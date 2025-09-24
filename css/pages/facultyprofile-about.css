@@ -1,0 +1,70 @@
+.main {
+    display: flex;
+    font-family: Georgia, serif;
+}
+
+.divider {
+    width: 15%;
+    height: 4px;
+    background-color: #2c3e50;
+    margin: 5px auto;
+}
+
+/* Contents */
+.content-container {
+    padding: 40px;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    position: relative;
+    max-width: 65%;
+}
+
+.about-me {
+    font-size: 1.2em;
+    line-height: 1.6;
+    color: #333;
+}
+
+.about-header {
+    font-size: 2em;
+    margin-bottom: 20px;
+    color: #2c3e50;
+    text-align: center;
+}
+
+.about-desc {
+    padding: 10px;
+    font-size: 1em;
+    color: #555;
+    margin-top: 20px;
+    justify-content: center;
+    text-align: justify;
+    width: 92%;
+}
+
+.educationalbg-header {
+    font-size: 1.2em;
+    margin: 30px;
+    color: #2c3e50;
+    text-align: center;
+}
+
+.educationalbg-desc {
+    padding: 10px;
+    font-size: 1.2em;
+    color: #555;
+    margin-top: 20px;
+    text-align: left;
+}
+
+.educationalbg-list {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    padding: 10px;
+    font-size: 0.9em;
+    color: #555;
+    margin-top: 20px;
+    text-align: left;
+}

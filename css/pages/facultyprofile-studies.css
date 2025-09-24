@@ -1,0 +1,46 @@
+.main {
+    display: flex;
+    font-family: Georgia, serif;
+}
+
+.content-divider {
+    height: 1.5px;
+    background-color: #b9b9b9;
+    margin: auto;
+    border: none;
+}
+
+/* Contents */
+.content-container {
+    padding: 40px;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    position: relative;
+    width: 65%;
+}
+.studies-section {
+    line-height: 1.6;
+}
+
+.content-header {
+    font-size: 2.5em;
+    margin-bottom: 5px;
+    color: #2c3e50;
+}
+.research-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 20px;
+    padding: 10px;
+}
+/* Studies List */
+
+.research-item {
+    background-color: #ecf0f1;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 70%;
+}

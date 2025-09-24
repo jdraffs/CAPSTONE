@@ -1,0 +1,103 @@
+.main {
+    background-color: white;
+}
+
+/* Welcome part */
+.welcome-container {
+    height: 120px;
+    max-width: 750px;
+    display: block;
+    text-align: center;
+    margin: auto;
+    margin-top: 30px;
+    color: maroon;
+}
+
+.welcome-title {
+    font-family: Arial, Helvetica, sans-serif;
+    margin-bottom: 20px;
+    font-weight: 700;
+}
+.welcome-desc {
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 10px;
+    color: #444;
+}
+.official-title {
+    display: block;
+    text-align: center;
+    margin: auto;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    color: maroon;
+    font-size: 25px;
+    font-weight: 600;
+}
+
+.hr2 {
+    margin: auto;
+    max-width: 35%;
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+
+/* Staff Containers */
+
+.faculty-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px;
+}
+
+.staff-container {
+    border: 1px solid #ccc;
+    max-width: 500px;
+    width: 50%; /* adjust width for 2 per row */
+    min-width: 290px;
+    height: 200px;
+    padding: 15px;
+    box-sizing: border-box;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+}
+
+.staff-wrap {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.faculty-img {
+    width: 150px;
+    height: 170px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.text-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.name {
+    font-size: 18px;
+    font-weight: 600;
+    font-family: Arial, Helvetica, sans-serif;
+    margin-bottom: 5px;
+    color: #222;
+    text-decoration: none;
+}
+
+.details {
+    font-size: 14px;
+    color: #444;
+    margin: 2px 0;
+}
+
+.research-link {
+    font-size: 14px;
+    color: #0066cc;
+    text-decoration: underline;
+}

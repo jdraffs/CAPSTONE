@@ -1,0 +1,170 @@
+.main {
+    background-color: white;
+    flex-direction: column;
+    align-items: center;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Verdana, sans-serif;
+}
+
+.hero-section {
+    width: 100%;
+    height: 380px;
+    display: flex;
+    background-size: cover;   
+}
+
+.hero-content {
+    width: 100%;
+    color: white;
+    text-align: left;
+    background-color: rgb(27, 27, 27, 0.98);
+    display: flex;
+    flex-direction: column;
+}
+.hero-title-design {
+    display: flex;
+    gap: 15px;
+    position: relative;
+    top: 120px;
+    left: 100px;
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: bold;
+}
+
+.hero-text {
+    font-size: 1.2rem;
+    margin-top: 30px;
+    max-width: 70%;
+    text-align:  justify;
+}
+
+.vl1 {
+    height: 50px;
+    width: 2px;
+    background-color:  rgb(237, 237, 237);
+    border: none;
+    margin-top: 5px;
+}
+
+/* Welcome part */
+.welcome-container {
+    height: 120px;
+    max-width: 750px;
+    display: block;
+    text-align: center;
+    margin: auto;
+    margin-top: 30px;
+    color: maroon;
+}
+
+.welcome-title {
+    font-family: Arial, Helvetica, sans-serif;
+    margin-bottom: 20px;
+    font-weight: 700;
+}
+.welcome-desc {
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 10px;
+    color: #444;
+}
+.official-title {
+    display: block;
+    text-align: center;
+    margin: auto;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    color: maroon;
+    font-size: 25px;
+    font-weight: 600;
+}
+
+.hr2 {
+    margin: auto;
+    max-width: 35%;
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+
+/* Staff Containers */
+.faculty-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px;
+}
+
+.staff-container {
+    border: 1px solid #ccc;
+    max-width: 500px;
+    width: 50%; /* adjust width for 2 per row */
+    min-width: 290px;
+    height: 200px;
+    padding: 15px;
+    box-sizing: border-box;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.staff-container:hover {
+    box-shadow: 0 4px 8px rgba(156, 109, 109, 0.37);
+    transform: translateY(-5px);
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.staff-wrap {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.faculty-img {
+    width: 150px;
+    height: 170px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.text-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.name {
+    font-size: 18px;
+    font-weight: 600;
+    font-family: Arial, Helvetica, sans-serif;
+    margin-bottom: 5px;
+    color: #222;
+    text-decoration: none;
+}
+
+.details {
+    font-size: 14px;
+    color: #444;
+    margin: 2px 0;
+}
+
+.research-link {
+    font-size: 14px;
+    color: #0066cc;
+    text-decoration: underline;
+}
+
+
+@media (max-width: 1059px) {
+    .staff-container {
+    border: 1px solid #ccc;
+    max-width: 550px;
+    width: 60%; /* adjust width for 2 per row */
+    min-width: 400px;
+    height: 200px;
+    padding: 15px;
+    box-sizing: border-box;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+}
+}

@@ -1,0 +1,306 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #f9f9f9;
+    color: #333;
+     font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Verdana, sans-serif;
+}
+
+main {
+    background-color: #fff;
+}
+
+.hero-section {
+    width: 100%;
+    height: 450px;
+    display: flex;
+}
+
+.hero-content {
+    width: 100%;
+    color: white;
+    text-align: center;
+    padding: 80px 50px;
+    background-color: rgb(27, 27, 27, 0.95);
+}
+
+.hero-title {
+    font-size: 5rem;
+    font-weight: bold;
+}
+
+.hero-text {
+    font-size: 1.4rem;
+    line-height: 1.5;
+    margin: 50px auto;
+    max-width: 73%;
+}
+
+.hero-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.hero-button {
+    text-decoration: none;
+    border: none;
+    background-color: transparent;
+    color: white;
+}
+
+/* Horizontal Rule Styling */
+.hr {
+    width: 5%;
+    background-color: rgb(255, 167, 16);
+    height: 4px;
+    border: rgb(255, 167, 16);
+}
+
+/* Anchor Styling */
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Main Content Layout */
+.main-container {
+    padding: 0px 0px;
+    margin: 0 auto;
+}
+.campus-facilities-title, 
+.campus-gallery-title {
+    font-size: 2.8em;
+    font-weight: bold;
+    color: #800000;
+    margin-bottom: 18px;
+    line-height: 1.2;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    text-align: center;
+    padding-bottom: 8px;
+    margin-top: 32px;
+}
+
+.org-title {
+    font-size: 2.5em;
+    font-weight: bold;
+    color: rgb(255, 255, 255);
+    line-height: 1.2;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding-bottom: 8px;
+    margin-top: 32px;
+}
+
+
+.student-spotlight-title {
+    font-size: 2.8em;
+    font-weight: bold;
+    color: #000000;
+    line-height: 1.2;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    text-align: left;
+    padding-bottom: 8px;
+    margin-top: 32px;
+    margin-bottom: 18px;
+}
+
+/* Sections */
+.content-title {
+    font-size: 2.1em;
+    font-weight: bold;
+    color: #000000;
+    margin-bottom: 18px;
+    line-height: 1.2;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding-bottom: 8px;
+    margin-top: 32px;
+}
+
+.content-text {
+    font-size: 1.13em;
+    color: #222;
+    background: rgba(128,0,0,0.04);
+    border-radius: 10px;
+    padding: 18px 28px;
+    max-width: 750px;
+    list-style: inside disc;
+    box-sizing: border-box;
+    line-height: 1.7;
+    box-shadow: 0 2px 8px rgba(128,0,0,0.03);
+}
+/* Gallery Styles */
+.campus-facilities {
+    background-color: rgb(255, 255, 255);
+    padding: 10px;
+}
+
+.student-orgs {
+    background-color: rgb(27, 27, 27);
+    padding: 10px 90px 10px 90px;
+    font-family: 'Georgia', serif;
+}
+
+.campus-gallery {
+    background-color: rgb(255, 255, 255);
+    padding: 10px 110px 10px 110px;
+}
+
+.student-services {
+    padding: 10px 110px 10px 110px;
+}
+.community-outreach {
+    background-color: rgb(255, 255, 255);
+    padding: 10px 110px 10px 110px;
+}
+.student-spotlight {
+    background-color: rgb(255, 255, 255);
+    padding: 10px 110px 10px 110px;
+}
+
+.community-gallery,
+.gallery,
+.orgs-list {
+    justify-content: center;
+    display: flex;
+    gap: 50px;
+    margin: 22px 10px;
+    flex-wrap: wrap;
+}
+
+.facilities-list {
+    justify-content: center;
+    display: flex;
+    gap: 50px;
+    margin: 22px 10px;
+    flex-wrap: wrap;
+}
+.event-gallery img,
+.community-gallery img,
+.gallery img {
+    width: 120px;
+    border-radius: 10px;
+    object-fit: cover;
+    height: 80px;
+    box-shadow: 0 2px 8px rgba(128,0,0,0.08);
+    background: #fff;
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+/* Organization and Facility Card */
+.org-image {
+    min-width: 250px;
+    height: 250px;
+    background-color: #f7f7f7;
+    border-radius: 100%;
+    text-align: center;
+    transition: all 0.3s ease;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+    overflow: hidden;
+}
+.hero-vl {
+  border-left: 1px solid white;
+  height: 20px;
+}
+
+.vl {
+  border: 1px solid rgba(255, 255, 255, 0.815);
+  margin-top: 60px;
+  height: 150px;
+}
+.vl1 {
+  border-left: 2px solid #c9c9c950;
+  height:450px;
+  margin: 0 20px 0 20px;
+}
+
+.facility-image {
+    min-width: 600px;
+    height: 400px;
+    background-color: #f7f7f7;
+    border: 1px solid #c0c0c0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+    overflow: hidden;
+}
+
+.facultycard-title {
+    text-align: center;
+    font-size: 2em;
+    font-weight: bold;
+    letter-spacing: 2px;
+    color: rgb(0, 0, 0);
+    height: 50px;
+    margin-top: 15px;
+    padding: 15px;
+}
+
+.orgcard-title {
+    text-align: center;
+    font-size: 1.5em;
+    font-weight: bold;
+    letter-spacing: 2px;
+    color: rgb(255, 255, 255);
+    height: 50px;
+    margin-top: 15px;
+    padding: 15px;
+}
+/* Featured Org Box */
+.featured-org {
+    background: rgba(128,0,0,0.08);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin: 18px auto;
+    max-width: 420px;
+    text-align: center;
+    color: #800000;
+    font-weight: 600;
+    font-size: 1.1em;
+    box-shadow: 0 2px 8px rgba(128,0,0,0.04);
+}
+
+/* Button Styles */
+
+.button:hover {
+    background: #a83232;
+    box-shadow: 0 4px 16px rgba(128,0,0,0.12);
+}
+
+/* Student Spotlight & Blockquote */
+.spotlight-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 100px;
+    padding: 20px;
+    margin-bottom: 25px;
+}
+.student-spotlight blockquote {
+    font-style: italic;
+    color: #444;
+    background: #f5f5f5;
+    border-left: 5px solid #800000;
+    align-self: center;
+    padding: 18px 28px;
+    border-radius: 10px;
+    max-width:500px;
+    box-shadow: 0 2px 8px rgba(128,0,0,0.03);
+}

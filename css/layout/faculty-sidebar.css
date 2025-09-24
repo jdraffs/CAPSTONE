@@ -1,0 +1,67 @@
+/* Right side */
+.sideprofile-container {
+    height: 170vh;
+    max-width: 330px;
+    background-color: #f3f3f3;
+}
+
+.sideprofile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color:  #2c3e50;
+    padding: 20px;
+    gap: 10px;
+}
+
+.sideprofile img {
+    width: 150px;
+    height: auto;
+    border-radius: 10px;
+}
+
+.profile-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.profile-buttons-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.profile-buttons {
+    height: 50px;
+    width: 300px;
+    display: flex;              
+    align-items: center;         
+    justify-content: center;
+}
+
+.profile-buttons a{
+    text-decoration: none;
+    justify-content: center; 
+    display: flex;              
+    align-items: center;
+    justify-content: center; 
+    height: 100%;
+    width: 100%;
+    color: #2c3e50;
+}
+
+.profile-buttons:hover {
+    background-color: #692727;
+    transition: background-color 0.3s ease;
+    border-radius: 10px;
+}
+
+.profile-buttons:hover a {
+    color: #ffffff;
+    transition: color 0.3s ease;
+}

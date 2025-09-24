@@ -1,0 +1,129 @@
+.footer-box {
+    width: 100%;
+    background-color:  #1c2737;
+}
+
+.footer {
+    padding: 40px 20px;
+    max-width: 1200px;
+    margin: auto;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  
+  .footer-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 30px;
+  }
+  
+  .footer-section {
+    flex: 1 1 220px;
+    min-width: 200px;
+  }
+  
+  .logo-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .logo-img {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .logo-text p {
+    font-size: 12px;
+    line-height: 1.2;
+  }
+
+  .logo-name {
+    color: #94a3b8;
+  }
+  
+  .logo-branch {
+    font-weight: 700;
+    color: rgb(255, 255, 255);
+    font-size: 14px;
+  }
+  
+  .footer-desc {
+    font-size: 12px;
+    margin: 15px 0;
+    color: #94a3b8;
+  }
+  
+  .social-links a {
+    color: #94a3b8;
+    margin-right: 10px;
+    font-size: 14px;
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+  
+  .social-links a:hover {
+    color: white;
+  }
+  
+  .footer-section h3 {
+    color: white;
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+  
+  .footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .footer-links li {
+    margin-bottom: 6px;
+  }
+  
+  .footer-links a {
+    color: #94a3b8;
+    font-size: 12px;
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+  
+  .footer-links a:hover {
+    color: white;
+  }
+  
+  .contact-text {
+    font-size: 12px;
+    color: #94a3b8;
+  }
+  
+  .contact-link {
+    color: #f87171;
+    text-decoration: none;
+  }
+  
+  .contact-link:hover {
+    text-decoration: underline;
+  }
+  
+  .contact-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #f87171;
+    font-size: 12px;
+    margin-top: 6px;
+  }
+  
+  .footer-divider {
+    border: none;
+    border-top: 1px solid #334155;
+    margin: 30px 0;
+  }
+  
+  .footer-copy {
+    text-align: center;
+    font-size: 12px;
+    color: #64748b;
+  }
