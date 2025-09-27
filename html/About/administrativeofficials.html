@@ -9,9 +9,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
   <link rel="stylesheet" href="/css//layout/navbar.css">
   <link rel="stylesheet" href="/css/layout/floatingfunction.css">
-  <link rel="stylesheet" href="/css/layout/faculty-sidebar.css">
+  <link rel="stylesheet" href="/css/pages/administrativeofficials.css">
   <link rel="stylesheet" href="/css/layout/footer.css">
-  <link rel="stylesheet" href="/css/pages/facultyprofile-about.css">
 </head>
 <body>
   <header>
@@ -32,40 +31,32 @@
         <li class="nav-item">
           <a href="/index.html">Home</a>
         </li>
-        <li class="nav-item">
-          <a href="about.html">About</a>
+        <li class="nav-item dropdown-btn">
+          <a href="#about">About <span class="arrow">&#11206;</span></a>
+          <div class="dropdown-content">
+            <a href="#">History</a>
+            <a href="/html/About/administrativeofficials.html">Administrative Officials</a>
+            <a href="#">Maps</a>
+          </div>
         </li>
         <li class="nav-item">
           <a href="/html/Admission/admission.html">Admission</a>
         </li>
 
-        <div class="dropdown-btn">
-        <li class="nav-item">
-          <a href="/html/Students/students.html">Students <span class="arrow">&#11206</span></a>
-        </li>
+
+        <li class="nav-item dropdown-btn">
+          <a href="/html/Students/students.html">Students <span class="arrow">&#11206;</span></a>
           <div class="dropdown-content">
             <a href="/html/Students/students.html">Scholarship & Forms</a>
             <a href="https://pupsinta.freshservice.com/support/home">PUP Sinta</a>
             <a href="https://sis8.pup.edu.ph/student/">PUP Student Portal</a>
             <a href="#">Student Organizations</a>
           </div>
-        </div>
+        </li>
 
         <li class="nav-item">
           <a href="/html/CampusLife/campus-life.html">Campus Life</a>
         </li>
-
-        <div class="dropdown-btn">
-        <li class="nav-item">
-          <a href="/html/Faculty&Resources/faculty.html">Faculty & Resources<span class="arrow">&#11206</span></a>
-        </li>
-          <div class="dropdown-content">
-            <a href="/html/Faculty&Resources/administrativeofficials.html">Administrative Officials</a>
-            <a href="#">Faculty Corner</a>
-            <a href="#">Research and Publications</a>
-            <a href="#">Research Extensions & Services</a>
-          </div>
-        </div>
 
         <li class="nav-item">
           <a href="/html/Alumni&Services/alumni.html">Alumni & Services</a>
@@ -75,6 +66,8 @@
         <li class="nav-item">
           <a href="/html/Contact&Support/QuickHelp&Chatbot.html">Contact/Support</a>
         </li>
+          </div>
+        </div>
 
       </ul>
 
@@ -97,78 +90,89 @@
   </header>
 
   <main class="main">
-    <div class="sideprofile-container">
-        <div class="sideprofile">
-
-            <img src="/assets/images/facultyimage/moralessr.jpg" alt="Faculty Profile" class="profile-image">
-            <div class="profile-info">
-              <h2 class="profile-name">Sheryl "Sharima" R. Morales, MEM</h2>
-              <p class="profile-occupation">Associate Professor &#8548;</p>
-              <p class="profile-position">Campus Director</p>
-            </div>
-              
-            <hr class="divider">
-
-            <div class="profile-buttons-container">
-              <div class="profile-buttons">
-                  <a href="/html/Faculty&Resources/facultyprofile-about.html" id="about-btn" class="profile-about">ABOUT ME</a>
-              </div>
-
-              <div class ="profile-buttons">
-                  <a href="/html/Faculty&Resources/facultyprofile-studies.html" id="studies-btn">STUDIES & RESEARCH</a>
-              </div>
-
-              <div class ="profile-buttons">
-                  <a href="facultyprofile-contact.html" id="contact-btn">CONTACT</a>
-              </div>
-            </div>
+    <section class="hero-section" style="background-image: url('/assets/images//PUPBg4.jpg');">
+      <div class="hero-content">
+        <div class="hero-title-design">
+          <div class="vl1"></div>
+          <div class="hero-title&desc">
+            <h1 class="hero-title" data-aos="fade-left">Administrative Officials</h1>
+            <p class="hero-text">Get to know the dedicated officials behind the academic excellence of PUP Parañaque. Explore our directory to learn about their professional backgrounds, academic achievements, research contributions, and roles within the university. These are the individuals who guide, support, and inspire the next generation of PUP scholars.</p>
+          </div>
         </div>
-    </div>
-
-    <div class="content-container" id="main-content">
-      <div class="about-me">
-        <h2 class="about-header">About Me</h2>
-        <hr class="divider">
-          <p class="about-desc">Sheryl ‘Sharima’ Renomeron-Morales is currently an Associate Professor and faculty researcher at the Research Management 
-            Office of the Polytechnic University of the Philippines. Her research primarily focuses on curriculum and instruction, 
-            higher education peace and security studies, and inclusive education. She also serves as an adviser to the National Youth Congress 
-            of the Philippines 2013, a youth organization dedicated to the promotion of youth, peace, and nationalism.</p>
-
-        <h3 class="educationalbg-header">Educational Background</h3>
-        <hr class="divider">
-        <ul class="educationalbg-list">
-          <li>Undergraduate Studies:
-            <ul><b>Bachelor is Business Teacher Education</b><br> major in Business Technology
-              <li>Polytechnic University of the Philippines</li>
-              <li>Sta. Mesa, Manila</li>
-              <li>June 1997 to March 2001</li>
-            </ul>
-          </li>
-
-          <li>Graduate Studies:
-            <ul><b>Master in Educational Management (Non-Thesis)</b><br> major in Cirriculum and Instruction
-              <li>Polytechnic University of the Philippines-Graduate School</li>
-              <li>Sta. Mesa, Manila</li>
-              <li>Summer 2003 to March 2007</li>
-            </ul>
-            <br>
-            <ul><b>Doutora "Honoris Causa" Em Educacao Religiosa</b><br> (Doctor of Philosophy "Honoris Causa" in Religious Education)
-              <li>Centro de Altos Estudos Sao Constantino, O Grande</li>
-              <li>Republica Federativa Do Brasil</li>
-              <li>October 23, 2012</li>
-            </ul>
-            <br>
-            <ul><b>Academic Units Earned, Doctor in Educational Management</b>
-              <li>Polytechnic University of the Philippines-Graduate School</li>
-              <li>Sta. Mesa, Manila</li>
-              <li>October 2008 to March 2012</li>
-            </ul>
-          </li>
-        </div>
-        </ul>
       </div>
-    </div>
+    </section>
     
+    <div class="faculty-grid">
+
+      <div class="staff-container" onclick="location.href='/html/About/facultyprofile-about.html'">
+        <div class="staff-wrap">
+          <img src="/assets/images/facultyimage/moralessr.jpg" alt="Faculty Image" class="faculty-img">
+          <div class="text-info">
+            <a class="name">Sheryl "Sharima" R. Morales, MEM</a>
+            <p class="details">Associate Professor &#8548;</p>
+            <p class="details">Campus Director</p>
+          </div>
+        </div>
+      </div>
+    
+      <div class="staff-container">
+        <div class="staff-wrap">
+          <img src="/assets/images/facultyimage/serranojf.jpg" alt="Faculty Image" class="faculty-img">
+          <div class="text-info">
+            <a class="name">Jefferson F. Serrano, MPES</a>
+            <p class="details">Assistant Professor &#8544;</p>
+            <p class="details">Head, Academic Programs</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="staff-container">
+        <div class="staff-wrap">
+          <img src="/assets/images/facultyimage/martinezmjj.jpg" alt="Faculty Image" class="faculty-img">
+          <div class="text-info">
+            <a class="name">Mila Joy J. Martinez, MS HRM</a>
+            <p class="details">Instructor &#8546;</p>
+            <p class="details">Head, Student Affairs and Services</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="staff-container">
+        <div class="staff-wrap">
+          <img src="/assets/images/facultyimage/eniergarr.jpg" alt="Faculty Image" class="faculty-img">
+          <div class="text-info">
+            <a class="name">Ribert R. Enierga, MIT</a>
+            <p class="details">Assistant Professor &#8547;</p>
+            <p class="details">Registrar and Head of Admission</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="staff-container">
+        <div class="staff-wrap">
+          <img src="/assets/images/facultyimage/aviladoajm.jpg" alt="Faculty Image" class="faculty-img">
+          <div class="text-info">
+            <a class="name">Avegail Jean M. Avilado</a>
+            <p class="details">Instructor &#8544;</p>
+            <p class="details">Research and Extension Coordinator</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="staff-container">
+        <div class="staff-wrap">
+          <img src="/assets/images/facultyimage/pambuenael.jpg" alt="Faculty Image" class="faculty-img">
+          <div class="text-info">
+            <a class="name">Elizabeth L. Pambuena, PhD</a>
+            <p class="details">Associate Professor &#8547;</p>
+            <p class="details">Collecting and Disbursing Officer</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <hr class="hr2">
+
 
   </main>
 
@@ -205,6 +209,7 @@
           <li><a href="#">Programs</a></li>
           <li><a href="#">Admission</a></li>
           <li><a href="#">Extension Services</a></li>
+          <li><a href="login.html">Log in</a></li>
         </ul>
       </div>
 
