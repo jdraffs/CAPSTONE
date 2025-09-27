@@ -5,24 +5,6 @@ document.addEventListener('DOMContentLoaded', function () {
   const loginTitle = document.getElementById('login-title');
 
 
-  tabButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      tabButtons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-
-      const target = btn.getAttribute('data-tab');
-
-      if (target === 'faculty-login') {
-        facultyTab.classList.add('active');
-        adminTab.classList.remove('active');
-        loginTitle.textContent = 'Login to Your Faculty Account'; 
-      } else if (target === 'admin-login') {
-        adminTab.classList.add('active');
-        facultyTab.classList.remove('active');
-        loginTitle.textContent = 'Login to Your Admin Account';
-      }
-    });
-  });
 
   
   window.togglePassword = function (fieldId) {
@@ -57,24 +39,6 @@ document.addEventListener('DOMContentLoaded', function () {
       window.location.href = "/html/AdminLogin/admin-dashboard.html"; 
     } else {
       alert("Invalid Admin credentials");
-    }
-  });
-
-
-  const facultyForm = document.getElementById('faculty-login-form');
-
-  facultyForm.addEventListener('submit', function (e) {
-    e.preventDefault();
-
-    const facultyUser = document.getElementById('faculty-username').value.trim();
-    const facultyPass = document.getElementById('faculty-password').value.trim();
-
-
-    if (facultyUser === "faculty" && facultyPass === "faculty") {
-      alert("Faculty login successful!");
-      window.location.href = "/html/faculty/faculty-dashboard.html";
-    } else {
-      alert("Invalid Faculty credentials");
     }
   });
 });

@@ -88,8 +88,8 @@
 
   <main class="main">
     <div class="welcome-container">
-      <h1 class="welcome-title">Faculty and Admin Login Portal</h1>
-      <p class="welcome-desc">Access the official PUP Parañaque Campus system to manage research, academic content, announcements, and campus activities.
+      <h1 class="welcome-title">Admin Login Portal</h1>
+      <p class="welcome-desc">Access the official PUP Parañaque Campus system to manage academic content, announcements, and campus activities.
 
  </p>
     </div>
@@ -97,27 +97,25 @@
     <hr class="hr2">
     <div class="login-container">
       <div class="login-tabs">
-        <button class="tab-btn active" data-tab="faculty-login">Faculty Login</button>
-        <button class="tab-btn" data-tab="admin-login">Admin Login</button>
+        <button class="tab-btn active" data-tab="faculty-login">Admin Login</button>
       </div>
       
       <div class="tab-content">
         <!-- Faculty Login Form -->
-        <h2 id="login-title" class="login-title"> Login to Your Faculty Account </h2>
-        <div class="tab-pane active" id="faculty-login">
-          <form id="faculty-login-form" class="login-form">
+        <h2 id="login-title" class="login-title"> Login to Your Admin Account </h2>
+        <div class="tab-pane active" id="admin-login">
+          <form id="admin-login-form" class="login-form">
             <div class="form-group">
-              <label for="faculty-username">Username</label>
-              <input type="text" id="faculty-username" name="username" placeholder="Enter your username" required>
+              <label for="admin-username">Admin ID</label>
+              <input type="text" id="admin-username" name="username" placeholder="Enter admin ID" required>
             </div>
             
             <div class="form-group">
-              <label for="faculty-password">Password</label>
+              <label for="admin-password">Password</label>
               <div class="password-field">
-                <input type="password" id="faculty-password" name="password" placeholder="Enter your password" required>
-                <span class="toggle-password" onclick="togglePassword('faculty-password')">
-                 
-                </span>
+              <input type="password" id="admin-password" name="password" placeholder="Enter your password" required>
+              <span class="toggle-password" onclick="togglePassword('admin-password')">
+              </span>
               </div>
             </div>
             
@@ -133,33 +131,7 @@
             
 
           </form>
-        </div>
-
-        <!-- Admin Login Form -->
-<div class="tab-pane" id="admin-login">
-  <form id="admin-login-form" class="login-form">
-    <div class="form-group">
-      <label for="admin-username">Admin ID</label>
-      <input type="text" id="admin-username" name="username" placeholder="Enter admin ID" required>
-    </div>
-
-    <div class="form-group">
-      <label for="admin-password">Password</label>
-      <div class="password-field">
-        <input type="password" id="admin-password" name="password" placeholder="Enter your password" required>
-        <span class="toggle-password" onclick="togglePassword('admin-password')">
-
-        </span>
       </div>
-    </div>
-
-    <button type="submit" class="login-btn">Admin Login</button>
-  </form>
-</div>
-        
-
-    
-    
   </main>
 
   <div class="footer-box">
