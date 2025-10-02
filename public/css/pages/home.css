@@ -69,19 +69,19 @@ position: absolute;
 
 @keyframes change {
   0% {
-    background-image: url('/assets/images/PUPBg9.jpg');
+    background-image: url('/public/assets/images/PUPBg9.jpg');
   }
   25% {
-    background-image: url('/assets/images/PUPBg11.jpg');
+    background-image: url('/public/assets/images/PUPBg11.jpg');
   }
   50% {
-    background-image: url('/assets/images/PUPBg12.jpg');
+    background-image: url('/public/assets/images/PUPBg12.jpg');
   }
   75% {
-    background-image: url('/assets/images/PUPBg3.jpg');
+    background-image: url('/public/assets/images/PUPBg3.jpg');
   }
   100% {
-    background-image: url('/assets/images/PUPBg9.jpg');
+    background-image: url('/public/assets/images/PUPBg9.jpg');
   }
 }
 
@@ -310,7 +310,7 @@ html {
 /* Glance section */
 .glance-section {
   padding: 60px 20px;
-  background-image: url('/assets/images/PUPBg13.jpg');
+  background-image: url('/public/assets/images/PUPBg13.jpg');
   color: #fffdfd;
   text-align :center;
   font-family: var(--font-display);

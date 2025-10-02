@@ -74,7 +74,7 @@
 }
 
 .img {
-    background-image: url(/assets/images/history-img.jpg);
+    background-image: url(/public/assets/images/history-img.jpg);
     background-size: cover;
     height: 500px;           
     width: 100%;
