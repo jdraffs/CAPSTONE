@@ -3,7 +3,7 @@ const newsItems = [
       id: 1,
       title: "PUPPQ Faculty Enhance Skills at OBE Workshop",
       description: "The PUPPQ faculty members participated in a Continuous Quality Improvement (CQI) Workshop on Outcome-Based Education (OBE) at Silid Lakan Dayang, PUP Sta. Mesa.",
-      image: "/assets/images/newsimage/news1.jpg",
+      image: "/public/assets/images/newsimage/news1.jpg",
       date: "April 30, 2025",
       link: "#"
     },
@@ -11,7 +11,7 @@ const newsItems = [
       id: 2,
       title: "From Enrollment to Employment",
       description: "PUP Parañaque City Campus welcomes partnership with the DOLE-NCR, Parañaque City PESO, and the City Government of Parañaque to be an accredited Job Placement Office!",
-      image: "/assets/images/newsimage/news2.jpg",
+      image: "/public/assets/images/newsimage/news2.jpg",
       date: "April 8, 2025",
       link: "#"
     },
@@ -19,7 +19,7 @@ const newsItems = [
       id: 3,
       title: "PUP Parañaque City Campus' 2nd Globe Summit",
       description: "in collaboration with Academia Research Lab Ltd. and other international partners was highlighted in The Philippine Star, one of the country's most renowned broadsheets.",
-            image: "/assets/images/newsimage/news3.jpg",
+            image: "/public/assets/images/newsimage/news3.jpg",
       date: "May 31, 2025",
       link: "#"
     }
