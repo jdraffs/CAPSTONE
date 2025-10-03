@@ -1,3 +1,8 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 .main {
     background-color: white;
     flex-direction: column;
@@ -25,7 +30,7 @@
     gap: 15px;
     position: relative;
     top: 120px;
-    left: 100px;
+    margin-left: 100px;
 }
 
 .hero-title {

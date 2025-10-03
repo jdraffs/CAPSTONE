@@ -1,4 +1,8 @@
-95% of storage used … If you run out of space, you can't save to Drive or use Gmail. Get 30 GB of storage for ₱49.00 ₱10.00/month for 2 months.
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 main {
     display: flex;
     flex-direction: column;
@@ -124,14 +128,14 @@ a {
 }
 .text-button-wrap {
     position: relative;
-    left: 50px;
+    margin-left: 50px;
     display: flex;
     flex-direction: column;
     gap: 50px;
 }
 .text-button-wrap1 {
     position: relative;
-    left: 200px;
+    margin-left: 200px;
     display: flex;
     flex-direction: column;
     gap: 50px;
