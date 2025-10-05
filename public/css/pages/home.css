@@ -69,19 +69,10 @@ position: absolute;
 
 @keyframes change {
   0% {
-    background-image: url('/public/assets/images/PUPBg9.jpg');
-  }
-  25% {
     background-image: url('/public/assets/images/PUPBg11.jpg');
   }
-  50% {
-    background-image: url('/public/assets/images/PUPBg12.jpg');
-  }
-  75% {
-    background-image: url('/public/assets/images/PUPBg3.jpg');
-  }
   100% {
-    background-image: url('/public/assets/images/PUPBg9.jpg');
+    background-image: url('/public/assets/images/PUPBg3.jpg');
   }
 }
 
