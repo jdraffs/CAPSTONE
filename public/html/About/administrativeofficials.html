@@ -13,85 +13,80 @@
   <link rel="stylesheet" href="/public/css/layout/footer.css">
 </head>
 <body>
+<!--NAVBAR-->
   <header>
     <nav id="navbar" class="navbar">
-
-      <div class="logo">
-        <img class="logoimage" src="/public/assets/images/PUPLogo.webp" alt="PUP logo" />
-        <div class="logotitlewrap">
-          <h1 class="logotitle">Polytechnic University of the Philippines</h1>
-          <h2 class="logotitle2">PARANAQUE CAMPUS</h2>
-        </div>
-
-      </div>
-
-      <hr class="hr1">
-
-      <ul class="nav-menu">
-        <li class="nav-item">
-          <a href="/public/index.html">Home</a>
-        </li>
-
-        <li class="nav-item dropdown-btn">
-          <a href="#about">About <span class="arrow">&#11206;</span></a>
-          <div class="dropdown-content">
-            <a href="/public/html/About/history.html">History</a>
-            <a href="/public/html/About/administrativeofficials.html">Administrative Officials</a>
-            <a href="/public/html/About/vicinitymap.html">Vicinity Map</a>
-          </div>
-        </li>
-
-        <li class="nav-item">
-          <a href="/public/html/Admission/admission.html">Admission</a>
-        </li>
-
-
-        <li class="nav-item dropdown-btn">
-          <a href="/public/html/Students/students.html">Students <span class="arrow">&#11206;</span></a>
-          <div class="dropdown-content">
-            <a href="/public/html/Students/students.html">Scholarship & Forms</a>
-            <a href="https://pupsinta.freshservice.com/support/home">PUP Sinta</a>
-            <a href="https://sis8.pup.edu.ph/student/">PUP Student Portal</a>
-            <a href="#">Student Organizations</a>
-          </div>
-        </li>
-
-        <li class="nav-item">
-          <a href="/public/html/CampusLife/campus-life.html">Campus Life</a>
-        </li>
-
-        <li class="nav-item">
-          <a href="/public/html/Alumni&Services/alumni.html">Alumni & Services</a>
-        </li>
-
-
-        <li class="nav-item">
-          <a href="/public/html/Contact&Support/QuickHelp&Chatbot.html">Contact/Support</a>
-        </li>
+      <!--Logo and Title-->
+        <div class="logo">
+            <img class="logoimage" src="/public/assets/images/PUPLogo.webp" alt="PUP logo" />
+          <div class="logotitlewrap">
+            <h1 class="logotitle">Polytechnic University of the Philippines</h1>
+            <h2 class="logotitle2">PARAÑAQUE CAMPUS</h2>
           </div>
         </div>
 
-      </ul>
+        <hr class="hr1">
+        <!--Nav Items-->
+        <ul class="nav-menu">
+          <li class="nav-item">
+            <a href="index.html">Home</a>
+          </li>
 
-      <div class="search-hamburger">
-        <div class="hamburger">
-          <span class="bar"></span>
-          <span class="bar"></span>
-          <span class="bar"></span>
+          <li class="nav-item dropdown-btn">
+              <a href="#about">About <span class="arrow">&#11206;</span></a>
+            <div class="dropdown-content">
+              <a href="./html/About/history.html">History</a>
+              <a href="./html/About/administrativeofficials.html">Administrative Officials</a>
+              <a href="./html/About/vicinitymap.html">Vicinity Map</a>
+            </div>
+          </li>
+
+          <li class="nav-item">
+            <a href="./html/Admission/admission.html">Admission</a>
+          </li>
+
+          <li class="nav-item dropdown-btn">
+              <a href="./html/Students/students.html">Students <span class="arrow">&#11206;</span></a>
+            <div class="dropdown-content">
+              <a href="./html/Students/students.html">Scholarship & Forms</a>
+              <a href="https://pupsinta.freshservice.com/support/home">PUP Sinta</a>
+              <a href="https://sis8.pup.edu.ph/student/">PUP Student Portal</a>
+              <a href="#">Student Organizations</a>
+            </div>
+          </li>
+
+          <li class="nav-item">
+            <a href="./html/CampusLife/campus-life.html">Campus Life</a>
+          </li>
+
+          <li class="nav-item">
+            <a href="./html/Alumni&Services/alumni.html">Alumni & Services</a>
+          </li>
+
+          <li class="nav-item">
+            <a href="./html/Contact&Support/QuickHelp&Chatbot.html">Contact/Support</a>
+          </li>
+        </ul>
+        <!--HAMBURGER AND SEARCH-->
+        <div class="search-hamburger">
+          <div class="hamburger">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+          </div>
+
+          <div class="search-bar">
+            <form class="search" action="/public/index.html">
+              <input type="text" placeholder="Search" name="search" class="searchbox">
+              <button type="submit" class="searchbutton"><i class="fa fa-search"></i></button>
+            </form>
+          </div>
         </div>
-
-        <div class="search-bar">
-          <form class="search" action="/index.html">
-            <input type="text" placeholder="Search" name="search" class="searchbox">
-            <button type="submit" class="searchbutton"><i class="fa fa-search"></i></button>
-          </form>
-        </div>
-      </div>
-
     </nav>
   </header>
-
+<!--MAIN CONTENT-->
   <main class="main">
+    <!--Hero Section-->
     <section class="hero-section" style="background-image: url('/public/assets/images//PUPBg4.jpg');">
       <div class="hero-content">
         <div class="hero-title-design">
@@ -103,9 +98,8 @@
         </div>
       </div>
     </section>
-    
+    <!--FACULTY GRID-->
     <div class="faculty-grid">
-
       <div class="staff-container" onclick="location.href='/public/html/About/facultyprofile-about.html'">
         <div class="staff-wrap">
           <img src="/public/assets/images/facultyimage/moralessr.jpg" alt="Faculty Image" class="faculty-img">
@@ -171,80 +165,78 @@
           </div>
         </div>
       </div>
-
     </div>
     <hr class="hr2">
-
-
   </main>
+  <!--FOOTER-->
+  <section class="footer-box">
+    <footer class="footer">
+      <div class="footer-container">
 
-  <div class="footer-box">
-  <footer class="footer">
-    <div class="footer-container">
-      <!-- Logo and Description -->
-      <div class="footer-section">
-        <div class="logo-wrapper">
-          <img src="/public/assets/images/PUPLogo.webp" alt="PUP logo" class="logo-img">
-          <div class="logo-text">
-             <p class="logo-name">Polytechnic University of the Philippines</p>
-            <p class="logo-branch">PARAÑAQUE CAMPUS</p>
+        <!-- Logo and Description -->
+        <div class="footer-section">
+          <div class="logo-wrapper">
+            <img src="/public/assets/images/PUPLogo.webp" alt="PUP logo" class="logo-img">
+            <div class="logo-text">
+              <p class="logo-name">Polytechnic University of the Philippines</p>
+              <p class="logo-branch">PARAÑAQUE CAMPUS</p>
+            </div>
+          </div>
+          <p class="footer-desc">
+            PUP Parañaque recognizes the vital contributions of its faculty and staff in delivering quality education and services to its students and the community.
+          </p>
+          <div class="social-links">
+            <a href="#" aria-label="Facebook"><i class="fas fa-lightbulb"></i></a>
+            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+            <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#" aria-label="Globe"><i class="fas fa-globe"></i></a>
           </div>
         </div>
-        <p class="footer-desc">
-          PUP Parañaque recognizes the vital contributions of its faculty and staff in delivering quality education and services to its students and the community.
-        </p>
-        <div class="social-links">
-          <a href="#" aria-label="Facebook"><i class="fas fa-lightbulb"></i></a>
-          <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-          <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-          <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-          <a href="#" aria-label="Globe"><i class="fas fa-globe"></i></a>
+
+        <!-- Quick Links -->
+        <div class="footer-section">
+          <h3>Quick Links</h3>
+          <ul class="footer-links">
+            <li><a href="#">Home</a></li>
+            <li><a href="#">About</a></li>
+            <li><a href="#">Programs</a></li>
+            <li><a href="#">Admission</a></li>
+            <li><a href="#">Extension Services</a></li>
+          </ul>
+        </div>
+
+        <!-- Resources -->
+        <div class="footer-section">
+          <h3>Resources</h3>
+          <ul class="footer-links">
+            <li><a href="#">Forms</a></li>
+            <li><a href="#">Academic Calendar</a></li>
+            <li><a href="#">Faculty Resources</a></li>
+            <li><a href="#">Staff Resources</a></li>
+            <li><a href="#">University Policies</a></li>
+          </ul>
+        </div>
+
+        <!-- Contact -->
+        <div class="footer-section">
+          <h3>Contact</h3>
+          <p class="contact-text">
+            <a href="#" class="contact-link">
+              PUP Parañaque Campus<br/>
+              Col. E. De Leon St. Wawa, Brgy. Sto. Niño<br/>
+              Parañaque City, Philippines 1700,<br/>
+              Metro Manila
+            </a>
+          </p>
+            <p class="contact-info"><i class="fas fa-phone-alt"></i> (63 2) 553-8623</p>
+            <p class="contact-info"><i class="fas fa-envelope"></i> <a href="mailto:inquire@pup.edu.ph">paranaque@pup.edu.ph</a></p>
         </div>
       </div>
-
-      <!-- Quick Links -->
-      <div class="footer-section">
-        <h3>Quick Links</h3>
-        <ul class="footer-links">
-          <li><a href="#">Home</a></li>
-          <li><a href="#">About</a></li>
-          <li><a href="#">Programs</a></li>
-          <li><a href="#">Admission</a></li>
-          <li><a href="#">Extension Services</a></li>
-          <li><a href="/private/html/AdminLogin/admin-dashboard.html">Log in</a></li>
-        </ul>
-      </div>
-
-      <!-- Resources -->
-      <div class="footer-section">
-        <h3>Resources</h3>
-        <ul class="footer-links">
-          <li><a href="#">Forms</a></li>
-          <li><a href="#">Academic Calendar</a></li>
-          <li><a href="#">Faculty Resources</a></li>
-          <li><a href="#">Staff Resources</a></li>
-          <li><a href="#">University Policies</a></li>
-        </ul>
-      </div>
-
-      <!-- Contact -->
-      <div class="footer-section">
-        <h3>Contact</h3>
-        <p class="contact-text">
-          <a href="#" class="contact-link">PUP Parañaque Campus
-            Col. E. De Leon St. Wawa, Brgy. Sto. Niño
-            Parañaque City, Philippines 1700,</a><br/>
-          Metro Manila
-        </p>
-        <p class="contact-info"><i class="fas fa-phone-alt"></i> (63 2) 553-8623</p>
-        <p class="contact-info"><i class="fas fa-envelope"></i> <a href="mailto:inquire@pup.edu.ph">paranaque@pup.edu.ph</a></p>
-      </div>
-    </div>
-
-    <hr class="footer-divider" />
-    <p class="footer-copy">© 2025 Polytechnic University of the Philippines Parañaque Campus. All rights reserved.</p>
-  </footer>
-  </div>
+        <hr class="footer-divider" />
+        <p class="footer-copy">© 2025 Polytechnic University of the Philippines Parañaque Campus. All rights reserved.</p>
+    </footer>
+  </section>
 
 </body>
 </html>
