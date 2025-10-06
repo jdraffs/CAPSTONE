@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (inputEmail === mockAdminEmail && inputPassword === mockAdminPassword) {
       alert("Admin login successful!");
-      window.location.href = "/html/AdminLogin/admin-dashboard.html"; 
+      window.location.href = "/private/html/AdminLogin/admin-dashboard.html"; 
     } else {
       alert("Invalid Admin credentials");
     }

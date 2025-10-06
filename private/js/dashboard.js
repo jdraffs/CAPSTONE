@@ -12,7 +12,7 @@
     });
   });
   function logout() {
-    window.location.href = '/index.html'; // adjust path if needed
+    window.location.href = '/public/index.html'; // adjust path if needed
 }
 
 
