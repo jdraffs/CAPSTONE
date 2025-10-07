@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/private/css/admin1.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!--SIDEBAR-->
+    <section class="sidebar">
+        <div class="logo">
+            <img class="logoimage" src="/public/assets/images/PUPLogo.webp" alt="PUP Logo">
+            <div class="logotitlewrap">
+                <h2 class="logotitle logotitle1">PUP</h2>
+                <h2 class="logotitle">Parañaque</h2>
+            </div>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h3 class="nav-title">Main</h3>
+                <ul class="nav-list">
+                    <li class="nav-item active">
+                        <a class="nav-link" href=#overview data-page="overview">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="nav-section">
+                <h3 class="nav-title">Management</h3>
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#overview" data-page="overview">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>OJT</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#research&extension" data-page="research&extension">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Research & Extension</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#nstp" data-page="nstp">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>NSTP</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#formsrepository" data-page="formsrepository">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Forms Repository</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#announcements/memos" data-page="announcements/memos">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Announcements/Memos</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-details">
+                        <span class="user-name">Admin</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </section>
+    
+    <!--MAIN CONTENT-->
+    <main class="main">
+        <!--TOP-->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <h1 class="page-title" id="pageTitle">Dashboard</h1>
+            </div>
+            <div class="header-right">
+                <div>
+                    <i class="fa fa-bell" aria-hidden="true"></i>
+                </div>
+                <div>
+                    <i class="fa fa-user" aria-hidden="true"></i>
+                </div>
+            </div>
+        </header>
+            <!--DASHBOARD CONTENT-->
+            <div class="dashboard-content" id="dashboardContent">
+                <!-- Overview Content-->
+                <div class="content-page active" id="overview-page">
+                    <h1> Welcome, Admin! </h1>
+                    <p id="datetime" class="datetime"></p>
+                    <!-- Summary Cards-->
+                    <section class="summary-cards">
+                        <div class="card-grid">
+                            <div class="summary-card faculty">
+                                <div class="card-icon faculty">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h3 class="card-number" data-count="12">0</h3>
+                                    <p class="card-label">Pending Approvals</p>
+                                </div>
+                            </div>
+
+                            <div class="summary-card alumni">
+                                <div class="card-icon alumni">
+                                    <i class="fas fa-newspaper"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h3 class="card-number" data-count="104">0</h3>
+                                    <p class="card-label">Recent Uploads</p>
+                                </div>
+                            </div>
+
+                            <div class="summary-card research">
+                                <div class="card-icon research">
+                                    <i class="fas fa-microscope"></i>
+                                </div>
+                                <div class="card-content research">
+                                    <h3 class="card-number" data-count="89">0</h3>
+                                    <p class="card-label">Offices Linked</p>
+                                </div>
+                            </div>
+                    </section>
+                    <!--Quick Links-->
+                    <section>
+                        
+                    </section>
+    </main>
+</body>
+</html>
