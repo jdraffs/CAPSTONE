@@ -480,3 +480,17 @@ main {
 .notification-item.low .notification-icon {
   background-color: #1e88e5;
 }
+/*Charts*/
+.charts-grid {
+    display: grid;
+    gap: 2rem;
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.chart-container {
+    background: #fff;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow-x: auto;
+}
