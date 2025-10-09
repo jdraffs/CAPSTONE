@@ -22,6 +22,7 @@
         <div class="sidebar-divider"></div>
 
         <nav class="sidebar-nav">
+            <div class="sidebar-scroll">
             <div class="nav-section">
                 <h3 class="nav-title">Main</h3>
                 <ul class="nav-list">
@@ -39,7 +40,7 @@
                 <ul class="nav-list">
                     <li class="nav-item">
                         <a class="nav-link" href="#overview" data-page="overview">
-                            <i class="fa-solid fa-book"></i>
+                            <i class="fa-solid fa-briefcase"></i>
                             <span>OJT</span>
                         </a>
                     </li>
@@ -57,7 +58,7 @@
                 <ul class="nav-list">
                     <li class="nav-item">
                         <a class="nav-link" href="#nstp" data-page="nstp">
-                            <i class="fas fa-tachometer-alt"></i>
+                            <i class="fa-solid fa-handshake-angle"></i>
                             <span>NSTP</span>
                         </a>
                     </li>
@@ -66,7 +67,7 @@
                 <ul class="nav-list">
                     <li class="nav-item">
                         <a class="nav-link" href="#formsrepository" data-page="formsrepository">
-                            <i class="fas fa-tachometer-alt"></i>
+                            <i class="fa-brands fa-wpforms"></i>
                             <span>Forms Repository</span>
                         </a>
                     </li>
@@ -75,12 +76,13 @@
                 <ul class="nav-list">
                     <li class="nav-item">
                         <a class="nav-link" href="#announcements/memos" data-page="announcements/memos">
-                            <i class="fas fa-tachometer-alt"></i>
+                            <i class="fa-solid fa-scroll"></i>
                             <span>Announcements/Memos</span>
                         </a>
                     </li>
                 </ul>
             </div>
+            </div> <!-- End of sidebar-scroll -->
 
 
             <div class="sidebar-footer">
@@ -106,6 +108,7 @@
             <div class="header-right">
                 <div>
                     <i class="fa fa-bell" aria-hidden="true"></i>
+                    <a class="notif-link" href="#notifications" data-page="overview">
                 </div>
                 <div>
                     <i class="fa fa-user" aria-hidden="true"></i>
@@ -146,7 +149,7 @@
                                     <i class="fas fa-microscope"></i>
                                 </div>
                                 <div class="card-content research">
-                                    <h3 class="card-number" data-count="89">0</h3>
+                                    <h3 class="card-number" data-count="2">0</h3>
                                     <p class="card-label">Offices Linked</p>
                                 </div>
                             </div>
@@ -173,7 +176,7 @@
                         <section class="notifications-panel">
                             <div class="section-header">
                             <h2>Notifications</h2>
-                            <span class="notification-badge">5</span>
+                            <span class="notification-badge">3</span>
                             </div>
 
                             <div class="notifications-list">
@@ -211,24 +214,25 @@
                             </div>
                             </div>
                         </section>
-                        <!--Analytics Overview-->
+                        <!-- Analytics Overview -->
                         <section class="dashboard-section charts-section">
                         <div class="section-header">
                             <h2>Analytics Overview</h2>
                         </div>
-                                <div class="chart-container">
-                                    <h3>Number of Site Visitors</h3>
-                                    <canvas id="siteVisitorsChart"></canvas>
-                                </div>
-                                <div class="chart-container">
-                                    <h3>Most Viewed Content</h3>
-                                    <canvas id="mostViewedResearchChart"></canvas>
-                                </div>
+
+                        <div class="charts-grid">
+                            <div class="chart-container">
+                            <h3>Number of Site Visitors</h3>
+                            <canvas id="siteVisitorsChart"></canvas>
                             </div>
+
+                            <div class="chart-container">
+                            <h3>Most Viewed Content</h3>
+                            <canvas id="mostViewedResearchChart"></canvas>
+                            </div>
+                        </div>
                         </section>
-                        
-
-
     </main>
+<script src="/private/js/dashboard.js"></script>
 </body>
 </html>

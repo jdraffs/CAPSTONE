@@ -115,7 +115,6 @@ body {
 .nav-item.active .nav-link {
   background: linear-gradient(to right, #cc0000cc, transparent);
   color: rgb(0, 0, 0);
-
 }
 
 .sidebar-divider {
