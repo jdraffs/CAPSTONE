@@ -5,6 +5,17 @@ import fetch from 'node-fetch';
 
 dotenv.config();
 
+import pkg from 'pg';
+const { Pool } = pkg;
+
+const pool = new Pool({
+  user: 'postgres', // or your DB user
+  host: 'localhost',
+  database: 'capstone_db',
+  password: 'Kisses123', // replace with your PostgreSQL password
+  port: 5432,
+});
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -47,6 +58,37 @@ res.json({ reply: assistantReply });
   }
 });
 
+app.get('/api/admins', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM admin_accounts');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+app.post('/api/login', async (req, res) => {
+  const { adminid, password } = req.body;
+
+  try {
+    const result = await pool.query(
+      'SELECT * FROM admin_accounts WHERE adminid = $1 AND password = $2',
+      [adminid, password]
+    );
+
+    if (result.rows.length > 0) {
+      res.json({ success: true, message: 'Login successful' });
+    } else {
+      res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
+  } catch (err) {
+    console.error('Database error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
