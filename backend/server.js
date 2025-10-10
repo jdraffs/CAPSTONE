@@ -1,13 +1,17 @@
+// Import required dependencies
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import fetch from 'node-fetch';
 
+// Load environment variables from .env file
 dotenv.config();
 
+// Import PostgreSQL client (pg)
 import pkg from 'pg';
 const { Pool } = pkg;
 
+// PostgreSQL connection setup
 const pool = new Pool({
   user: 'postgres', // or your DB user
   host: 'localhost',
@@ -16,12 +20,21 @@ const pool = new Pool({
   port: 5432,
 });
 
+// Initialize Express app
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Define the port for the server
 const PORT = process.env.PORT || 3000;
 
+/* 
+  ===============================
+  🤖 Chatbot API Endpoint
+  ===============================
+  This endpoint sends user messages to a Hugging Face AI model (Mistral-7B).
+  It returns the model’s generated response to the client.
+*/
 app.post('/api/chatbot', async (req, res) => {
   const userMessage = req.body.message;
 
@@ -58,6 +71,15 @@ res.json({ reply: assistantReply });
   }
 });
 
+/* 
+  ===============================
+  👩‍💼 Admin Routes
+  ===============================
+  These routes handle admin-related functionality such as 
+  fetching admin data and verifying login credentials.
+*/
+
+// Get all admin accounts from the database
 app.get('/api/admins', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM admin_accounts');
@@ -68,6 +90,7 @@ app.get('/api/admins', async (req, res) => {
   }
 });
 
+// Verify admin login credentials
 app.post('/api/login', async (req, res) => {
   const { adminid, password } = req.body;
 
@@ -87,6 +110,14 @@ app.post('/api/login', async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
+
+/* 
+  ===============================
+  🚀 Server Startup
+  ===============================
+  Start listening on the specified port.
+  This confirms the backend is running successfully.
+*/
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
