@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/private/css/admin1.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!--SIDEBAR-->
+    <section class="sidebar">
+        <div class="logo">
+            <img class="logoimage" src="/public/assets/images/PUPLogo.webp" alt="PUP Logo">
+            <div class="logotitlewrap">
+                <h2 class="logotitle logotitle1">PUP</h2>
+                <h2 class="logotitle">Parañaque</h2>
+            </div>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <nav class="sidebar-nav">
+            <div class="sidebar-scroll">
+            <div class="nav-section">
+                <h3 class="nav-title">Main</h3>
+                <ul class="nav-list">
+                    <li class="nav-item active">
+                        <a class="nav-link" href=#overview data-page="overview">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="nav-section">
+                <h3 class="nav-title">Management</h3>
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#overview" data-page="overview">
+                            <i class="fa-solid fa-briefcase"></i>
+                            <span>OJT</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#research&extension" data-page="research&extension">
+                            <i class="fa-solid fa-book"></i>
+                            <span>Research & Extension</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#nstp" data-page="nstp">
+                            <i class="fa-solid fa-handshake-angle"></i>
+                            <span>NSTP</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#formsrepository" data-page="formsrepository">
+                            <i class="fa-brands fa-wpforms"></i>
+                            <span>Forms Repository</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#announcements/memos" data-page="announcements/memos">
+                            <i class="fa-solid fa-scroll"></i>
+                            <span>Announcements/Memos</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            </div> <!-- End of sidebar-scroll -->
+
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-details">
+                        <span class="user-name">Admin</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </section>
+    
+    <!--MAIN CONTENT-->
+    <main class="main">
+        <!--TOP-->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <h1 class="page-title" id="pageTitle">Dashboard</h1>
+            </div>
+            <div class="header-right">
+                <div>
+                    <a class="notif-link" href="#notifications" data-page="overview">
+                    <i class="fa fa-bell" aria-hidden="true"></i>
+                    </a>
+                </div>
+                <div>
+                    <a class="profile-link" href="#profile" data-page="profile">
+                    <i class="fa fa-user" aria-hidden="true"></i>
+                    </a>
+                </div>
+            </div>
+        </header>
+            <!--DASHBOARD CONTENT-->
+            <div class="dashboard-content" id="dashboardContent">
+                <!-- Overview Content-->
+                <div class="content-page active" id="overview-page">
+                    <h1> Welcome, Admin! </h1>
+                    <p id="datetime" class="datetime"></p>
+                    <!-- Summary Cards-->
+                    <section class="summary-cards">
+                        <div class="card-grid">
+                            <div class="summary-card faculty">
+                                <div class="card-icon faculty">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h3 class="card-number" data-count="12">0</h3>
+                                    <p class="card-label">Pending Approvals</p>
+                                </div>
+                            </div>
+
+                            <div class="summary-card alumni">
+                                <div class="card-icon alumni">
+                                    <i class="fas fa-newspaper"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h3 class="card-number" data-count="104">0</h3>
+                                    <p class="card-label">Recent Uploads</p>
+                                </div>
+                            </div>
+
+                            <div class="summary-card research">
+                                <div class="card-icon research">
+                                    <i class="fas fa-microscope"></i>
+                                </div>
+                                <div class="card-content research">
+                                    <h3 class="card-number" data-count="2">0</h3>
+                                    <p class="card-label">Offices Linked</p>
+                                </div>
+                            </div>
+                    </section>
+                        <!-- Quick Actions -->
+                        <section class="quick-actions">
+                            <h2>Quick Actions</h2>
+                            <div class="actions-grid">
+                            <button class="action-btn">
+                                <i class="fas fa-plus"></i>
+                                <span>Add Post</span>
+                            </button>
+                            <button class="action-btn">
+                                <i class="fas fa-file"></i>
+                                <span>Upload File</span>
+                            </button>
+                            <button class="action-btn">
+                                <i class="fas fa-history"></i>
+                                <span>Audit Trail</span>
+                            </button>
+                            </div>
+                        </section>
+                        <!-- Notifications Panel -->
+                        <section class="notifications-panel">
+                            <div class="section-header">
+                            <h2>Notifications</h2>
+                            <span class="notification-badge">3</span>
+                            </div>
+
+                            <div class="notifications-list">
+                            <div class="notification-item high">
+                                <div class="notification-icon">
+                                <i class="fas fa-thumbs-up"></i>
+                                </div>
+                                <div class="notification-content">
+                                <h4>Memo Approved by SAS</h4>
+                                <p>Approved by SAS</p>
+                                <span class="notification-time">30 minutes ago</span>
+                                </div>
+                            </div>
+
+                            <div class="notification-item medium">
+                                <div class="notification-icon">
+                                <i class="fas fa-user-plus"></i>
+                                </div>
+                                <div class="notification-content">
+                                <h4>New Alumni Profile Request</h4>
+                                <p>2 alumni profiles awaiting verification</p>
+                                <span class="notification-time">2 hours ago</span>
+                                </div>
+                            </div>
+
+                            <div class="notification-item low">
+                                <div class="notification-icon">
+                                <i class="fas fa-sync"></i>
+                                </div>
+                                <div class="notification-content">
+                                <h4>System Update Completed</h4>
+                                <p>Dashboard updated to version 2.1.5</p>
+                                <span class="notification-time">1 day ago</span>
+                                </div>
+                            </div>
+                            </div>
+                        </section>
+                        <!-- Analytics Overview -->
+                        <section class="dashboard-section charts-section">
+                        <div class="section-header">
+                            <h2>Analytics Overview</h2>
+                        </div>
+
+                        <div class="charts-grid">
+                            <div class="chart-container">
+                            <h3>Number of Site Visitors</h3>
+                            <canvas id="siteVisitorsChart"></canvas>
+                            </div>
+
+                            <div class="chart-container">
+                            <h3>Most Viewed Content</h3>
+                            <canvas id="mostViewedResearchChart"></canvas>
+                            </div>
+                        </div>
+                        </section>
+    </main>
+<script src="/private/js/dashboard.js"></script>
+</body>
+</html>
