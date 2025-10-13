@@ -14,8 +14,8 @@ document.getElementById('admin-login-form').addEventListener('submit', async (e)
     const data = await response.json();
 
     if (data.success) {
-      // ✅ Redirect to dashboard
-      window.location.href = '/private/html/AdminLogin/admin-dashboard.html';
+      //Redirect to dashboard
+      window.location.href = '/private/html/AdminLogin/admin1.html';
     } else {
       alert('Invalid admin ID or password.');
     }
