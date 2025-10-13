@@ -13,12 +13,17 @@ document.getElementById('admin-login-form').addEventListener('submit', async (e)
 
     const data = await response.json();
 
-    if (data.success) {
-      //Redirect to dashboard
+  if (data.success) {
+    if (data.adminid === 'adminave') {
       window.location.href = '/private/html/adminPages/adminAve/admin1.html';
+    } else if (data.adminid === 'adminewan') {
+      window.location.href = '/private/html/adminPages/adminEwan/admin2.html';
     } else {
-      alert('Invalid admin ID or password.');
+      alert('Unknown admin. Please contact system administrator.');
     }
+  } else {
+    alert('Invalid admin ID or password.');
+  }
 
   } catch (error) {
     console.error('Error:', error);

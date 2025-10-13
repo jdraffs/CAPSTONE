@@ -25,7 +25,7 @@ router.post('/', async (req, res) => {
     );
 
     if (result.rows.length > 0) {
-      res.json({ success: true, message: 'Login successful' });
+      res.json({ success: true, adminid: result.rows[0].adminid });
     } else {
       res.status(401).json({ success: false, message: 'Invalid admin ID or password' });
     }
