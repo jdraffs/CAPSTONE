@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -39,7 +39,7 @@
                 <h3 class="nav-title">Management</h3>
                 <ul class="nav-list">
                     <li class="nav-item">
-                        <a class="nav-link" href="#overview" data-page="overview">
+                        <a class="nav-link" href="#ojt" data-page="ojt">
                             <i class="fa-solid fa-briefcase"></i>
                             <span>OJT</span>
                         </a>
@@ -48,7 +48,7 @@
 
                 <ul class="nav-list">
                     <li class="nav-item">
-                        <a class="nav-link" href="#research&extension" data-page="research&extension">
+                        <a class="nav-link" href="#research-extension" data-page="research-extension">
                             <i class="fa-solid fa-book"></i>
                             <span>Research & Extension</span>
                         </a>
@@ -66,7 +66,7 @@
 
                 <ul class="nav-list">
                     <li class="nav-item">
-                        <a class="nav-link" href="#formsrepository" data-page="formsrepository">
+                        <a class="nav-link" href="#forms-repository" data-page="forms-repository">
                             <i class="fa-brands fa-wpforms"></i>
                             <span>Forms Repository</span>
                         </a>
@@ -75,7 +75,7 @@
 
                 <ul class="nav-list">
                     <li class="nav-item">
-                        <a class="nav-link" href="#announcements/memos" data-page="announcements/memos">
+                        <a class="nav-link" href="#announcements-memos" data-page="announcements-memos">
                             <i class="fa-solid fa-scroll"></i>
                             <span>Announcements/Memos</span>
                         </a>
@@ -219,23 +219,64 @@
                         </section>
                         <!-- Analytics Overview -->
                         <section class="dashboard-section charts-section">
-                        <div class="section-header">
-                            <h2>Analytics Overview</h2>
-                        </div>
-
-                        <div class="charts-grid">
-                            <div class="chart-container">
-                            <h3>Number of Site Visitors</h3>
-                            <canvas id="siteVisitorsChart"></canvas>
+                            <div class="section-header">
+                                <h2>Analytics Overview</h2>
                             </div>
 
-                            <div class="chart-container">
-                            <h3>Most Viewed Content</h3>
-                            <canvas id="mostViewedResearchChart"></canvas>
+                            <div class="charts-grid">
+                                <div class="chart-container">
+                                <h3>Number of Site Visitors</h3>
+                                <canvas id="siteVisitorsChart"></canvas>
+                                </div>
+
+                                <div class="chart-container">
+                                <h3>Most Viewed Content</h3>
+                                <canvas id="mostViewedResearchChart"></canvas>
+                                </div>
                             </div>
-                        </div>
                         </section>
     </main>
-<script src="/private/js/dashboard.js"></script>
+
+    <!-- CONTENTS FOR EACH SECTION -->
+            <section>
+                <div class="content-page" id="ojt-page">
+                    <div class="page-placeholder">
+                        <h2>MS TEAMS CONTENT</h2>
+                        <p>-Manage faculty accounts (create faculty accounts, view list of all faculty, activate/deactivate account, reset faculty password) -Manage Alumni Submissions (approve or reject requests)</p>
+                    </div>
+                </div>
+
+                <div class="content-page" id="research-extension-page">
+                    <div class="page-placeholder">
+                        <h2>MS TEAMS CONTENT</h2>
+                        <p>-Manage news & updates (Add/Edit/Delete News article with upload image, View Engagement or number of views) -Manage Research Extensions </p>
+                    </div>
+                </div>
+
+                <div class="content-page" id="nstp-page">
+                    <div class="page-placeholder">
+                        <h2>MS TEAMS CONTENT</h2>
+                        <p>-Approve Faculty Profile Edits, -Approve Research Outputs (Flipbook display) </p>
+                    </div>
+                </div>
+
+                <div class="content-page" id="forms-repository-page">
+                    <div class="page-placeholder">
+                        <h2>MS TEAMS CONTENT</h2>
+                        <p>Configure system preferences</p>
+                    </div>
+                </div>
+
+                <div class="content-page" id="announcements-memos-page">
+                    <div class="page-placeholder">
+                        <h2>MS TEAMS CONTENT</h2>
+                        <p>Configure system preferences</p>
+                    </div>
+                </div>
+
+
+            </section>
+    <!-- SCRIPTS -->
+<script src="/private/js/admin1.js"></script>
 </body>
 </html>

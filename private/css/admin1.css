@@ -513,3 +513,11 @@ main {
   margin-bottom: 1rem;
   color: #333;
 }
+/*main content of each page */
+.content-page {
+  display: none;
+}
+
+.content-page.active {
+  display: block;
+}
