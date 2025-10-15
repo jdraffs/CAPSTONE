@@ -1,42 +1,31 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const links = document.querySelectorAll('.nav-link');
-  const pages = document.querySelectorAll('.content-page');
-  const sectionTitle = document.querySelector('.page-title'); // optional
+  const navItems = document.querySelectorAll('.nav-item');
+  const currentPath = window.location.pathname;
+  const currentFile = currentPath.split('/').pop();
 
-  function showPage(page) {
-    // Hide all pages
-    pages.forEach(p => p.classList.remove('active'));
+  navItems.forEach(item => {
+    const link = item.querySelector('a');
+    if (!link) return;
 
-    // Show selected one
-    const targetPage = document.getElementById(`${page}-page`);
-    if (targetPage) {
-      targetPage.classList.add('active');
+    const href = link.getAttribute('href');
+
+    // Case 1: Links with an actual page (e.g., ojt.html)
+    if (href.endsWith('.html')) {
+      const linkFile = href.split('/').pop();
+      if (linkFile === currentFile) {
+        item.classList.add('active');
+      } else {
+        item.classList.remove('active');
+      }
     }
-
-    // Update title if available
-    if (sectionTitle) {
-      const targetLink = document.querySelector(`[data-page="${page}"] span`);
-      if (targetLink) sectionTitle.textContent = targetLink.textContent.trim();
+    // Case 2: Dashboard or hash links (e.g., #overview)
+    else if (href.startsWith('#') && currentFile === 'admin1.html') {
+      // Only highlight the Dashboard link when on admin1.html
+      if (href === '#overview') {
+        item.classList.add('active');
+      } else {
+        item.classList.remove('active');
+      }
     }
-
-    // Update active state in sidebar
-    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-    const activeLink = document.querySelector(`[data-page="${page}"]`);
-    if (activeLink) activeLink.closest('.nav-item').classList.add('active');
-  }
-
-  // Handle clicks
-  links.forEach(link => {
-    link.addEventListener('click', e => {
-      e.preventDefault();
-      const page = link.dataset.page;
-      window.location.hash = page;
-      showPage(page);
-    });
   });
-
-  // On load
-  let initialPage = window.location.hash.substring(1);
-  if (!initialPage) initialPage = links[0].dataset.page;
-  showPage(initialPage);
 });
