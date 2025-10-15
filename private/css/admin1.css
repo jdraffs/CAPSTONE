@@ -1,36 +1,50 @@
 body {
-    min-height: 100vh;
-    margin: 0;
-    padding: 0;
-    background: #f6f5f5;
-    box-sizing: border-box;
-    
-}
-.sidebar {
-    background-color: #ffffff;
-    display: grid;
-    grid-column: 1 / 2;
-    grid-row: 1 / 3;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 230px;
-    height: 100vh;
-    z-index: 100;
-}
-.main {
-    background-color: #f6f5f5;
-    min-height: 100vh;
-    margin-left: 230px;
-    width: calc(100% - 230px);
-    padding-bottom: 40px; 
+  margin: 0;
+  padding: 0;
+  background: #f6f5f5;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 230px 1fr; /* Sidebar + Main */
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
+.sidebar {
+  background-color: #ffffff;
+  height: 100vh;
+  position: sticky; /* use sticky, not fixed */
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #e0e0e0;
+}
+
+
+/* Main content area */
+.main {
+  background-color: #f6f5f5;
+  min-height: 100vh;
+  padding-bottom: 40px;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* Remove margin-left conflicts */
+main {
+  flex: 1;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
 /*Top sidebar */
 .logo {
     display: flex;
     justify-content: left;
-
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 .logotitlewrap {
     text-align: left;
@@ -54,15 +68,10 @@ body {
 }
 
 /*Navigation */
-.sidebar-divider {
-    height: 1px;
-    background-color: #e0e0e0;
-    margin: 1rem 0;
-    width: 225px;
-}
 .sidebar-nav {
-    padding: 20px 0;
+    padding: 0px 0;
     height: 1000px;
+    max-width: 100%;
 }
 .nav-section {
     margin-bottom: 2rem;
@@ -113,10 +122,13 @@ body {
     color: rgb(0, 0, 0);
 }
 .sidebar-scroll {
-    max-height: calc(100vh - 270px); /* adjust if needed depending dun sa footer height */
+    max-height: calc(100vh - 237px); /* adjust if needed depending dun sa footer height */
     overflow-y: auto;
     overflow-x: hidden;
-    padding-bottom: 80px; /* prevents content from hiding behind footer */
+    padding-bottom: 50px; /* prevents content from hiding behind footer */
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: #686868 #cecece;
 }
 
 /*Sidebar Footer */
@@ -163,14 +175,6 @@ body {
     font-size: 18px;
 }
 /* Main */
-main {
-    flex: 1;
-    margin-left: 250px;
-    transition: margin-left 0.3s ease;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-}
 /* Dashboard Header */
 .dashboard-header {
     height: 80px;
