@@ -120,17 +120,39 @@
             </div>
         </header>
             <!--DASHBOARD CONTENT-->
-            <div class="dashboard-content" id="dashboardContent">
+            <div class="main-content" id="mainContent">
+                
+                <div class="ojt-container">
+                    <div class="ojt-feed" id="ojtFeed">
+                        <div class="ojt-placeholder">
+                            <i class="fa-solid fa-briefcase"></i>
+                            <h2>No OJT posts yet</h2>
+                            <p>Share announcements, updates, or OJT opportunities with others here.</p>
+                        </div>
+                    </div>
+
+                    <!-- Post Button -->
+                    <button class="ojt-post-btn" id="openPostModal">
+                        <i class="fa-solid fa-plus"></i> Post
+                    </button>
+
+                    <!-- Post Modal -->
+                    <div class="ojt-modal" id="postModal">
+                        <div class="ojt-modal-content">
+                            <h2>Create a Post</h2>
+                            <textarea id="postText" placeholder="What's new about OJT?"></textarea>
+                            <div class="ojt-modal-actions">
+                                <button id="cancelPost">Cancel</button>
+                                <button id="submitPost">Post</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
             </div>
 
-
-
-
-
-
-
     <!-- SCRIPTS -->
-<script src="/private/js/admin1.js"></script>
+<script src="/private/js/admin/admin1/admin1.js"></script>
+<script src="/private/js/admin/admin1/ojt.js"></script>
 </body>
 </html>
