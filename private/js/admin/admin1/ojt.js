@@ -10,7 +10,7 @@ const fileName = document.getElementById('fileName');
 const toolbarButtons = document.querySelectorAll('.post-toolbar button');
 const fontSizeSelect = document.getElementById('fontSize');
 
-let editingPostId = null; // track the post being edited
+let editingPostId = null; // track if editing a post
 
 openBtn.addEventListener('click', () => {
   modal.style.display = 'flex';
@@ -29,6 +29,7 @@ function clearForm() {
   postText.innerHTML = '';
   fileUpload.value = '';
   fileName.textContent = '';
+  editingPostId = null;
 }
 
 toolbarButtons.forEach(button => {
@@ -51,55 +52,54 @@ fileUpload.addEventListener('change', () => {
   fileName.textContent = file ? file.name : '';
 });
 
-// ✅ SUBMIT POST or UPDATE
+// ✅ CREATE OR UPDATE POST
 submitBtn.addEventListener('click', async () => {
   const title = postTitle.value.trim();
   const content = postText.innerHTML.trim();
+  const file = fileUpload.files[0];
 
-  if (title || content) {
-    const newPost = document.createElement('div');
-    newPost.classList.add('ojt-post');
+  if (!title && !content && !file) {
+    alert('Please add a title or content before posting.');
+    return;
+  }
 
-    const titleElem = document.createElement('h1');
-    titleElem.textContent = title;
+  const formData = new FormData();
+  formData.append('title', title);
+  formData.append('content', content);
+  formData.append('adminid', 'adminave');
 
-    const contentElem = document.createElement('div');
-    contentElem.innerHTML = content;
+  if (file) {
+    formData.append('image', file);
+  }
 
-    const divider = document.createElement('div');
-    divider.classList.add('ojt-divider');
+  let url = '';
+  let method = '';
 
-    const timestamp = document.createElement('span');
-    const now = new Date();
-    timestamp.textContent = now.toLocaleString('en-US', {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
+  if (editingPostId) {
+    url = `http://localhost:3000/api/ojt/update/${editingPostId}`;
+    method = 'PUT';
+  } else {
+    url = 'http://localhost:3000/api/ojt/create';
+    method = 'POST';
+  }
+
+  try {
+    const res = await fetch(url, {
+      method,
+      body: formData,
     });
 
-    divider.appendChild(timestamp);
-    newPost.appendChild(titleElem);
-    newPost.appendChild(contentElem);
+    const data = await res.json();
 
-    if (editingPostId) {
-      url = `http://localhost:3000/api/ojt/update/${editingPostId}`;
-      method = 'PUT';
+    if (data.success) {
+      clearForm();
+      modal.style.display = 'none';
+      loadPosts();
+    } else {
+      alert('Something went wrong while saving your post.');
     }
-
-    newPost.appendChild(divider);
-    feed.prepend(newPost);
-
-    // Reset modal
-    postTitle.value = '';
-    postText.innerHTML = '';
-    fileUpload.value = '';
-    fileName.textContent = '';
-    modal.style.display = 'none';
-
-    const placeholder = document.querySelector('.ojt-placeholder');
-    if (placeholder) placeholder.remove();
+  } catch (err) {
+    console.error('Error submitting post:', err);
   }
 });
 
@@ -131,7 +131,7 @@ async function loadPosts() {
           <div class="ojt-divider"><span>${new Date(post.created_at).toLocaleString()}</span></div>
         `;
 
-        // Edit button
+        // ✏️ Edit button
         postElem.querySelector('.ojt-edit').addEventListener('click', () => {
           editingPostId = post.id;
           postTitle.value = post.title;
@@ -140,12 +140,10 @@ async function loadPosts() {
           modal.style.display = 'flex';
         });
 
-        // Delete button
+        // ❌ Delete button
         postElem.querySelector('.ojt-delete').addEventListener('click', async () => {
           if (confirm('Are you sure you want to delete this post?')) {
-            await fetch(`http://localhost:3000/api/ojt/delete/${post.id}`, {
-              method: 'DELETE',
-            });
+            await fetch(`http://localhost:3000/api/ojt/delete/${post.id}`, { method: 'DELETE' });
             loadPosts();
           }
         });
