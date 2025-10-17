@@ -2,12 +2,12 @@ const openBtn = document.getElementById('openPostModal');
 const modal = document.getElementById('postModal');
 const cancelBtn = document.getElementById('cancelPost');
 const submitBtn = document.getElementById('submitPost');
-const feed = document.getElementById('ojtFeed');
+const feed = document.getElementById('postFeed');
 const postTitle = document.getElementById('postTitle');
 const postText = document.getElementById('postText');
 const fileUpload = document.getElementById('fileUpload');
 const fileName = document.getElementById('fileName');
-const toolbarButtons = document.querySelectorAll('.ojt-toolbar button');
+const toolbarButtons = document.querySelectorAll('.post-toolbar button');
 const fontSizeSelect = document.getElementById('fontSize');
 
 openBtn.addEventListener('click', () => {
@@ -49,7 +49,7 @@ submitBtn.addEventListener('click', () => {
 
   if (title || content) {
     const newPost = document.createElement('div');
-    newPost.classList.add('ojt-post');
+    newPost.classList.add('result-post');
 
     const titleElem = document.createElement('h1');
     titleElem.textContent = title;
@@ -58,7 +58,7 @@ submitBtn.addEventListener('click', () => {
     contentElem.innerHTML = content;
 
     const divider = document.createElement('div');
-    divider.classList.add('ojt-divider');
+    divider.classList.add('post-divider');
 
     const timestamp = document.createElement('span');
     const now = new Date();
@@ -90,7 +90,7 @@ submitBtn.addEventListener('click', () => {
     fileName.textContent = '';
     modal.style.display = 'none';
 
-    const placeholder = document.querySelector('.ojt-placeholder');
+    const placeholder = document.querySelector('.post-placeholder');
     if (placeholder) placeholder.remove();
   }
 });
