@@ -122,9 +122,9 @@
             <!--DASHBOARD CONTENT-->
             <div class="main-content" id="mainContent">
                 
-                <div class="ojt-container">
-                    <div class="ojt-feed" id="ojtFeed">
-                        <div class="ojt-placeholder">
+                <div class="post-container">
+                    <div class="post-feed" id="postFeed">
+                        <div class="post-placeholder">
                             <i class="fa-solid fa-briefcase"></i>
                             <h2>No OJT posts yet</h2>
                             <p>Share announcements, updates, or OJT opportunities with others here.</p>
@@ -132,20 +132,20 @@
                     </div>
 
                     <!-- Post Button -->
-                    <button class="ojt-post-btn" id="openPostModal">
+                    <button class="post-btn" id="openPostModal">
                         <i class="fa-solid fa-plus"></i> Post
                     </button>
 
                     <!-- Post Modal -->
-                    <div class="ojt-modal" id="postModal">
-                    <div class="ojt-modal-content">
+                    <div class="post-modal" id="postModal">
+                    <div class="post-modal-content">
                         <h2>Create a Post</h2>
 
                         <!-- Title Input -->
-                        <input type="text" id="postTitle" placeholder="Enter title..." class="ojt-post-title" />
+                        <input type="text" id="postTitle" placeholder="Enter title..." class="post-title" />
 
                         <!-- Toolbar -->
-                        <div class="ojt-toolbar">
+                        <div class="post-toolbar">
                         <button data-command="bold"><i class="fa-solid fa-bold"></i></button>
                         <button data-command="italic"><i class="fa-solid fa-italic"></i></button>
                         <button data-command="underline"><i class="fa-solid fa-underline"></i></button>
@@ -159,17 +159,17 @@
                         </div>
 
                         <!-- Rich Text Area -->
-                        <div id="postText" class="ojt-editor" contenteditable="true" placeholder="Write your post..."></div>
+                        <div id="postText" class="post-editor" contenteditable="true" placeholder="Write your post..."></div>
 
                         <!-- File Upload -->
-                        <div class="ojt-upload">
+                        <div class="post-upload">
                         <label for="fileUpload"><i class="fa-solid fa-paperclip"></i> Attach file</label>
                         <input type="file" id="fileUpload" style="display:none" />
                         <span id="fileName"></span>
                         </div>
 
                         <!-- Buttons -->
-                        <div class="ojt-modal-actions">
+                        <div class="post-modal-actions">
                         <button id="cancelPost">Cancel</button>
                         <button id="submitPost">Post</button>
                         </div>
