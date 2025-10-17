@@ -60,111 +60,117 @@ updateDateTime(); // Initial call
 
 //charts
 // Sample data for research uploads per month
-const researchCtx = document.getElementById('researchChart').getContext('2d');
-const researchChart = new Chart(researchCtx, {
-    type: 'bar',
-    data: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-        datasets: [{
-            label: 'Uploads',
-            data: [12, 19, 3, 5, 9, 7],
-            backgroundColor: 'rgba(54, 162, 235, 0.7)',
-            borderColor: 'rgba(54, 162, 235, 1)',
-            borderWidth: 1,
-            borderRadius: 4
-        }]
-    },
-    options: {
-        responsive: true,
-        scales: {
-            y: {
-                beginAtZero: true,
-                title: { display: true, text: 'Number of Uploads' }
-            }
-        }
-    }
-});
+// const researchCtx = document.getElementById('researchChart').getContext('2d');
+// const researchChart = new Chart(researchCtx, {
+//     type: 'bar',
+//     data: {
+//         labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+//         datasets: [{
+//             label: 'Uploads',
+//             data: [12, 19, 3, 5, 9, 7],
+//             backgroundColor: 'rgba(54, 162, 235, 0.7)',
+//             borderColor: 'rgba(54, 162, 235, 1)',
+//             borderWidth: 1,
+//             borderRadius: 4
+//         }]
+//     },
+//     options: {
+//         responsive: true,
+//         scales: {
+//             y: {
+//                 beginAtZero: true,
+//                 title: { display: true, text: 'Number of Uploads' }
+//             }
+//         }
+//     }
+// });
 
-// Sample data for user activity trend
-const userCtx = document.getElementById('userActivityChart').getContext('2d');
-const userActivityChart = new Chart(userCtx, {
-    type: 'line',
-    data: {
-        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-        datasets: [{
-            label: 'Active Users',
-            data: [50, 60, 45, 70, 80, 65],
-            backgroundColor: 'rgba(255, 99, 132, 0.2)',
-            borderColor: 'rgba(255, 99, 132, 1)',
-            tension: 0.3,
-            fill: true,
-            pointRadius: 5,
-            borderWidth: 2
-        }]
-    },
-    options: {
-        responsive: true,
-        scales: {
-            y: {
-                beginAtZero: true,
-                title: { display: true, text: 'Users' }
-            }
-        }
-    }
-});
+// // Sample data for user activity trend
+// const userCtx = document.getElementById('userActivityChart').getContext('2d');
+// const userActivityChart = new Chart(userCtx, {
+//     type: 'line',
+//     data: {
+//         labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+//         datasets: [{
+//             label: 'Active Users',
+//             data: [50, 60, 45, 70, 80, 65],
+//             backgroundColor: 'rgba(255, 99, 132, 0.2)',
+//             borderColor: 'rgba(255, 99, 132, 1)',
+//             tension: 0.3,
+//             fill: true,
+//             pointRadius: 5,
+//             borderWidth: 2
+//         }]
+//     },
+//     options: {
+//         responsive: true,
+//         scales: {
+//             y: {
+//                 beginAtZero: true,
+//                 title: { display: true, text: 'Users' }
+//             }
+//         }
+//     }
+// });
 
 // Site Visitors Chart (Line Chart)
-const siteVisitorsCtx = document.getElementById('siteVisitorsChart').getContext('2d');
-new Chart(siteVisitorsCtx, {
-    type: 'line',
-    data: {
-        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-        datasets: [{
-            label: 'Visitors',
-            data: [120, 200, 150, 300],
-            borderColor: 'rgba(75, 192, 192, 1)',
-            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-            tension: 0.4,
-            fill: true
-        }]
-    },
-    options: {
-        responsive: true,
-        scales: {
-            y: {
-                beginAtZero: true,
-                title: { display: true, text: 'Number of Visitors' }
+const siteVisitorsCanvas = document.getElementById('siteVisitorsChart');
+if (siteVisitorsCanvas) {
+    const siteVisitorsCtx = siteVisitorsCanvas.getContext('2d');
+    new Chart(siteVisitorsCtx, {
+        type: 'line',
+        data: {
+            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+            datasets: [{
+                label: 'Visitors',
+                data: [120, 200, 150, 300],
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Number of Visitors' }
+                }
             }
         }
-    }
-});
+    });
+}
 
 // Most Viewed Research Outputs (Horizontal Bar Chart)
-const mostViewedCtx = document.getElementById('mostViewedResearchChart').getContext('2d');
-new Chart(mostViewedCtx, {
-    type: 'bar',
-    data: {
-        labels: ['AI in Education', 'Climate Change Impact', 'Digital Literacy', 'Renewable Energy Study', 'Mental Health Awareness'],
-        datasets: [{
-            label: 'Views',
-            data: [234, 189, 145, 300, 275],
-            backgroundColor: 'rgba(153, 102, 255, 0.7)',
-            borderColor: 'rgba(153, 102, 255, 1)',
-            borderWidth: 1,
-            borderRadius: 4
-        }]
-    },
-    options: {
-        indexAxis: 'y',
-        responsive: true,
-        scales: {
-            x: {
-                beginAtZero: true,
-                title: { display: true, text: 'Views' }
+const mostViewedCanvas = document.getElementById('mostViewedContentChart');
+if (mostViewedCanvas) {
+    const mostViewedCtx = mostViewedCanvas.getContext('2d');
+    new Chart(mostViewedCtx, {
+        type: 'bar',
+        data: {
+            labels: ['OJT', 'Research & Extension', 'NSTP', 'Announcements & Memos'],
+            datasets: [{
+                label: 'Views',
+                data: [234, 189, 145, 300],
+                backgroundColor: 'rgba(153, 102, 255, 0.7)',
+                borderColor: 'rgba(153, 102, 255, 1)',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Views' }
+                }
             }
         }
-    }
-});
+    });
+}
 
 
 

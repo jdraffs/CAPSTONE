@@ -1,5 +1,6 @@
-/* OJT PAGE FEED STYLES */
-.ojt-container {
+/* POST LAYOUT */
+
+.post-container {
   position: relative;
   height: 100%;
   display: flex;
@@ -12,7 +13,7 @@
 }
 
 /* FEED */
-.ojt-feed {
+.post-feed {
   width: 100%;
   flex: 1;
   overflow-y: auto;
@@ -21,20 +22,20 @@
   gap: 1%;
 }
 
-.ojt-placeholder {
+.post-placeholder {
   text-align: center;
   margin-top: 100px;
   color: #888;
 }
 
-.ojt-placeholder i {
+.post-placeholder i {
   font-size: 50px;
   margin-bottom: 10px;
   color: #666;
 }
 
 /* POST BUTTON */
-.ojt-post-btn {
+.post-btn {
   position: fixed;
   bottom: 30px;
   left: 260px; /* adjust depending on sidebar width */
@@ -53,12 +54,12 @@
   transition: 0.3s;
 }
 
-.ojt-post-btn:hover {
+.post-btn:hover {
   background: #c73535;
 }
 
 /* MODAL */
-.ojt-modal {
+.post-modal {
   position: fixed;
   top: 0;
   left: 0;
@@ -71,7 +72,7 @@
   z-index: 999;
 }
 
-.ojt-modal-content {
+.post-modal-content {
   background: #f7f7f7;
   padding: 20px;
   border-radius: 12px;
@@ -83,12 +84,12 @@
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.315);
 }
 
-.ojt-modal-content h2 {
+.post-modal-content h2 {
   margin: auto;
   color: #1c1c1c;
 }
 
-.ojt-modal-content textarea {
+.post-modal-content textarea {
   background: #f7f7f7;
   border: none;
   padding: 15px 5px;
@@ -100,18 +101,18 @@
   border-bottom: 1px solid rgb(164, 164, 164);
   font-size: 1.2rem;
 }
-.ojt-modal-content textarea::placeholder {
+.post-modal-content textarea::placeholder {
   color: #999;
   font-size: 1.2rem;
 }
 
-.ojt-modal-actions {
+.post-modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
 }
 
-.ojt-modal-actions button {
+.post-modal-actions button {
   padding: 8px 14px;
   border: none;
   border-radius: 6px;
@@ -130,7 +131,7 @@
 }
 
 /* POST ITEM */
-.ojt-post {
+.result-post {
   background: #ffffff;
   padding: 30px 25px;
   border-radius: 10px;
@@ -141,7 +142,7 @@
   color: #3e3e3e;
 }
 
-.ojt-post-title {
+.post-title {
   font-size: 1.5rem;
   font-weight: 600;
   padding: 8px;
@@ -152,7 +153,7 @@
   color: #000;
 }
 
-.ojt-toolbar {
+.post-toolbar {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -161,7 +162,7 @@
   border-radius: 8px;
 }
 
-.ojt-toolbar button, .ojt-toolbar select {
+.post-toolbar button, .post-toolbar select {
   background: none;
   border: none;
   cursor: pointer;
@@ -169,11 +170,11 @@
   font-size: 16px;
 }
 
-.ojt-toolbar button:hover {
+.post-toolbar button:hover {
   color: #e64343;
 }
 
-.ojt-editor {
+.post-editor {
   background: #fff;
   border-radius: 8px;
   padding: 12px;
@@ -183,7 +184,7 @@
   color: #000;
 }
 
-.ojt-upload {
+.post-upload {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -191,19 +192,19 @@
   color: #555;
 }
 
-.ojt-upload label {
+.post-upload label {
   cursor: pointer;
   color: #e64343;
   font-weight: 600;
 }
 
-.ojt-post p {
+.result-post p {
   margin: 0;
   color: #000000;
 }
 
 /* DIVIDER WITH DATE */
-.ojt-divider {
+.post-divider {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -213,8 +214,8 @@
   position: relative;
 }
 
-.ojt-divider::before,
-.ojt-divider::after {
+.post-divider::before,
+.post-divider::after {
   content: "";
   flex: 1;
   height: 1px;
@@ -222,7 +223,7 @@
   margin: 0 10px;
 }
 
-.ojt-divider span {
+.post-divider span {
   background: #ffffff;
   padding: 0 8px;
   color: #842828;

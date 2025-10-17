@@ -298,7 +298,7 @@
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow-x: auto;
-  height: 300px; /* alisin toh if ever may problem sa charts sa js */
+  height: 350px; /* alisin toh if ever may problem sa charts sa js */
 }
 
 .chart-container h3 {

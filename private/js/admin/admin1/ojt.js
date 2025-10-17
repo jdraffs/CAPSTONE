@@ -2,12 +2,12 @@ const openBtn = document.getElementById('openPostModal');
 const modal = document.getElementById('postModal');
 const cancelBtn = document.getElementById('cancelPost');
 const submitBtn = document.getElementById('submitPost');
-const feed = document.getElementById('ojtFeed');
+const feed = document.getElementById('postFeed');
 const postTitle = document.getElementById('postTitle');
 const postText = document.getElementById('postText');
 const fileUpload = document.getElementById('fileUpload');
 const fileName = document.getElementById('fileName');
-const toolbarButtons = document.querySelectorAll('.ojt-toolbar button');
+const toolbarButtons = document.querySelectorAll('.post-toolbar button');
 const fontSizeSelect = document.getElementById('fontSize');
 
 let editingPostId = null; // track the post being edited
@@ -55,39 +55,51 @@ fileUpload.addEventListener('change', () => {
 submitBtn.addEventListener('click', async () => {
   const title = postTitle.value.trim();
   const content = postText.innerHTML.trim();
-  const file = fileUpload.files[0];
 
-  if (!title && !content) return alert('Please enter a title or content.');
+  if (title || content) {
+    const newPost = document.createElement('div');
+    newPost.classList.add('ojt-post');
 
-  const formData = new FormData();
-  formData.append('title', title);
-  formData.append('content', content);
-  formData.append('adminid', 'adminave');
-  if (file) formData.append('image', file);
+    const titleElem = document.createElement('h1');
+    titleElem.textContent = title;
 
-  try {
-    let url = 'http://localhost:3000/api/ojt/create';
-    let method = 'POST';
+    const contentElem = document.createElement('div');
+    contentElem.innerHTML = content;
+
+    const divider = document.createElement('div');
+    divider.classList.add('ojt-divider');
+
+    const timestamp = document.createElement('span');
+    const now = new Date();
+    timestamp.textContent = now.toLocaleString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+
+    divider.appendChild(timestamp);
+    newPost.appendChild(titleElem);
+    newPost.appendChild(contentElem);
 
     if (editingPostId) {
       url = `http://localhost:3000/api/ojt/update/${editingPostId}`;
       method = 'PUT';
     }
 
-    const response = await fetch(url, { method, body: formData });
-    const data = await response.json();
+    newPost.appendChild(divider);
+    feed.prepend(newPost);
 
-    if (data.success) {
-      alert(editingPostId ? '✅ Post updated!' : '✅ Post uploaded!');
-      modal.style.display = 'none';
-      clearForm();
-      loadPosts(); // refresh feed
-    } else {
-      alert('❌ Failed to save post.');
-    }
-  } catch (err) {
-    console.error('Error saving post:', err);
-    alert('Server error while saving post.');
+    // Reset modal
+    postTitle.value = '';
+    postText.innerHTML = '';
+    fileUpload.value = '';
+    fileName.textContent = '';
+    modal.style.display = 'none';
+
+    const placeholder = document.querySelector('.ojt-placeholder');
+    if (placeholder) placeholder.remove();
   }
 });
 
