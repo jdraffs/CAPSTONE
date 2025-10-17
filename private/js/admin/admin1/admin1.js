@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// SA CHARTS TOH
+
 
   // Select all nav items
   const navItems = document.querySelectorAll('.nav-item');
