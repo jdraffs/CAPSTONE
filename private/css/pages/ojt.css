@@ -1,1 +1,252 @@
-/* OJT SPECIFIC PAGE FEED STYLES */
+/* OJT PAGE FEED STYLES */
+.ojt-container {
+  position: relative;
+  height: 100%;
+  display: flex;
+  gap: 20px;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  color: #eaeaea;
+  font-family: 'Inter', sans-serif;
+}
+
+/* FEED */
+.ojt-feed {
+  width: 100%;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1%;
+}
+
+.ojt-placeholder {
+  text-align: center;
+  margin-top: 100px;
+  color: #888;
+}
+
+.ojt-placeholder i {
+  font-size: 50px;
+  margin-bottom: 10px;
+  color: #666;
+}
+
+/* POST BUTTON */
+.ojt-post-btn {
+  position: fixed;
+  bottom: 30px;
+  left: 260px; /* adjust depending on sidebar width */
+  background: #e64343;
+  color: white;
+  border: none;
+  padding: 14px 22px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  transition: 0.3s;
+}
+
+.ojt-post-btn:hover {
+  background: #c73535;
+}
+
+/* MODAL */
+.ojt-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 15, 15, 0.415);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.ojt-modal-content {
+  background: #f7f7f7;
+  padding: 20px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.315);
+}
+
+.ojt-modal-content h2 {
+  margin: auto;
+  color: #1c1c1c;
+}
+
+.ojt-modal-content textarea {
+  background: #f7f7f7;
+  border: none;
+  padding: 15px 5px;
+  color: #030303;
+  resize: none;
+  min-height: 200px;
+  outline: none;
+  border-top:  1px solid rgb(164, 164, 164);
+  border-bottom: 1px solid rgb(164, 164, 164);
+  font-size: 1.2rem;
+}
+.ojt-modal-content textarea::placeholder {
+  color: #999;
+  font-size: 1.2rem;
+}
+
+.ojt-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.ojt-modal-actions button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+#cancelPost {
+  background: #444;
+  color: white;
+}
+
+#submitPost {
+  background: #e64343;
+  color: white;
+}
+
+/* POST ITEM */
+.ojt-post {
+  background: #ffffff;
+  padding: 30px 25px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  box-shadow: 0 3px 10px rgba(63, 63, 63, 0.3);
+  width: 80%;
+  margin: auto;
+  color: #3e3e3e;
+}
+
+.ojt-post-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  padding: 8px;
+  border: none;
+  border-bottom: 1px solid #ccc;
+  outline: none;
+  background: #f7f7f7;
+  color: #000;
+}
+
+.ojt-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #efefef;
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+
+.ojt-toolbar button, .ojt-toolbar select {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #333;
+  font-size: 16px;
+}
+
+.ojt-toolbar button:hover {
+  color: #e64343;
+}
+
+.ojt-editor {
+  background: #fff;
+  border-radius: 8px;
+  padding: 12px;
+  min-height: 200px;
+  border: 1px solid #ccc;
+  overflow-y: auto;
+  color: #000;
+}
+
+.ojt-upload {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.ojt-upload label {
+  cursor: pointer;
+  color: #e64343;
+  font-weight: 600;
+}
+
+.ojt-post p {
+  margin: 0;
+  color: #000000;
+}
+
+/* DIVIDER WITH DATE */
+.ojt-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #555;
+  font-size: 0.9rem;
+  margin-top: 15px;
+  position: relative;
+}
+
+.ojt-divider::before,
+.ojt-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #3b3a3a;
+  margin: 0 10px;
+}
+
+.ojt-divider span {
+  background: #ffffff;
+  padding: 0 8px;
+  color: #842828;
+  font-weight: 500;
+  font-size: 0.8rem;
+}
+
+/* BUTTON ACTIONS */
+.ojt-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.ojt-actions button {
+  background: none;
+  border: none;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 1.3rem;
+  transition: color 0.2s ease;
+}
+
+.ojt-actions button:hover {
+  color: #922525;
+}
