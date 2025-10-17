@@ -9,10 +9,10 @@ const { Pool } = pkg;
 
 // PostgreSQL connection
 const pool = new Pool({
-  user: 'postgres',          // change to your DB user
+  user: 'postgres',
   host: 'localhost',
-  database: 'capstone_db',   // change to your database name
-  password: 'Kisses123',     // your PostgreSQL password
+  database: 'capstone_db',
+  password: 'Kisses123',
   port: 5432
 });
 
@@ -30,7 +30,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// CREATE POST (Insert to DB)
+// CREATE POST
 router.post('/create', upload.single('image'), async (req, res) => {
   try {
     const { title, content, adminid } = req.body;
@@ -59,6 +59,70 @@ router.get('/posts', async (req, res) => {
   } catch (err) {
     console.error('Error fetching posts:', err);
     res.status(500).json({ success: false, message: 'Failed to fetch posts' });
+  }
+});
+
+// DELETE POST
+router.delete('/delete/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Get image path first (to delete from folder)
+    const result = await pool.query('SELECT image_path FROM ojt_posts WHERE id = $1', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Post not found' });
+    }
+
+    const imagePath = result.rows[0].image_path;
+    if (imagePath) {
+      const fullPath = path.join('./public', imagePath);
+      if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
+    }
+
+    await pool.query('DELETE FROM ojt_posts WHERE id = $1', [id]);
+    res.json({ success: true, message: 'Post deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting post:', err);
+    res.status(500).json({ success: false, message: 'Failed to delete post' });
+  }
+});
+
+// UPDATE POST
+router.put('/update/:id', upload.single('image'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, content } = req.body;
+
+    // Get the old image (if exists)
+    const oldPost = await pool.query('SELECT image_path FROM ojt_posts WHERE id = $1', [id]);
+    if (oldPost.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Post not found' });
+    }
+
+    let imagePath = oldPost.rows[0].image_path;
+
+    // If a new image is uploaded, replace old one
+    if (req.file) {
+      if (imagePath) {
+        const oldImageFullPath = path.join('./public', imagePath);
+        if (fs.existsSync(oldImageFullPath)) fs.unlinkSync(oldImageFullPath);
+      }
+      imagePath = `/uploads/ojt/${req.file.filename}`;
+    }
+
+    const query = `
+      UPDATE ojt_posts
+      SET title = $1, content = $2, image_path = $3
+      WHERE id = $4
+      RETURNING *;
+    `;
+    const values = [title, content, imagePath, id];
+    const result = await pool.query(query, values);
+
+    res.json({ success: true, post: result.rows[0] });
+  } catch (err) {
+    console.error('Error updating post:', err);
+    res.status(500).json({ success: false, message: 'Failed to update post' });
   }
 });
 
