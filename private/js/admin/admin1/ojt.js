@@ -151,17 +151,17 @@ async function loadPosts() {
         feed.appendChild(postElem);
       });
     } else {
-      feed.innerHTML = `
-        <div class="post-container">
-          <div class="post-feed" id="postFeed">
-            <div class="post-placeholder">
-              <i class="fa-solid fa-briefcase"></i>
-              <h2>No OJT posts yet</h2>
-              <p>Share announcements, updates, or OJT opportunities with others here.</p>
-            </div>
+    feed.innerHTML = `
+      <div class="post-container">
+        <div class="post-feed" id="postFeed">
+          <div class="post-placeholder">
+            <i class="fa-solid fa-briefcase"></i>
+            <h2>No OJT posts yet</h2>
+            <p>Share announcements, updates, or OJT opportunities with others here.</p>
           </div>
         </div>
-      `;
+      </div>
+    `;
     }
   } catch (err) {
     console.error('Error loading posts:', err);
