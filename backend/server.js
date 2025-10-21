@@ -6,6 +6,7 @@ import chatbotRoute from './routes/chatbotRoute.js';
 import ojtRoute from './routes/ojtRoute.js';
 import announcementRoute from './routes/announcementRoute.js';
 import researchextensionRoute from './routes/research&extensionRoute.js';
+import nstpRoute from './routes/nstpRoute.js';
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ app.use('/api', chatbotRoute);
 app.use('/api/ojt', ojtRoute);
 app.use('/api/announcements', announcementRoute);
 app.use('/api/researchextension', researchextensionRoute);
+app.use('/api/nstp', nstpRoute);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
