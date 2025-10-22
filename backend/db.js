@@ -3,6 +3,8 @@ import pkg from "pg";
 import dotenv from "dotenv";
 
 dotenv.config();
+console.log(" Loaded ENV:", process.env.PG_USER, process.env.PG_PASSWORD);
+
 
 const { Pool } = pkg;
 
@@ -15,7 +17,7 @@ const pool = new Pool({
 });
 
 pool.connect()
-  .then(() => console.log("✅ Connected to PostgreSQL"))
-  .catch(err => console.error("❌ Connection error:", err));
+  .then(() => console.log("Connected to PostgreSQL"))
+  .catch(err => console.error("Connection error:", err));
 
 export default pool;

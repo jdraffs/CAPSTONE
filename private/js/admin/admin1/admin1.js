@@ -91,7 +91,10 @@ function updateDateTime() {
 setInterval(updateDateTime, 1000); // Update every second
 updateDateTime(); // Initial call
 
+
 //charts
+
+
 // Sample data for research uploads per month
 const researchCtx = document.getElementById('researchChart').getContext('2d');
 const researchChart = new Chart(researchCtx, {
@@ -231,3 +234,28 @@ document.querySelectorAll('.nav-link').forEach(link => {
 document.getElementById('mobileMenuToggle').onclick = function() {
   document.querySelector('.sidebar').classList.toggle('open');
 };
+
+//RECENT UPLOADS FETCHING
+// === Fetch and update total recent uploads ===
+async function updateRecentUploadsCount() {
+  try {
+    const response = await fetch('http://localhost:3000/api/recent-uploads');
+    const data = await response.json();
+
+    if (data.success) {
+      const countElement = document.getElementById('recentUploadsCount');
+      if (countElement) {
+        countElement.textContent = data.totalRecentUploads;
+      }
+    } else {
+      console.error('Failed to fetch recent uploads:', data.message);
+    }
+  } catch (err) {
+    console.error('Error fetching recent uploads:', err);
+  }
+}
+
+// Call on page load
+document.addEventListener('DOMContentLoaded', () => {
+  updateRecentUploadsCount();
+});
