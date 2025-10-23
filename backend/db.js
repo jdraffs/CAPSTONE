@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+
 const { Pool } = pkg;
 
 const pool = new Pool({
@@ -15,7 +16,7 @@ const pool = new Pool({
 });
 
 pool.connect()
-  .then(() => console.log("✅ Connected to PostgreSQL"))
-  .catch(err => console.error("❌ Connection error:", err));
+  .then(() => console.log("Connected to PostgreSQL"))
+  .catch(err => console.error("Connection error:", err));
 
 export default pool;
