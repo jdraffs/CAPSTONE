@@ -7,6 +7,10 @@
   border-bottom: 2px solid rgb(165, 165, 165);
 }
 
+.fa-bell, .fa-user {
+  color: #822020;
+}
+
 .add-btn, .back-btn {
   background: #ffffff;
   color: rgb(80, 80, 80);
