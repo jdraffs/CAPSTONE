@@ -1,4 +1,8 @@
 /* Admin Dashboard Styles */
+.fa-bell, .fa-user {
+  color: #822020;
+}
+
 .content-page {
     display: none;
 }

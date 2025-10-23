@@ -3,6 +3,10 @@
 .announce-post-btn:hover {
   background: #2d5682;
 }
+
+.fa-bell, .fa-user {
+  color: #822020;
+}
 /* POST ITEM */
 .nstp-post {
   background: #ffffff;
