@@ -23,8 +23,6 @@ router.get('/', async (req, res) => {
       0
     );
 
-    console.log("Raw query results:", results.map(r => r.rows[0].count));
-    console.log("Total Recent Uploads:", totalRecentUploads);
 
     res.json({ success: true, totalRecentUploads });
   } catch (err) {

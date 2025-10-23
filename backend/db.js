@@ -3,7 +3,6 @@ import pkg from "pg";
 import dotenv from "dotenv";
 
 dotenv.config();
-console.log(" Loaded ENV:", process.env.PG_USER, process.env.PG_PASSWORD);
 
 
 const { Pool } = pkg;
