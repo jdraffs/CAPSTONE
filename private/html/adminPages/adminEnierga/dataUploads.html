@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="/private/css/pages/admin2.css">
     <link rel="stylesheet" href="/private/css/layout/post.css">
     <link rel="stylesheet" href="/private/css/layout/dashboardsidebar.css">
+    <link rel="stylesheet" href="/private/css/pages/dataUploads.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
@@ -107,7 +108,44 @@
         </header>
             <!--DASHBOARD CONTENT-->
             <div class="main-content" id="mainContent">
-                
+                <div class="data-upload-container">
+                    <h2>Upload Your Data</h2>
+                    <p>Select a CSV, Excel, or JSON file to preview and visualize.</p>
+
+                    <!-- Upload box -->
+                    <div class="upload-box">
+                        <input type="file" id="dataFileInput" accept=".csv,.xlsx,.xls,.json">
+                        <label for="dataFileInput" class="upload-label">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Choose a file
+                        </label>
+                    </div>
+
+                    <!-- File Info -->
+                    <div id="fileInfo" class="file-info"></div>
+
+                    <!-- Table preview -->
+                    <div class="table-preview-section">
+                        <h3>Data Preview</h3>
+                        <div id="tablePreview" class="table-preview">
+                            <p>No file uploaded yet.</p>
+                        </div>
+                    </div>
+
+                    <!-- Generate Visualization -->
+                    <div class="visualization-controls">
+                        <button id="generateVizBtn" class="generate-btn" disabled>
+                            <i class="fa-solid fa-chart-line"></i> Generate Visualization
+                        </button>
+                    </div>
+
+                    <!-- Visualization Section -->
+                    <div class="visualization-section">
+                        <h3>Visualization</h3>
+                        <div id="visualizationArea" class="visualization-placeholder">
+                            <p>No visualization yet.</p>
+                    </div>
+                </div>
+                </div>
             </div>
     </main>
     <!-- SCRIPTS -->
