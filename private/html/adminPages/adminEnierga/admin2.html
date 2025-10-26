@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/private/css/pages/admin2.css">
     <link rel="stylesheet" href="/private/css/layout/dashboardsidebar.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -27,7 +28,7 @@
                 <h3 class="nav-title">Main</h3>
                 <ul class="nav-list">
                     <li class="nav-item active">
-                        <a class="nav-link" href=#overview data-page="overview">
+                        <a class="nav-link" href="/private/html/adminPages/adminEnierga/admin2.html">
                             <i class="fas fa-tachometer-alt"></i>
                             <span>Dashboard</span>
                         </a>
@@ -39,7 +40,7 @@
                 <h3 class="nav-title">Management</h3>
                 <ul class="nav-list">
                     <li class="nav-item">
-                        <a class="nav-link" href="#overview" data-page="overview">
+                        <a class="nav-link" href="/private/html/adminPages/adminAve/ojt.html">
                             <i class="fa-solid fa-briefcase"></i>
                             <span>OJT</span>
                         </a>
@@ -48,7 +49,7 @@
 
                 <ul class="nav-list">
                     <li class="nav-item">
-                        <a class="nav-link" href="#research&extension" data-page="research&extension">
+                        <a class="nav-link" href="/private/html/adminPages/adminAve/research&extension.html">
                             <i class="fa-solid fa-book"></i>
                             <span>Research & Extension</span>
                         </a>
@@ -57,7 +58,7 @@
 
                 <ul class="nav-list">
                     <li class="nav-item">
-                        <a class="nav-link" href="#nstp" data-page="nstp">
+                        <a class="nav-link" href="/private/html/adminPages/adminAve/nstp.html">
                             <i class="fa-solid fa-handshake-angle"></i>
                             <span>NSTP</span>
                         </a>
@@ -142,7 +143,7 @@
                                     <i class="fas fa-newspaper"></i>
                                 </div>
                                 <div class="card-content">
-                                    <h3 class="card-number" data-count="104">0</h3>
+                                    <h3 class="card-number" id="recentUploadsCount"></h3>
                                     <p class="card-label">Recent Uploads</p>
                                 </div>
                             </div>
@@ -199,8 +200,8 @@
                                 <i class="fas fa-user-plus"></i>
                                 </div>
                                 <div class="notification-content">
-                                <h4>New Alumni Profile Request</h4>
-                                <p>2 alumni profiles awaiting verification</p>
+                                <h4>Announcement Returned for Revision</h4>
+                                <p>SAS requested edits on your Announcement</p>
                                 <span class="notification-time">2 hours ago</span>
                                 </div>
                             </div>
@@ -210,8 +211,8 @@
                                 <i class="fas fa-sync"></i>
                                 </div>
                                 <div class="notification-content">
-                                <h4>System Update Completed</h4>
-                                <p>Dashboard updated to version 2.1.5</p>
+                                <h4>New Form Added to Repository</h4>
+                                <p>A new downloadable form was added to the system.</p>
                                 <span class="notification-time">1 day ago</span>
                                 </div>
                             </div>
@@ -219,23 +220,66 @@
                         </section>
                         <!-- Analytics Overview -->
                         <section class="dashboard-section charts-section">
-                        <div class="section-header">
-                            <h2>Analytics Overview</h2>
-                        </div>
-
-                        <div class="charts-grid">
-                            <div class="chart-container">
-                            <h3>Number of Site Visitors</h3>
-                            <canvas id="siteVisitorsChart"></canvas>
+                            <div class="section-header">
+                                <h2>Analytics Overview</h2>
                             </div>
 
-                            <div class="chart-container">
-                            <h3>Most Viewed Content</h3>
-                            <canvas id="mostViewedResearchChart"></canvas>
+                            <div class="charts-grid">
+                                <div class="chart-container">
+                                <h3>Number of Site Visitors</h3>
+                                <canvas id="siteVisitorsChart"></canvas>
+                                </div>
+
+                                <div class="chart-container">
+                                <h3>Most Viewed Content</h3>
+                                <canvas id="mostViewedContentChart"></canvas>
+                                </div>
                             </div>
-                        </div>
                         </section>
     </main>
-<script src="/private/js/dashboard.js"></script>
+
+    <!-- CONTENTS FOR EACH SECTION -->
+            <section>
+                <div class="content-page" id="ojt-page">
+                    <div class="page-placeholder">
+                        <h2>MS TEAMS CONTENT</h2>
+                        <p>-Manage faculty accounts (create faculty accounts, view list of all faculty, activate/deactivate account, reset faculty password) -Manage Alumni Submissions (approve or reject requests)</p>
+                    </div>
+                </div>
+
+                <div class="content-page" id="research-extension-page">
+                    <div class="page-placeholder">
+                        <h2>MS TEAMS CONTENT</h2>
+                        <p>-Manage news & updates (Add/Edit/Delete News article with upload image, View Engagement or number of views) -Manage Research Extensions </p>
+                    </div>
+                </div>
+
+                <div class="content-page" id="nstp-page">
+                    <div class="page-placeholder">
+                        <h2>MS TEAMS CONTENT</h2>
+                        <p>-Approve Faculty Profile Edits, -Approve Research Outputs (Flipbook display) </p>
+                    </div>
+                </div>
+
+                <div class="content-page" id="forms-repository-page">
+                    <div class="page-placeholder">
+                        <h2>MS TEAMS CONTENT</h2>
+                        <p>Configure system preferences</p>
+                    </div>
+                </div>
+
+                <div class="content-page" id="announcements-memos-page">
+                    <div class="page-placeholder">
+                        <h2>MS TEAMS CONTENT</h2>
+                        <p>Configure system preferences</p>
+                    </div>
+                </div>
+
+
+            </section>
+<!-- SCRIPTS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/private/js/admin/admin1/chart.js"></script>
+<script src="/private/js/admin/admin2/admin2.js"></script>
 </body>
 </html>
