@@ -16,11 +16,9 @@ document.getElementById('admin-login-form').addEventListener('submit', async (e)
   if (data.success) {
     if (data.adminid === 'adminave') {
       window.location.href = '/private/html/adminPages/adminAve/admin1.html';
-    } else if (data.adminid === 'adminewan') {
-      window.location.href = '/private/html/adminPages/adminEwan/admin2.html';
-    } else {
-      alert('Unknown admin. Please contact system administrator.');
-    }
+    } else if (data.adminid === 'adminEnierga') {
+      window.location.href = '/private/html/adminPages/adminEnierga/admin2.html';
+    } 
   } else {
     alert('Invalid admin ID or password.');
   }
