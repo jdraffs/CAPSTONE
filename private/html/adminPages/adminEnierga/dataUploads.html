@@ -124,12 +124,16 @@
                     <div id="fileInfo" class="file-info"></div>
 
                     <!-- Table preview -->
-                    <div class="table-preview-section">
-                        <h3>Data Preview</h3>
-                        <div id="tablePreview" class="table-preview">
-                            <p>No file uploaded yet.</p>
+                    <div id="tablePreview" class="table-preview">
+                        <!-- spinner (hidden na sha by default) -->
+                        <div id="loadingSpinner" class="loading-spinner" style="display: none;">
+                            Loading preview<span class="dots"></span>
                         </div>
+
+                        <!-- Default message -->
+                        <p id="noFileMsg">No file uploaded yet.</p>
                     </div>
+
 
                     <!-- Generate Visualization -->
                     <div class="visualization-controls">
