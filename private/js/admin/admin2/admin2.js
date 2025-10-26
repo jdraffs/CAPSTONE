@@ -115,3 +115,40 @@ document.addEventListener('DOMContentLoaded', () => {
   updateRecentUploadsCount();
 });
 
+// START OF ADMIN2.JS CONTENT
+const dataFileInput = document.getElementById('dataFileInput');
+const fileInfo = document.getElementById('fileInfo');
+const tablePreview = document.getElementById('tablePreview');
+const loadingSpinner = document.getElementById('loadingSpinner');
+const noFileMsg = document.getElementById('noFileMsg');
+const generateBtn = document.getElementById('generateVizBtn');
+
+dataFileInput.addEventListener('change', () => {
+  const file = dataFileInput.files[0];
+  if (!file) return;
+
+  // Show file info liek size tsaka name
+  const fileSizeKB = (file.size / 1024).toFixed(1);
+  fileInfo.textContent = `File uploaded: ${file.name}, size: ${fileSizeKB} KB`;
+
+  // Show spinner, hide old content
+  showLoading();
+
+  // Simulate preview load (replace later with real parser)
+  setTimeout(() => {
+    hideLoading();
+    noFileMsg.style.display = 'none';
+    tablePreview.innerHTML = `<p>File "${file.name}" ready for preview.</p>`;
+    generateBtn.disabled = false;
+  }, 2000);
+});
+
+function showLoading() {
+  loadingSpinner.style.display = 'block';
+  noFileMsg.style.display = 'none';
+  tablePreview.querySelectorAll('p:not(#noFileMsg)').forEach(p => p.remove());
+}
+
+function hideLoading() {
+  loadingSpinner.style.display = 'none';
+}
