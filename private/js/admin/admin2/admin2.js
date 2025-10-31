@@ -128,6 +128,33 @@ if (dataFileInput) {
     const file = dataFileInput.files[0];
     if (!file) return;
 
+  const fileSizeKB = (file.size / 1024).toFixed(1);
+  fileInfo.textContent = `File uploaded: ${file.name}, size: ${fileSizeKB} KB`;
+
+  showLoading();
+
+  const fileName = file.name.toLowerCase();
+
+  if (fileName.endsWith('.csv')) {
+    parseCSV(file);
+  } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+    parseExcel(file);
+  } else if (fileName.endsWith('.json')) {
+    parseJSON(file);
+  } else {
+    hideLoading();
+    tablePreview.innerHTML = `<p>Unsupported file format.</p>`;
+  }
+});
+
+function showLoading() {
+  loadingSpinner.style.display = 'block';
+  noFileMsg.style.display = 'none';
+  tablePreview.querySelectorAll('p:not(#noFileMsg)').forEach(p => p.remove());
+}
+
+function hideLoading() {
+  loadingSpinner.style.display = 'none';
     const fileSizeKB = (file.size / 1024).toFixed(1);
     fileInfo.textContent = `File uploaded: ${file.name}, size: ${fileSizeKB} KB`;
 
@@ -140,4 +167,85 @@ if (dataFileInput) {
       generateBtn.disabled = false;
     }, 2000);
   });
+}
+
+function renderTable(data) {
+  hideLoading();
+  if (!data || !data.length) {
+    tablePreview.innerHTML = '<p>No data found in file.</p>';
+    return;
+  }
+
+  const table = document.createElement('table');
+  table.classList.add('data-table');
+
+  // header
+  const headerRow = document.createElement('tr');
+  Object.keys(data[0]).forEach(key => {
+    const th = document.createElement('th');
+    th.textContent = key;
+    headerRow.appendChild(th);
+  });
+  table.appendChild(headerRow);
+
+  // first few rows
+  data.slice(0, 10).forEach(row => {
+    const tr = document.createElement('tr');
+    Object.values(row).forEach(val => {
+      const td = document.createElement('td');
+      td.textContent = val;
+      tr.appendChild(td);
+    });
+    table.appendChild(tr);
+  });
+
+  tablePreview.innerHTML = '';
+  tablePreview.appendChild(table);
+  generateBtn.disabled = false;
+}
+
+//parsers
+
+function parseCSV(file) {
+  Papa.parse(file, {
+    header: true,
+    complete: (results) => renderTable(results.data),
+    error: (err) => {
+      hideLoading();
+      tablePreview.innerHTML = `<p>Error reading CSV: ${err.message}</p>`;
+    }
+  });
+}
+
+function parseExcel(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, { type: 'array' });
+    const firstSheet = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[firstSheet];
+    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+    renderTable(jsonData);
+  };
+  reader.onerror = () => {
+    hideLoading();
+    tablePreview.innerHTML = `<p>Error reading Excel file.</p>`;
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseJSON(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const jsonData = JSON.parse(e.target.result);
+      const arrayData = Array.isArray(jsonData) ? jsonData : [jsonData];
+      renderTable(arrayData);
+    } catch (err) {
+      tablePreview.innerHTML = `<p>Error parsing JSON: ${err.message}</p>`;
+    } finally {
+      hideLoading();
+    }
+  };
+  reader.readAsText(file);
 }
