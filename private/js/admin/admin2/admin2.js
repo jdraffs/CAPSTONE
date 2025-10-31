@@ -123,9 +123,10 @@ const loadingSpinner = document.getElementById('loadingSpinner');
 const noFileMsg = document.getElementById('noFileMsg');
 const generateBtn = document.getElementById('generateVizBtn');
 
-dataFileInput.addEventListener('change', () => {
-  const file = dataFileInput.files[0];
-  if (!file) return;
+if (dataFileInput) {
+  dataFileInput.addEventListener('change', () => {
+    const file = dataFileInput.files[0];
+    if (!file) return;
 
   const fileSizeKB = (file.size / 1024).toFixed(1);
   fileInfo.textContent = `File uploaded: ${file.name}, size: ${fileSizeKB} KB`;
@@ -154,6 +155,18 @@ function showLoading() {
 
 function hideLoading() {
   loadingSpinner.style.display = 'none';
+    const fileSizeKB = (file.size / 1024).toFixed(1);
+    fileInfo.textContent = `File uploaded: ${file.name}, size: ${fileSizeKB} KB`;
+
+    showLoading();
+
+    setTimeout(() => {
+      hideLoading();
+      noFileMsg.style.display = 'none';
+      tablePreview.innerHTML = `<p>File "${file.name}" ready for preview.</p>`;
+      generateBtn.disabled = false;
+    }, 2000);
+  });
 }
 
 function renderTable(data) {
