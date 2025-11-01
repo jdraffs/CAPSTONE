@@ -166,7 +166,7 @@ function hideLoading() {
       tablePreview.innerHTML = `<p>File "${file.name}" ready for preview.</p>`;
       generateBtn.disabled = false;
     }, 2000);
-  });
+  };
 }
 
 function renderTable(data) {
