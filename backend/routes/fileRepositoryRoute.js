@@ -65,14 +65,30 @@ router.post("/folders", async (req, res) => {
   }
 });
 
-// Get all folders (or subfolders by parent_id)
+// Get all folders (or subfolders by parent_id) — updated to support all=true
 router.get("/folders", async (req, res) => {
   try {
-    const { parent_id } = req.query;
-    const query = parent_id
-      ? "SELECT * FROM file_repository_folders WHERE parent_id = $1 ORDER BY created_at DESC"
-      : "SELECT * FROM file_repository_folders WHERE parent_id IS NULL ORDER BY created_at DESC";
-    const result = await pool.query(query, parent_id ? [parent_id] : []);
+    const { parent_id, all } = req.query;
+
+    let query;
+    let params = [];
+
+    if (all === "true") {
+      query = "SELECT * FROM file_repository_folders ORDER BY created_at DESC";
+    } else if (parent_id !== undefined) {
+      // parent_id provided (may be null or value)
+      if (parent_id === "null") {
+        query = "SELECT * FROM file_repository_folders WHERE parent_id IS NULL ORDER BY created_at DESC";
+      } else {
+        query = "SELECT * FROM file_repository_folders WHERE parent_id = $1 ORDER BY created_at DESC";
+        params = [parent_id];
+      }
+    } else {
+      // default to root folders (existing behavior)
+      query = "SELECT * FROM file_repository_folders WHERE parent_id IS NULL ORDER BY created_at DESC";
+    }
+
+    const result = await pool.query(query, params);
     res.json({ success: true, folders: result.rows });
   } catch (err) {
     console.error("Error fetching folders:", err);
@@ -116,14 +132,29 @@ router.post("/files", upload.single("file"), async (req, res) => {
   }
 });
 
-// Get all files in a folder
+// Get all files in a folder — updated to support all=true
 router.get("/files", async (req, res) => {
   try {
-    const { folder_id } = req.query;
-    const query = folder_id
-      ? "SELECT * FROM file_repository_files WHERE folder_id = $1 ORDER BY created_at DESC"
-      : "SELECT * FROM file_repository_files WHERE folder_id IS NULL ORDER BY created_at DESC";
-    const result = await pool.query(query, folder_id ? [folder_id] : []);
+    const { folder_id, all } = req.query;
+
+    let query;
+    let params = [];
+
+    if (all === "true") {
+      query = "SELECT * FROM file_repository_files ORDER BY created_at DESC";
+    } else if (folder_id !== undefined) {
+      if (folder_id === "null") {
+        query = "SELECT * FROM file_repository_files WHERE folder_id IS NULL ORDER BY created_at DESC";
+      } else {
+        query = "SELECT * FROM file_repository_files WHERE folder_id = $1 ORDER BY created_at DESC";
+        params = [folder_id];
+      }
+    } else {
+      // maintain existing default behavior (root-level files)
+      query = "SELECT * FROM file_repository_files WHERE folder_id IS NULL ORDER BY created_at DESC";
+    }
+
+    const result = await pool.query(query, params);
     res.json({ success: true, files: result.rows });
   } catch (err) {
     console.error("Error fetching files:", err);
