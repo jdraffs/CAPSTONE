@@ -1,9 +1,9 @@
-// === HELPER: Logout ===
+// HELPER: Logout
 function logout() {
-  window.location.href = '/public/index.html'; // adjust path if needed
+  window.location.href = '/public/index.html'; 
 }
 
-// === HELPER: Fetch and update total recent uploads ===
+// HELPER: Fetch and update total recent uploads 
 async function updateRecentUploadsCount() {
   try {
     const response = await fetch('http://localhost:3000/api/recent-uploads');
@@ -22,9 +22,9 @@ async function updateRecentUploadsCount() {
   }
 }
 
-// === MAIN DOM LOGIC ===
+// MAIN DOM LOGIC
 document.addEventListener('DOMContentLoaded', () => {
-  // --- NAV HIGHLIGHTING ---
+  // NAV HIGHLIGHTING 
   const navItems = document.querySelectorAll('.nav-item');
   const currentPath = window.location.pathname;
   const currentFile = currentPath.split('/').pop();
@@ -34,12 +34,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!link) return;
     const href = link.getAttribute('href');
 
-    // Case 1: Links with an actual page
+    // case 1: links with an actual page
     if (href.endsWith('.html')) {
       const linkFile = href.split('/').pop();
       item.classList.toggle('active', linkFile === currentFile);
     }
-    // Case 2: Dashboard or hash links
+    // case 2: dashboard or hash links
     else if (href.startsWith('#') && currentFile === 'admin2.html') {
       item.classList.toggle('active', href === '#overview');
     }
@@ -68,13 +68,13 @@ document.addEventListener('DOMContentLoaded', () => {
   //   });
   // });
 
-  // --- MOBILE MENU TOGGLE ---
+  // MOBILE MENU TOGGLE 
   const toggle = document.getElementById('mobileMenuToggle');
   if (toggle) {
     toggle.onclick = () => document.querySelector('.sidebar').classList.toggle('open');
   }
 
-  // --- COUNTERS ---
+  // COUNTERS 
   const counters = document.querySelectorAll('.card-number');
   counters.forEach(counter => {
     const updateCount = () => {
@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateCount();
   });
 
-  // --- DATE/TIME ---
+  // DATE/TIME 
   function updateDateTime() {
     const now = new Date();
     const options = {
@@ -111,11 +111,21 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(updateDateTime, 1000);
   updateDateTime();
 
-  // --- RECENT UPLOADS ---
+  // RECENT UPLOADS 
   updateRecentUploadsCount();
 });
 
 // START OF ADMIN2.JS CONTENT
+window.addEventListener('DOMContentLoaded', () => {
+  if (typeof XLSX === 'undefined') {
+    const script = document.createElement('script');
+    script.src = "https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js";
+    script.onload = () => console.log('XLSX loaded dynamically');
+    document.body.appendChild(script);
+  }
+});
+
+
 const dataFileInput = document.getElementById('dataFileInput');
 const fileInfo = document.getElementById('fileInfo');
 const tablePreview = document.getElementById('tablePreview');
@@ -219,20 +229,26 @@ function parseCSV(file) {
 
 function parseExcel(file) {
   const reader = new FileReader();
+
   reader.onload = (e) => {
-    const data = new Uint8Array(e.target.result);
-    const workbook = XLSX.read(data, { type: 'array' });
-    const firstSheet = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[firstSheet];
-    const jsonData = XLSX.utils.sheet_to_json(worksheet);
-    renderTable(jsonData);
+    setTimeout(() => {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const firstSheet = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheet];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      renderTable(jsonData);
+    }, 800); 
   };
+
   reader.onerror = () => {
     hideLoading();
     tablePreview.innerHTML = `<p>Error reading Excel file.</p>`;
   };
+
   reader.readAsArrayBuffer(file);
 }
+
 
 function parseJSON(file) {
   const reader = new FileReader();
@@ -249,3 +265,124 @@ function parseJSON(file) {
   };
   reader.readAsText(file);
 }
+
+
+// FILE UPLOAD + PREVIEW 
+const fileInput = document.getElementById("excelFile");
+
+fileInput.addEventListener("change", (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = (e) => {
+    setTimeout(() => {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const firstSheet = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheet];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+      renderTable(jsonData);
+      generateBtn.disabled = false; //Para maenable yung "Generate Visualization"
+    }, 800);
+  };
+
+  reader.readAsArrayBuffer(file);
+});
+
+// TABLE RENDERING FUNCTION 
+function renderTable(data) {
+  if (!data || !data.length) {
+    tablePreview.innerHTML = "<p>No data found in the file.</p>";
+    return;
+  }
+
+  const headers = Object.keys(data[0]);
+  const headerHTML = headers.map(h => `<th>${h}</th>`).join("");
+  const rowsHTML = data
+    .map(row => {
+      const cells = headers.map(h => `<td>${row[h] ?? ""}</td>`).join("");
+      return `<tr>${cells}</tr>`;
+    })
+    .join("");
+
+  tablePreview.innerHTML = `
+    <table class="preview-table">
+      <thead><tr>${headerHTML}</tr></thead>
+      <tbody>${rowsHTML}</tbody>
+    </table>
+  `;
+}
+
+// START NG CHART GENERATION 
+generateBtn.addEventListener("click", () => {
+  const table = tablePreview.querySelector("table");
+  if (!table) {
+    alert("Please upload a file first.");
+    return;
+  }
+
+  // extract headers & rows
+  const headers = Array.from(table.querySelectorAll("th")).map(th => th.textContent);
+  const rows = Array.from(table.querySelectorAll("tr"))
+    .slice(1)
+    .map(tr => Array.from(tr.querySelectorAll("td")).map(td => td.textContent));
+
+  if (!headers.length || !rows.length) {
+    alert("No data available to visualize.");
+    return;
+  }
+
+  // detect numeric columns
+  const numericCols = headers.filter((_, colIndex) =>
+    rows.every(row => !isNaN(parseFloat(row[colIndex])) && row[colIndex] !== "")
+  );
+
+  if (numericCols.length === 0) {
+    alert("No numeric columns found for chart visualization.");
+    return;
+  }
+
+  // use first numeric column for chart data
+  const valueColIndex = headers.indexOf(numericCols[0]);
+  const labels = rows.map(row => row[0]); // first column = labels
+  const values = rows.map(row => parseFloat(row[valueColIndex]));
+
+  // clear previous chart
+  const vizArea = document.getElementById("visualizationArea");
+  vizArea.innerHTML = '<canvas id="dataChart"></canvas>';
+
+  //draw chart
+  const ctx = document.getElementById("dataChart").getContext("2d");
+  new Chart(ctx, {
+    type: "bar", // pwedeng palitan ng line or pie
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: `${numericCols[0]} (Preview)`,
+          data: values,
+          backgroundColor: "rgba(54, 162, 235, 0.6)",
+          borderColor: "rgba(54, 162, 235, 1)",
+          borderWidth: 1,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: true },
+        title: {
+          display: true,
+          text: "Generated Data Visualization",
+          font: { size: 16 },
+        },
+      },
+      scales: {
+        y: { beginAtZero: true },
+      },
+    },
+  });
+});
