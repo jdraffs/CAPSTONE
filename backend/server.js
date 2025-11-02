@@ -18,6 +18,7 @@ import nstpRoute from './routes/nstpRoute.js';
 import recentUploadsRoute from "./routes/recentUploadsRoute.js";
 import formsrepositoryRoute from './routes/formsrepositoryRoute.js';
 import fileRepositoryRoute from "./routes/fileRepositoryRoute.js";
+import dataUploadsRoute from "./routes/dataUploadsRoute.js";
 
 // initialize 
 dotenv.config();
@@ -26,10 +27,12 @@ const app = express();
 // middleware 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(__dirname)); // optional if gusto root static
-app.use('/uploads', express.static('public/uploads'));
-app.use('/private', express.static(path.join(__dirname, '..', 'private')));
-app.use('/public', express.static(path.join(__dirname, '..', 'public')));
+
+// Serve static folders (correct relative paths)
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+app.use('/private', express.static(path.join(__dirname, 'private')));
+app.use('/public', express.static(path.join(__dirname, 'public')));
+
 
 
 
@@ -43,6 +46,9 @@ app.use('/api/nstp', nstpRoute);
 app.use("/api/recent-uploads", recentUploadsRoute);
 app.use("/api/files", fileRepositoryRoute);
 app.use('/api/forms', formsrepositoryRoute);
+app.use("/uploads", express.static("uploads")); // serve uploaded files
+app.use("/api", dataUploadsRoute);
+
 
 // pagstart ng server
 const PORT = process.env.PORT || 3000;
