@@ -135,10 +135,10 @@
   color: #822020;
 }
 
-.add-btn, .back-btn {
-  background: #bb3535;
+.add-btn {
+  background: #ffbf00;
   color: rgb(255, 255, 255);
-  border: 1px solid #991414;
+  border: 1px solid #dca500;
   height: 40px;
   padding: 8px 12px;
   border-radius: 8px;
@@ -147,8 +147,17 @@
   font-weight: bold;
 }
 
-.add-btn:hover, .back-btn:hover {
-  background: #d95151;
+.add-btn:hover{
+  background: #ffe28a;
+}
+
+.add-btn.empty-trash-btn {
+  color: #ffffff;
+  background-color: #bb3535;
+  border: 1px solid #991414;
+}
+.add-btn.empty-trash-btn:hover {
+  background-color: #ff1313;
 }
 
 .dot-menu {

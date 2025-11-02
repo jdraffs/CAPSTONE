@@ -34,6 +34,8 @@ const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
     const allowed = [
+      "application/vnd.ms-excel", // .xls
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       "application/pdf",
       "application/msword",
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",

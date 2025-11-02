@@ -17,6 +17,120 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.setItem("trash", JSON.stringify([...trash]));
   }
 
+  // Permanently delete file by id and cleanup local sets
+async function deleteFilePermanent(id) {
+  try {
+    const response = await fetch(`${API_BASE}/files/${id}`, { method: "DELETE" });
+    if (!response.ok) throw new Error('failed');
+    // cleanup local sets
+    trash.delete(`file-${id}`);
+    favorites.delete(`file-${id}`);
+    saveTrash();
+    saveFavorites();
+    return true;
+  } catch (err) {
+    console.error(`Error permanently deleting file ${id}:`, err);
+    return false;
+  }
+}
+
+  // Permanently delete folder by id, cleanup local sets and folderMap + descendants
+  async function deleteFolderPermanent(folderId) {
+    try {
+      const response = await fetch(`${API_BASE}/folders/${folderId}`, { method: "DELETE" });
+      if (!response.ok) throw new Error('failed');
+
+      // remove folder and its descendants from folderMap, favorites, trash
+      const idStr = String(folderId);
+
+      // remove the folder itself
+      if (window.folderMap && window.folderMap[folderId]) {
+        delete window.folderMap[folderId];
+      }
+      trash.delete(`folder-${folderId}`);
+      favorites.delete(`folder-${folderId}`);
+
+      // find descendants in folderMap (simple loop)
+      if (window.folderMap) {
+        const descendants = [];
+        Object.values(window.folderMap).forEach(f => {
+          // walk up parents, if we encounter deleted folderId => it's descendant
+          let cursor = f;
+          while (cursor) {
+            if (!cursor.parent_id) break;
+            if (String(cursor.parent_id) === idStr) {
+              descendants.push(cursor.id);
+              break;
+            }
+            cursor = cursor.parent_id ? window.folderMap[cursor.parent_id] : null;
+          }
+        });
+        // remove descendants found (note: this isn't fully recursive but will remove direct children; to be safer, iterate until no new descendants)
+        let removedAny = true;
+        while (removedAny) {
+          removedAny = false;
+          Object.values(window.folderMap).forEach(f => {
+            if (descendants.includes(f.id)) return;
+            let c = f;
+            while (c) {
+              if (!c.parent_id) break;
+              if (descendants.includes(c.parent_id) || String(c.parent_id) === idStr) {
+                if (!descendants.includes(f.id)) {
+                  descendants.push(f.id);
+                  removedAny = true;
+                }
+                break;
+              }
+              c = c.parent_id ? window.folderMap[c.parent_id] : null;
+            }
+          });
+        }
+        descendants.forEach(did => {
+          delete window.folderMap[did];
+          trash.delete(`folder-${did}`);
+          favorites.delete(`folder-${did}`);
+        });
+      }
+
+      saveTrash();
+      saveFavorites();
+      return true;
+    } catch (err) {
+      console.error(`Error permanently deleting folder ${folderId}:`, err);
+      return false;
+    }
+  }
+
+// Empty trash: iterate through trash set and delete each permanently
+async function emptyTrashAll() {
+  if (trash.size === 0) {
+    alert("Trash is already empty.");
+    return;
+  }
+
+  if (!confirm("Permanently delete everything in Trash? This cannot be undone.")) return;
+
+  // copy items so we can modify trash during deletion
+  const items = Array.from(trash);
+  // iterate sequentially
+  for (const entry of items) {
+    // entry format: "<type>-<id>"
+    const [type, id] = entry.split('-');
+    if (type === 'file') {
+      await deleteFilePermanent(id);
+    } else if (type === 'folder') {
+      await deleteFolderPermanent(id);
+    }
+    // also ensure we remove it from trash set (deleteFilePermanent/FolderPermanent already remove)
+    trash.delete(entry);
+  }
+  
+  saveTrash();
+  await fetchFoldersAndFiles();
+  alert("Trash emptied.");
+}
+
+
   function toggleFavorite(id, type) {
     const favId = `${type}-${id}`;
     if (favorites.has(favId)) favorites.delete(favId);
@@ -77,8 +191,6 @@ document.addEventListener("DOMContentLoaded", () => {
       // Apply your existing in-memory filter logic (this returns filtered sets)
       const filtered = filterItems(folders, files);
 
-      // If we requested all folders/files but the user is viewing a specific folder (All filter),
-      // scope locally to only show children of currentFolderId (keeps navigation consistent)
       if (currentFilter === "all" && currentFolderId) {
         filtered.folders = filtered.folders.filter(f => f.parent_id === currentFolderId);
         filtered.files = filtered.files.filter(f => f.folder_id === currentFolderId);
@@ -133,26 +245,35 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Build breadcrumb trail array from currentFolderId and window.folderMap
-  function buildBreadcrumbTrail() {
-    const trail = [{ id: null, name: "Repository" }];
+    function buildBreadcrumbTrail() {
+      // If a global filter is active, show it as the root breadcrumb
+      if (["recent", "favorites", "trash"].includes(currentFilter)) {
+        const labelMap = {
+          recent: "Recent",
+          favorites: "Favorites",
+          trash: "Trash"
+        };
+        return [{ id: null, name: labelMap[currentFilter] }];
+      }
 
-    if (!currentFolderId) return trail;
+      // Default view — “Repository” as root
+      const trail = [{ id: null, name: "Repository" }];
 
-    // walk up using folderMap; if a parent is missing, we fall back to a single link
-    let cursor = window.folderMap[currentFolderId];
-    if (!cursor) {
-      // fallback: still show a direct clickable item to top-level
-      return trail;
+      if (!currentFolderId) return trail;
+
+      // Build folder hierarchy using folderMap
+      let cursor = window.folderMap[currentFolderId];
+      if (!cursor) return trail; // fallback if folder missing
+
+      const parts = [];
+      while (cursor) {
+        parts.unshift({ id: cursor.id, name: cursor.name });
+        cursor = cursor.parent_id ? window.folderMap[cursor.parent_id] : null;
+      }
+
+      return trail.concat(parts);
     }
 
-    const parts = [];
-    while (cursor) {
-      parts.unshift({ id: cursor.id, name: cursor.name });
-      cursor = cursor.parent_id ? window.folderMap[cursor.parent_id] : null;
-    }
-
-    return trail.concat(parts);
-  }
 
   function render(folders, files) {
     container.innerHTML = "";
@@ -189,6 +310,21 @@ document.addEventListener("DOMContentLoaded", () => {
       await addFile();
     };
     leftControls.appendChild(addFileBtn);
+
+    // show "Empty Trash" button when viewing trash filter
+    if (currentFilter === 'trash') {
+      const emptyTrashBtn = document.createElement("button");
+      emptyTrashBtn.textContent = "Empty Trash";
+      emptyTrashBtn.className = "add-btn empty-trash-btn";
+      emptyTrashBtn.type = "button";
+      emptyTrashBtn.onclick = async (e) => {
+        e.preventDefault();
+        // call helper to empty trash
+        await emptyTrashAll();
+      };
+      leftControls.appendChild(emptyTrashBtn);
+    }
+
 
     const rightControls = document.createElement("div");
     rightControls.className = "header-right-controls";
@@ -242,6 +378,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     allIcon.addEventListener("click", () => {
       currentFilter = "all";
+      currentFolderId = null; // clear any folder scope
       fetchFoldersAndFiles();
     });
     filters.insertBefore(allIcon, filters.firstChild);
@@ -307,21 +444,54 @@ document.addEventListener("DOMContentLoaded", () => {
           fetchFoldersAndFiles();
         },
         async () => {
-          // permanent delete handler (used when in trash view)
-          if (confirm(`Permanently delete folder "${folder.name}"? This cannot be undone.`)) {
-            try {
-              const response = await fetch(`${API_BASE}/folders/${folder.id}`, { method: "DELETE" });
-              if (response.ok) {
-                trash.delete(`folder-${folder.id}`);
-                saveTrash();
-                fetchFoldersAndFiles();
-              } else {
-                alert("Failed to delete folder permanently.");
-              }
-            } catch (err) {
-              console.error("Permanent delete error:", err);
-              alert("Error deleting folder permanently.");
+          if (!confirm(`Permanently delete folder "${folder.name}"? This cannot be undone.`)) return;
+
+          try {
+            const response = await fetch(`${API_BASE}/folders/${folder.id}`, { method: "DELETE" });
+
+            if (!response.ok) {
+              alert("Failed to delete folder permanently.");
+              return;
             }
+
+            // cleanup local state:
+            const deletedIdStr = String(folder.id);
+
+            // Remove from folderMap (so breadcrumb/build won't resurrect it)
+            if (window.folderMap && window.folderMap[folder.id]) {
+              delete window.folderMap[folder.id];
+            }
+
+            // Remove from local trash and favorites
+            trash.delete(`folder-${folder.id}`);
+            favorites.delete(`folder-${folder.id}`);
+            saveTrash();
+            saveFavorites();
+
+            // If currentFolderId is the deleted folder or a descendant, reset to root.
+            // Walk up from currentFolderId via folderMap parents to check ancestry.
+            if (currentFolderId != null) {
+              let cursor = window.folderMap[currentFolderId];
+              // if folderMap doesn't have the currentFolderId (deleted or not loaded),
+              // also compare direct equality (string-safe)
+              if (!cursor && String(currentFolderId) === deletedIdStr) {
+                currentFolderId = null;
+              } else {
+                while (cursor) {
+                  if (String(cursor.id) === deletedIdStr) {
+                    currentFolderId = null;
+                    break;
+                  }
+                  cursor = cursor.parent_id ? window.folderMap[cursor.parent_id] : null;
+                }
+              }
+            }
+
+            // Ensure UI fetch happens after state updates
+            await fetchFoldersAndFiles();
+          } catch (err) {
+            console.error("Permanent delete error:", err);
+            alert("Error deleting folder permanently.");
           }
         },
         () => toggleFavorite(folder.id, "folder")
@@ -334,21 +504,30 @@ document.addEventListener("DOMContentLoaded", () => {
         file,
         "file",
         () => window.open(file.file_path, "_blank"),
+        // permanent delete handler for file (replace your current block)
         async () => {
-          if (confirm(`Permanently delete file "${file.file_name}"? This cannot be undone.`)) {
-            try {
-              const response = await fetch(`${API_BASE}/files/${file.id}`, { method: "DELETE" });
-              if (response.ok) {
-                trash.delete(`file-${file.id}`);
-                saveTrash();
-                fetchFoldersAndFiles();
-              } else {
-                alert("Failed to delete file permanently.");
-              }
-            } catch (err) {
-              console.error("Permanent delete error:", err);
-              alert("Error deleting file permanently.");
+          if (!confirm(`Permanently delete file "${file.file_name}"? This cannot be undone.`)) return;
+
+          try {
+            const response = await fetch(`${API_BASE}/files/${file.id}`, { method: "DELETE" });
+
+            if (!response.ok) {
+              alert("Failed to delete file permanently.");
+              return;
             }
+
+            // Cleanup local sets
+            trash.delete(`file-${file.id}`);
+            favorites.delete(`file-${file.id}`);
+            saveTrash();
+            saveFavorites();
+
+            // If currentFolderId points to a folder that was inside a deleted file context (rare),
+            // keep as-is. Otherwise just refresh UI after cleanup.
+            await fetchFoldersAndFiles();
+          } catch (err) {
+            console.error("Permanent delete error:", err);
+            alert("Error deleting file permanently.");
           }
         },
         () => toggleFavorite(file.id, "file")
@@ -486,23 +665,26 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function addFile() {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.onchange = async (e) => {
-      e.preventDefault();
-      const file = e.target.files[0];
-      if (!file) return;
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".xls,.xlsx";
+      input.onchange = async (e) => {
+        e.preventDefault();
+        const file = e.target.files[0];
+        if (!file) return;
 
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("folder_id", currentFolderId);
-      formData.append("adminid", "adminEnierga");
+        const formData = new FormData();
+        formData.append("file", file);
+        if (currentFolderId !== null) {
+          formData.append("folder_id", currentFolderId);
+        }
+        formData.append("adminid", "adminEnierga");
 
-      await fetch(`${API_BASE}/files`, { method: "POST", body: formData });
-      fetchFoldersAndFiles();
-    };
-    input.click();
-  }
+        await fetch(`${API_BASE}/files`, { method: "POST", body: formData });
+        fetchFoldersAndFiles();
+      };
+      input.click();
+    }
 
   // Initial load
   fetchFoldersAndFiles();
