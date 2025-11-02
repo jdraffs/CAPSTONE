@@ -115,274 +115,254 @@ document.addEventListener('DOMContentLoaded', () => {
   updateRecentUploadsCount();
 });
 
-// START OF ADMIN2.JS CONTENT
-window.addEventListener('DOMContentLoaded', () => {
-  if (typeof XLSX === 'undefined') {
-    const script = document.createElement('script');
-    script.src = "https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js";
-    script.onload = () => console.log('XLSX loaded dynamically');
+// START OF ADMIN2.JS CLEAN VERSION
+
+window.addEventListener("DOMContentLoaded", () => {
+  // === Dynamic XLSX load ===
+  if (typeof XLSX === "undefined") {
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
+    script.onload = () => console.log("XLSX loaded dynamically");
     document.body.appendChild(script);
   }
-});
 
-
-const dataFileInput = document.getElementById('dataFileInput');
-const fileInfo = document.getElementById('fileInfo');
-const tablePreview = document.getElementById('tablePreview');
-const loadingSpinner = document.getElementById('loadingSpinner');
-const noFileMsg = document.getElementById('noFileMsg');
-const generateBtn = document.getElementById('generateVizBtn');
-
-if (dataFileInput) {
-  dataFileInput.addEventListener('change', () => {
-    const file = dataFileInput.files[0];
-    if (!file) return;
-
-  const fileSizeKB = (file.size / 1024).toFixed(1);
-  fileInfo.textContent = `File uploaded: ${file.name}, size: ${fileSizeKB} KB`;
-
-  showLoading();
-
-  const fileName = file.name.toLowerCase();
-
-  if (fileName.endsWith('.csv')) {
-    parseCSV(file);
-  } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
-    parseExcel(file);
-  } else if (fileName.endsWith('.json')) {
-    parseJSON(file);
-  } else {
-    hideLoading();
-    tablePreview.innerHTML = `<p>Unsupported file format.</p>`;
-  }
-});
-
-function showLoading() {
-  loadingSpinner.style.display = 'block';
-  noFileMsg.style.display = 'none';
-  tablePreview.querySelectorAll('p:not(#noFileMsg)').forEach(p => p.remove());
-}
-
-function hideLoading() {
-  loadingSpinner.style.display = 'none';
-    const fileSizeKB = (file.size / 1024).toFixed(1);
-    fileInfo.textContent = `File uploaded: ${file.name}, size: ${fileSizeKB} KB`;
-
-    showLoading();
-
-    setTimeout(() => {
-      hideLoading();
-      noFileMsg.style.display = 'none';
-      tablePreview.innerHTML = `<p>File "${file.name}" ready for preview.</p>`;
-      generateBtn.disabled = false;
-    }, 2000);
-  };
-}
-
-function renderTable(data) {
-  hideLoading();
-  if (!data || !data.length) {
-    tablePreview.innerHTML = '<p>No data found in file.</p>';
-    return;
-  }
-
-  const table = document.createElement('table');
-  table.classList.add('data-table');
-
-  // header
-  const headerRow = document.createElement('tr');
-  Object.keys(data[0]).forEach(key => {
-    const th = document.createElement('th');
-    th.textContent = key;
-    headerRow.appendChild(th);
-  });
-  table.appendChild(headerRow);
-
-  // first few rows
-  data.slice(0, 10).forEach(row => {
-    const tr = document.createElement('tr');
-    Object.values(row).forEach(val => {
-      const td = document.createElement('td');
-      td.textContent = val;
-      tr.appendChild(td);
-    });
-    table.appendChild(tr);
-  });
-
-  tablePreview.innerHTML = '';
-  tablePreview.appendChild(table);
-  generateBtn.disabled = false;
-}
-
-//parsers
-
-function parseCSV(file) {
-  Papa.parse(file, {
-    header: true,
-    complete: (results) => renderTable(results.data),
-    error: (err) => {
-      hideLoading();
-      tablePreview.innerHTML = `<p>Error reading CSV: ${err.message}</p>`;
-    }
-  });
-}
-
-function parseExcel(file) {
-  const reader = new FileReader();
-
-  reader.onload = (e) => {
-    setTimeout(() => {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: 'array' });
-      const firstSheet = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[firstSheet];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet);
-      renderTable(jsonData);
-    }, 800); 
-  };
-
-  reader.onerror = () => {
-    hideLoading();
-    tablePreview.innerHTML = `<p>Error reading Excel file.</p>`;
-  };
-
-  reader.readAsArrayBuffer(file);
-}
-
-
-function parseJSON(file) {
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      const jsonData = JSON.parse(e.target.result);
-      const arrayData = Array.isArray(jsonData) ? jsonData : [jsonData];
-      renderTable(arrayData);
-    } catch (err) {
-      tablePreview.innerHTML = `<p>Error parsing JSON: ${err.message}</p>`;
-    } finally {
-      hideLoading();
-    }
-  };
-  reader.readAsText(file);
-}
-
-
-// FILE UPLOAD + PREVIEW 
-const fileInput = document.getElementById("excelFile");
-
-fileInput.addEventListener("change", (event) => {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-
-  reader.onload = (e) => {
-    setTimeout(() => {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: "array" });
-      const firstSheet = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[firstSheet];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-      renderTable(jsonData);
-      generateBtn.disabled = false; //Para maenable yung "Generate Visualization"
-    }, 800);
-  };
-
-  reader.readAsArrayBuffer(file);
-});
-
-// TABLE RENDERING FUNCTION 
-function renderTable(data) {
-  if (!data || !data.length) {
-    tablePreview.innerHTML = "<p>No data found in the file.</p>";
-    return;
-  }
-
-  const headers = Object.keys(data[0]);
-  const headerHTML = headers.map(h => `<th>${h}</th>`).join("");
-  const rowsHTML = data
-    .map(row => {
-      const cells = headers.map(h => `<td>${row[h] ?? ""}</td>`).join("");
-      return `<tr>${cells}</tr>`;
-    })
-    .join("");
-
-  tablePreview.innerHTML = `
-    <table class="preview-table">
-      <thead><tr>${headerHTML}</tr></thead>
-      <tbody>${rowsHTML}</tbody>
-    </table>
-  `;
-}
-
-// START NG CHART GENERATION 
-generateBtn.addEventListener("click", () => {
-  const table = tablePreview.querySelector("table");
-  if (!table) {
-    alert("Please upload a file first.");
-    return;
-  }
-
-  // extract headers & rows
-  const headers = Array.from(table.querySelectorAll("th")).map(th => th.textContent);
-  const rows = Array.from(table.querySelectorAll("tr"))
-    .slice(1)
-    .map(tr => Array.from(tr.querySelectorAll("td")).map(td => td.textContent));
-
-  if (!headers.length || !rows.length) {
-    alert("No data available to visualize.");
-    return;
-  }
-
-  // detect numeric columns
-  const numericCols = headers.filter((_, colIndex) =>
-    rows.every(row => !isNaN(parseFloat(row[colIndex])) && row[colIndex] !== "")
-  );
-
-  if (numericCols.length === 0) {
-    alert("No numeric columns found for chart visualization.");
-    return;
-  }
-
-  // use first numeric column for chart data
-  const valueColIndex = headers.indexOf(numericCols[0]);
-  const labels = rows.map(row => row[0]); // first column = labels
-  const values = rows.map(row => parseFloat(row[valueColIndex]));
-
-  // clear previous chart
+  const dataFileInput = document.getElementById("dataFileInput");
+  const fileInfo = document.getElementById("fileInfo");
+  const tablePreview = document.getElementById("tablePreview");
+  const loadingSpinner = document.getElementById("loadingSpinner");
+  const noFileMsg = document.getElementById("noFileMsg");
+  const generateBtn = document.getElementById("generateVizBtn");
   const vizArea = document.getElementById("visualizationArea");
-  vizArea.innerHTML = '<canvas id="dataChart"></canvas>';
 
-  //draw chart
-  const ctx = document.getElementById("dataChart").getContext("2d");
-  new Chart(ctx, {
-    type: "bar", // pwedeng palitan ng line or pie
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: `${numericCols[0]} (Preview)`,
-          data: values,
-          backgroundColor: "rgba(54, 162, 235, 0.6)",
-          borderColor: "rgba(54, 162, 235, 1)",
-          borderWidth: 1,
+  let jsonData = [];
+  let uploadedFileId = null; // store backend file ID
+
+  // === File Input Handler ===
+  if (dataFileInput) {
+    dataFileInput.addEventListener("change", async () => {
+      const file = dataFileInput.files[0];
+      if (!file) return;
+
+      const fileSizeKB = (file.size / 1024).toFixed(1);
+      fileInfo.textContent = `Uploading ${file.name}...`;
+
+      showLoading();
+      const fileName = file.name.toLowerCase();
+
+      // Upload file to backend
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch("/api/data/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        const result = await res.json();
+        if (result.success) {
+          uploadedFileId = result.id;
+          console.log("File uploaded to DB, ID:", uploadedFileId);
+          fileInfo.textContent = `${file.name} uploaded successfully (${fileSizeKB} KB)`;
+        } else {
+          console.error("Upload failed:", result.message);
+          fileInfo.textContent = "Upload failed.";
+        }
+      } catch (err) {
+        console.error("Upload error:", err);
+        fileInfo.textContent = "Server upload failed.";
+      }
+
+      // Continue with preview rendering
+      if (fileName.endsWith(".csv")) parseCSV(file);
+      else if (fileName.endsWith(".xlsx") || fileName.endsWith(".xls")) parseExcel(file);
+      else if (fileName.endsWith(".json")) parseJSON(file);
+      else {
+        hideLoading();
+        tablePreview.innerHTML = `<p>Unsupported file format.</p>`;
+      }
+    });
+  }
+
+  function showLoading() {
+    loadingSpinner.style.display = "block";
+    noFileMsg.style.display = "none";
+  }
+
+  function hideLoading() {
+    loadingSpinner.style.display = "none";
+  }
+
+  // === RENDER TABLE ===
+  function renderTable(data) {
+    hideLoading();
+    if (!data || !data.length) {
+      tablePreview.innerHTML = "<p>No data found in the file.</p>";
+      generateBtn.disabled = true;
+      return;
+    }
+
+    jsonData = data;
+
+    const headers = Object.keys(data[0]);
+    const table = document.createElement("table");
+    table.className = "preview-table";
+
+    const thead = document.createElement("thead");
+    const trHead = document.createElement("tr");
+    headers.forEach((h) => {
+      const th = document.createElement("th");
+      th.textContent = h;
+      trHead.appendChild(th);
+    });
+    thead.appendChild(trHead);
+    table.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+    data.slice(0, 50).forEach((row) => {
+      const tr = document.createElement("tr");
+      headers.forEach((h) => {
+        const td = document.createElement("td");
+        td.textContent = row[h] ?? "";
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+
+    tablePreview.innerHTML = "";
+    tablePreview.appendChild(table);
+
+    // Enable visualization button
+    generateBtn.disabled = false;
+    generateBtn.classList.add("active");
+  }
+
+  // === PARSERS ===
+  function parseCSV(file) {
+    Papa.parse(file, {
+      header: true,
+      complete: (results) => renderTable(results.data),
+      error: (err) => {
+        hideLoading();
+        tablePreview.innerHTML = `<p>Error reading CSV: ${err.message}</p>`;
+      },
+    });
+  }
+
+  function parseExcel(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setTimeout(() => {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+        const firstSheet = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheet];
+        const parsed = XLSX.utils.sheet_to_json(worksheet);
+        renderTable(parsed);
+      }, 500);
+    };
+    reader.onerror = () => {
+      hideLoading();
+      tablePreview.innerHTML = "<p>Error reading Excel file.</p>";
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function parseJSON(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const parsed = JSON.parse(e.target.result);
+        const arr = Array.isArray(parsed) ? parsed : [parsed];
+        renderTable(arr);
+      } catch (err) {
+        tablePreview.innerHTML = `<p>Error parsing JSON: ${err.message}</p>`;
+      } finally {
+        hideLoading();
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // === CHART GENERATION ===
+  generateBtn.addEventListener("click", async () => {
+    if (jsonData.length === 0) {
+      alert("Please upload and preview a file first.");
+      return;
+    }
+
+    const headers = Object.keys(jsonData[0]);
+    const numericCols = headers.filter((h) =>
+      jsonData.every((row) => !isNaN(parseFloat(row[h])) && row[h] !== "")
+    );
+
+    if (numericCols.length === 0) {
+      alert("No numeric columns found for chart visualization.");
+      return;
+    }
+
+    // use first numeric column for chart
+    const valueCol = numericCols[0];
+    const labelCol = headers[0];
+    const labels = jsonData.map((row) => row[labelCol]);
+    const values = jsonData.map((row) => parseFloat(row[valueCol]));
+
+    vizArea.innerHTML = '<canvas id="dataChart"></canvas>';
+    const ctx = document.getElementById("dataChart").getContext("2d");
+
+    new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: `${valueCol} (Preview)`,
+            data: values,
+            backgroundColor: "rgba(54, 162, 235, 0.6)",
+            borderColor: "rgba(54, 162, 235, 1)",
+            borderWidth: 1,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: true },
+          title: {
+            display: true,
+            text: "Generated Data Visualization",
+            font: { size: 16 },
+          },
         },
-      ],
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { display: true },
-        title: {
-          display: true,
-          text: "Generated Data Visualization",
-          font: { size: 16 },
+        scales: {
+          y: { beginAtZero: true },
         },
       },
-      scales: {
-        y: { beginAtZero: true },
-      },
-    },
+    });
+
+    // Send visualization to backend
+    if (uploadedFileId) {
+      const response = await fetch("/api/data/visualization", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "Generated Chart",
+          chartType: "bar",
+          labels,
+          values,
+          fileId: uploadedFileId,
+        }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        console.log("Visualization saved to DB");
+      } else {
+        console.error("Failed to save visualization:", result.message);
+      }
+    } else {
+      console.warn("No uploaded file ID to link visualization with");
+    }
   });
 });
