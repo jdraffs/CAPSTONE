@@ -285,91 +285,91 @@ window.addEventListener("DOMContentLoaded", () => {
     reader.readAsText(file);
   }
 
-  // === CHART GENERATION ===
-  generateBtn.addEventListener("click", async () => {
-    if (jsonData.length === 0) {
-      alert("Please upload and preview a file first.");
-      return;
-    }
+// === CHART GENERATION ===
+const chartTypeSelect = document.getElementById("chartTypeSelect"); 
+generateBtn.addEventListener("click", async () => {
+  if (jsonData.length === 0) {
+    alert("Please upload and preview a file first.");
+    return;
+  }
 
-    const headers = Object.keys(jsonData[0]);
-    const numericCols = headers.filter((h) =>
-      jsonData.every((row) => !isNaN(parseFloat(row[h])) && row[h] !== "")
-    );
+  const headers = Object.keys(jsonData[0]);
+  const numericCols = headers.filter((h) =>
+    jsonData.every((row) => !isNaN(parseFloat(row[h])) && row[h] !== "")
+  );
 
-    if (numericCols.length === 0) {
-      alert("No numeric columns found for chart visualization.");
-      return;
-    }
+  if (numericCols.length === 0) {
+    alert("No numeric columns found for chart visualization.");
+    return;
+  }
 
-    // use first numeric column for chart
-    const valueCol = numericCols[0];
-    const labelCol = headers[0];
-    const labels = jsonData.map((row) => row[labelCol]);
-    const values = jsonData.map((row) => parseFloat(row[valueCol]));
+  const valueCol = numericCols[0];
+  const labelCol = headers[0];
+  const labels = jsonData.map((row) => row[labelCol]);
+  const values = jsonData.map((row) => parseFloat(row[valueCol]));
 
-    vizArea.innerHTML = '<canvas id="dataChart"></canvas>';
-    const ctx = document.getElementById("dataChart").getContext("2d");
+  vizArea.innerHTML = '<canvas id="dataChart"></canvas>';
+  const ctx = document.getElementById("dataChart").getContext("2d");
 
-    //small safety check lang
-    if (typeof Chart === "undefined") {
-  alert("Chart.js failed to load. Please check your internet connection or script order.");
-  return;
-}
+  // safety check lang before creating chart
+  if (typeof Chart === "undefined") {
+    alert("Chart.js failed to load. Please check your connection or script order.");
+    return;
+  }
 
+  // use selected chart type, fallback to 'bar'
+  new Chart(ctx, {
+    type: chartTypeSelect?.value || "bar",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: `${valueCol} (Preview)`,
+          data: values,
+          backgroundColor: "rgba(54, 162, 235, 0.6)",
+          borderColor: "rgba(54, 162, 235, 1)",
+          borderWidth: 1,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: true },
+        title: {
+          display: true,
+          text: "Generated Data Visualization",
+          font: { size: 16 },
+        },
+      },
+      scales: {
+        y: { beginAtZero: true },
+      },
+    },
+  });
 
-    new Chart(ctx, {
-      type: "bar",
-      data: {
+  // para isend yung visualization to backend
+  if (uploadedFileId) {
+    const response = await fetch("/api/data/visualization", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: "Generated Chart",
+        chartType: chartTypeSelect?.value || "bar",
         labels,
-        datasets: [
-          {
-            label: `${valueCol} (Preview)`,
-            data: values,
-            backgroundColor: "rgba(54, 162, 235, 0.6)",
-            borderColor: "rgba(54, 162, 235, 1)",
-            borderWidth: 1,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { display: true },
-          title: {
-            display: true,
-            text: "Generated Data Visualization",
-            font: { size: 16 },
-          },
-        },
-        scales: {
-          y: { beginAtZero: true },
-        },
-      },
+        values,
+        fileId: uploadedFileId,
+      }),
     });
 
-    // Send visualization to backend
-    if (uploadedFileId) {
-      const response = await fetch("/api/data/visualization", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: "Generated Chart",
-          chartType: "bar",
-          labels,
-          values,
-          fileId: uploadedFileId,
-        }),
-      });
-
-      const result = await response.json();
-      if (result.success) {
-        console.log("Visualization saved to DB");
-      } else {
-        console.error("Failed to save visualization:", result.message);
-      }
+    const result = await response.json();
+    if (result.success) {
+      console.log("Visualization saved to DB");
     } else {
-      console.warn("No uploaded file ID to link visualization with");
+      console.error("Failed to save visualization:", result.message);
     }
-  });
+  } else {
+    console.warn("No uploaded file ID to link visualization with");
+  }
+});
 });
