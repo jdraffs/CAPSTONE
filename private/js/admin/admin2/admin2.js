@@ -311,6 +311,13 @@ window.addEventListener("DOMContentLoaded", () => {
     vizArea.innerHTML = '<canvas id="dataChart"></canvas>';
     const ctx = document.getElementById("dataChart").getContext("2d");
 
+    //small safety check lang
+    if (typeof Chart === "undefined") {
+  alert("Chart.js failed to load. Please check your internet connection or script order.");
+  return;
+}
+
+
     new Chart(ctx, {
       type: "bar",
       data: {
