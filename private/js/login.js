@@ -13,15 +13,21 @@ document.getElementById('admin-login-form').addEventListener('submit', async (e)
 
     const data = await response.json();
 
-  if (data.success) {
-    if (data.adminid === 'adminave') {
-      window.location.href = '/private/html/adminPages/adminAve/admin1.html';
-    } else if (data.adminid === 'adminEnierga') {
-      window.location.href = '/private/html/adminPages/adminEnierga/admin2.html';
-    } 
-  } else {
-    alert('Invalid admin ID or password.');
-  }
+    if (data.success) {
+      // ✅ Store admin info globally for later access
+      localStorage.setItem("adminid", adminid);
+
+      // Redirect based on admin ID
+      if (data.adminid === 'adminave') {
+        window.location.href = '/private/html/adminPages/adminAve/admin1.html';
+      } else if (data.adminid === 'adminEnierga') {
+        window.location.href = '/private/html/adminPages/adminEnierga/admin2.html';
+      } else {
+        alert('Unknown admin ID.');
+      }
+    } else {
+      alert('Invalid admin ID or password.');
+    }
 
   } catch (error) {
     console.error('Error:', error);
