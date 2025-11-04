@@ -101,7 +101,7 @@ router.get("/folders", async (req, res) => {
 // ---------- File Routes ----------
 
 // Upload File
-router.post("/files", upload.single("file"), async (req, res) => {
+router.post("/upload", upload.single("file"), async (req, res) => {
   try {
     let { folder_id, adminid } = req.body;
     const filePath = `/uploads/fileRepository/${req.file.filename}`;

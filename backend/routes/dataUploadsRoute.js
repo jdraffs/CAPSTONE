@@ -49,20 +49,18 @@ const upload = multer({ storage });
 
 
 // Upload a file
-router.post("/data/upload", upload.single("file"), async (req, res) => {
-  try {
-    const { originalname, mimetype, size } = req.file;
-    const result = await pool.query(
-      `INSERT INTO data_uploads (filename, filetype, filesize)
-       VALUES ($1, $2, $3) RETURNING id`,
-      [originalname, mimetype, size]
-    );
+router.post("/upload", upload.single("file"), async (req, res) => {
+  const { folder_id, adminid } = req.body;
+  const file = req.file;
 
-    res.json({ success: true, id: result.rows[0].id });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Upload failed" });
-  }
+  await pool.query(
+    `INSERT INTO file_repository_files 
+     (folder_id, file_name, file_path, file_type, file_size, adminid)
+     VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+    [folder_id, file.originalname, file.path, file.mimetype, file.size, adminid]
+  );
+
+  res.status(200).json({ message: "File uploaded successfully" });
 });
 
 // Save visualization
