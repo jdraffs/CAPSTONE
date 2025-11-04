@@ -4,7 +4,6 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -29,12 +28,9 @@ app.use(cors());
 app.use(express.json());
 
 // Serve static folders (correct relative paths)
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
-app.use('/private', express.static(path.join(__dirname, 'private')));
-app.use('/public', express.static(path.join(__dirname, 'public')));
-
-
-
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
+app.use('/private', express.static(path.join(__dirname, '../private')));
+app.use('/public', express.static(path.join(__dirname, '../public')));
 
 // routes
 app.use('/api/login', loginRoute);
@@ -48,7 +44,6 @@ app.use("/api/files", fileRepositoryRoute);
 app.use('/api/forms', formsrepositoryRoute);
 app.use("/uploads", express.static("uploads")); // serve uploaded files
 app.use("/api", dataUploadsRoute);
-
 
 // pagstart ng server
 const PORT = process.env.PORT || 3000;
