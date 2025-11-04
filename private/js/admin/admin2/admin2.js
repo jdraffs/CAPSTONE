@@ -151,27 +151,30 @@ window.addEventListener("DOMContentLoaded", () => {
 
       // Upload file to backend
       try {
-        const formData = new FormData();
-        formData.append("file", file);
+  const adminid = localStorage.getItem("adminid");
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("adminid", adminid);
 
-        const res = await fetch("/api/data/upload", {
-          method: "POST",
-          body: formData,
-        });
+  const res = await fetch("http://localhost:3000/api/files/upload", {
+    method: "POST",
+    body: formData
+  });
 
-        const result = await res.json();
-        if (result.success) {
-          uploadedFileId = result.id;
-          console.log("File uploaded to DB, ID:", uploadedFileId);
-          fileInfo.textContent = `${file.name} uploaded successfully (${fileSizeKB} KB)`;
-        } else {
-          console.error("Upload failed:", result.message);
-          fileInfo.textContent = "Upload failed.";
-        }
-      } catch (err) {
-        console.error("Upload error:", err);
-        fileInfo.textContent = "Server upload failed.";
-      }
+  const result = await res.json();
+  if (result.success) {
+    uploadedFileId = result.id;
+    console.log("File uploaded to DB, ID:", uploadedFileId);
+    fileInfo.textContent = `${file.name} uploaded successfully (${fileSizeKB} KB)`;
+  } else {
+    console.error("Upload failed:", result.message);
+    fileInfo.textContent = "Upload failed.";
+  }
+} catch (err) {
+  console.error("Upload error:", err);
+  fileInfo.textContent = "Server upload failed.";
+}
+
 
       // Continue with preview rendering
       if (fileName.endsWith(".csv")) parseCSV(file);
