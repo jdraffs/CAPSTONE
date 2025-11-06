@@ -168,64 +168,150 @@ window.addEventListener("DOMContentLoaded", () => {
     reader.readAsText(file);
   }
 
-  // === CHART GENERATION ===
-  generateBtn.addEventListener("click", async () => {
-    if (jsonData.length === 0) {
-      alert("Please upload and preview a file first.");
-      return;
-    }
+// === CHART GENERATION ===
+generateBtn.addEventListener("click", async () => {
+  if (jsonData.length === 0) {
+    alert("Please upload and preview a file first.");
+    return;
+  }
 
-    const headers = Object.keys(jsonData[0]);
-    const numericCols = headers.filter((h) =>
-      jsonData.every((row) => !isNaN(parseFloat(row[h])) && row[h] !== "")
-    );
+  const headers = Object.keys(jsonData[0]);
+  const numericCols = headers.filter((h) =>
+    jsonData.every((row) => !isNaN(parseFloat(row[h])) && row[h] !== "")
+  );
 
-    if (numericCols.length === 0) {
-      alert("No numeric columns found for chart visualization.");
-      return;
-    }
+  if (numericCols.length === 0) {
+    alert("No numeric columns found for chart visualization.");
+    return;
+  }
 
-    const valueCol = numericCols[0];
-    const labelCol = headers[0];
-    const labels = jsonData.map((row) => row[labelCol]);
-    const values = jsonData.map((row) => parseFloat(row[valueCol]));
+  const valueCol = numericCols[0];
+  const labelCol = headers[0];
+  const labels = jsonData.map((row) => row[labelCol]);
+  const values = jsonData.map((row) => parseFloat(row[valueCol]));
 
-    vizArea.innerHTML = '<canvas id="dataChart"></canvas>';
-    const ctx = document.getElementById("dataChart").getContext("2d");
+  vizArea.innerHTML = '<canvas id="dataChart" style="height: 400px;"></canvas>';
+  const ctx = document.getElementById("dataChart").getContext("2d");
 
-    if (typeof Chart === "undefined") {
-      alert("Chart.js failed to load.");
-      return;
-    }
+  if (typeof Chart === "undefined") {
+    alert("Chart.js failed to load.");
+    return;
+  }
 
-    new Chart(ctx, {
-      type: chartTypeSelect?.value || "bar",
-      data: {
-        labels,
-        datasets: [
-          {
-            label: `${valueCol} (Preview)`,
-            data: values,
-            backgroundColor: "rgba(54, 162, 235, 0.6)",
-            borderColor: "rgba(54, 162, 235, 1)",
-            borderWidth: 1,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { display: true },
-          title: {
-            display: true,
-            text: "Generated Data Visualization",
-            font: { size: 16 },
+  // idedestroy previous chart if exists
+  if (window.currentChart) {
+    window.currentChart.destroy();
+  }
+
+  const vibrantPalette = [
+    "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6",
+    "#ef4444", "#14b8a6", "#6366f1", "#f97316"
+  ];
+
+  // gradient background generator (for bar/line)
+  const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+  gradient.addColorStop(0, "rgba(59,130,246,0.6)");
+  gradient.addColorStop(1, "rgba(139,92,246,0.2)");
+
+  // shadow plguin
+  const shadowPlugin = {
+    id: "shadowPlugin",
+    beforeDraw: (chart) => {
+      const { ctx } = chart;
+      ctx.save();
+      ctx.shadowColor = "rgba(0, 0, 0, 0.15)";
+      ctx.shadowBlur = 15;
+      ctx.shadowOffsetY = 8;
+    },
+    afterDraw: (chart) => {
+      chart.ctx.restore();
+    },
+  };
+
+  const chartType = chartTypeSelect?.value || "bar";
+
+  // common dataset styling
+  const dataset = {
+    label: `${valueCol} (Preview)`,
+    data: values,
+    borderWidth: 2,
+    borderRadius: 12,
+    tension: 0.4,
+    fill: chartType !== "bar" ? true : false,
+  };
+
+  // chart-specific visuals
+  if (chartType === "bar") {
+    dataset.backgroundColor = vibrantPalette.slice(0, values.length);
+    dataset.borderColor = vibrantPalette.slice(0, values.length);
+  } else if (chartType === "line") {
+    dataset.borderColor = "#3b82f6";
+    dataset.backgroundColor = gradient;
+  } else if (chartType === "pie" || chartType === "doughnut") {
+    dataset.backgroundColor = vibrantPalette.slice(0, values.length);
+    dataset.borderWidth = 1.5;
+  }
+
+  // create new chart
+  window.currentChart = new Chart(ctx, {
+    type: chartType,
+    data: { labels, datasets: [dataset] },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: 20 },
+      plugins: {
+        legend: {
+          display: true,
+          labels: {
+            color: "#333",
+            font: { size: 13, family: "'Inter', sans-serif" },
           },
         },
-        scales: {
-          y: { beginAtZero: true },
+        title: {
+          display: true,
+          text: "Generated Data Visualization",
+          color: "#222",
+          font: {
+            size: 18,
+            weight: "600",
+            family: "'Times New Roman', serif",
+          },
+          padding: { bottom: 20 },
+        },
+        tooltip: {
+          backgroundColor: "rgba(0,0,0,0.85)",
+          titleFont: { weight: "600" },
+          bodyFont: { size: 13 },
+          cornerRadius: 6,
+          padding: 10,
         },
       },
-    });
+      scales:
+        chartType !== "pie" && chartType !== "doughnut"
+          ? {
+              x: {
+                ticks: { color: "#555", font: { size: 12 } },
+                grid: { color: "rgba(200,200,200,0.15)" },
+              },
+              y: {
+                beginAtZero: true,
+                ticks: { color: "#555", font: { size: 12 } },
+                grid: { color: "rgba(200,200,200,0.15)" },
+              },
+            }
+          : {},
+      animation: {
+        duration: 1200,
+        easing: "easeOutQuart",
+      },
+      elements: {
+        bar: { borderRadius: 12 },
+        line: { borderWidth: 3 },
+        point: { radius: 4, hoverRadius: 6, backgroundColor: "#3b82f6" },
+      },
+    },
+    plugins: [shadowPlugin],
   });
+});
 });
