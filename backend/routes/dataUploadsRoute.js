@@ -49,19 +49,42 @@ const upload = multer({ storage });
 
 
 // Upload a file
+// Upload a file
 router.post("/upload", upload.single("file"), async (req, res) => {
-  const { folder_id, adminid } = req.body;
-  const file = req.file;
+  try {
+    const { folder_id, adminid } = req.body;
+    const file = req.file;
 
-  await pool.query(
-    `INSERT INTO file_repository_files 
-     (folder_id, file_name, file_path, file_type, file_size, adminid)
-     VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-    [folder_id, file.originalname, file.path, file.mimetype, file.size, adminid]
-  );
+    if (!file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
 
-  res.status(200).json({ message: "File uploaded successfully" });
+    // Extract file info
+    const storedFileName = file.filename; // e.g., 1762404284765-test.xlsx
+    const originalFileName = file.originalname;
+    const filePath = path.join("public/uploads/data_uploads", storedFileName);
+
+
+    // Insert into DB using the stored file name and correct path
+    const result = await pool.query(
+      `INSERT INTO file_repository_files 
+       (folder_id, file_name, file_path, file_type, file_size, adminid)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [folder_id, storedFileName, filePath, file.mimetype, file.size, adminid, finalChartType]
+    );
+
+    res.status(200).json({
+      message: "File uploaded successfully",
+      file: result.rows[0],
+    });
+
+  } catch (error) {
+    console.error("Error uploading file:", error);
+    res.status(500).json({ error: "File upload failed" });
+  }
 });
+
 
 // Save visualization
 router.post("/data/visualization", async (req, res) => {

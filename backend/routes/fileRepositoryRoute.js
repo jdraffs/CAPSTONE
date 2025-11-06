@@ -208,4 +208,34 @@ router.delete("/folders/:id", async (req, res) => {
   }
 });
 
+// Example route in fileRepositoryRoute.js
+router.get("/files/data", async (req, res) => {
+  try {
+    const { id } = req.query;
+    const result = await pool.query("SELECT * FROM file_repository_files WHERE id = $1", [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: "File not found" });
+    }
+
+    const file = result.rows[0];
+    console.log("Fetched file record:", file); // 👈 add this line
+
+    // Use correct full path
+    const filePath = path.join(process.cwd(), "public", file.file_path.replace(/^\/+/, ""));
+
+    console.log("Resolved file path:", filePath); // 👈 add this too
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ success: false, message: "File not found on disk" });
+    }
+
+    res.json({ success: true, message: "File found", path: filePath });
+  } catch (err) {
+    console.error("Error fetching file data:", err.message);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+
 export default router;

@@ -252,66 +252,74 @@ generateBtn.addEventListener("click", async () => {
     dataset.borderWidth = 1.5;
   }
 
-  // create new chart
-  window.currentChart = new Chart(ctx, {
-    type: chartType,
-    data: { labels, datasets: [dataset] },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      layout: { padding: 20 },
-      plugins: {
-        legend: {
-          display: true,
-          labels: {
-            color: "#333",
-            font: { size: 13, family: "'Inter', sans-serif" },
-          },
-        },
-        title: {
-          display: true,
-          text: "Generated Data Visualization",
-          color: "#222",
-          font: {
-            size: 18,
-            weight: "600",
-            family: "'Times New Roman', serif",
-          },
-          padding: { bottom: 20 },
-        },
-        tooltip: {
-          backgroundColor: "rgba(0,0,0,0.85)",
-          titleFont: { weight: "600" },
-          bodyFont: { size: 13 },
-          cornerRadius: 6,
-          padding: 10,
+// create new chart
+window.currentChart = new Chart(ctx, {
+  type: chartType,
+  data: { labels, datasets: [dataset] },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    layout: { padding: 20 },
+    plugins: {
+      legend: {
+        display: true,
+        labels: {
+          color: "#333",
+          font: { size: 13, family: "'Inter', sans-serif" },
         },
       },
-      scales:
-        chartType !== "pie" && chartType !== "doughnut"
-          ? {
-              x: {
-                ticks: { color: "#555", font: { size: 12 } },
-                grid: { color: "rgba(200,200,200,0.15)" },
-              },
-              y: {
-                beginAtZero: true,
-                ticks: { color: "#555", font: { size: 12 } },
-                grid: { color: "rgba(200,200,200,0.15)" },
-              },
-            }
-          : {},
-      animation: {
-        duration: 1200,
-        easing: "easeOutQuart",
+      title: {
+        display: true,
+        text: "Generated Data Visualization",
+        color: "#222",
+        font: {
+          size: 18,
+          weight: "600",
+          family: "'Times New Roman', serif",
+        },
+        padding: { bottom: 20 },
       },
-      elements: {
-        bar: { borderRadius: 12 },
-        line: { borderWidth: 3 },
-        point: { radius: 4, hoverRadius: 6, backgroundColor: "#3b82f6" },
+      tooltip: {
+        backgroundColor: "rgba(0,0,0,0.85)",
+        titleFont: { weight: "600" },
+        bodyFont: { size: 13 },
+        cornerRadius: 6,
+        padding: 10,
       },
     },
-    plugins: [shadowPlugin],
-  });
+    scales:
+      chartType !== "pie" && chartType !== "doughnut"
+        ? {
+            x: {
+              ticks: { color: "#555", font: { size: 12 } },
+              grid: { color: "rgba(200,200,200,0.15)" },
+            },
+            y: {
+              beginAtZero: true,
+              ticks: { color: "#555", font: { size: 12 } },
+              grid: { color: "rgba(200,200,200,0.15)" },
+            },
+          }
+        : {},
+    animation: {
+      duration: 1200,
+      easing: "easeOutQuart",
+    },
+    elements: {
+      bar: { borderRadius: 12 },
+      line: { borderWidth: 3 },
+      point: { radius: 4, hoverRadius: 6, backgroundColor: "#3b82f6" },
+    },
+  },
+  plugins: [shadowPlugin],
+});
+
+// ✅ Save selected chart info to localStorage for analytics page
+localStorage.setItem("lastChartType", chartType);
+localStorage.setItem("lastUploadedFileId", uploadedFileId);
+localStorage.setItem("lastLabels", JSON.stringify(labels));
+localStorage.setItem("lastValues", JSON.stringify(values));
+
+alert("Visualization generated successfully! You can now view it in Analytics.");
 });
 });
