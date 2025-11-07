@@ -114,3 +114,28 @@ document.addEventListener('DOMContentLoaded', () => {
   // RECENT UPLOADS 
   updateRecentUploadsCount();
 });
+
+//Recent Updates Modal 
+const updatesModal = document.getElementById("updatesModal");
+const viewAllUpdatesBtn = document.getElementById("viewAllUpdatesBtn");
+const closeUpdatesBtn = document.querySelector(".updates-close");
+const updatesModalTableBody = document.getElementById("updatesModalTableBody");
+
+viewAllUpdatesBtn.addEventListener("click", () => {
+  const tableRows = document.querySelectorAll(".updates-table tbody tr");
+  updatesModalTableBody.innerHTML = ""; // Clear old content
+  tableRows.forEach(row => {
+    updatesModalTableBody.innerHTML += row.outerHTML;
+  });
+  updatesModal.style.display = "flex";
+});
+
+closeUpdatesBtn.addEventListener("click", () => {
+  updatesModal.style.display = "none";
+});
+
+window.addEventListener("click", (e) => {
+  if (e.target === updatesModal) {
+    updatesModal.style.display = "none";
+  }
+});

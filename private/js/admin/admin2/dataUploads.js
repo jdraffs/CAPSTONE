@@ -193,125 +193,106 @@ generateBtn.addEventListener("click", async () => {
   vizArea.innerHTML = '<canvas id="dataChart" style="height: 400px;"></canvas>';
   const ctx = document.getElementById("dataChart").getContext("2d");
 
-  if (typeof Chart === "undefined") {
-    alert("Chart.js failed to load.");
-    return;
-  }
-
-  // idedestroy previous chart if exists
   if (window.currentChart) {
     window.currentChart.destroy();
   }
 
-  const vibrantPalette = [
-    "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6",
-    "#ef4444", "#14b8a6", "#6366f1", "#f97316"
-  ];
-
-  // gradient background generator (for bar/line)
+  // gradient fill
   const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-  gradient.addColorStop(0, "rgba(59,130,246,0.6)");
-  gradient.addColorStop(1, "rgba(139,92,246,0.2)");
-
-  // shadow plguin
-  const shadowPlugin = {
-    id: "shadowPlugin",
-    beforeDraw: (chart) => {
-      const { ctx } = chart;
-      ctx.save();
-      ctx.shadowColor = "rgba(0, 0, 0, 0.15)";
-      ctx.shadowBlur = 15;
-      ctx.shadowOffsetY = 8;
-    },
-    afterDraw: (chart) => {
-      chart.ctx.restore();
-    },
-  };
+  gradient.addColorStop(0, "rgba(59,130,246,0.35)");
+  gradient.addColorStop(1, "rgba(59,130,246,0.05)");
 
   const chartType = chartTypeSelect?.value || "bar";
 
-  // common dataset styling
+  const baseColor = "#3b82f6"; // main blue tone
+  const pastelPalette = [
+    "rgba(59,130,246,0.6)", "rgba(16,185,129,0.6)", "rgba(245,158,11,0.6)",
+    "rgba(139,92,246,0.6)", "rgba(239,68,68,0.6)", "rgba(20,184,166,0.6)",
+  ];
+
   const dataset = {
     label: `${valueCol} (Preview)`,
     data: values,
-    borderWidth: 2,
-    borderRadius: 12,
-    tension: 0.4,
-    fill: chartType !== "bar" ? true : false,
+    borderWidth: 2.5,
+    tension: 0.45,
+    fill: chartType === "line",
+    borderRadius: 8,
+    backgroundColor:
+      chartType === "line" ? gradient : pastelPalette.slice(0, values.length),
+    borderColor: chartType === "line" ? baseColor : pastelPalette.slice(0, values.length),
+    pointBackgroundColor: baseColor,
+    pointRadius: 4,
+    pointHoverRadius: 6,
   };
 
-  // chart-specific visuals
-  if (chartType === "bar") {
-    dataset.backgroundColor = vibrantPalette.slice(0, values.length);
-    dataset.borderColor = vibrantPalette.slice(0, values.length);
-  } else if (chartType === "line") {
-    dataset.borderColor = "#3b82f6";
-    dataset.backgroundColor = gradient;
-  } else if (chartType === "pie" || chartType === "doughnut") {
-    dataset.backgroundColor = vibrantPalette.slice(0, values.length);
-    dataset.borderWidth = 1.5;
-  }
-
-  // create new chart
   window.currentChart = new Chart(ctx, {
     type: chartType,
     data: { labels, datasets: [dataset] },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      layout: { padding: 20 },
+      layout: { padding: { top: 20, right: 20, bottom: 10, left: 10 } },
       plugins: {
         legend: {
-          display: true,
-          labels: {
-            color: "#333",
-            font: { size: 13, family: "'Inter', sans-serif" },
-          },
+          display: false,
         },
         title: {
           display: true,
           text: "Generated Data Visualization",
-          color: "#222",
+          color: "#1f2937",
           font: {
             size: 18,
             weight: "600",
-            family: "'Times New Roman', serif",
+            family: "'Inter', sans-serif",
           },
-          padding: { bottom: 20 },
+          padding: { bottom: 10 },
         },
         tooltip: {
-          backgroundColor: "rgba(0,0,0,0.85)",
-          titleFont: { weight: "600" },
+          backgroundColor: "rgba(0,0,0,0.8)",
           bodyFont: { size: 13 },
           cornerRadius: 6,
           padding: 10,
         },
       },
       scales:
-        chartType !== "pie" && chartType !== "doughnut"
-          ? {
+        chartType === "pie"
+          ? {}
+          : {
               x: {
-                ticks: { color: "#555", font: { size: 12 } },
-                grid: { color: "rgba(200,200,200,0.15)" },
+                grid: {
+                  color: "rgba(0,0,0,0.05)",
+                  borderDash: [4, 4],
+                },
+                ticks: {
+                  color: "#6b7280",
+                  font: { size: 12 },
+                },
               },
               y: {
                 beginAtZero: true,
-                ticks: { color: "#555", font: { size: 12 } },
-                grid: { color: "rgba(200,200,200,0.15)" },
+                grid: {
+                  color: "rgba(0,0,0,0.05)",
+                  borderDash: [4, 4],
+                },
+                ticks: {
+                  color: "#6b7280",
+                  font: { size: 12 },
+                },
               },
-            }
-          : {},
-      animation: {
-        duration: 1200,
-        easing: "easeOutQuart",
-      },
+            },
       elements: {
-        bar: { borderRadius: 12 },
-        line: { borderWidth: 3 },
-        point: { radius: 4, hoverRadius: 6, backgroundColor: "#3b82f6" },
+        bar: {
+          borderRadius: 10,
+        },
+        line: {
+          borderJoinStyle: "round",
+        },
+      },
+      animation: {
+        duration: 1000,
+        easing: "easeOutCubic",
       },
     },
-    plugins: [shadowPlugin],
   });
 });
 });

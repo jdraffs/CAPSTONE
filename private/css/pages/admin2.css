@@ -319,3 +319,114 @@
 .content-page.active {
   display: block;
 }
+
+/* recent updates section */
+.updates-section {
+    background: #fff;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    margin-top: 2rem;
+}
+
+.updates-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.updates-viewall {
+    background: none;
+    border: none;
+    color: #3b82f6;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.updates-viewall:hover {
+    text-decoration: underline;
+}
+
+.updates-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.updates-table th {
+    text-align: left;
+    color: #64748b;
+    font-weight: 600;
+    border-bottom: 2px solid #e2e8f0;
+    padding: 0.5rem 0;
+}
+
+.updates-table td {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+}
+
+.updates-icon {
+    margin-right: 8px;
+    font-size: 1rem;
+    vertical-align: middle;
+}
+
+.blue { color: #3b82f6; }
+.purple { color: #a855f7; }
+.orange { color: #f59e0b; }
+.green { color: #10b981; }
+.yellow { color: #eab308; }
+
+/* modal */
+.updates-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+}
+
+.updates-modal-content {
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    width: 80%;
+    max-width: 900px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+.updates-modal-body table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.updates-modal-body th,
+.updates-modal-body td {
+    text-align: left;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.updates-close {
+    float: right;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #64748b;
+}
+
+.updates-close:hover {
+    color: #ef4444;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
