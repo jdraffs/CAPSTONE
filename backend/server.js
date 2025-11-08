@@ -111,6 +111,21 @@ app.get("/api/files/data", async (req, res) => {
   }
 });
 
+app.post("/api/visualizations", async (req, res) => {
+  const { fileId, chartType, labels, values } = req.body;
+  try {
+    await pool.query(
+      "INSERT INTO data_visualizations (file_id, chart_type, labels, values) VALUES (?, ?, ?, ?)",
+      [fileId, chartType, JSON.stringify(labels), JSON.stringify(values)]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Failed to save visualization" });
+  }
+});
+
+
 
 
 // pagstart ng server
