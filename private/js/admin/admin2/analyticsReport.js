@@ -35,8 +35,15 @@ document.addEventListener("DOMContentLoaded", async () => {
           {
             label: "Data Values",
             data: sampleData,
-            backgroundColor: "rgba(100, 149, 237, 0.6)",
-            borderColor: "#4682B4",
+            backgroundColor: [
+              "rgba(255, 99, 132)",
+              "rgba(54, 162, 235)",
+              "rgba(255, 206, 86)",
+              "rgba(75, 192, 192)",
+              "rgba(153, 102, 255)"
+            ],
+            borderColor: "#000000ff",
+            borderRadius: 3,
             borderWidth: 1
           }
         ]
@@ -165,8 +172,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       document.getElementById("reportModal").classList.remove("active");
     }
   });
-
-  
 
   // Helper functions
   function calcMedian(arr) {

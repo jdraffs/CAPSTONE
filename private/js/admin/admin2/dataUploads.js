@@ -1,4 +1,3 @@
-
 window.addEventListener("DOMContentLoaded", () => {
   // === Dynamic XLSX load ===
   if (typeof XLSX === "undefined") {
@@ -312,17 +311,6 @@ window.currentChart = new Chart(ctx, {
     },
   },
   plugins: [shadowPlugin],
-});
-
-await fetch("http://localhost:3000/api/visualizations", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    fileId: uploadedFileId,
-    chartType: chartType,
-    labels: labels,
-    values: values
-  }),
 });
 
 // create new chart
