@@ -68,9 +68,9 @@ router.post("/upload", upload.single("file"), async (req, res) => {
     // Insert into DB using the stored file name and correct path
     const result = await pool.query(
       `INSERT INTO file_repository_files 
-       (folder_id, file_name, file_path, file_type, file_size, adminid)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING *`,
+      (folder_id, file_name, file_path, file_type, file_size, adminid)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING *`,
       [folder_id, storedFileName, filePath, file.mimetype, file.size, adminid, finalChartType]
     );
 
@@ -85,34 +85,9 @@ router.post("/upload", upload.single("file"), async (req, res) => {
   }
 });
 
-
-// Save visualization
-router.post("/data/visualization", async (req, res) => {
-  try {
-    const { title, chartType, labels, values, fileId } = req.body;
-
-    await pool.query(
-      `INSERT INTO data_visualizations (title, chart_type, labels, values, source_file_id)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [title, chartType, JSON.stringify(labels), JSON.stringify(values), fileId]
-    );
-
-    res.json({ success: true, message: "Visualization saved!" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Error saving visualization" });
-  }
-});
-
 // Fetch uploaded files
 router.get("/data/uploads", async (req, res) => {
   const result = await pool.query("SELECT * FROM data_uploads ORDER BY uploaded_at DESC");
-  res.json(result.rows);
-});
-
-// Fetch visualizations
-router.get("/data/visualizations", async (req, res) => {
-  const result = await pool.query("SELECT * FROM data_visualizations ORDER BY created_at DESC");
   res.json(result.rows);
 });
 
