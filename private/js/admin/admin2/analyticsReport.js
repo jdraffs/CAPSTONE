@@ -1,5 +1,4 @@
-//analyticsReport.js
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const reportsGrid = document.querySelector(".reports-grid");
 
   // Fetch uploaded files (data repository)
