@@ -1,3 +1,4 @@
+//analyticsReport.js
 document.addEventListener("DOMContentLoaded", () => {
   const reportsGrid = document.querySelector(".reports-grid");
 
