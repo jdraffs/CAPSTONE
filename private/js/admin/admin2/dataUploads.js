@@ -314,11 +314,36 @@ window.currentChart = new Chart(ctx, {
   plugins: [shadowPlugin],
 });
 
-// ✅ Save selected chart info to localStorage for analytics page
-localStorage.setItem("lastChartType", chartType);
-localStorage.setItem("lastUploadedFileId", uploadedFileId);
-localStorage.setItem("lastLabels", JSON.stringify(labels));
-localStorage.setItem("lastValues", JSON.stringify(values));
+await fetch("http://localhost:3000/api/visualizations", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    fileId: uploadedFileId,
+    chartType: chartType,
+    labels: labels,
+    values: values
+  }),
+});
+
+// create new chart
+window.currentChart = new Chart(ctx, {
+  type: chartType,
+  data: { labels, datasets: [dataset] },
+  options: { /* chart options... */ },
+  plugins: [shadowPlugin],
+});
+
+// ✅ Save chart data to backend (instead of localStorage)
+await fetch("http://localhost:3000/api/visualizations", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    fileId: uploadedFileId,
+    chartType: chartType,
+    labels: labels,
+    values: values
+  }),
+});
 
 alert("Visualization generated successfully! You can now view it in Analytics.");
 });

@@ -166,6 +166,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
+  
+
   // Helper functions
   function calcMedian(arr) {
     const sorted = [...arr].sort((a, b) => a - b);
