@@ -18,21 +18,21 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Permanently delete file by id and cleanup local sets
-async function deleteFilePermanent(id) {
-  try {
-    const response = await fetch(`${API_BASE}/files/${id}`, { method: "DELETE" });
-    if (!response.ok) throw new Error('failed');
-    // cleanup local sets
-    trash.delete(`file-${id}`);
-    favorites.delete(`file-${id}`);
-    saveTrash();
-    saveFavorites();
-    return true;
-  } catch (err) {
-    console.error(`Error permanently deleting file ${id}:`, err);
-    return false;
+  async function deleteFilePermanent(id) {
+    try {
+      const response = await fetch(`${API_BASE}/files/${id}`, { method: "DELETE" });
+      if (!response.ok) throw new Error('failed');
+      // cleanup local sets
+      trash.delete(`file-${id}`);
+      favorites.delete(`file-${id}`);
+      saveTrash();
+      saveFavorites();
+      return true;
+    } catch (err) {
+      console.error(`Error permanently deleting file ${id}:`, err);
+      return false;
+    }
   }
-}
 
   // Permanently delete folder by id, cleanup local sets and folderMap + descendants
   async function deleteFolderPermanent(folderId) {
@@ -101,35 +101,34 @@ async function deleteFilePermanent(id) {
     }
   }
 
-// Empty trash: iterate through trash set and delete each permanently
-async function emptyTrashAll() {
-  if (trash.size === 0) {
-    alert("Trash is already empty.");
-    return;
-  }
-
-  if (!confirm("Permanently delete everything in Trash? This cannot be undone.")) return;
-
-  // copy items so we can modify trash during deletion
-  const items = Array.from(trash);
-  // iterate sequentially
-  for (const entry of items) {
-    // entry format: "<type>-<id>"
-    const [type, id] = entry.split('-');
-    if (type === 'file') {
-      await deleteFilePermanent(id);
-    } else if (type === 'folder') {
-      await deleteFolderPermanent(id);
+  // Empty trash: iterate through trash set and delete each permanently
+  async function emptyTrashAll() {
+    if (trash.size === 0) {
+      alert("Trash is already empty.");
+      return;
     }
-    // also ensure we remove it from trash set (deleteFilePermanent/FolderPermanent already remove)
-    trash.delete(entry);
-  }
-  
-  saveTrash();
-  await fetchFoldersAndFiles();
-  alert("Trash emptied.");
-}
 
+    if (!confirm("Permanently delete everything in Trash? This cannot be undone.")) return;
+
+    // copy items so we can modify trash during deletion
+    const items = Array.from(trash);
+    // iterate sequentially
+    for (const entry of items) {
+      // entry format: "<type>-<id>"
+      const [type, id] = entry.split('-');
+      if (type === 'file') {
+        await deleteFilePermanent(id);
+      } else if (type === 'folder') {
+        await deleteFolderPermanent(id);
+      }
+      // also ensure we remove it from trash set (deleteFilePermanent/FolderPermanent already remove)
+      trash.delete(entry);
+    }
+    
+    saveTrash();
+    await fetchFoldersAndFiles();
+    alert("Trash emptied.");
+  }
 
   function toggleFavorite(id, type) {
     const favId = `${type}-${id}`;
@@ -245,35 +244,34 @@ async function emptyTrashAll() {
   }
 
   // Build breadcrumb trail array from currentFolderId and window.folderMap
-    function buildBreadcrumbTrail() {
-      // If a global filter is active, show it as the root breadcrumb
-      if (["recent", "favorites", "trash"].includes(currentFilter)) {
-        const labelMap = {
-          recent: "Recent",
-          favorites: "Favorites",
-          trash: "Trash"
-        };
-        return [{ id: null, name: labelMap[currentFilter] }];
-      }
-
-      // Default view — “Repository” as root
-      const trail = [{ id: null, name: "Repository" }];
-
-      if (!currentFolderId) return trail;
-
-      // Build folder hierarchy using folderMap
-      let cursor = window.folderMap[currentFolderId];
-      if (!cursor) return trail; // fallback if folder missing
-
-      const parts = [];
-      while (cursor) {
-        parts.unshift({ id: cursor.id, name: cursor.name });
-        cursor = cursor.parent_id ? window.folderMap[cursor.parent_id] : null;
-      }
-
-      return trail.concat(parts);
+  function buildBreadcrumbTrail() {
+    // If a global filter is active, show it as the root breadcrumb
+    if (["recent", "favorites", "trash"].includes(currentFilter)) {
+      const labelMap = {
+        recent: "Recent",
+        favorites: "Favorites",
+        trash: "Trash"
+      };
+      return [{ id: null, name: labelMap[currentFilter] }];
     }
 
+    // Default view — "Repository" as root
+    const trail = [{ id: null, name: "Repository" }];
+
+    if (!currentFolderId) return trail;
+
+    // Build folder hierarchy using folderMap
+    let cursor = window.folderMap[currentFolderId];
+    if (!cursor) return trail; // fallback if folder missing
+
+    const parts = [];
+    while (cursor) {
+      parts.unshift({ id: cursor.id, name: cursor.name });
+      cursor = cursor.parent_id ? window.folderMap[cursor.parent_id] : null;
+    }
+
+    return trail.concat(parts);
+  }
 
   function render(folders, files) {
     container.innerHTML = "";
@@ -288,29 +286,6 @@ async function emptyTrashAll() {
     const leftControls = document.createElement("div");
     leftControls.className = "header-left-controls";
 
-    // Note: we no longer use a simple "Back" button here; breadcrumbs below will handle navigation.
-    // But to preserve previous UX we keep a Back when inside folder (optional)
-
-    const addFolderBtn = document.createElement("button");
-    addFolderBtn.textContent = "New Folder";
-    addFolderBtn.className = "add-btn";
-    addFolderBtn.type = "button";
-    addFolderBtn.onclick = async (e) => {
-      e.preventDefault();
-      await addFolder();
-    };
-    leftControls.appendChild(addFolderBtn);
-
-    const addFileBtn = document.createElement("button");
-    addFileBtn.textContent = "Upload File";
-    addFileBtn.className = "add-btn";
-    addFileBtn.type = "button";
-    addFileBtn.onclick = async (e) => {
-      e.preventDefault();
-      await addFile();
-    };
-    leftControls.appendChild(addFileBtn);
-
     // show "Empty Trash" button when viewing trash filter
     if (currentFilter === 'trash') {
       const emptyTrashBtn = document.createElement("button");
@@ -324,7 +299,6 @@ async function emptyTrashAll() {
       };
       leftControls.appendChild(emptyTrashBtn);
     }
-
 
     const rightControls = document.createElement("div");
     rightControls.className = "header-right-controls";
@@ -504,7 +478,7 @@ async function emptyTrashAll() {
         file,
         "file",
         () => window.open(file.file_path, "_blank"),
-        // permanent delete handler for file (replace your current block)
+        // permanent delete handler for file
         async () => {
           if (!confirm(`Permanently delete file "${file.file_name}"? This cannot be undone.`)) return;
 
@@ -650,41 +624,6 @@ async function emptyTrashAll() {
     itemDiv.appendChild(menu);
     return itemDiv;
   }
-
-  async function addFolder() {
-    const name = prompt("Enter folder name:");
-    if (!name) return;
-
-    await fetch(`${API_BASE}/folders`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, parent_id: currentFolderId, adminid: "adminEnierga" })
-    });
-
-    fetchFoldersAndFiles();
-  }
-
-  async function addFile() {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = ".xls,.xlsx";
-      input.onchange = async (e) => {
-        e.preventDefault();
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const formData = new FormData();
-        formData.append("file", file);
-        if (currentFolderId !== null) {
-          formData.append("folder_id", currentFolderId);
-        }
-        formData.append("adminid", "adminEnierga");
-
-        await fetch(`${API_BASE}/files`, { method: "POST", body: formData });
-        fetchFoldersAndFiles();
-      };
-      input.click();
-    }
 
   // Initial load
   fetchFoldersAndFiles();

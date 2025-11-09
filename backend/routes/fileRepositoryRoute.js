@@ -50,24 +50,6 @@ const upload = multer({
 });
 
 // ---------- Folder Routes ----------
-
-// Create Folder
-router.post("/folders", async (req, res) => {
-  try {
-    const { name, parent_id, adminid } = req.body;
-    const result = await pool.query(
-      `INSERT INTO file_repository_folders (name, parent_id, adminid)
-       VALUES ($1, $2, $3)
-       RETURNING *`,
-      [name, parent_id || null, adminid]
-    );
-    res.json({ success: true, folder: result.rows[0] });
-  } catch (err) {
-    console.error("Error creating folder:", err);
-    res.status(500).json({ success: false, message: "Failed to create folder" });
-  }
-});
-
 // Get all folders (or subfolders by parent_id) — updated to support all=true
 router.get("/folders", async (req, res) => {
   try {
@@ -185,27 +167,6 @@ router.delete("/files/:id", async (req, res) => {
   } catch (err) {
     console.error("Error deleting file:", err);
     res.status(500).json({ success: false, message: "Failed to delete file" });
-  }
-});
-
-// Delete Folder
-router.delete("/folders/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const result = await pool.query(
-      "DELETE FROM file_repository_folders WHERE id = $1 RETURNING *",
-      [id]
-    );
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({ success: false, message: "Folder not found" });
-    }
-
-    res.json({ success: true, message: "Folder deleted successfully" });
-  } catch (err) {
-    console.error("Error deleting folder:", err);
-    res.status(500).json({ success: false, message: "Failed to delete folder" });
   }
 });
 
