@@ -114,31 +114,31 @@
                         <div class="card-grid">
                             <div class="summary-card faculty">
                                 <div class="card-icon faculty">
-                                    <i class="fas fa-clock"></i>
+                                    <i class="fas fa-file"></i>
                                 </div>
                                 <div class="card-content">
                                     <h3 class="card-number" data-count="12">0</h3>
-                                    <p class="card-label">Pending Approvals</p>
+                                    <p class="card-label">Total Datasets Uploaded</p>
                                 </div>
                             </div>
 
                             <div class="summary-card alumni">
                                 <div class="card-icon alumni">
-                                    <i class="fas fa-newspaper"></i>
+                                    <i class="fas fa-chart-line"></i>
                                 </div>
                                 <div class="card-content">
                                     <h3 class="card-number" id="recentUploadsCount"></h3>
-                                    <p class="card-label">Recent Uploads</p>
+                                    <p class="card-label">Reports Generated</p>
                                 </div>
                             </div>
 
                             <div class="summary-card research">
                                 <div class="card-icon research">
-                                    <i class="fas fa-microscope"></i>
+                                    <i class="fas fa-folder-open"></i>
                                 </div>
                                 <div class="card-content research">
                                     <h3 class="card-number" data-count="2">0</h3>
-                                    <p class="card-label">Offices Linked</p>
+                                    <p class="card-label">Repository Items</p>
                                 </div>
                             </div>
                     </section>
@@ -148,60 +148,98 @@
                             <div class="actions-grid">
                             <button class="action-btn">
                                 <i class="fas fa-plus"></i>
-                                <span>Add Post</span>
+                                <span>Upload New Data</span>
                             </button>
                             <button class="action-btn">
-                                <i class="fas fa-file"></i>
-                                <span>Upload File</span>
+                                <i class="fas fa-chart-line"></i>
+                                <span>view Analytics</span>
                             </button>
                             <button class="action-btn">
-                                <i class="fas fa-history"></i>
-                                <span>Audit Trail</span>
+                                <i class="fas fa-folder-open"></i>
+                                <span>Manage Repository</span>
                             </button>
                             </div>
                         </section>
-                        <!-- Notifications Panel -->
-                        <section class="notifications-panel">
-                            <div class="section-header">
-                            <h2>Notifications</h2>
-                            <span class="notification-badge">3</span>
+
+                        <!-- recent updates table -->
+                        <section class="updates-section">
+                            <div class="updates-header">
+                                <h2>Recent Updates</h2>
+                                <button id="viewAllUpdatesBtn" class="updates-viewall">View All</button>
                             </div>
 
-                            <div class="notifications-list">
-                            <div class="notification-item high">
-                                <div class="notification-icon">
-                                <i class="fas fa-thumbs-up"></i>
-                                </div>
-                                <div class="notification-content">
-                                <h4>Memo Approved by SAS</h4>
-                                <p>Approved by SAS</p>
-                                <span class="notification-time">30 minutes ago</span>
-                                </div>
-                            </div>
-
-                            <div class="notification-item medium">
-                                <div class="notification-icon">
-                                <i class="fas fa-user-plus"></i>
-                                </div>
-                                <div class="notification-content">
-                                <h4>Announcement Returned for Revision</h4>
-                                <p>SAS requested edits on your Announcement</p>
-                                <span class="notification-time">2 hours ago</span>
-                                </div>
-                            </div>
-
-                            <div class="notification-item low">
-                                <div class="notification-icon">
-                                <i class="fas fa-sync"></i>
-                                </div>
-                                <div class="notification-content">
-                                <h4>New Form Added to Repository</h4>
-                                <p>A new downloadable form was added to the system.</p>
-                                <span class="notification-time">1 day ago</span>
-                                </div>
-                            </div>
+                            <div class="updates-table-wrapper">
+                                <table class="updates-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Event</th>
+                                            <th>Details</th>
+                                            <th>Timestamp</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><i class="fa-solid fa-upload updates-icon blue"></i> New dataset uploaded</td>
+                                            <td>enrollment_2025.xlsx</td>
+                                            <td>3 hours ago</td>
+                                        </tr>
+                                        <tr>
+                                            <td><i class="fa-solid fa-chart-line updates-icon purple"></i> New analytics report generated</td>
+                                            <td>Dropouts Summary</td>
+                                            <td>Yesterday</td>
+                                        </tr>
+                                        <tr>
+                                            <td><i class="fa-solid fa-folder updates-icon orange"></i> Repository updated</td>
+                                            <td>2 new files added</td>
+                                            <td>2 days ago</td>
+                                        </tr>
+                                        <tr>
+                                            <td><i class="fa-solid fa-upload updates-icon blue"></i> New dataset uploaded</td>
+                                            <td>dropouts_2025.xlsx</td>
+                                            <td>3 days ago</td>
+                                        </tr>
+                                        <tr>
+                                            <td><i class="fa-solid fa-chart-simple updates-icon green"></i> Chart visualization created</td>
+                                            <td>Graduates tracking chart</td>
+                                            <td>4 days ago</td>
+                                        </tr>
+                                        <tr>
+                                            <td><i class="fa-solid fa-folder updates-icon orange"></i> Repository updated</td>
+                                            <td>5 files archived</td>
+                                            <td>1 week ago</td>
+                                        </tr>
+                                        <tr>
+                                            <td><i class="fa-solid fa-upload updates-icon blue"></i> New dataset uploaded</td>
+                                            <td>graduates_2025.csv</td>
+                                            <td>1 week ago</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </section>
+
+                        <!-- modal -->
+                        <div id="updatesModal" class="updates-modal">
+                            <div class="updates-modal-content">
+                                <span class="updates-close">&times;</span>
+                                <h3>All Updates</h3>
+                                <div class="updates-modal-body">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Event</th>
+                                                <th>Details</th>
+                                                <th>Timestamp</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="updatesModalTableBody">
+                                            <!-- filled dynamically na via JS -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>    
+
                         <!-- Analytics Overview -->
                         <section class="dashboard-section charts-section">
                             <div class="section-header">
@@ -219,7 +257,7 @@
                                 <canvas id="mostViewedContentChart"></canvas>
                                 </div>
                             </div>
-                        </section>
+                        </section>         
     </main>
 
     <!-- CONTENTS FOR EACH SECTION -->

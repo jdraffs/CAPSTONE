@@ -193,29 +193,25 @@
   color: #8b0000;
 }
 /*start ng chart */
-.visualization-section {
-  margin-top: 2rem;
+.visualization-section h3 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 1rem;
 }
 
 .visualization-placeholder {
-  background: #fff;
-  border: none;
+  background: #ffffff;
+  border: 1px solid rgba(229, 231, 235, 0.6);
   padding: 2rem;
   border-radius: 1rem;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-  text-align: center;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   min-height: 420px;
+  transition: all 0.3s ease;
 }
 
 .visualization-placeholder:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-}
-
-#dataChart {
-  width: 100%;
-  height: 360px !important;
-  border-radius: 1rem;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
