@@ -1,4 +1,4 @@
-// fileRepository.js (complete — replace your current file with this)
+// fileRepository.js
 document.addEventListener("DOMContentLoaded", () => {
   const container = document.getElementById("mainContent");
   let currentFolderId = null;

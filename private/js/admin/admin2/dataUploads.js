@@ -1,4 +1,4 @@
-
+//dataUploads.js
 window.addEventListener("DOMContentLoaded", () => {
   // === Dynamic XLSX load ===
   if (typeof XLSX === "undefined") {
@@ -294,5 +294,100 @@ generateBtn.addEventListener("click", async () => {
       },
     },
   });
+  // chart-specific visuals
+  if (chartType === "bar") {
+    dataset.backgroundColor = vibrantPalette.slice(0, values.length);
+    dataset.borderColor = vibrantPalette.slice(0, values.length);
+  } else if (chartType === "line") {
+    dataset.borderColor = "#3b82f6";
+    dataset.backgroundColor = gradient;
+  } else if (chartType === "pie" || chartType === "doughnut") {
+    dataset.backgroundColor = vibrantPalette.slice(0, values.length);
+    dataset.borderWidth = 1.5;
+  }
+
+// create new chart
+window.currentChart = new Chart(ctx, {
+  type: chartType,
+  data: { labels, datasets: [dataset] },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    layout: { padding: 20 },
+    plugins: {
+      legend: {
+        display: true,
+        labels: {
+          color: "#333",
+          font: { size: 13, family: "'Inter', sans-serif" },
+        },
+      },
+      title: {
+        display: true,
+        text: "Generated Data Visualization",
+        color: "#222",
+        font: {
+          size: 18,
+          weight: "600",
+          family: "'Times New Roman', serif",
+        },
+        padding: { bottom: 20 },
+      },
+      tooltip: {
+        backgroundColor: "rgba(0,0,0,0.85)",
+        titleFont: { weight: "600" },
+        bodyFont: { size: 13 },
+        cornerRadius: 6,
+        padding: 10,
+      },
+    },
+    scales:
+      chartType !== "pie" && chartType !== "doughnut"
+        ? {
+            x: {
+              ticks: { color: "#555", font: { size: 12 } },
+              grid: { color: "rgba(200,200,200,0.15)" },
+            },
+            y: {
+              beginAtZero: true,
+              ticks: { color: "#555", font: { size: 12 } },
+              grid: { color: "rgba(200,200,200,0.15)" },
+            },
+          }
+        : {},
+    animation: {
+      duration: 1200,
+      easing: "easeOutQuart",
+    },
+    elements: {
+      bar: { borderRadius: 12 },
+      line: { borderWidth: 3 },
+      point: { radius: 4, hoverRadius: 6, backgroundColor: "#3b82f6" },
+    },
+  },
+  plugins: [shadowPlugin],
+});
+
+// create new chart
+window.currentChart = new Chart(ctx, {
+  type: chartType,
+  data: { labels, datasets: [dataset] },
+  options: { /* chart options... */ },
+  plugins: [shadowPlugin],
+});
+
+// ✅ Save chart data to backend (instead of localStorage)
+await fetch("http://localhost:3000/api/visualizations", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    fileId: uploadedFileId,
+    chartType: chartType,
+    labels: labels,
+    values: values
+  }),
+});
+
+alert("Visualization generated successfully! You can now view it in Analytics.");
 });
 });
