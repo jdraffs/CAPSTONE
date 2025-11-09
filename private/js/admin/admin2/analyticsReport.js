@@ -28,12 +28,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       metric: file.type || "Uploaded Dataset",
       date: new Date(file.uploaded_at).toLocaleDateString(),
       recordsProcessed: sampleData.length,
-      chartType: file.chart_type || localStorage.getItem("lastChartType") || "bar",
+      chartType: localStorage.getItem(`chartType_${file.filename}`) || file.chart_type || "bar",
       chartData: {
         labels,
         datasets: [
           {
-            label: "Data Values",
+            label: file.column_name || file.filename || "Dataset",
             data: sampleData,
             backgroundColor: [
               "rgba(255, 99, 132)",
@@ -68,6 +68,14 @@ document.addEventListener("DOMContentLoaded", async () => {
           <p>${report.metric}</p>
         </div>
       </div>
+      <div class="chart-selector">
+        <label for="chartType-${report.id}">Chart Type:</label>
+        <select id="chartType-${report.id}" class="chart-type-select">
+          <option value="bar" ${report.chartType === "bar" ? "selected" : ""}>Bar</option>
+          <option value="line" ${report.chartType === "line" ? "selected" : ""}>Line</option>
+          <option value="pie" ${report.chartType === "pie" ? "selected" : ""}>Pie</option>
+        </select>
+      </div>
       <canvas id="chart-${report.id}" class="chart-preview"></canvas>
       <div class="report-meta">
         <span><i class="bi bi-calendar"></i> ${report.date}</span>
@@ -86,7 +94,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     reportsGrid.appendChild(card);
 
     const ctx = document.getElementById(`chart-${report.id}`).getContext("2d");
-    new Chart(ctx, {
+    const chartInstance = new Chart(ctx, {
       type: report.chartType,
       data: report.chartData,
       options: {
@@ -101,7 +109,44 @@ document.addEventListener("DOMContentLoaded", async () => {
           : {}
       }
     });
+
+    // Store reference
+    report.chartInstance = chartInstance;
   });
+
+  document.querySelectorAll(".chart-type-select").forEach(select => {
+    select.addEventListener("change", (e) => {
+      const reportId = e.target.id.split("-")[1];
+      const selectedType = e.target.value;
+      const report = reports.find(r => r.id == reportId);
+      if (!report) return;
+
+      // Destroy old chart instance
+      report.chartInstance.destroy();
+
+      // Create new chart with selected type
+      const ctx = document.getElementById(`chart-${report.id}`).getContext("2d");
+      report.chartInstance = new Chart(ctx, {
+        type: selectedType,
+        data: report.chartData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true },
+            tooltip: { enabled: true }
+          },
+          scales: selectedType === "bar" || selectedType === "line"
+            ? { y: { beginAtZero: true } }
+            : {}
+        }
+      });
+
+      // Save choice (so it persists if page reloads)
+      localStorage.setItem(`chartType_${report.title}`, selectedType);
+    });
+  });
+
 
   // Handle "View Report" click
   document.body.addEventListener("click", (e) => {
@@ -198,3 +243,4 @@ document.addEventListener("DOMContentLoaded", async () => {
     return "Low averages suggest areas that may need improvement.";
   }
 });
+

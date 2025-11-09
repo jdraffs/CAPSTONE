@@ -376,18 +376,6 @@ window.currentChart = new Chart(ctx, {
   plugins: [shadowPlugin],
 });
 
-// ✅ Save chart data to backend (instead of localStorage)
-await fetch("http://localhost:3000/api/visualizations", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    fileId: uploadedFileId,
-    chartType: chartType,
-    labels: labels,
-    values: values
-  }),
-});
-
-alert("Visualization generated successfully! You can now view it in Analytics.");
+alert("Visualization preview generated successfully!");
 });
 });
