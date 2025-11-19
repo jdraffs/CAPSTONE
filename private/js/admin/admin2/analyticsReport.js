@@ -149,9 +149,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         <button class="refresh-btn" data-id="${report.id}" data-filename="${report.title}">
           <i class="bi bi-arrow-clockwise"></i> Refresh
         </button>
-        <button class="delete-btn">
-          <i class="bi bi-trash"></i>
-        </button>
       </div>
     `;
 
