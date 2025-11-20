@@ -215,3 +215,25 @@
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
+/* para maging excel like yung table preview */
+.preview-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+.preview-table th,
+.preview-table td {
+    border: 1px solid #d0d0d0;
+    padding: 8px;
+}
+
+.preview-table th {
+    background: #f2f2f2;
+    font-weight: bold;
+}
+.table-preview {
+    max-height: 450px;
+    overflow-y: auto;
+}
