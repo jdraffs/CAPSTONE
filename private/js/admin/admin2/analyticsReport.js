@@ -53,6 +53,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       reports.push({
         id: index + 1,
+        file_id: file.file_id,
         title: displayName || `Report ${index + 1}`,  // Use display name
         actualFilename: actualFilename,  // Store actual filename for API calls
         metric: file.type || "Uploaded Dataset",
@@ -151,9 +152,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         <button class="refresh-btn" data-id="${report.id}" data-filename="${report.actualFilename || report.title}">
           <i class="bi bi-arrow-clockwise"></i> Refresh
         </button>
-        <button class="delete-btn">
-          <i class="bi bi-trash"></i>
-        </button>
+        <button onclick="deleteReportPermanently(${report.file_id})" class="delete-btn"><i class="bi bi-trash"></i></button>
+
+
       </div>
     `;
 
@@ -428,3 +429,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 });
+
+  //delete function
+  async function deleteReportPermanently(fileId) {
+      const confirmDelete = confirm("Are you sure you want to delete this file permanently? This action cannot be undone.");
+
+      if (!confirmDelete) return;
+
+      try {
+          const response = await fetch(`/file-repository/files/${fileId}/permanent`, {
+              method: "DELETE"
+          });
+
+          if (response.ok) {
+              alert("File permanently deleted.");
+              loadAnalyticsReports(); // refresh list
+          } else {
+              alert("Failed to delete file.");
+          }
+      } catch (error) {
+          console.error("Error deleting permanently:", error);
+      }
+  }
