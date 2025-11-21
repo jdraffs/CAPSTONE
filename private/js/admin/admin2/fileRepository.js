@@ -477,7 +477,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const itemDiv = createRepositoryItem(
         file,
         "file",
-        () => window.open(file.file_path, "_blank"),
+        () => {
+        const fileUrl = `http://localhost:3000${file.file_path}`;
+        const googleSheetsImportUrl =
+          `https://docs.google.com/spreadsheets/u/0/create?usp=drive_web&authuser=0&hl=en&copy=true&url=${encodeURIComponent(fileUrl)}`;
+        
+        window.open(googleSheetsImportUrl, "_blank");
+      },
         // permanent delete handler for file
         async () => {
           if (!confirm(`Permanently delete file "${file.file_name}"? This cannot be undone.`)) return;
@@ -602,6 +608,32 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       menu.appendChild(moveTrashBtn);
     }
+
+    // Download button (only for files)
+    if (type === "file") {
+      const downloadBtn = document.createElement("button");
+      downloadBtn.className = "download-btn";
+      downloadBtn.type = "button";
+      downloadBtn.textContent = "Download";
+
+      downloadBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+
+        // Trigger download by creating a hidden link
+        const link = document.createElement("a");
+        link.href = item.file_path;  // backend returns file_path
+        link.download = item.file_name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        menu.classList.add("hidden");
+      });
+
+      menu.appendChild(downloadBtn);
+    }
+
 
     // Close other menus when opening
     dots.addEventListener("click", (e) => {

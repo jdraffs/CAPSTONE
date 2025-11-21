@@ -74,14 +74,20 @@
 /* dot menu icon location */
 .dot-menu {
   position: absolute;
-  top: 8px;
+  width: 25px;
+  border-radius: 100%;
   right: 10px;
   cursor: pointer;
-  z-index: 1200; /* above repository item content */
+  z-index: 1200;
+  padding: 3px;
+}
+.dot-menu:hover {
+  background: #d3d3d3;
 }
 
 .dot-menu i {
-  font-size: 20px;
+  font-size: 30px;
+  margin: 0;
 }
 .dot-menu i:hover {
   color: #b62323;
