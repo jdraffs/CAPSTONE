@@ -192,12 +192,12 @@
 
 .report-actions {
   display: flex;
-  justify-content: space-between;
   margin-top: 15px;
+  gap: 15px;
 }
 
 .view-btn {
-  background: #007bff;
+  background: #3596ff;
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -209,20 +209,46 @@
   align-items: center;
   gap: 6px;
   transition: 0.3s;
+  height: 40px;
 }
 
 .view-btn:hover {
   background: #0069d9;
 }
 
+/* Refresh Button */
+.refresh-btn {
+  background: #2abd7d;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.3s;
+}
+
+.refresh-btn:hover {
+  background: #0f7e4e;
+  transform: translateY(-2px);
+}
+
+.refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .delete-btn {
   background: #fff;
-  border: 1px solid #dc3545;
+  border: 2px solid #dc3545;
   color: #dc3545;
   border-radius: 8px;
   padding: 8px 10px;
   cursor: pointer;
   transition: 0.3s;
+  width: 50px;
 }
 
 .delete-btn:hover {
@@ -348,31 +374,6 @@
   font-size: 1.3rem;
   font-weight: bold;
 }
-
-/* Refresh Button */
-.refresh-btn {
-  background: #17a2b8;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  transition: all 0.3s;
-}
-
-.refresh-btn:hover {
-  background: #138496;
-  transform: translateY(-2px);
-}
-
-.refresh-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 /* Spinning animation for refresh */
 @keyframes spin {
   from { transform: rotate(0deg); }
