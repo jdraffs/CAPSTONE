@@ -53,8 +53,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       reports.push({
         id: index + 1,
-        title: displayName || `Report ${index + 1}`,  // Use display name
-        actualFilename: actualFilename,  // Store actual filename for API calls
+        title: file.filename || `Report ${index + 1}`,
         metric: file.type || "Uploaded Dataset",
         date: new Date(file.uploaded_at).toLocaleDateString(),
         recordsProcessed: analyticsData.statistics.count,
@@ -73,8 +72,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       // Fallback to basic report
       reports.push({
         id: index + 1,
-        title: displayName || `Report ${index + 1}`,
-        actualFilename: actualFilename,  // Store for API calls
+        title: file.filename || `Report ${index + 1}`,
         metric: "Error Processing",
         date: new Date(file.uploaded_at).toLocaleDateString(),
         recordsProcessed: 0,
@@ -148,11 +146,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         <button class="view-btn" data-id="${report.id}">
           <i class="bi bi-eye"></i> View Full Report
         </button>
-        <button class="refresh-btn" data-id="${report.id}" data-filename="${report.actualFilename || report.title}">
+        <button class="refresh-btn" data-id="${report.id}" data-filename="${report.title}">
           <i class="bi bi-arrow-clockwise"></i> Refresh
-        </button>
-        <button class="delete-btn">
-          <i class="bi bi-trash"></i>
         </button>
       </div>
     `;
@@ -176,14 +171,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       chartContainer.innerHTML = '<p>Regenerating chart...</p>';
 
       try {
-        // Request new chart from Python API using actual filename
+        // Request new chart from Python API
         const response = await fetch(`${PYTHON_API_URL}/analytics/process`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            filename: report.actualFilename || report.title,  // Use actual filename
+            filename: report.title,
             chart_type: selectedType
           })
         });
@@ -351,7 +346,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       </div>
 
       <div class="insight">
-        <strong>🔍 Analysis Summary</strong>
+        <strong>🔍 AI-Powered Interpretation</strong>
         <div class="interpretation-text">
           ${report.interpretation}
         </div>
@@ -360,11 +355,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       ${report.fileInfo ? `
         <div class="file-info">
           <strong>📊 File Information</strong>
-          <p><strong>Total Rows:</strong> ${report.fileInfo.total_rows.toLocaleString()}</p>
+          <p><strong>Total Rows:</strong> ${report.fileInfo.total_rows}</p>
           <p><strong>Total Columns:</strong> ${report.fileInfo.total_columns}</p>
           <p><strong>Analyzed Column:</strong> ${report.fileInfo.analyzed_column}</p>
           <p><strong>Numeric Columns Available:</strong> ${report.fileInfo.numeric_columns.join(', ')}</p>
-          ${report.summary?.is_sampled ? `<p><strong>Note:</strong> Large dataset - showing sample of ${report.summary.original_length.toLocaleString()} records</p>` : ''}
         </div>
       ` : ''}
 
