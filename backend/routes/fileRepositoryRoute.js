@@ -89,6 +89,7 @@ router.post("/upload", upload.single("file"), async (req, res) => {
     let { folder_id, adminid } = req.body;
     const filePath = `/uploads/fileRepository/${req.file.filename}`;
 
+
     if (folder_id === "null" || folder_id === "" || folder_id === undefined) {
       folder_id = null;
     } else {

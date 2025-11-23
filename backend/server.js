@@ -32,7 +32,7 @@ app.use(cors());
 app.use(express.json());
 
 // Serve static folders (correct relative paths)
-app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 app.use('/private', express.static(path.join(__dirname, '../private')));
 app.use('/public', express.static(path.join(__dirname, '../public')));
 
@@ -71,8 +71,9 @@ app.get("/api/files/data", async (req, res) => {
 
     const enrichedFiles = files.map(file => {
       const dbPath = file.file_path || ""; // stored path from DB
-      const cleaned = dbPath.replace(/^\/+/, "");
-      const absolutePath = path.resolve(__dirname, "public", cleaned);
+      const filename = dbPath.split("/").pop();
+      const absolutePath = path.resolve(__dirname, "public/uploads/fileRepository", filename);
+
 
       if (fs.existsSync(absolutePath)) {
         try {

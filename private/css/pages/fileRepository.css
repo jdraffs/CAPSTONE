@@ -1,14 +1,14 @@
+/*fileRepository.css */
 .main-content {
   padding: 25px 30px;
-  /* ensure header/menu can overflow if needed */
 }
 
-/* repository header already ok; keep previous rules but ensure flex spacing */
-/* header controls */
+/* Header controls */
 .header-left-controls {
   display: flex;
   gap: 10px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .header-right-controls {
@@ -17,16 +17,115 @@
   gap: 15px;
 }
 
-/* repository grid - keep visible overflow so dropdowns aren't clipped */
+/* ========================================
+   BULK ACTIONS STYLES - NEW
+   ======================================== */
+
+.bulk-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+  background: #e1f2ff;
+  border-radius: 50px;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.selection-count {
+  font-weight: 600;
+  color: #1976d2;
+  font-size: 14px;
+  margin-right: 5px;
+}
+
+.bulk-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bulk-btn i {
+  font-size: 14px;
+}
+
+.download-bulk-btn {
+  background: #2797ec;
+  color: white;
+}
+
+.download-bulk-btn:hover {
+  background: #2077b8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px #2981c46c;
+}
+
+.trash-bulk-btn {
+  background: #2797ec;
+  color: white;
+}
+
+.trash-bulk-btn:hover {
+  background: #2077b8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px #2981c46c;
+}
+
+.delete-bulk-btn {
+  background: #2797ec;
+  color: white;
+}
+
+.delete-bulk-btn:hover {
+  background: #2077b8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px #2981c46c;
+}
+
+.cancel-bulk-btn {
+  padding: 8px 11px;
+  border-radius: 100%;
+  background: none;
+  color: #115293;
+}
+
+.cancel-bulk-btn:hover {
+  background: #13589c2c;
+}
+.cancel-bulk-btn i{
+  font-size: 20px;
+}
+
+
+
+/* ========================================
+   REPOSITORY ITEMS WITH SELECTION
+   ======================================== */
+
 .repository-items {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 12px;
-  overflow: visible; /* allow dropdowns to escape item box */
+  overflow: visible;
 }
 
-/* repository item: remove fixed width that causes layout issues,
-   allow dropdown to overflow outside this box */
 .repository-item {
   position: relative;
   background: #9a9a9a2e;
@@ -35,23 +134,69 @@
   text-align: center;
   color: rgb(51, 51, 51);
   cursor: pointer;
-  transition: background 0.2s, transform 0.12s;
+  transition: all 0.3s ease;
   height: auto;
   min-height: 90px;
-  width: auto;      /* remove width:70% which caused shrink/clipping */
+  width: auto;
   white-space: nowrap;
-  overflow: visible; /* very important: allow dropdown to show outside */
+  overflow: visible;
   text-overflow: ellipsis;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  border: 2px solid transparent;
 }
 
-/* hover visual */
+/* Hover effect */
 .repository-item:hover {
   background: #50505020;
   transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Selected state - Light blue background */
+.repository-item.selected {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border: 2px solid #2196f3;
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+  transform: scale(1.02);
+  position: relative;
+}
+
+/* Selection indicator checkmark */
+.repository-item.selected::before {
+  content: '\2713'; /* Checkmark */
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 24px;
+  height: 24px;
+  background: #2196f3;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.repository-item.selected:hover {
+  background: linear-gradient(135deg, #bbdefb 0%, #90caf9 100%);
+}
+
+/* Selected item icon color */
+.repository-item.selected i {
+  color: #1976d2;
+}
+
+/* Selected item label */
+.repository-item.selected .item-label {
+  color: #1565c0;
+  font-weight: 600;
 }
 
 .repository-item i {
@@ -59,6 +204,7 @@
   display: block;
   margin-bottom: 6px;
   color: #3e3e3e;
+  transition: color 0.3s ease;
 }
 
 .repository-item .item-label {
@@ -71,24 +217,34 @@
   font-size: 0.9rem;
 }
 
-/* dot menu icon location */
+/* ========================================
+   DOT MENU AND DROPDOWN
+   ======================================== */
+
 .dot-menu {
   position: absolute;
+  width: 25px;
+  border-radius: 100%;
   top: 8px;
   right: 10px;
   cursor: pointer;
-  z-index: 1200; /* above repository item content */
+  z-index: 1200;
+  padding: 3px;
+}
+
+.dot-menu:hover {
+  background: #32323232;
 }
 
 .dot-menu i {
-  font-size: 20px;
+  font-size: 25px;
+  margin: 0;
 }
+
 .dot-menu i:hover {
   color: #b62323;
 }
 
-/* dropdown menu: place below the dot icon, but allow it to expand.
-   Use top: calc(100% + X) to position it beneath the item reliably. */
 .dropdown-menu {
   position: absolute;
   top: 30px;
@@ -98,20 +254,18 @@
   border-radius: 6px;
   display: flex;
   flex-direction: column;
-  min-width: 100px;     /* bigger so 3 items fit */
+  min-width: 100px;
   max-width: 260px;
-  z-index: 2000;        /* make sure it floats above other elements */
+  z-index: 2000;
   box-shadow: 0 6px 18px rgba(0,0,0,0.12);
   padding: 6px 0;
-  overflow: visible;    /* menu internal content should be visible */
+  overflow: visible;
 }
 
-/* Hidden state keeps it out of layout */
 .dropdown-menu.hidden {
   display: none;
 }
 
-/* buttons inside menu */
 .dropdown-menu button {
   background: none;
   border: none;
@@ -121,6 +275,7 @@
   cursor: pointer;
   width: 100%;
   font-size: 0.95rem;
+  transition: background 0.2s ease;
 }
 
 .dropdown-menu button + button {
@@ -130,6 +285,10 @@
 .dropdown-menu button:hover {
   background: #f6f6f6;
 }
+
+/* ========================================
+   OTHER ELEMENTS
+   ======================================== */
 
 .fa-bell, .fa-user {
   color: #822020;
@@ -147,7 +306,7 @@
   font-weight: bold;
 }
 
-.add-btn:hover{
+.add-btn:hover {
   background: #ffe28a;
 }
 
@@ -156,22 +315,9 @@
   background-color: #bb3535;
   border: 1px solid #991414;
 }
+
 .add-btn.empty-trash-btn:hover {
   background-color: #ff1313;
-}
-
-.dot-menu {
-  position: absolute;
-  top: 8px;
-  right: 10px;
-  cursor: pointer;
-}
-
-.dot-menu i {
-  font-size: 25px;
-}
-.dot-menu i:hover {
-  color: #b62323;
 }
 
 .repository-header-wrapper {
@@ -216,16 +362,7 @@
   color: #b62323;
 }
 
-/* Breadcrumb card styling */
-.repository-header-wrapper {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 12px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-  margin-bottom: 12px;
-}
-
-/* Breadcrumb line */
+/* Breadcrumb */
 .breadcrumb-trail {
   padding: 8px 5px;
   margin-bottom: 10px;
@@ -237,28 +374,71 @@
   gap: 5px;
 }
 
-/* crumb part */
 .breadcrumb-part {
   color: #333;
   font-family: sans-serif;
   border-radius: 50px;
   padding: 5px 15px;
+  transition: background 0.2s ease;
 }
+
 .breadcrumb-part:hover {
   background-color: #8282821f;
 }
 
-/* clickable crumb */
 .breadcrumb-part[style], .breadcrumb-part:hover {
   color: #a91c1c;
 }
 
-/* highlight current crumb */
 .breadcrumb-current {
   color: #555;
+  font-weight: 600;
 }
 
-/* separator */
 .breadcrumb-separator {
   color: #888888;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+@media (max-width: 768px) {
+  .bulk-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .bulk-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .repository-items {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+
+  .repository-search {
+    width: 100%;
+  }
+
+  .header-left-controls,
+  .header-right-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 480px) {
+  .repository-item {
+    min-height: 80px;
+  }
+
+  .repository-item i {
+    font-size: 36px;
+  }
+
+  .breadcrumb-trail {
+    font-size: 1.2rem;
+  }
 }

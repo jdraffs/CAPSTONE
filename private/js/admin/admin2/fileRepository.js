@@ -2,12 +2,16 @@
 document.addEventListener("DOMContentLoaded", () => {
   const container = document.getElementById("mainContent");
   let currentFolderId = null;
-  let currentFilter = "all"; // Track active filter
-  let favorites = new Set(JSON.parse(localStorage.getItem("favorites") || "[]")); // Store favorites locally
-  let trash = new Set(JSON.parse(localStorage.getItem("trash") || "[]")); // Store trashed items locally
+  let currentFilter = "all";
+  let favorites = new Set(JSON.parse(localStorage.getItem("favorites") || "[]"));
+  let trash = new Set(JSON.parse(localStorage.getItem("trash") || "[]"));
+  let selectedItems = new Set(); // Track selected items: "type-id" format
+  let lastSelectedIndex = -1; // Track last selected item for shift-click
+  let lastClickTime = 0; // Track last click time for double-click detection
+  let lastClickedItem = null; // Track last clicked item for double-click
+  const DOUBLE_CLICK_DELAY = 300; // milliseconds
   const API_BASE = "http://localhost:3000/api/files";
 
-  // global folder map: id -> folder object { id, name, parent_id, ... }
   window.folderMap = window.folderMap || {};
 
   function saveFavorites() {
@@ -17,12 +21,167 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.setItem("trash", JSON.stringify([...trash]));
   }
 
-  // Permanently delete file by id and cleanup local sets
+  // Clear selection
+  function clearSelection() {
+    selectedItems.clear();
+    updateBulkActionsUI();
+    // Remove visual selection from all items
+    document.querySelectorAll(".repository-item.selected").forEach(item => {
+      item.classList.remove("selected");
+    });
+  }
+
+  // Toggle item selection
+  function toggleItemSelection(id, type, itemElement, itemIndex) {
+    const itemKey = `${type}-${id}`;
+    
+    if (selectedItems.has(itemKey)) {
+      selectedItems.delete(itemKey);
+      itemElement.classList.remove("selected");
+    } else {
+      selectedItems.add(itemKey);
+      itemElement.classList.add("selected");
+      lastSelectedIndex = itemIndex; // Update last selected index
+    }
+    
+    updateBulkActionsUI();
+  }
+
+  // Handle shift-click range selection
+  function handleShiftSelection(currentIndex, allItems) {
+    if (lastSelectedIndex === -1 || lastSelectedIndex === currentIndex) {
+      return; // No range to select
+    }
+
+    const start = Math.min(lastSelectedIndex, currentIndex);
+    const end = Math.max(lastSelectedIndex, currentIndex);
+
+    // Select all items in range
+    for (let i = start; i <= end; i++) {
+      const item = allItems[i];
+      if (item) {
+        const itemElement = item.element;
+        const itemKey = `${item.type}-${item.id}`;
+        
+        if (!selectedItems.has(itemKey)) {
+          selectedItems.add(itemKey);
+          itemElement.classList.add("selected");
+        }
+      }
+    }
+
+    updateBulkActionsUI();
+  }
+
+  // Update bulk actions UI based on selection
+  function updateBulkActionsUI() {
+    const bulkActionsDiv = document.getElementById("bulkActions");
+    const selectionCount = document.getElementById("selectionCount");
+    
+    if (!bulkActionsDiv) return;
+    
+    if (selectedItems.size > 0) {
+      bulkActionsDiv.style.display = "flex";
+      if (selectionCount) {
+        selectionCount.textContent = `${selectedItems.size} item${selectedItems.size > 1 ? 's' : ''} selected`;
+      }
+    } else {
+      bulkActionsDiv.style.display = "none";
+    }
+  }
+
+  // Bulk download selected files
+  async function bulkDownload() {
+    const fileItems = Array.from(selectedItems).filter(item => item.startsWith('file-'));
+    
+    if (fileItems.length === 0) {
+      alert("No files selected for download. Please select files only.");
+      return;
+    }
+
+    for (const itemKey of fileItems) {
+      const fileId = itemKey.split('-')[1];
+      
+      try {
+        // Find file data from DOM or fetch it
+        const fileElement = document.querySelector(`[data-item-id="${itemKey}"]`);
+        if (fileElement) {
+          const filePath = fileElement.dataset.filePath;
+          const fileName = fileElement.dataset.fileName;
+          
+          // Trigger download
+          const link = document.createElement("a");
+          link.href = filePath;
+          link.download = fileName;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          // Small delay between downloads
+          await new Promise(resolve => setTimeout(resolve, 300));
+        }
+      } catch (error) {
+        console.error(`Error downloading file ${fileId}:`, error);
+      }
+    }
+    
+    alert(`${fileItems.length} file(s) downloaded successfully!`);
+    clearSelection();
+  }
+
+  // Bulk move to trash
+  function bulkMoveToTrash() {
+    if (selectedItems.size === 0) return;
+    
+    const count = selectedItems.size;
+    if (!confirm(`Move ${count} item(s) to trash?`)) return;
+    
+    selectedItems.forEach(itemKey => {
+      trash.add(itemKey);
+    });
+    
+    saveTrash();
+    clearSelection();
+    fetchFoldersAndFiles();
+    alert(`${count} item(s) moved to trash.`);
+  }
+
+  // Bulk delete permanently
+  async function bulkDeletePermanently() {
+    if (selectedItems.size === 0) return;
+    
+    const count = selectedItems.size;
+    if (!confirm(`Permanently delete ${count} item(s)? This action cannot be undone!`)) return;
+    
+    const items = Array.from(selectedItems);
+    let successCount = 0;
+    
+    for (const itemKey of items) {
+      const [type, id] = itemKey.split('-');
+      
+      try {
+        if (type === 'file') {
+          const success = await deleteFilePermanent(id);
+          if (success) successCount++;
+        } else if (type === 'folder') {
+          const success = await deleteFolderPermanent(id);
+          if (success) successCount++;
+        }
+      } catch (error) {
+        console.error(`Error deleting ${itemKey}:`, error);
+      }
+    }
+    
+    clearSelection();
+    await fetchFoldersAndFiles();
+    alert(`${successCount} of ${count} item(s) deleted permanently.`);
+  }
+
+  // Permanently delete file by id
   async function deleteFilePermanent(id) {
     try {
       const response = await fetch(`${API_BASE}/files/${id}`, { method: "DELETE" });
       if (!response.ok) throw new Error('failed');
-      // cleanup local sets
       trash.delete(`file-${id}`);
       favorites.delete(`file-${id}`);
       saveTrash();
@@ -34,27 +193,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Permanently delete folder by id, cleanup local sets and folderMap + descendants
+  // Permanently delete folder by id
   async function deleteFolderPermanent(folderId) {
     try {
       const response = await fetch(`${API_BASE}/folders/${folderId}`, { method: "DELETE" });
       if (!response.ok) throw new Error('failed');
 
-      // remove folder and its descendants from folderMap, favorites, trash
       const idStr = String(folderId);
 
-      // remove the folder itself
       if (window.folderMap && window.folderMap[folderId]) {
         delete window.folderMap[folderId];
       }
       trash.delete(`folder-${folderId}`);
       favorites.delete(`folder-${folderId}`);
 
-      // find descendants in folderMap (simple loop)
       if (window.folderMap) {
         const descendants = [];
         Object.values(window.folderMap).forEach(f => {
-          // walk up parents, if we encounter deleted folderId => it's descendant
           let cursor = f;
           while (cursor) {
             if (!cursor.parent_id) break;
@@ -65,7 +220,7 @@ document.addEventListener("DOMContentLoaded", () => {
             cursor = cursor.parent_id ? window.folderMap[cursor.parent_id] : null;
           }
         });
-        // remove descendants found (note: this isn't fully recursive but will remove direct children; to be safer, iterate until no new descendants)
+        
         let removedAny = true;
         while (removedAny) {
           removedAny = false;
@@ -101,7 +256,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Empty trash: iterate through trash set and delete each permanently
+  // Empty trash
   async function emptyTrashAll() {
     if (trash.size === 0) {
       alert("Trash is already empty.");
@@ -110,18 +265,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!confirm("Permanently delete everything in Trash? This cannot be undone.")) return;
 
-    // copy items so we can modify trash during deletion
     const items = Array.from(trash);
-    // iterate sequentially
     for (const entry of items) {
-      // entry format: "<type>-<id>"
       const [type, id] = entry.split('-');
       if (type === 'file') {
         await deleteFilePermanent(id);
       } else if (type === 'folder') {
         await deleteFolderPermanent(id);
       }
-      // also ensure we remove it from trash set (deleteFilePermanent/FolderPermanent already remove)
       trash.delete(entry);
     }
     
@@ -154,13 +305,11 @@ document.addEventListener("DOMContentLoaded", () => {
     return trash.has(`${type}-${id}`);
   }
 
-  // Fetch folders & files; if we need global filters or breadcrumbs, ensure we have full folder list
+  // Fetch folders & files
   async function fetchFoldersAndFiles() {
     try {
       let foldersRes, filesRes;
 
-      // If viewing global filters or we need breadcrumb ancestors,
-      // request "all=true" to get every item from the server
       const needAllFolders = ["favorites", "recent", "trash"].includes(currentFilter) || currentFolderId !== null && !window.folderMap[currentFolderId];
 
       if (["favorites", "recent", "trash"].includes(currentFilter) || needAllFolders) {
@@ -169,7 +318,6 @@ document.addEventListener("DOMContentLoaded", () => {
           fetch(`${API_BASE}/files?all=true`)
         ]);
       } else {
-        // Folder-specific view (only children)
         [foldersRes, filesRes] = await Promise.all([
           fetch(`${API_BASE}/folders${currentFolderId ? `?parent_id=${currentFolderId}` : ""}`),
           fetch(`${API_BASE}/files${currentFolderId ? `?folder_id=${currentFolderId}` : ""}`)
@@ -182,12 +330,10 @@ document.addEventListener("DOMContentLoaded", () => {
       let folders = foldersData.folders || [];
       let files = filesData.files || [];
 
-      // Update global folderMap with whatever we got (so we can build breadcrumbs)
       folders.forEach(f => {
         if (f && f.id !== undefined) window.folderMap[f.id] = f;
       });
 
-      // Apply your existing in-memory filter logic (this returns filtered sets)
       const filtered = filterItems(folders, files);
 
       if (currentFilter === "all" && currentFolderId) {
@@ -204,14 +350,12 @@ document.addEventListener("DOMContentLoaded", () => {
   function filterItems(folders, files) {
     switch (currentFilter) {
       case "files":
-        // show only files (non-trashed)
         return {
           folders: [],
           files: files.filter(f => !isTrashed(f.id, "file"))
         };
 
       case "recent":
-        // Sort by most recent across all files and exclude trashed items
         const recentFiles = [...files]
           .filter(f => !isTrashed(f.id, "file"))
           .sort((a, b) => {
@@ -223,19 +367,16 @@ document.addEventListener("DOMContentLoaded", () => {
         return { folders: [], files: recentFiles };
 
       case "favorites":
-        // Favorites across entire dataset (exclude trashed)
         const favFolders = folders.filter(f => isFavorite(f.id, "folder") && !isTrashed(f.id, "folder"));
         const favFiles = files.filter(f => isFavorite(f.id, "file") && !isTrashed(f.id, "file"));
         return { folders: favFolders, files: favFiles };
 
       case "trash":
-        // Show trashed items (both folders and files) — these come from local storage
         const trashedFolders = folders.filter(f => isTrashed(f.id, "folder"));
         const trashedFiles = files.filter(f => isTrashed(f.id, "file"));
         return { folders: trashedFolders, files: trashedFiles };
 
       default:
-        // Default 'all' view: exclude trashed items from normal view
         return {
           folders: folders.filter(f => !isTrashed(f.id, "folder")),
           files: files.filter(f => !isTrashed(f.id, "file"))
@@ -243,9 +384,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Build breadcrumb trail array from currentFolderId and window.folderMap
   function buildBreadcrumbTrail() {
-    // If a global filter is active, show it as the root breadcrumb
     if (["recent", "favorites", "trash"].includes(currentFilter)) {
       const labelMap = {
         recent: "Recent",
@@ -255,14 +394,12 @@ document.addEventListener("DOMContentLoaded", () => {
       return [{ id: null, name: labelMap[currentFilter] }];
     }
 
-    // Default view — "Repository" as root
     const trail = [{ id: null, name: "Repository" }];
 
     if (!currentFolderId) return trail;
 
-    // Build folder hierarchy using folderMap
     let cursor = window.folderMap[currentFolderId];
-    if (!cursor) return trail; // fallback if folder missing
+    if (!cursor) return trail;
 
     const parts = [];
     while (cursor) {
@@ -275,6 +412,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function render(folders, files) {
     container.innerHTML = "";
+    clearSelection(); // Clear selection when re-rendering
+
+    // Create a flat list of all items for shift-click range selection
+    const allItems = [];
+    let itemIndex = 0;
 
     // ===== header start =====
     const headerWrapper = document.createElement("div");
@@ -286,7 +428,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const leftControls = document.createElement("div");
     leftControls.className = "header-left-controls";
 
-    // show "Empty Trash" button when viewing trash filter
+    // Show "Empty Trash" or bulk actions
     if (currentFilter === 'trash') {
       const emptyTrashBtn = document.createElement("button");
       emptyTrashBtn.textContent = "Empty Trash";
@@ -294,11 +436,34 @@ document.addEventListener("DOMContentLoaded", () => {
       emptyTrashBtn.type = "button";
       emptyTrashBtn.onclick = async (e) => {
         e.preventDefault();
-        // call helper to empty trash
         await emptyTrashAll();
       };
       leftControls.appendChild(emptyTrashBtn);
     }
+
+    // Bulk actions div (hidden by default)
+    const bulkActionsDiv = document.createElement("div");
+    bulkActionsDiv.id = "bulkActions";
+    bulkActionsDiv.className = "bulk-actions";
+    bulkActionsDiv.style.display = "none";
+    
+    bulkActionsDiv.innerHTML = `
+      <span id="selectionCount" class="selection-count">0 items selected</span>
+      <button class="bulk-btn download-bulk-btn" onclick="window.bulkDownload()">
+        <i class="fa fa-download"></i> Download
+      </button>
+      <button class="bulk-btn trash-bulk-btn" onclick="window.bulkMoveToTrash()">
+        <i class="fa fa-trash"></i> Move to Trash
+      </button>
+      <button class="bulk-btn delete-bulk-btn" onclick="window.bulkDeletePermanently()">
+        <i class="fa fa-trash-alt"></i> Delete Permanently
+      </button>
+      <button class="bulk-btn cancel-bulk-btn" onclick="window.clearSelection()">
+        <i class="fa fa-times"></i>
+      </button>
+    `;
+    
+    leftControls.appendChild(bulkActionsDiv);
 
     const rightControls = document.createElement("div");
     rightControls.className = "header-right-controls";
@@ -336,7 +501,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       filterIcon.addEventListener("click", () => {
         currentFilter = filter;
-        // when switching to global filters, show root (clear folder scope)
         if (["favorites", "recent", "trash"].includes(filter)) currentFolderId = null;
         fetchFoldersAndFiles();
       });
@@ -352,7 +516,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     allIcon.addEventListener("click", () => {
       currentFilter = "all";
-      currentFolderId = null; // clear any folder scope
+      currentFolderId = null;
       fetchFoldersAndFiles();
     });
     filters.insertBefore(allIcon, filters.firstChild);
@@ -361,31 +525,27 @@ document.addEventListener("DOMContentLoaded", () => {
     header.appendChild(leftControls);
     header.appendChild(rightControls);
 
-    // Put header inside wrapper card (so you have white card look)
     headerWrapper.appendChild(header);
     container.appendChild(headerWrapper);
 
-    // ===== breadcrumb start =====
+    // ===== breadcrumb =====
     const breadcrumb = document.createElement("div");
     breadcrumb.className = "breadcrumb-trail";
 
-    const trail = buildBreadcrumbTrail(); // returns array of {id, name}
+    const trail = buildBreadcrumbTrail();
 
     trail.forEach((part, i) => {
       const crumb = document.createElement("span");
       crumb.className = "breadcrumb-part";
       crumb.textContent = part.name;
-      // Only make clickable if it's not current (last) element
       if (i < trail.length - 1) {
         crumb.style.cursor = "pointer";
         crumb.addEventListener("click", () => {
           currentFolderId = part.id;
-          // When clicking crumbs, clear any global filter to return to normal folder view
           currentFilter = "all";
           fetchFoldersAndFiles();
         });
       } else {
-        // last element, not clickable; emphasize it
         crumb.classList.add("breadcrumb-current");
       }
       breadcrumb.appendChild(crumb);
@@ -397,124 +557,42 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // insert breadcrumb just below header (but above items)
     container.appendChild(breadcrumb);
-    // ===== breadcrumb end =====
 
     // Items grid
     const itemsDiv = document.createElement("div");
     itemsDiv.className = "repository-items";
 
     folders.forEach((folder) => {
-      const itemDiv = createRepositoryItem(
-        folder,
-        "folder",
-        () => {
-          if (currentFilter === "favorites") {
-            alert("Please switch to 'All' view to navigate into folders");
-            return;
-          }
-          currentFolderId = folder.id;
-          fetchFoldersAndFiles();
-        },
-        async () => {
-          if (!confirm(`Permanently delete folder "${folder.name}"? This cannot be undone.`)) return;
-
-          try {
-            const response = await fetch(`${API_BASE}/folders/${folder.id}`, { method: "DELETE" });
-
-            if (!response.ok) {
-              alert("Failed to delete folder permanently.");
-              return;
-            }
-
-            // cleanup local state:
-            const deletedIdStr = String(folder.id);
-
-            // Remove from folderMap (so breadcrumb/build won't resurrect it)
-            if (window.folderMap && window.folderMap[folder.id]) {
-              delete window.folderMap[folder.id];
-            }
-
-            // Remove from local trash and favorites
-            trash.delete(`folder-${folder.id}`);
-            favorites.delete(`folder-${folder.id}`);
-            saveTrash();
-            saveFavorites();
-
-            // If currentFolderId is the deleted folder or a descendant, reset to root.
-            // Walk up from currentFolderId via folderMap parents to check ancestry.
-            if (currentFolderId != null) {
-              let cursor = window.folderMap[currentFolderId];
-              // if folderMap doesn't have the currentFolderId (deleted or not loaded),
-              // also compare direct equality (string-safe)
-              if (!cursor && String(currentFolderId) === deletedIdStr) {
-                currentFolderId = null;
-              } else {
-                while (cursor) {
-                  if (String(cursor.id) === deletedIdStr) {
-                    currentFolderId = null;
-                    break;
-                  }
-                  cursor = cursor.parent_id ? window.folderMap[cursor.parent_id] : null;
-                }
-              }
-            }
-
-            // Ensure UI fetch happens after state updates
-            await fetchFoldersAndFiles();
-          } catch (err) {
-            console.error("Permanent delete error:", err);
-            alert("Error deleting folder permanently.");
-          }
-        },
-        () => toggleFavorite(folder.id, "folder")
-      );
+      const itemDiv = createRepositoryItem(folder, "folder", folders, files, itemIndex, allItems);
+      allItems.push({ id: folder.id, type: "folder", element: itemDiv, index: itemIndex });
+      itemIndex++;
       itemsDiv.appendChild(itemDiv);
     });
 
     files.forEach((file) => {
-      const itemDiv = createRepositoryItem(
-        file,
-        "file",
-        () => window.open(file.file_path, "_blank"),
-        // permanent delete handler for file
-        async () => {
-          if (!confirm(`Permanently delete file "${file.file_name}"? This cannot be undone.`)) return;
-
-          try {
-            const response = await fetch(`${API_BASE}/files/${file.id}`, { method: "DELETE" });
-
-            if (!response.ok) {
-              alert("Failed to delete file permanently.");
-              return;
-            }
-
-            // Cleanup local sets
-            trash.delete(`file-${file.id}`);
-            favorites.delete(`file-${file.id}`);
-            saveTrash();
-            saveFavorites();
-
-            // If currentFolderId points to a folder that was inside a deleted file context (rare),
-            // keep as-is. Otherwise just refresh UI after cleanup.
-            await fetchFoldersAndFiles();
-          } catch (err) {
-            console.error("Permanent delete error:", err);
-            alert("Error deleting file permanently.");
-          }
-        },
-        () => toggleFavorite(file.id, "file")
-      );
+      const itemDiv = createRepositoryItem(file, "file", folders, files, itemIndex, allItems);
+      allItems.push({ id: file.id, type: "file", element: itemDiv, index: itemIndex });
+      itemIndex++;
       itemsDiv.appendChild(itemDiv);
     });
 
     container.appendChild(itemsDiv);
   }
 
-  function createRepositoryItem(item, type, onClick, onDeletePermanent, onToggleFavorite) {
+  function createRepositoryItem(item, type, allFolders, allFiles, itemIndex, allItemsList) {
     const itemDiv = document.createElement("div");
     itemDiv.className = "repository-item";
+    
+    const itemKey = `${type}-${item.id}`;
+    itemDiv.dataset.itemId = itemKey;
+    itemDiv.dataset.itemIndex = itemIndex;
+    
+    // Store file data for downloads
+    if (type === "file") {
+      itemDiv.dataset.filePath = item.file_path;
+      itemDiv.dataset.fileName = item.file_name;
+    }
 
     const icon = document.createElement("i");
     icon.className = type === "folder" ? "fa fa-folder" : "fa fa-file";
@@ -527,16 +605,72 @@ document.addEventListener("DOMContentLoaded", () => {
     nameSpan.title = name;
     itemDiv.appendChild(nameSpan);
 
-    // localized favorite highlight: entire folder/file card turns yellow-ish
+    // Check if already selected
+    if (selectedItems.has(itemKey)) {
+      itemDiv.classList.add("selected");
+    }
+
+    // Favorite highlight
     if (isFavorite(item.id, type)) {
       itemDiv.style.backgroundColor = "rgba(255, 193, 7, 0.15)";
       itemDiv.style.border = "1px solid #ffc107";
     }
 
+    // Click handler - NEW BEHAVIOR
     itemDiv.addEventListener("click", (e) => {
-      if (!e.target.classList.contains("dot-menu") && !e.target.closest(".dot-menu")) {
-        onClick();
+      if (e.target.classList.contains("dot-menu") || e.target.closest(".dot-menu")) {
+        return; // Don't handle selection if clicking menu
       }
+
+      const currentTime = Date.now();
+      const isDoubleClick = (currentTime - lastClickTime < DOUBLE_CLICK_DELAY) && (lastClickedItem === itemKey);
+
+      // Update last click tracking
+      lastClickTime = currentTime;
+      lastClickedItem = itemKey;
+
+      // Handle double-click
+      if (isDoubleClick) {
+        if (type === "folder") {
+          if (currentFilter === "favorites") {
+            alert("Please switch to 'All' view to navigate into folders");
+            return;
+          }
+          currentFolderId = item.id;
+          fetchFoldersAndFiles();
+        } else {
+          // Open file in Google Sheets
+          const fileUrl = `http://localhost:3000${item.file_path}`;
+          const googleSheetsImportUrl =
+            `https://docs.google.com/spreadsheets/u/0/create?usp=drive_web&authuser=0&hl=en&copy=true&url=${encodeURIComponent(fileUrl)}`;
+          window.open(googleSheetsImportUrl, "_blank");
+        }
+        return;
+      }
+
+      // Handle shift-click for range selection
+      if (e.shiftKey) {
+        handleShiftSelection(itemIndex, allItemsList);
+        return;
+      }
+
+      // Handle ctrl/cmd-click for multi-select (toggle)
+      if (e.ctrlKey || e.metaKey) {
+        toggleItemSelection(item.id, type, itemDiv, itemIndex);
+        return;
+      }
+
+      // Single click - just select the item (NEW DEFAULT BEHAVIOR)
+      // Clear previous selection if not using ctrl/shift
+      if (!selectedItems.has(itemKey)) {
+        // Clear all other selections
+        document.querySelectorAll(".repository-item.selected").forEach(el => {
+          el.classList.remove("selected");
+        });
+        selectedItems.clear();
+      }
+      
+      toggleItemSelection(item.id, type, itemDiv, itemIndex);
     });
 
     const dots = document.createElement("div");
@@ -546,7 +680,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const menu = document.createElement("div");
     menu.className = "dropdown-menu hidden";
 
-    // Favorite button (works everywhere)
+    // Favorite button
     const favoriteBtn = document.createElement("button");
     favoriteBtn.className = "favorite-btn";
     favoriteBtn.type = "button";
@@ -554,12 +688,12 @@ document.addEventListener("DOMContentLoaded", () => {
     favoriteBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       e.preventDefault();
-      onToggleFavorite();
+      toggleFavorite(item.id, type);
       menu.classList.add("hidden");
     });
     menu.appendChild(favoriteBtn);
 
-    // If current view is 'trash': show Restore + Delete Permanently
+    // Trash view: Restore + Delete
     if (currentFilter === "trash") {
       const restoreBtn = document.createElement("button");
       restoreBtn.className = "restore-btn";
@@ -568,7 +702,6 @@ document.addEventListener("DOMContentLoaded", () => {
       restoreBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         e.preventDefault();
-        // remove from trash
         trash.delete(`${type}-${item.id}`);
         saveTrash();
         menu.classList.add("hidden");
@@ -583,27 +716,59 @@ document.addEventListener("DOMContentLoaded", () => {
       permDeleteBtn.addEventListener("click", async (e) => {
         e.stopPropagation();
         e.preventDefault();
-        // Call permanent delete handler provided by render (onDeletePermanent)
-        await onDeletePermanent();
+        
+        if (!confirm(`Permanently delete "${name}"? This cannot be undone.`)) return;
+
+        if (type === "file") {
+          await deleteFilePermanent(item.id);
+        } else {
+          await deleteFolderPermanent(item.id);
+        }
+        
         menu.classList.add("hidden");
+        await fetchFoldersAndFiles();
       });
       menu.appendChild(permDeleteBtn);
     } else {
-      // Normal view: show Move to Trash (soft delete)
+      // Normal view: Move to Trash
       const moveTrashBtn = document.createElement("button");
       moveTrashBtn.className = "move-trash-btn";
       moveTrashBtn.type = "button";
-      moveTrashBtn.textContent = isTrashed(item.id, type) ? "Remove from Trash" : "Move to Trash";
+      moveTrashBtn.textContent = "Move to Trash";
       moveTrashBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         e.preventDefault();
-        toggleTrash(item.id, type); // soft delete toggle
+        toggleTrash(item.id, type);
         menu.classList.add("hidden");
       });
       menu.appendChild(moveTrashBtn);
     }
 
-    // Close other menus when opening
+    // Download button (files only)
+    if (type === "file") {
+      const downloadBtn = document.createElement("button");
+      downloadBtn.className = "download-btn";
+      downloadBtn.type = "button";
+      downloadBtn.textContent = "Download";
+
+      downloadBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+
+        const link = document.createElement("a");
+        link.href = item.file_path;
+        link.download = item.file_name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        menu.classList.add("hidden");
+      });
+
+      menu.appendChild(downloadBtn);
+    }
+
+    // Menu toggle
     dots.addEventListener("click", (e) => {
       e.stopPropagation();
       e.preventDefault();
@@ -613,7 +778,6 @@ document.addEventListener("DOMContentLoaded", () => {
       menu.classList.toggle("hidden");
     });
 
-    // Close menu when clicking outside
     document.addEventListener("click", (e) => {
       if (!dots.contains(e.target) && !menu.contains(e.target)) {
         menu.classList.add("hidden");
@@ -624,6 +788,12 @@ document.addEventListener("DOMContentLoaded", () => {
     itemDiv.appendChild(menu);
     return itemDiv;
   }
+
+  // Expose functions to window for onclick handlers
+  window.bulkDownload = bulkDownload;
+  window.bulkMoveToTrash = bulkMoveToTrash;
+  window.bulkDeletePermanently = bulkDeletePermanently;
+  window.clearSelection = clearSelection;
 
   // Initial load
   fetchFoldersAndFiles();

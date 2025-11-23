@@ -1,3 +1,4 @@
+#analytics_api.py
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import pandas as pd
@@ -79,12 +80,15 @@ def load_file_data(filename):
     print(f"✅ Using file: {actual_filename}")
     print(f"📁 Full path: {filepath}")
     
-    file_ext = os.path.splitext(filename)[1].lower()
+    file_ext = os.path.splitext(actual_filename)[1].lower()
     
     try:
+        # Read file with optimizations for large files
         if file_ext == '.csv':
-            df = pd.read_csv(filepath)
+            # Read CSV in chunks if large
+            df = pd.read_csv(filepath, low_memory=False)
         elif file_ext in ['.xlsx', '.xls']:
+            # Read Excel with optimization
             df = pd.read_excel(filepath, engine='openpyxl' if file_ext == '.xlsx' else 'xlrd')
         elif file_ext == '.json':
             df = pd.read_json(filepath)
@@ -92,6 +96,15 @@ def load_file_data(filename):
             raise ValueError(f"Unsupported file type: {file_ext}")
         
         print(f"✅ Successfully loaded file with {len(df)} rows and {len(df.columns)} columns")
+        
+        # Handle large files - limit to first 10,000 rows for processing
+        if len(df) > 10000:
+            print(f"⚠️ Large file detected ({len(df)} rows). Using first 10,000 rows for analysis.")
+            original_rows = len(df)
+            df = df.head(10000)
+        else:
+            original_rows = len(df)
+        
         print(f"📊 Columns: {df.columns.tolist()}")
         
         # Get numeric columns
@@ -107,18 +120,27 @@ def load_file_data(filename):
         
         # Try to use first column as labels if it's not numeric
         label_col = df.columns[0] if df.columns[0] not in numeric_cols else None
-        labels = df[label_col].astype(str).tolist() if label_col else [f"Row {i+1}" for i in range(len(data))]
+        
+        if label_col:
+            labels = df[label_col].astype(str).tolist()[:len(data)]
+        else:
+            # For large datasets, create simplified labels
+            if len(data) > 100:
+                labels = [f"Row {i+1}" for i in range(len(data))]
+            else:
+                labels = [f"Row {i+1}" for i in range(len(data))]
         
         print(f"✅ Using column '{column_name}' with {len(data)} values")
         
         return {
             'data': data,
-            'labels': labels[:len(data)],  # Match label length with data
+            'labels': labels,
             'column_name': column_name,
-            'filename': filename,
+            'filename': actual_filename,
             'total_columns': len(df.columns),
             'numeric_columns': numeric_cols,
-            'total_rows': len(df)
+            'total_rows': original_rows,
+            'processed_rows': len(data)
         }
     except Exception as e:
         print(f"❌ Error parsing file: {str(e)}")
