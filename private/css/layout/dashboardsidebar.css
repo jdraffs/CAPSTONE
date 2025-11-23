@@ -25,7 +25,7 @@ body {
 .main {
   background-color: #f6f5f5;
   min-height: 100vh;
-  padding-bottom: 40px;
+  padding-bottom: 1-px;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -206,5 +206,5 @@ main {
 }
 /* Dashboard Content */
 .dashboard-content {
-    padding: 30px;
+    padding: 0px 30px;
 }

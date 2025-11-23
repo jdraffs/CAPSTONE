@@ -1,3 +1,4 @@
+//analyticsReport.js
 document.addEventListener("DOMContentLoaded", async () => {
   const reportsGrid = document.querySelector(".reports-grid");
   const PYTHON_API_URL = "http://localhost:5000/api";

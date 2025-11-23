@@ -7,7 +7,8 @@
     <link rel="stylesheet" href="/private/css/layout/dashboardsidebar.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 </head>
 <body>
     <!--SIDEBAR-->
@@ -64,11 +65,8 @@
                         </a>
                     </li>
                 </ul>
-
-
             </div>
             </div> <!-- End of sidebar-scroll -->
-
 
             <div class="sidebar-footer">
                 <div class="user-info">
@@ -141,35 +139,92 @@
                                     <p class="card-label">Repository Items</p>
                                 </div>
                             </div>
+                        </div>
                     </section>
-                        <!-- Quick Actions -->
-                        <section class="quick-actions">
-                            <h2>Quick Actions</h2>
-                            <div class="actions-grid">
-                            <button class="action-btn">
+
+                    <!-- Quick Actions -->
+                    <section class="quick-actions">
+                        <h2>Quick Actions</h2>
+                        <div class="actions-grid">
+                            <button class="action-btn" onclick="window.location.href='./dataUploads.html'">
                                 <i class="fas fa-plus"></i>
                                 <span>Upload New Data</span>
                             </button>
-                            <button class="action-btn">
+                            <button class="action-btn" onclick="window.location.href='./analyticsReport.html'">
                                 <i class="fas fa-chart-line"></i>
-                                <span>view Analytics</span>
+                                <span>View Analytics</span>
                             </button>
-                            <button class="action-btn">
+                            <button class="action-btn" onclick="window.location.href='./fileRepository.html'">
                                 <i class="fas fa-folder-open"></i>
                                 <span>Manage Repository</span>
                             </button>
-                            </div>
-                        </section>
+                        </div>
+                    </section>
 
-                        <!-- recent updates table -->
-                        <section class="updates-section">
-                            <div class="updates-header">
-                                <h2>Recent Updates</h2>
-                                <button id="viewAllUpdatesBtn" class="updates-viewall">View All</button>
-                            </div>
+                    <!-- recent updates table -->
+                    <section class="updates-section">
+                        <div class="updates-header">
+                            <h2>Recent Updates</h2>
+                            <button id="viewAllUpdatesBtn" class="updates-viewall">View All</button>
+                        </div>
 
-                            <div class="updates-table-wrapper">
-                                <table class="updates-table">
+                        <div class="updates-table-wrapper">
+                            <table class="updates-table">
+                                <thead>
+                                    <tr>
+                                        <th>Event</th>
+                                        <th>Details</th>
+                                        <th>Timestamp</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><i class="fa-solid fa-upload updates-icon blue"></i> New dataset uploaded</td>
+                                        <td>enrollment_2025.xlsx</td>
+                                        <td>3 hours ago</td>
+                                    </tr>
+                                    <tr>
+                                        <td><i class="fa-solid fa-chart-line updates-icon purple"></i> New analytics report generated</td>
+                                        <td>Dropouts Summary</td>
+                                        <td>Yesterday</td>
+                                    </tr>
+                                    <tr>
+                                        <td><i class="fa-solid fa-folder updates-icon orange"></i> Repository updated</td>
+                                        <td>2 new files added</td>
+                                        <td>2 days ago</td>
+                                    </tr>
+                                    <tr>
+                                        <td><i class="fa-solid fa-upload updates-icon blue"></i> New dataset uploaded</td>
+                                        <td>dropouts_2025.xlsx</td>
+                                        <td>3 days ago</td>
+                                    </tr>
+                                    <tr>
+                                        <td><i class="fa-solid fa-chart-simple updates-icon green"></i> Chart visualization created</td>
+                                        <td>Graduates tracking chart</td>
+                                        <td>4 days ago</td>
+                                    </tr>
+                                    <tr>
+                                        <td><i class="fa-solid fa-folder updates-icon orange"></i> Repository updated</td>
+                                        <td>5 files archived</td>
+                                        <td>1 week ago</td>
+                                    </tr>
+                                    <tr>
+                                        <td><i class="fa-solid fa-upload updates-icon blue"></i> New dataset uploaded</td>
+                                        <td>graduates_2025.csv</td>
+                                        <td>1 week ago</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <!-- modal -->
+                    <div id="updatesModal" class="updates-modal">
+                        <div class="updates-modal-content">
+                            <span class="updates-close">&times;</span>
+                            <h3>All Updates</h3>
+                            <div class="updates-modal-body">
+                                <table>
                                     <thead>
                                         <tr>
                                             <th>Event</th>
@@ -177,131 +232,74 @@
                                             <th>Timestamp</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td><i class="fa-solid fa-upload updates-icon blue"></i> New dataset uploaded</td>
-                                            <td>enrollment_2025.xlsx</td>
-                                            <td>3 hours ago</td>
-                                        </tr>
-                                        <tr>
-                                            <td><i class="fa-solid fa-chart-line updates-icon purple"></i> New analytics report generated</td>
-                                            <td>Dropouts Summary</td>
-                                            <td>Yesterday</td>
-                                        </tr>
-                                        <tr>
-                                            <td><i class="fa-solid fa-folder updates-icon orange"></i> Repository updated</td>
-                                            <td>2 new files added</td>
-                                            <td>2 days ago</td>
-                                        </tr>
-                                        <tr>
-                                            <td><i class="fa-solid fa-upload updates-icon blue"></i> New dataset uploaded</td>
-                                            <td>dropouts_2025.xlsx</td>
-                                            <td>3 days ago</td>
-                                        </tr>
-                                        <tr>
-                                            <td><i class="fa-solid fa-chart-simple updates-icon green"></i> Chart visualization created</td>
-                                            <td>Graduates tracking chart</td>
-                                            <td>4 days ago</td>
-                                        </tr>
-                                        <tr>
-                                            <td><i class="fa-solid fa-folder updates-icon orange"></i> Repository updated</td>
-                                            <td>5 files archived</td>
-                                            <td>1 week ago</td>
-                                        </tr>
-                                        <tr>
-                                            <td><i class="fa-solid fa-upload updates-icon blue"></i> New dataset uploaded</td>
-                                            <td>graduates_2025.csv</td>
-                                            <td>1 week ago</td>
-                                        </tr>
+                                    <tbody id="updatesModalTableBody">
+                                        <!-- filled dynamically via JS -->
                                     </tbody>
                                 </table>
                             </div>
-                        </section>
-
-                        <!-- modal -->
-                        <div id="updatesModal" class="updates-modal">
-                            <div class="updates-modal-content">
-                                <span class="updates-close">&times;</span>
-                                <h3>All Updates</h3>
-                                <div class="updates-modal-body">
-                                    <table>
-                                        <thead>
-                                            <tr>
-                                                <th>Event</th>
-                                                <th>Details</th>
-                                                <th>Timestamp</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="updatesModalTableBody">
-                                            <!-- filled dynamically na via JS -->
-                                        </tbody>
-                                    </table>
-                                </div>
+                        </div>
+                    </div>
+                                        <!-- Analytics Overview Section - NEW -->
+                    <section class="analytics-overview-section">
+                        <div class="section-header analytics-header">
+                            <h2>
+                                <i class="bi bi-graph-up-arrow"></i>
+                                Analytics Overview
+                            </h2>
+                        </div>
+                        
+                        <!-- This is the container where analytics will be loaded dynamically -->
+                        <div id="analyticsOverviewContainer">
+                            <!-- Analytics content will be loaded here by JavaScript -->
+                            <div class="analytics-loading">
+                                <i class="bi bi-hourglass-split"></i>
+                                <p>Loading analytics...</p>
                             </div>
-                        </div>    
-
-                        <!-- Analytics Overview -->
-                        <section class="dashboard-section charts-section">
-                            <div class="section-header">
-                                <h2>Analytics Overview</h2>
-                            </div>
-
-                            <div class="charts-grid">
-                                <div class="chart-container">
-                                <h3>Number of Site Visitors</h3>
-                                <canvas id="siteVisitorsChart"></canvas>
-                                </div>
-
-                                <div class="chart-container">
-                                <h3>Most Viewed Content</h3>
-                                <canvas id="mostViewedContentChart"></canvas>
-                                </div>
-                            </div>
-                        </section>         
+                        </div>
+                    </section>
+                </div>
+            </div>
     </main>
 
     <!-- CONTENTS FOR EACH SECTION -->
-            <section>
-                <div class="content-page" id="ojt-page">
-                    <div class="page-placeholder">
-                        <h2>MS TEAMS CONTENT</h2>
-                        <p>-Manage faculty accounts (create faculty accounts, view list of all faculty, activate/deactivate account, reset faculty password) -Manage Alumni Submissions (approve or reject requests)</p>
-                    </div>
-                </div>
+    <section>
+        <div class="content-page" id="ojt-page">
+            <div class="page-placeholder">
+                <h2>MS TEAMS CONTENT</h2>
+                <p>-Manage faculty accounts (create faculty accounts, view list of all faculty, activate/deactivate account, reset faculty password) -Manage Alumni Submissions (approve or reject requests)</p>
+            </div>
+        </div>
 
-                <div class="content-page" id="research-extension-page">
-                    <div class="page-placeholder">
-                        <h2>MS TEAMS CONTENT</h2>
-                        <p>-Manage news & updates (Add/Edit/Delete News article with upload image, View Engagement or number of views) -Manage Research Extensions </p>
-                    </div>
-                </div>
+        <div class="content-page" id="research-extension-page">
+            <div class="page-placeholder">
+                <h2>MS TEAMS CONTENT</h2>
+                <p>-Manage news & updates (Add/Edit/Delete News article with upload image, View Engagement or number of views) -Manage Research Extensions </p>
+            </div>
+        </div>
 
-                <div class="content-page" id="nstp-page">
-                    <div class="page-placeholder">
-                        <h2>MS TEAMS CONTENT</h2>
-                        <p>-Approve Faculty Profile Edits, -Approve Research Outputs (Flipbook display) </p>
-                    </div>
-                </div>
+        <div class="content-page" id="nstp-page">
+            <div class="page-placeholder">
+                <h2>MS TEAMS CONTENT</h2>
+                <p>-Approve Faculty Profile Edits, -Approve Research Outputs (Flipbook display) </p>
+            </div>
+        </div>
 
-                <div class="content-page" id="forms-repository-page">
-                    <div class="page-placeholder">
-                        <h2>MS TEAMS CONTENT</h2>
-                        <p>Configure system preferences</p>
-                    </div>
-                </div>
+        <div class="content-page" id="forms-repository-page">
+            <div class="page-placeholder">
+                <h2>MS TEAMS CONTENT</h2>
+                <p>Configure system preferences</p>
+            </div>
+        </div>
 
-                <div class="content-page" id="announcements-memos-page">
-                    <div class="page-placeholder">
-                        <h2>MS TEAMS CONTENT</h2>
-                        <p>Configure system preferences</p>
-                    </div>
-                </div>
+        <div class="content-page" id="announcements-memos-page">
+            <div class="page-placeholder">
+                <h2>MS TEAMS CONTENT</h2>
+                <p>Configure system preferences</p>
+            </div>
+        </div>
+    </section>
 
-
-            </section>
 <!-- SCRIPTS -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="/private/js/admin/admin1/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="/private/js/admin/admin2/admin2.js"></script>
