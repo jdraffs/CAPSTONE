@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          filename: actualFilename,  // Send ACTUAL filename with timestamp
+          filename: actualFilename,
           chart_type: chartType
         })
       });
@@ -53,9 +53,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       reports.push({
         id: index + 1,
-        file_id: file.file_id,
-        title: displayName || `Report ${index + 1}`,  // Use display name
-        actualFilename: actualFilename,  // Store actual filename for API calls
+        file_id: file.id,  // ✅ Fixed: Use file.id instead of file.file_id
+        title: displayName || `Report ${index + 1}`,
+        actualFilename: actualFilename,
         metric: file.type || "Uploaded Dataset",
         date: new Date(file.uploaded_at).toLocaleDateString(),
         recordsProcessed: analyticsData.statistics.count,
@@ -74,8 +74,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       // Fallback to basic report
       reports.push({
         id: index + 1,
+        file_id: file.id,  // ✅ Fixed: Use file.id
         title: displayName || `Report ${index + 1}`,
-        actualFilename: actualFilename,  // Store for API calls
+        actualFilename: actualFilename,
         metric: "Error Processing",
         date: new Date(file.uploaded_at).toLocaleDateString(),
         recordsProcessed: 0,
@@ -152,13 +153,60 @@ document.addEventListener("DOMContentLoaded", async () => {
         <button class="refresh-btn" data-id="${report.id}" data-filename="${report.actualFilename || report.title}">
           <i class="bi bi-arrow-clockwise"></i> Refresh
         </button>
-        <button onclick="deleteReportPermanently(${report.file_id})" class="delete-btn"><i class="bi bi-trash"></i></button>
-
-
+        <button class="delete-btn" data-file-id="${report.file_id}">
+          <i class="bi bi-trash"></i>
+        </button>
       </div>
     `;
 
     reportsGrid.appendChild(card);
+  });
+
+  // ✅ Handle delete button with event delegation (no onclick attribute)
+  document.body.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".delete-btn");
+    if (!btn) return;
+
+    const fileId = btn.dataset.fileId;
+    
+    if (!fileId) {
+      alert("Error: File ID not found");
+      console.error("File ID is undefined");
+      return;
+    }
+
+    const confirmDelete = confirm("Are you sure you want to delete this file permanently? This action cannot be undone.");
+    if (!confirmDelete) return;
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+
+    try {
+      // ✅ Fixed: Use correct API endpoint
+      const response = await fetch(`http://localhost:3000/api/files/files/${fileId}`, {
+        method: "DELETE"
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      alert("File permanently deleted.");
+      
+      // Remove the card from UI
+      btn.closest(".report-card").remove();
+      
+      // Refresh if no cards left
+      if (reportsGrid.children.length === 0) {
+        reportsGrid.innerHTML = "<p>No analytics available yet. Upload a file to generate reports.</p>";
+      }
+
+    } catch (error) {
+      console.error("Error deleting permanently:", error);
+      alert(`Failed to delete file: ${error.message}`);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-trash"></i>';
+    }
   });
 
   // Handle chart type changes
@@ -170,21 +218,19 @@ document.addEventListener("DOMContentLoaded", async () => {
       
       if (!report) return;
 
-      // Show loading indicator
       const card = e.target.closest(".report-card");
       const chartContainer = card.querySelector(".chart-container");
       const originalContent = chartContainer.innerHTML;
       chartContainer.innerHTML = '<p>Regenerating chart...</p>';
 
       try {
-        // Request new chart from Python API using actual filename
         const response = await fetch(`${PYTHON_API_URL}/analytics/process`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            filename: report.actualFilename || report.title,  // Use actual filename
+            filename: report.actualFilename || report.title,
             chart_type: selectedType
           })
         });
@@ -195,16 +241,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const analyticsData = await response.json();
         
-        // Update chart image
         chartContainer.innerHTML = `<img src="${analyticsData.chart_image}" alt="Chart" class="chart-preview-img" />`;
         
-        // Update report data
         report.chartImage = analyticsData.chart_image;
         report.chartType = selectedType;
         report.statistics = analyticsData.statistics;
         report.interpretation = analyticsData.interpretation;
 
-        // Save preference
         localStorage.setItem(`chartType_${report.title}`, selectedType);
 
       } catch (error) {
@@ -247,7 +290,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       const analyticsData = await response.json();
       
-      // Update report
       Object.assign(report, {
         chartImage: analyticsData.chart_image,
         statistics: analyticsData.statistics,
@@ -255,12 +297,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         tableData: analyticsData.table_data
       });
 
-      // Update UI
       const card = btn.closest(".report-card");
       const chartContainer = card.querySelector(".chart-container");
       chartContainer.innerHTML = `<img src="${analyticsData.chart_image}" alt="Chart" class="chart-preview-img" />`;
 
-      // Update quick stats
       const quickStats = card.querySelector(".quick-stats");
       quickStats.innerHTML = `
         <div class="stat-mini">
@@ -429,25 +469,3 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 });
-
-  //delete function
-  async function deleteReportPermanently(fileId) {
-      const confirmDelete = confirm("Are you sure you want to delete this file permanently? This action cannot be undone.");
-
-      if (!confirmDelete) return;
-
-      try {
-          const response = await fetch(`/file-repository/files/${fileId}/permanent`, {
-              method: "DELETE"
-          });
-
-          if (response.ok) {
-              alert("File permanently deleted.");
-              loadAnalyticsReports(); // refresh list
-          } else {
-              alert("Failed to delete file.");
-          }
-      } catch (error) {
-          console.error("Error deleting permanently:", error);
-      }
-  }
