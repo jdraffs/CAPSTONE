@@ -1,3 +1,4 @@
+<!-- dataUploads.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,10 +10,9 @@
     <link rel="stylesheet" href="/private/css/pages/dataUploads.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-        <!--SIDEBAR-->
+    <!--SIDEBAR-->
     <section class="sidebar">
         <div class="logo">
             <img class="logoimage" src="/public/assets/images/PUPLogo.webp" alt="PUP Logo">
@@ -26,51 +26,48 @@
 
         <nav class="sidebar-nav">
             <div class="sidebar-scroll">
-            <div class="nav-section">
-                <h3 class="nav-title">Main</h3>
-                <ul class="nav-list">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/private/html/adminPages/adminEnierga/admin2.html">
-                            <i class="fas fa-tachometer-alt"></i>
-                            <span>Dashboard</span>
-                        </a>
-                    </li>
-                </ul>
+                <div class="nav-section">
+                    <h3 class="nav-title">Main</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/adminEnierga/admin2.html">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <h3 class="nav-title">Management</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/adminEnierga/dataUploads.html">
+                                <i class="fa-solid fa-copy"></i>
+                                <span>Data Uploads</span>
+                            </a>
+                        </li>
+                    </ul>
+
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/adminEnierga/analyticsReport.html">
+                                <i class="fa-solid fa-chart-line"></i>
+                                <span>Analytics Report</span>
+                            </a>
+                        </li>
+                    </ul>
+
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/adminEnierga/fileRepository.html">
+                                <i class="fa-solid fa-box-archive"></i>
+                                <span>File Repository</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </div>
-
-            <div class="nav-section">
-                <h3 class="nav-title">Management</h3>
-                <ul class="nav-list">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/private/html/adminPages/adminEnierga/dataUploads.html">
-                            <i class="fa-solid fa-copy"></i>
-                            <span>Data Uploads</span>
-                        </a>
-                    </li>
-                </ul>
-
-                <ul class="nav-list">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/private/html/adminPages/adminEnierga/analyticsReport.html">
-                            <i class="fa-solid fa-chart-line"></i>
-                            <span>Analytics Report</span>
-                        </a>
-                    </li>
-                </ul>
-
-                <ul class="nav-list">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/private/html/adminPages/adminEnierga/fileRepository.html">
-                            <i class="fa-solid fa-box-archive"></i>
-                            <span>File Repository</span>
-                        </a>
-                    </li>
-                </ul>
-
-
-            </div>
-            </div> <!-- End of sidebar-scroll -->
-
 
             <div class="sidebar-footer">
                 <div class="user-info">
@@ -85,7 +82,7 @@
         </nav>
     </section>
 
-        <!--MAIN CONTENT-->
+    <!--MAIN CONTENT-->
     <main class="main">
         <!--TOP-->
         <header class="dashboard-header">
@@ -95,72 +92,95 @@
             <div class="header-right">
                 <div>
                     <a class="notif-link" href="#notifications" data-page="overview">
-                    <i class="fa fa-bell" aria-hidden="true"></i>
+                        <i class="fa fa-bell" aria-hidden="true"></i>
                     </a>
                 </div>
                 <div>
                     <a class="profile-link" href="#profile" data-page="profile">
-                    <i class="fa fa-user" aria-hidden="true"></i>
+                        <i class="fa fa-user" aria-hidden="true"></i>
                     </a>
                 </div>
             </div>
-
         </header>
-            <!-- DASHBOARD CONTENT -->
-            <div class="main-content" id="mainContent">
+
+        <!-- DASHBOARD CONTENT -->
+        <div class="main-content" id="mainContent">
             <div class="data-upload-container">
-                <h2>Upload Your Data</h2>
-                <p>Select a CSV, Excel, or JSON file to preview and visualize.</p>
+                <div class="upload-header">
+                    <h2><i class="fa fa-cloud-upload"></i> Upload Your Data</h2>
+                    <p>Select a CSV, Excel, or JSON file to preview, then upload to the repository.</p>
+                </div>
 
                 <!-- Upload box -->
-                <div class="upload-box">
-                <input type="file" id="dataFileInput" accept=".csv,.xlsx,.xls,.json">
-                <label for="dataFileInput" class="upload-label">
-                    <i class="fa-solid fa-cloud-arrow-up"></i> Choose a file
-                </label>
-                </div>
+                <div class="upload-section">
+                    <div class="upload-box">
+                        <input type="file" id="dataFileInput" accept=".csv,.xlsx,.xls,.json">
+                        <label for="dataFileInput" class="upload-label">
+                            <i class="fa-solid fa-file-arrow-up"></i>
+                            <span>Choose a File</span>
+                            <small>CSV, Excel, or JSON</small>
+                        </label>
+                    </div>
 
-                <!-- File Info -->
-                <div id="fileInfo" class="file-info"></div>
+                    <!-- File Info -->
+                    <div id="fileInfo" class="file-info"></div>
+
+                    <!-- Upload Button (appears after file is chosen) -->
+                    <button id="uploadBtn" class="upload-btn" disabled>
+                        <i class="fa fa-upload"></i> Upload File
+                    </button>
+                </div>
 
                 <!-- Table preview -->
-                <div id="tablePreview" class="table-preview">
-                <!-- spinner -->
-                <div id="loadingSpinner" class="loading-spinner" style="display: none;">
-                    Loading preview<span class="dots"></span>
-                </div>
+                <div class="preview-section">
+                    <h3><i class="fa fa-table"></i> Data Preview</h3>
+                    <div id="tablePreview" class="table-preview">
+                        <!-- Spinner -->
+                        <div id="loadingSpinner" class="loading-spinner" style="display: none;">
+                            <i class="fa fa-spinner fa-spin"></i>
+                            Loading preview<span class="dots"></span>
+                        </div>
 
-                <!-- Default message -->
-                <p id="noFileMsg">No file uploaded yet.</p>
+                        <!-- Default message -->
+                        <p id="noFileMsg" class="placeholder-msg">
+                            <i class="fa fa-inbox"></i>
+                            No file selected yet. Choose a file to see preview.
+                        </p>
+                    </div>
                 </div>
 
                 <!-- Generate Visualization -->
                 <div class="visualization-controls">
-                <button id="generateVizBtn" class="generate-btn" disabled>
-                    <i class="fa-solid fa-chart-line"></i> Generate Visualization
-                </button>
-                <select id="chartTypeSelect">
-                    <option value="bar">Bar</option>
-                    <option value="line">Line</option>
-                    <option value="pie">Pie</option>
-                </select>
+                    <div class="controls-row">
+                        <div class="control-group">
+                            <label for="chartTypeSelect">Chart Type:</label>
+                            <select id="chartTypeSelect">
+                                <option value="bar">Bar Chart</option>
+                                <option value="line">Line Chart</option>
+                                <option value="pie">Pie Chart</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-
 
                 <!-- Visualization Section -->
                 <div class="visualization-section">
-                <h3>Visualization Preview</h3>
-                <div id="visualizationArea" class="visualization-placeholder">
-                    <p>No visualization yet.</p>
-                </div>
+                    <h3><i class="fa fa-eye"></i> Visualization Preview</h3>
+                    <div id="visualizationArea" class="visualization-placeholder">
+                        <p>
+                            <i class="fa fa-chart-pie"></i>
+                            No visualization yet. Add a file to generate a preview.
+                        </p>
+                    </div>
                 </div>
             </div>
-            </div>
+        </div>
+    </main>
 
-            </main>
-<!-- SCRIPTS -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="/private/js/admin/admin2/admin2.js"></script>
-<script src="/private/js/admin/admin2/dataUploads.js"></script>
+    <!-- SCRIPTS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/private/js/admin/admin2/admin2.js"></script>
+    <script src="/private/js/admin/admin2/dataUploads.js"></script>
 </body>
 </html>

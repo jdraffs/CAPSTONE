@@ -24,40 +24,68 @@ class AnalyticsProcessor:
             column_name: Name of the data column
             max_data_points: Maximum data points to visualize (prevents memory issues)
         """
-        # Handle large datasets by sampling if necessary
-        original_length = len(data)
+        # Convert data to list if it's not already
+        if not isinstance(data, list):
+            data = list(data)
         
-        if len(data) > max_data_points:
+        # Convert all data to numeric, filtering out non-numeric values
+        clean_data = []
+        clean_labels = []
+        
+        for i, value in enumerate(data):
+            try:
+                # Try to convert to float
+                numeric_value = float(value)
+                # Skip NaN values
+                if not np.isnan(numeric_value):
+                    clean_data.append(numeric_value)
+                    # Get corresponding label
+                    if labels and i < len(labels):
+                        clean_labels.append(str(labels[i]))
+                    else:
+                        clean_labels.append(f"Item {len(clean_data)}")
+            except (ValueError, TypeError):
+                # Skip non-numeric values
+                continue
+        
+        # Check if we have any valid data
+        if len(clean_data) == 0:
+            raise ValueError("No valid numeric data found in the dataset. Please check your file format.")
+        
+        original_length = len(clean_data)
+        
+        # Handle large datasets by sampling if necessary
+        if len(clean_data) > max_data_points:
             # Sample data for visualization while keeping all for statistics
-            indices = np.linspace(0, len(data) - 1, max_data_points, dtype=int)
-            sampled_data = [data[i] for i in indices]
-            sampled_labels = [labels[i] if labels else f"Item {i+1}" for i in indices]
+            indices = np.linspace(0, len(clean_data) - 1, max_data_points, dtype=int)
+            sampled_data = [clean_data[i] for i in indices]
+            sampled_labels = [clean_labels[i] for i in indices]
             
             self.viz_df = pd.DataFrame({
                 'Label': sampled_labels,
-                'Value': pd.to_numeric(sampled_data, errors='coerce')
+                'Value': sampled_data
             })
             
             # Keep full data for statistics
-            self.full_data = pd.to_numeric(data, errors='coerce')
+            self.full_data = np.array(clean_data)
             self.is_sampled = True
         else:
             self.viz_df = pd.DataFrame({
-                'Label': labels if labels else [f"Item {i+1}" for i in range(len(data))],
-                'Value': pd.to_numeric(data, errors='coerce')
+                'Label': clean_labels,
+                'Value': clean_data
             })
-            self.full_data = self.viz_df['Value']
+            self.full_data = np.array(clean_data)
             self.is_sampled = False
         
-        self.viz_df = self.viz_df.dropna()
-        self.full_data = self.full_data.dropna()
         self.column_name = column_name
         self.original_length = original_length
+        
+        print(f"✅ Initialized with {len(clean_data)} valid numeric values")
         
     def calculate_statistics(self):
         """Calculate comprehensive statistics using numpy and pandas"""
         # Use full dataset for accurate statistics
-        values = self.full_data.values
+        values = self.full_data
         
         if len(values) == 0:
             return {
@@ -66,10 +94,17 @@ class AnalyticsProcessor:
                 'q3': 0, 'count': 0, 'sum': 0, 'range': 0
             }
         
+        # Handle mode calculation safely
+        try:
+            mode_result = stats.mode(values, keepdims=True)
+            mode_value = float(mode_result[0][0])
+        except:
+            mode_value = float(values[0]) if len(values) > 0 else 0
+        
         stats_dict = {
             'mean': float(np.mean(values)),
             'median': float(np.median(values)),
-            'mode': float(stats.mode(values, keepdims=True)[0][0]) if len(values) > 0 else 0,
+            'mode': mode_value,
             'std': float(np.std(values)),
             'variance': float(np.var(values)),
             'min': float(np.min(values)),
@@ -82,8 +117,11 @@ class AnalyticsProcessor:
         }
         
         if len(values) > 2:
-            stats_dict['skewness'] = float(stats.skew(values))
-            stats_dict['kurtosis'] = float(stats.kurtosis(values))
+            try:
+                stats_dict['skewness'] = float(stats.skew(values))
+                stats_dict['kurtosis'] = float(stats.kurtosis(values))
+            except:
+                pass
         
         return stats_dict
     
@@ -131,10 +169,9 @@ class AnalyticsProcessor:
             interpretations.append("There's a significant difference between the highest and lowest values, showing quite a bit of variation in the data.")
         
         # 6. What does this mean in practical terms?
-        # If we can identify what the data represents from the column name or labels
         column_lower = self.column_name.lower()
         
-        if 'student' in column_lower or 'enrollment' in column_lower:
+        if 'student' in column_lower or 'enrollment' in column_lower or 'enrollee' in column_lower:
             if mean > median:
                 interpretations.append(f"Based on these numbers, there are <strong>more students in the higher-enrolled categories</strong>, with some categories having significantly more students than others.")
             else:
@@ -180,18 +217,10 @@ class AnalyticsProcessor:
         Returns:
             Base64 encoded image string
         """
-        # Professional color palette (multiple colors, but muted/professional)
+        # Professional color palette
         PROFESSIONAL_COLORS = [
-            '#5470C6',  # Professional Blue
-            '#91CC75',  # Professional Green
-            '#FAC858',  # Professional Yellow/Gold
-            '#EE6666',  # Professional Red/Coral
-            '#73C0DE',  # Professional Cyan
-            '#3BA272',  # Professional Teal
-            '#FC8452',  # Professional Orange
-            '#9A60B4',  # Professional Purple
-            '#EA7CCC',  # Professional Pink
-            '#5470C6',  # Loop back to start
+            '#5470C6', '#91CC75', '#FAC858', '#EE6666', '#73C0DE',
+            '#3BA272', '#FC8452', '#9A60B4', '#EA7CCC', '#5470C6',
         ]
         
         plt.figure(figsize=figsize, dpi=dpi)
@@ -212,9 +241,8 @@ class AnalyticsProcessor:
         else:
             display_labels = labels
         
-        # Assign colors based on number of data points
-        num_colors = len(values)
-        colors = [PROFESSIONAL_COLORS[i % len(PROFESSIONAL_COLORS)] for i in range(num_colors)]
+        # Assign colors
+        colors = [PROFESSIONAL_COLORS[i % len(PROFESSIONAL_COLORS)] for i in range(len(values))]
         
         if chart_type == 'bar':
             bars = plt.bar(range(len(values)), values, 
@@ -229,7 +257,6 @@ class AnalyticsProcessor:
             plt.title(f'{self.column_name}', fontsize=16, fontweight='600', 
                      color='#2C3E50', pad=20)
             
-            # Clean grid
             plt.grid(axis='y', alpha=0.15, linestyle='-', linewidth=0.8, color='#CCCCCC')
             ax = plt.gca()
             ax.set_axisbelow(True)
@@ -240,7 +267,6 @@ class AnalyticsProcessor:
             ax.spines['bottom'].set_linewidth(0.8)
             ax.spines['bottom'].set_color('#CCCCCC')
             
-            # Add value labels on bars (only if not too many)
             if len(values) <= 30:
                 for bar, val in zip(bars, values):
                     height = bar.get_height()
@@ -250,13 +276,11 @@ class AnalyticsProcessor:
                            color='#333333', fontweight='500')
         
         elif chart_type == 'line':
-            # Use gradient of colors for line segments if multiple points
             plt.plot(range(len(values)), values, 
                     marker='o', linewidth=3, markersize=7,
                     color='#5470C6', markerfacecolor='#5470C6', 
                     markeredgecolor='white', markeredgewidth=2)
             
-            # Add colored markers for emphasis
             for i, (x, y) in enumerate(zip(range(len(values)), values)):
                 plt.scatter(x, y, color=colors[i], s=80, zorder=5, 
                           edgecolor='white', linewidth=2)
@@ -272,13 +296,8 @@ class AnalyticsProcessor:
             ax.set_axisbelow(True)
             ax.spines['top'].set_visible(False)
             ax.spines['right'].set_visible(False)
-            ax.spines['left'].set_linewidth(0.8)
-            ax.spines['left'].set_color('#CCCCCC')
-            ax.spines['bottom'].set_linewidth(0.8)
-            ax.spines['bottom'].set_color('#CCCCCC')
         
         elif chart_type == 'pie':
-            # Use professional color palette
             wedges, texts, autotexts = plt.pie(values, labels=labels if len(labels) <= 10 else None,
                    autopct='%1.1f%%', startangle=90,
                    colors=colors,
@@ -298,7 +317,6 @@ class AnalyticsProcessor:
                                        color='#5470C6', edgecolor='white', 
                                        linewidth=1.5, alpha=0.85)
             
-            # Color each bar differently
             for i, patch in enumerate(patches):
                 patch.set_facecolor(colors[i % len(colors)])
             
@@ -312,10 +330,6 @@ class AnalyticsProcessor:
             ax.set_axisbelow(True)
             ax.spines['top'].set_visible(False)
             ax.spines['right'].set_visible(False)
-            ax.spines['left'].set_linewidth(0.8)
-            ax.spines['left'].set_color('#CCCCCC')
-            ax.spines['bottom'].set_linewidth(0.8)
-            ax.spines['bottom'].set_color('#CCCCCC')
         
         elif chart_type == 'box':
             bp = plt.boxplot(values, vert=True, patch_artist=True, widths=0.5,
@@ -338,12 +352,7 @@ class AnalyticsProcessor:
             ax.set_axisbelow(True)
             ax.spines['top'].set_visible(False)
             ax.spines['right'].set_visible(False)
-            ax.spines['left'].set_linewidth(0.8)
-            ax.spines['left'].set_color('#CCCCCC')
-            ax.spines['bottom'].set_linewidth(0.8)
-            ax.spines['bottom'].set_color('#CCCCCC')
             
-            # Add text annotations
             stats_text = (f"Median: {np.median(values):.1f}\n"
                          f"Mean: {np.mean(values):.1f}\n"
                          f"Range: {np.ptp(values):.1f}")
@@ -352,14 +361,12 @@ class AnalyticsProcessor:
                             edgecolor='#CCCCCC', linewidth=1.5),
                     fontweight='500', color='#333333')
         
-        # Add sampling notice if data was sampled
         if self.is_sampled:
             plt.figtext(0.99, 0.01, f'Showing {len(values):,} of {self.original_length:,} data points', 
                        ha='right', fontsize=9, style='italic', color='#999999')
         
         plt.tight_layout()
         
-        # Convert to base64
         buffer = io.BytesIO()
         plt.savefig(buffer, format='png', bbox_inches='tight', dpi=dpi, facecolor='white')
         buffer.seek(0)
@@ -375,7 +382,6 @@ class AnalyticsProcessor:
             interpretation = self.generate_interpretation(statistics)
             chart_image = self.create_visualization(chart_type)
             
-            # Limit table data for large datasets
             table_rows = self.viz_df.values.tolist()
             if len(table_rows) > 100:
                 table_rows = table_rows[:100]
@@ -397,11 +403,14 @@ class AnalyticsProcessor:
                 }
             }
         except Exception as e:
+            print(f"❌ Analysis failed: {str(e)}")
+            import traceback
+            print(traceback.format_exc())
             raise Exception(f"Analysis failed: {str(e)}")
     
     def _detect_outliers(self):
         """Detect outliers using IQR method"""
-        values = self.full_data.values
+        values = self.full_data
         q1 = np.percentile(values, 25)
         q3 = np.percentile(values, 75)
         iqr = q3 - q1
@@ -419,11 +428,14 @@ def process_file_analytics(file_data, chart_type='bar'):
             data=file_data.get('data', []),
             labels=file_data.get('labels'),
             column_name=file_data.get('column_name', file_data.get('filename', 'Dataset')),
-            max_data_points=500  # Limit for visualization
+            max_data_points=500
         )
         
         return processor.get_full_analysis(chart_type)
     except Exception as e:
+        print(f"❌ Processing failed: {str(e)}")
+        import traceback
+        print(traceback.format_exc())
         return {
             'error': str(e),
             'statistics': {},

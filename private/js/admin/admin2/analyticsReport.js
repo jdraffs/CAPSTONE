@@ -1,4 +1,4 @@
-//analyticsReport.js
+//analyticsReport.js - Enhanced with column selection
 document.addEventListener("DOMContentLoaded", async () => {
   const reportsGrid = document.querySelector(".reports-grid");
   const PYTHON_API_URL = "http://localhost:5000/api";
@@ -27,7 +27,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   for (let index = 0; index < uploadedFiles.length; index++) {
     const file = uploadedFiles[index];
     
-    // Use the ACTUAL filename (with timestamp) from the server
     const actualFilename = file.filename || file.originalName || file.displayName;
     const displayName = file.displayName || file.originalName || file.filename;
     
@@ -54,7 +53,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       reports.push({
         id: index + 1,
-        file_id: file.id,  // ✅ Fixed: Use file.id instead of file.file_id
+        file_id: file.id,
         title: displayName || `Report ${index + 1}`,
         actualFilename: actualFilename,
         metric: file.type || "Uploaded Dataset",
@@ -66,16 +65,18 @@ document.addEventListener("DOMContentLoaded", async () => {
         interpretation: analyticsData.interpretation,
         tableData: analyticsData.table_data,
         fileInfo: analyticsData.file_info,
-        summary: analyticsData.summary
+        summary: analyticsData.summary,
+        availableColumns: analyticsData.file_info?.available_columns || [],
+        columnDescriptions: analyticsData.file_info?.column_descriptions || {},
+        currentColumn: analyticsData.file_info?.analyzed_column || "Default Column"
       });
 
     } catch (error) {
       console.error(`Error processing ${file.filename}:`, error);
       
-      // Fallback to basic report
       reports.push({
         id: index + 1,
-        file_id: file.id,  // ✅ Fixed: Use file.id
+        file_id: file.id,
         title: displayName || `Report ${index + 1}`,
         actualFilename: actualFilename,
         metric: "Error Processing",
@@ -108,13 +109,32 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
+    // Build column selector if multiple columns available
+    let columnSelector = '';
+    if (report.availableColumns && report.availableColumns.length > 1) {
+      columnSelector = `
+        <div class="column-selector">
+          <label for="columnSelect-${report.id}">Select Data Column:</label>
+          <select id="columnSelect-${report.id}" class="column-select-dropdown">
+            ${report.availableColumns.map(col => `
+              <option value="${col.raw_name}" ${col.display_name === report.currentColumn ? 'selected' : ''}>
+                ${col.display_name} (${col.data_count} values)
+              </option>
+            `).join('')}
+          </select>
+        </div>
+      `;
+    }
+
     card.innerHTML = `
       <div class="report-header">
         <div>
           <h3>${report.title}</h3>
           <p>${report.metric}</p>
+          <p class="current-column-display"><strong>Analyzing:</strong> ${report.currentColumn}</p>
         </div>
       </div>
+      ${columnSelector}
       <div class="chart-selector">
         <label for="chartType-${report.id}">Chart Type:</label>
         <select id="chartType-${report.id}" class="chart-type-select">
@@ -163,7 +183,82 @@ document.addEventListener("DOMContentLoaded", async () => {
     reportsGrid.appendChild(card);
   });
 
-  // ✅ Handle delete button with event delegation (no onclick attribute)
+  // Handle column selection changes
+  document.body.addEventListener("change", async (e) => {
+    if (!e.target.classList.contains("column-select-dropdown")) return;
+
+    const reportId = e.target.id.split("-")[1];
+    const selectedColumn = e.target.value;
+    const report = reports.find(r => r.id == reportId);
+    
+    if (!report) return;
+
+    const card = e.target.closest(".report-card");
+    const chartContainer = card.querySelector(".chart-container");
+    const columnDisplay = card.querySelector(".current-column-display");
+    const originalContent = chartContainer.innerHTML;
+    
+    chartContainer.innerHTML = '<p>Loading data for selected column...</p>';
+
+    try {
+      const response = await fetch(`${PYTHON_API_URL}/analytics/process`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          filename: report.actualFilename || report.title,
+          chart_type: report.chartType,
+          column: selectedColumn  // Send the selected column
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to load column data');
+      }
+
+      const analyticsData = await response.json();
+      
+      // Update chart
+      chartContainer.innerHTML = `<img src="${analyticsData.chart_image}" alt="Chart" class="chart-preview-img" />`;
+      
+      // Update report data
+      report.chartImage = analyticsData.chart_image;
+      report.statistics = analyticsData.statistics;
+      report.interpretation = analyticsData.interpretation;
+      report.tableData = analyticsData.table_data;
+      report.currentColumn = analyticsData.file_info.analyzed_column;
+
+      // Update column display
+      if (columnDisplay) {
+        columnDisplay.innerHTML = `<strong>Analyzing:</strong> ${report.currentColumn}`;
+      }
+
+      // Update quick stats
+      const quickStats = card.querySelector(".quick-stats");
+      quickStats.innerHTML = `
+        <div class="stat-mini">
+          <span class="stat-label">Mean</span>
+          <span class="stat-value">${analyticsData.statistics.mean.toFixed(2)}</span>
+        </div>
+        <div class="stat-mini">
+          <span class="stat-label">Median</span>
+          <span class="stat-value">${analyticsData.statistics.median.toFixed(2)}</span>
+        </div>
+        <div class="stat-mini">
+          <span class="stat-label">Std Dev</span>
+          <span class="stat-value">${analyticsData.statistics.std.toFixed(2)}</span>
+        </div>
+      `;
+
+    } catch (error) {
+      console.error('Error loading column data:', error);
+      chartContainer.innerHTML = originalContent;
+      alert('Failed to load data for selected column. Please try again.');
+    }
+  });
+
+  // Handle delete button
   document.body.addEventListener("click", async (e) => {
     const btn = e.target.closest(".delete-btn");
     if (!btn) return;
@@ -172,7 +267,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     if (!fileId) {
       alert("Error: File ID not found");
-      console.error("File ID is undefined");
       return;
     }
 
@@ -183,7 +277,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     btn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
 
     try {
-      // ✅ Fixed: Use correct API endpoint
       const response = await fetch(`http://localhost:3000/api/files/files/${fileId}`, {
         method: "DELETE"
       });
@@ -193,11 +286,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       alert("File permanently deleted.");
-      
-      // Remove the card from UI
       btn.closest(".report-card").remove();
       
-      // Refresh if no cards left
       if (reportsGrid.children.length === 0) {
         reportsGrid.innerHTML = "<p>No analytics available yet. Upload a file to generate reports.</p>";
       }
@@ -224,6 +314,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       const originalContent = chartContainer.innerHTML;
       chartContainer.innerHTML = '<p>Regenerating chart...</p>';
 
+      // Get currently selected column if available
+      const columnSelector = card.querySelector(".column-select-dropdown");
+      const selectedColumn = columnSelector ? columnSelector.value : null;
+
       try {
         const response = await fetch(`${PYTHON_API_URL}/analytics/process`, {
           method: 'POST',
@@ -232,7 +326,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           },
           body: JSON.stringify({
             filename: report.actualFilename || report.title,
-            chart_type: selectedType
+            chart_type: selectedType,
+            column: selectedColumn
           })
         });
 
@@ -273,6 +368,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     btn.disabled = true;
     btn.innerHTML = '<i class="bi bi-arrow-clockwise spin"></i> Refreshing...';
 
+    const card = btn.closest(".report-card");
+    const columnSelector = card.querySelector(".column-select-dropdown");
+    const selectedColumn = columnSelector ? columnSelector.value : null;
+
     try {
       const response = await fetch(`${PYTHON_API_URL}/analytics/process`, {
         method: 'POST',
@@ -281,7 +380,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         },
         body: JSON.stringify({
           filename: filename,
-          chart_type: report.chartType
+          chart_type: report.chartType,
+          column: selectedColumn
         })
       });
 
@@ -298,7 +398,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         tableData: analyticsData.table_data
       });
 
-      const card = btn.closest(".report-card");
       const chartContainer = card.querySelector(".chart-container");
       chartContainer.innerHTML = `<img src="${analyticsData.chart_image}" alt="Chart" class="chart-preview-img" />`;
 
@@ -352,6 +451,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     reportDetails.innerHTML = `
       <h2>${report.title}</h2>
+      <p class="current-column-display"><strong>Currently Analyzing:</strong> ${report.currentColumn}</p>
       
       <div class="chart-full">
         <img src="${report.chartImage}" alt="Full Chart" style="max-width: 100%; height: auto;" />
@@ -405,7 +505,9 @@ document.addEventListener("DOMContentLoaded", async () => {
           <p><strong>Total Rows:</strong> ${report.fileInfo.total_rows.toLocaleString()}</p>
           <p><strong>Total Columns:</strong> ${report.fileInfo.total_columns}</p>
           <p><strong>Analyzed Column:</strong> ${report.fileInfo.analyzed_column}</p>
-          <p><strong>Numeric Columns Available:</strong> ${report.fileInfo.numeric_columns.join(', ')}</p>
+          ${report.fileInfo.available_columns && report.fileInfo.available_columns.length > 1 ? 
+            `<p><strong>Available Data Columns:</strong> ${report.fileInfo.available_columns.map(c => c.display_name).join(', ')}</p>` 
+            : ''}
           ${report.summary?.is_sampled ? `<p><strong>Note:</strong> Large dataset - showing sample of ${report.summary.original_length.toLocaleString()} records</p>` : ''}
         </div>
       ` : ''}
