@@ -3,8 +3,7 @@ window.addEventListener("DOMContentLoaded", () => {
   // === Dynamic XLSX load ===
   if (typeof XLSX === "undefined") {
     const script = document.createElement("script");
-    script.src =
-      "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
+    script.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
     script.onload = () => console.log("XLSX loaded dynamically");
     document.body.appendChild(script);
   }
@@ -14,31 +13,72 @@ window.addEventListener("DOMContentLoaded", () => {
   const tablePreview = document.getElementById("tablePreview");
   const loadingSpinner = document.getElementById("loadingSpinner");
   const noFileMsg = document.getElementById("noFileMsg");
-  const generateBtn = document.getElementById("generateVizBtn");
+  const uploadBtn = document.getElementById("uploadBtn");
   const vizArea = document.getElementById("visualizationArea");
   const chartTypeSelect = document.getElementById("chartTypeSelect");
 
   let jsonData = [];
+  let selectedFile = null;
   let uploadedFileId = null;
 
-  // === File Input Handler ===
+  // === File Input Handler (Preview + Auto Visualization) ===
   if (dataFileInput) {
     dataFileInput.addEventListener("change", async () => {
       const file = dataFileInput.files[0];
-      if (!file) return;
+      if (!file) {
+        resetUI();
+        return;
+      }
 
+      selectedFile = file;
       const fileSizeKB = (file.size / 1024).toFixed(1);
-      fileInfo.textContent = `Uploading ${file.name}...`;
+      fileInfo.innerHTML = `
+        <i class="fa fa-file"></i>
+        <strong>${file.name}</strong> (${fileSizeKB} KB) - Ready to upload
+      `;
+      
       showLoading();
 
       const fileName = file.name.toLowerCase();
 
-      // Upload file to backend
+      // Generate preview based on file type
+      if (fileName.endsWith(".csv")) parseCSV(file);
+      else if (fileName.endsWith(".xlsx") || fileName.endsWith(".xls")) parseExcel(file);
+      else if (fileName.endsWith(".json")) parseJSON(file);
+      else {
+        hideLoading();
+        tablePreview.innerHTML = `<p class="error-msg">⚠️ Unsupported file format. Please upload CSV, Excel, or JSON.</p>`;
+        uploadBtn.disabled = true;
+      }
+    });
+  }
+
+  // === Chart Type Change Handler ===
+  if (chartTypeSelect) {
+    chartTypeSelect.addEventListener("change", () => {
+      if (jsonData.length > 0) {
+        generateVisualization();
+      }
+    });
+  }
+
+  // === Upload Button Handler ===
+  if (uploadBtn) {
+    uploadBtn.addEventListener("click", async () => {
+      if (!selectedFile) {
+        alert("Please choose a file first!");
+        return;
+      }
+
+      uploadBtn.disabled = true;
+      uploadBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Uploading...';
+
       try {
-        const adminid = localStorage.getItem("adminid");
+        const adminid = localStorage.getItem("adminid") || "1";
         const formData = new FormData();
-        formData.append("file", file);
+        formData.append("file", selectedFile);
         formData.append("adminid", adminid);
+        formData.append("folder_id", null);
 
         const res = await fetch("http://localhost:3000/api/files/upload", {
           method: "POST",
@@ -46,51 +86,92 @@ window.addEventListener("DOMContentLoaded", () => {
         });
 
         const result = await res.json();
+        
         if (result.success) {
-          uploadedFileId = result.id;
-          console.log("File uploaded to DB, ID:", uploadedFileId);
-          fileInfo.textContent = `${file.name} uploaded successfully (${fileSizeKB} KB)`;
+          uploadedFileId = result.file.id;
+          console.log("✅ File uploaded to DB, ID:", uploadedFileId);
+          
+          fileInfo.innerHTML = `
+            <i class="fa fa-check-circle" style="color: #10b981;"></i>
+            <strong>${selectedFile.name}</strong> uploaded successfully!
+          `;
+
+          uploadBtn.innerHTML = '<i class="fa fa-check"></i> Uploaded Successfully';
+          uploadBtn.style.background = "#10b981";
+          
+          showNotification("File uploaded successfully!", "success");
         } else {
-          console.error("Upload failed:", result.message);
-          fileInfo.textContent = "Upload failed.";
+          throw new Error(result.message || "Upload failed");
         }
       } catch (err) {
         console.error("Upload error:", err);
-        fileInfo.textContent = "Server upload failed.";
-      }
-
-      // Continue with preview rendering
-      if (fileName.endsWith(".csv")) parseCSV(file);
-      else if (fileName.endsWith(".xlsx") || fileName.endsWith(".xls"))
-        parseExcel(file);
-      else if (fileName.endsWith(".json")) parseJSON(file);
-      else {
-        hideLoading();
-        tablePreview.innerHTML = `<p>Unsupported file format.</p>`;
+        fileInfo.innerHTML = `
+          <i class="fa fa-exclamation-circle" style="color: #ef4444;"></i>
+          Upload failed: ${err.message}
+        `;
+        
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = '<i class="fa fa-upload"></i> Upload File';
+        
+        showNotification("Upload failed. Please try again.", "error");
       }
     });
+  }
+
+  function resetUI() {
+    selectedFile = null;
+    jsonData = [];
+    uploadedFileId = null;
+    fileInfo.textContent = "";
+    tablePreview.innerHTML = '<p id="noFileMsg">No file selected yet.</p>';
+    vizArea.innerHTML = '<p>No visualization yet.</p>';
+    uploadBtn.disabled = true;
+    uploadBtn.innerHTML = '<i class="fa fa-upload"></i> Upload File';
+    uploadBtn.style.background = "";
   }
 
   function showLoading() {
     loadingSpinner.style.display = "block";
     noFileMsg.style.display = "none";
+    uploadBtn.disabled = false;
   }
 
   function hideLoading() {
     loadingSpinner.style.display = "none";
   }
 
+  function showNotification(message, type = "info") {
+    const notification = document.createElement("div");
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+      <i class="fa ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+      ${message}
+    `;
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+      notification.classList.add("show");
+    }, 100);
+
+    setTimeout(() => {
+      notification.classList.remove("show");
+      setTimeout(() => notification.remove(), 300);
+    }, 3000);
+  }
+
   // === RENDER TABLE ===
   function renderTable(data) {
     hideLoading();
+    
     if (!data || !data.length) {
-      tablePreview.innerHTML = "<p>No data found in the file.</p>";
-      generateBtn.disabled = true;
+      tablePreview.innerHTML = "<p class='error-msg'>⚠️ No data found in the file.</p>";
+      uploadBtn.disabled = true;
       return;
     }
 
     jsonData = data;
     const headers = Object.keys(data[0]);
+    
     const table = document.createElement("table");
     table.className = "preview-table";
 
@@ -105,7 +186,8 @@ window.addEventListener("DOMContentLoaded", () => {
     table.appendChild(thead);
 
     const tbody = document.createElement("tbody");
-    data.slice(0, 50).forEach((row) => {
+    const previewRows = Math.min(data.length, 50);
+    data.slice(0, previewRows).forEach((row) => {
       const tr = document.createElement("tr");
       headers.forEach((h) => {
         const td = document.createElement("td");
@@ -118,315 +200,216 @@ window.addEventListener("DOMContentLoaded", () => {
 
     tablePreview.innerHTML = "";
     tablePreview.appendChild(table);
-    generateBtn.disabled = false;
+    
+    // Add row count info
+    if (data.length > 50) {
+      const rowInfo = document.createElement("div");
+      rowInfo.className = "row-info";
+      rowInfo.textContent = `Showing ${previewRows} of ${data.length} rows (preview limited to first 50 rows)`;
+      tablePreview.appendChild(rowInfo);
+    }
+
+    uploadBtn.disabled = false;
+    
+    // Automatically generate visualization
+    generateVisualization();
+  }
+
+  // === GENERATE VISUALIZATION ===
+  function generateVisualization() {
+    if (jsonData.length === 0) return;
+
+    const headers = Object.keys(jsonData[0]);
+    const numericCols = headers.filter((h) =>
+      jsonData.every((row) => !isNaN(parseFloat(row[h])) && row[h] !== "")
+    );
+
+    if (numericCols.length === 0) {
+      vizArea.innerHTML = '<p class="error-msg">⚠️ No numeric columns found for visualization.</p>';
+      return;
+    }
+
+    const valueCol = numericCols[0];
+    const labelCol = headers[0];
+    const labels = jsonData.map((row) => row[labelCol]);
+    const values = jsonData.map((row) => parseFloat(row[valueCol]));
+
+    vizArea.innerHTML = '<canvas id="dataChart" style="height: 400px;"></canvas>';
+    const ctx = document.getElementById("dataChart").getContext("2d");
+
+    if (window.currentChart) {
+      window.currentChart.destroy();
+    }
+
+    const chartType = chartTypeSelect?.value || "bar";
+
+    // Maroon color scheme to match your theme
+    const maroonPalette = [
+      "rgba(139, 0, 0, 0.7)",    // Dark red
+      "rgba(178, 34, 34, 0.7)",  // Firebrick
+      "rgba(220, 20, 60, 0.7)",  // Crimson
+      "rgba(205, 92, 92, 0.7)",  // Indian red
+      "rgba(240, 128, 128, 0.7)", // Light coral
+      "rgba(233, 150, 122, 0.7)", // Dark salmon
+    ];
+
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, "rgba(139, 0, 0, 0.4)");
+    gradient.addColorStop(1, "rgba(139, 0, 0, 0.05)");
+
+    const dataset = {
+      label: valueCol,
+      data: values,
+      borderWidth: 2,
+      tension: 0.4,
+      fill: chartType === "line",
+      borderRadius: 6,
+      backgroundColor: chartType === "line" ? gradient : maroonPalette.slice(0, values.length),
+      borderColor: chartType === "line" ? "#8b0000" : maroonPalette.slice(0, values.length),
+      pointBackgroundColor: "#8b0000",
+      pointRadius: 4,
+      pointHoverRadius: 6,
+    };
+
+    window.currentChart = new Chart(ctx, {
+      type: chartType,
+      data: { labels, datasets: [dataset] },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: { padding: { top: 15, right: 15, bottom: 10, left: 10 } },
+        plugins: {
+          legend: { display: false },
+          title: {
+            display: true,
+            text: `${valueCol} Visualization`,
+            color: "#1f2937",
+            font: { size: 16, weight: "600", family: "'Inter', sans-serif" },
+            padding: { bottom: 10 },
+          },
+          tooltip: {
+            backgroundColor: "rgba(0,0,0,0.8)",
+            bodyFont: { size: 12 },
+            cornerRadius: 4,
+            padding: 8,
+          },
+        },
+        scales: chartType === "pie" ? {} : {
+          x: {
+            grid: { color: "rgba(0,0,0,0.05)" },
+            ticks: { color: "#6b7280", font: { size: 11 } },
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: "rgba(0,0,0,0.05)" },
+            ticks: { color: "#6b7280", font: { size: 11 } },
+          },
+        },
+        elements: {
+          bar: { borderRadius: 8 },
+          line: { borderJoinStyle: "round" },
+        },
+        animation: { duration: 800, easing: "easeOutCubic" },
+      },
+    });
   }
 
   // === PARSERS ===
-function parseCSV(file) {
-  Papa.parse(file, {
-    header: true,
-    skipEmptyLines: false,
-    dynamicTyping: false,
-    complete: (results) => {
-      let data = results.data;
+  function parseCSV(file) {
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: false,
+      dynamicTyping: false,
+      complete: (results) => {
+        let data = results.data;
 
-      // FIX: Identify all headers same lang din sa excel
-      const allHeaders = new Set();
-      data.forEach(row => {
-        Object.keys(row).forEach(key => {
-          allHeaders.add(key.trim());
+        const allHeaders = new Set();
+        data.forEach(row => {
+          Object.keys(row).forEach(key => {
+            allHeaders.add(key.trim());
+          });
         });
-      });
 
-      const headerArray = Array.from(allHeaders);
+        const headerArray = Array.from(allHeaders);
 
-      // FIX: ensure ma all rows contain all headers
-      const normalizedData = data.map(row => {
-        const cleanRow = {};
-        headerArray.forEach(h => {
-          cleanRow[h] = row[h] ?? "";
+        const normalizedData = data.map(row => {
+          const cleanRow = {};
+          headerArray.forEach(h => {
+            cleanRow[h] = row[h] ?? "";
+          });
+          return cleanRow;
         });
-        return cleanRow;
-      });
 
-      renderTable(normalizedData);
-    },
-    error: (err) => {
+        renderTable(normalizedData);
+      },
+      error: (err) => {
+        hideLoading();
+        tablePreview.innerHTML = `<p class="error-msg">❌ Error reading CSV: ${err.message}</p>`;
+        uploadBtn.disabled = true;
+      }
+    });
+  }
+
+  function parseExcel(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setTimeout(() => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: "array" });
+          const firstSheet = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheet];
+
+          const parsed = XLSX.utils.sheet_to_json(worksheet, {
+            defval: "",
+            raw: false
+          });
+
+          renderTable(parsed);
+        } catch (err) {
+          hideLoading();
+          tablePreview.innerHTML = `<p class="error-msg">❌ Error parsing Excel: ${err.message}</p>`;
+          uploadBtn.disabled = true;
+        }
+      }, 300);
+    };
+    reader.onerror = () => {
       hideLoading();
-      tablePreview.innerHTML = `<p>Error reading CSV: ${err.message}</p>`;
-    }
-  });
-}
+      tablePreview.innerHTML = "<p class='error-msg'>❌ Error reading Excel file.</p>";
+      uploadBtn.disabled = true;
+    };
+    reader.readAsArrayBuffer(file);
+  }
 
+  function parseJSON(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const parsed = JSON.parse(e.target.result);
+        const arr = Array.isArray(parsed) ? parsed : [parsed];
 
-function parseExcel(file) {
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    setTimeout(() => {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: "array" });
-      const firstSheet = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[firstSheet];
-
-      // FIX: Kinikeep na niya yung columns even if empty siya
-      const parsed = XLSX.utils.sheet_to_json(worksheet, {
-        defval: "",
-        raw: false
-      });
-
-      renderTable(parsed);
-    }, 500);
-  };
-  reader.onerror = () => {
-    hideLoading();
-    tablePreview.innerHTML = "<p>Error reading Excel file.</p>";
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-
-function parseJSON(file) {
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      const parsed = JSON.parse(e.target.result);
-      const arr = Array.isArray(parsed) ? parsed : [parsed];
-
-
-      const allKeys = new Set();
-      arr.forEach(obj => {
-        Object.keys(obj).forEach(k => allKeys.add(k.trim()));
-      });
-
-      const keyArray = Array.from(allKeys);
-
-      const normalized = arr.map(obj => {
-        const clean = {};
-        keyArray.forEach(k => {
-          clean[k] = obj[k] ?? "";
+        const allKeys = new Set();
+        arr.forEach(obj => {
+          Object.keys(obj).forEach(k => allKeys.add(k.trim()));
         });
-        return clean;
-      });
 
-      renderTable(normalized);
-    } catch (err) {
-      tablePreview.innerHTML = `<p>Error parsing JSON: ${err.message}</p>`;
-    } finally {
-      hideLoading();
-    }
-  };
-  reader.readAsText(file);
-}
+        const keyArray = Array.from(allKeys);
 
+        const normalized = arr.map(obj => {
+          const clean = {};
+          keyArray.forEach(k => {
+            clean[k] = obj[k] ?? "";
+          });
+          return clean;
+        });
 
-// === CHART GENERATION ===
-generateBtn.addEventListener("click", async () => {
-  if (jsonData.length === 0) {
-    alert("Please upload and preview a file first.");
-    return;
+        renderTable(normalized);
+      } catch (err) {
+        hideLoading();
+        tablePreview.innerHTML = `<p class="error-msg">❌ Error parsing JSON: ${err.message}</p>`;
+        uploadBtn.disabled = true;
+      }
+    };
+    reader.readAsText(file);
   }
-
-  const headers = Object.keys(jsonData[0]);
-  const numericCols = headers.filter((h) =>
-    jsonData.every((row) => !isNaN(parseFloat(row[h])) && row[h] !== "")
-  );
-
-  if (numericCols.length === 0) {
-    alert("No numeric columns found for chart visualization.");
-    return;
-  }
-
-  const valueCol = numericCols[0];
-  const labelCol = headers[0];
-  const labels = jsonData.map((row) => row[labelCol]);
-  const values = jsonData.map((row) => parseFloat(row[valueCol]));
-
-  vizArea.innerHTML = '<canvas id="dataChart" style="height: 400px;"></canvas>';
-  const ctx = document.getElementById("dataChart").getContext("2d");
-
-  if (window.currentChart) {
-    window.currentChart.destroy();
-  }
-
-  // gradient fill
-  const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-  gradient.addColorStop(0, "rgba(59,130,246,0.35)");
-  gradient.addColorStop(1, "rgba(59,130,246,0.05)");
-
-  const chartType = chartTypeSelect?.value || "bar";
-
-  const baseColor = "#3b82f6"; // main blue tone
-  const pastelPalette = [
-    "rgba(59,130,246,0.6)", "rgba(16,185,129,0.6)", "rgba(245,158,11,0.6)",
-    "rgba(139,92,246,0.6)", "rgba(239,68,68,0.6)", "rgba(20,184,166,0.6)",
-  ];
-
-  const dataset = {
-    label: `${valueCol} (Preview)`,
-    data: values,
-    borderWidth: 2.5,
-    tension: 0.45,
-    fill: chartType === "line",
-    borderRadius: 8,
-    backgroundColor:
-      chartType === "line" ? gradient : pastelPalette.slice(0, values.length),
-    borderColor: chartType === "line" ? baseColor : pastelPalette.slice(0, values.length),
-    pointBackgroundColor: baseColor,
-    pointRadius: 4,
-    pointHoverRadius: 6,
-  };
-
-  window.currentChart = new Chart(ctx, {
-    type: chartType,
-    data: { labels, datasets: [dataset] },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      layout: { padding: { top: 20, right: 20, bottom: 10, left: 10 } },
-      plugins: {
-        legend: {
-          display: false,
-        },
-        title: {
-          display: true,
-          text: "Generated Data Visualization",
-          color: "#1f2937",
-          font: {
-            size: 18,
-            weight: "600",
-            family: "'Inter', sans-serif",
-          },
-          padding: { bottom: 10 },
-        },
-        tooltip: {
-          backgroundColor: "rgba(0,0,0,0.8)",
-          bodyFont: { size: 13 },
-          cornerRadius: 6,
-          padding: 10,
-        },
-      },
-      scales:
-        chartType === "pie"
-          ? {}
-          : {
-              x: {
-                grid: {
-                  color: "rgba(0,0,0,0.05)",
-                  borderDash: [4, 4],
-                },
-                ticks: {
-                  color: "#6b7280",
-                  font: { size: 12 },
-                },
-              },
-              y: {
-                beginAtZero: true,
-                grid: {
-                  color: "rgba(0,0,0,0.05)",
-                  borderDash: [4, 4],
-                },
-                ticks: {
-                  color: "#6b7280",
-                  font: { size: 12 },
-                },
-              },
-            },
-      elements: {
-        bar: {
-          borderRadius: 10,
-        },
-        line: {
-          borderJoinStyle: "round",
-        },
-      },
-      animation: {
-        duration: 1000,
-        easing: "easeOutCubic",
-      },
-    },
-  });
-  // chart-specific visuals
-  if (chartType === "bar") {
-    dataset.backgroundColor = vibrantPalette.slice(0, values.length);
-    dataset.borderColor = vibrantPalette.slice(0, values.length);
-  } else if (chartType === "line") {
-    dataset.borderColor = "#3b82f6";
-    dataset.backgroundColor = gradient;
-  } else if (chartType === "pie" || chartType === "doughnut") {
-    dataset.backgroundColor = vibrantPalette.slice(0, values.length);
-    dataset.borderWidth = 1.5;
-  }
-
-// create new chart
-window.currentChart = new Chart(ctx, {
-  type: chartType,
-  data: { labels, datasets: [dataset] },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    layout: { padding: 20 },
-    plugins: {
-      legend: {
-        display: true,
-        labels: {
-          color: "#333",
-          font: { size: 13, family: "'Inter', sans-serif" },
-        },
-      },
-      title: {
-        display: true,
-        text: "Generated Data Visualization",
-        color: "#222",
-        font: {
-          size: 18,
-          weight: "600",
-          family: "'Times New Roman', serif",
-        },
-        padding: { bottom: 20 },
-      },
-      tooltip: {
-        backgroundColor: "rgba(0,0,0,0.85)",
-        titleFont: { weight: "600" },
-        bodyFont: { size: 13 },
-        cornerRadius: 6,
-        padding: 10,
-      },
-    },
-    scales:
-      chartType !== "pie" && chartType !== "doughnut"
-        ? {
-            x: {
-              ticks: { color: "#555", font: { size: 12 } },
-              grid: { color: "rgba(200,200,200,0.15)" },
-            },
-            y: {
-              beginAtZero: true,
-              ticks: { color: "#555", font: { size: 12 } },
-              grid: { color: "rgba(200,200,200,0.15)" },
-            },
-          }
-        : {},
-    animation: {
-      duration: 1200,
-      easing: "easeOutQuart",
-    },
-    elements: {
-      bar: { borderRadius: 12 },
-      line: { borderWidth: 3 },
-      point: { radius: 4, hoverRadius: 6, backgroundColor: "#3b82f6" },
-    },
-  },
-  plugins: [shadowPlugin],
-});
-
-// create new chart
-window.currentChart = new Chart(ctx, {
-  type: chartType,
-  data: { labels, datasets: [dataset] },
-  options: { /* chart options... */ },
-  plugins: [shadowPlugin],
-});
-
-alert("Visualization preview generated successfully!");
-});
 });
