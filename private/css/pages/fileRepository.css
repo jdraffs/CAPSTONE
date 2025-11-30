@@ -400,6 +400,174 @@
 }
 
 /* ========================================
+   FILE PREVIEW MODAL - Add to fileRepository.css
+   ======================================== */
+
+#filePreviewModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+}
+
+.modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-container {
+  background: white;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 1200px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 25px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #f8f9fa;
+  border-radius: 12px 12px 0 0;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  color: #333;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 90%;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  padding: 5px 10px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.modal-body {
+  flex: 1;
+  overflow: auto;
+  padding: 20px;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafafa;
+}
+
+.modal-body .loading {
+  font-size: 1.1rem;
+  color: #666;
+  text-align: center;
+}
+
+.modal-footer {
+  padding: 15px 25px;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  background: #f8f9fa;
+  border-radius: 0 0 12px 12px;
+}
+
+.modal-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.download-modal-btn {
+  background: #2797ec;
+  color: white;
+}
+
+.download-modal-btn:hover {
+  background: #2077b8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(41, 129, 196, 0.3);
+}
+
+/* Responsive modal */
+@media (max-width: 768px) {
+  .modal-container {
+    max-width: 95%;
+    max-height: 95vh;
+  }
+
+  .modal-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .modal-body {
+    padding: 15px;
+  }
+
+  .modal-footer {
+    padding: 12px 15px;
+  }
+}
+
+/* ========================================
    RESPONSIVE DESIGN
    ======================================== */
 
