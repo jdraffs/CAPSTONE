@@ -122,51 +122,102 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   // === PARSERS ===
-  function parseCSV(file) {
-    Papa.parse(file, {
-      header: true,
-      complete: (results) => renderTable(results.data),
-      error: (err) => {
-        hideLoading();
-        tablePreview.innerHTML = `<p>Error reading CSV: ${err.message}</p>`;
-      },
-    });
-  }
+function parseCSV(file) {
+  Papa.parse(file, {
+    header: true,
+    skipEmptyLines: false,
+    dynamicTyping: false,
+    complete: (results) => {
+      let data = results.data;
 
-  function parseExcel(file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setTimeout(() => {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: "array" });
-        const firstSheet = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheet];
-        const parsed = XLSX.utils.sheet_to_json(worksheet);
-        renderTable(parsed);
-      }, 500);
-    };
-    reader.onerror = () => {
+      // FIX: Identify all headers same lang din sa excel
+      const allHeaders = new Set();
+      data.forEach(row => {
+        Object.keys(row).forEach(key => {
+          allHeaders.add(key.trim());
+        });
+      });
+
+      const headerArray = Array.from(allHeaders);
+
+      // FIX: ensure ma all rows contain all headers
+      const normalizedData = data.map(row => {
+        const cleanRow = {};
+        headerArray.forEach(h => {
+          cleanRow[h] = row[h] ?? "";
+        });
+        return cleanRow;
+      });
+
+      renderTable(normalizedData);
+    },
+    error: (err) => {
       hideLoading();
-      tablePreview.innerHTML = "<p>Error reading Excel file.</p>";
-    };
-    reader.readAsArrayBuffer(file);
-  }
+      tablePreview.innerHTML = `<p>Error reading CSV: ${err.message}</p>`;
+    }
+  });
+}
 
-  function parseJSON(file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const parsed = JSON.parse(e.target.result);
-        const arr = Array.isArray(parsed) ? parsed : [parsed];
-        renderTable(arr);
-      } catch (err) {
-        tablePreview.innerHTML = `<p>Error parsing JSON: ${err.message}</p>`;
-      } finally {
-        hideLoading();
-      }
-    };
-    reader.readAsText(file);
-  }
+
+function parseExcel(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    setTimeout(() => {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const firstSheet = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheet];
+
+      // FIX: Kinikeep na niya yung columns even if empty siya
+      const parsed = XLSX.utils.sheet_to_json(worksheet, {
+        defval: "",
+        raw: false
+      });
+
+      renderTable(parsed);
+    }, 500);
+  };
+  reader.onerror = () => {
+    hideLoading();
+    tablePreview.innerHTML = "<p>Error reading Excel file.</p>";
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+
+function parseJSON(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      const arr = Array.isArray(parsed) ? parsed : [parsed];
+
+
+      const allKeys = new Set();
+      arr.forEach(obj => {
+        Object.keys(obj).forEach(k => allKeys.add(k.trim()));
+      });
+
+      const keyArray = Array.from(allKeys);
+
+      const normalized = arr.map(obj => {
+        const clean = {};
+        keyArray.forEach(k => {
+          clean[k] = obj[k] ?? "";
+        });
+        return clean;
+      });
+
+      renderTable(normalized);
+    } catch (err) {
+      tablePreview.innerHTML = `<p>Error parsing JSON: ${err.message}</p>`;
+    } finally {
+      hideLoading();
+    }
+  };
+  reader.readAsText(file);
+}
+
 
 // === CHART GENERATION ===
 generateBtn.addEventListener("click", async () => {
