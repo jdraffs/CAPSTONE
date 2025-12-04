@@ -22,6 +22,7 @@ import recentUploadsRoute from "./routes/recentUploadsRoute.js";
 import formsrepositoryRoute from './routes/formsrepositoryRoute.js';
 import fileRepositoryRoute from "./routes/fileRepositoryRoute.js";
 import dataUploadsRoute from "./routes/dataUploadsRoute.js";
+import eventsRoute from "./routes/eventsRoute.js";
 
 // initialize 
 dotenv.config();
@@ -31,7 +32,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Serve static folders (correct relative paths)
+// serve static folders (correct relative paths)
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 app.use('/private', express.static(path.join(__dirname, '../private')));
 app.use('/public', express.static(path.join(__dirname, '../public')));
@@ -48,12 +49,13 @@ app.use("/api/files", fileRepositoryRoute);
 app.use('/api/forms', formsrepositoryRoute);
 app.use("/uploads", express.static("uploads")); // serve uploaded files
 app.use("/api", dataUploadsRoute);
+app.use("/api", eventsRoute);
 
 
-// server.js — replace existing /api/files/data handler with this
+
 app.get("/api/files/data", async (req, res) => {
   try {
-    // Fetch file metadata from DB
+    // fetch file metadata from DB
     const result = await pool.query(`
       SELECT 
         id, 

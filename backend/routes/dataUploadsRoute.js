@@ -1,5 +1,4 @@
 //dataUploadsRoute.js
-// --- Admin 2 Routes ---
 import express from "express";
 import multer from "multer";
 import pkg from "pg";
@@ -7,16 +6,16 @@ import pkg from "pg";
 const { Pool } = pkg;
 const router = express.Router();
 
-// Database connection
+// database connection
 const pool = new Pool({
   user: "postgres",
   host: "localhost",
-  database: "your_database_name",
-  password: "yourpassword",
+  database: "capstone_db",
+  password: "Kisses123",
   port: 5432,
 });
 
-// Multer setup for file uploads
+// multer + utilities
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -25,21 +24,20 @@ router.get("/test", (req, res) => {
   res.send("Data Upload Route Working");
 });
 
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const uploadPath = path.join(__dirname, "../public/uploads");
+//FIX: changed upload path to fileRepository (same as File Repository)
+const uploadDir = path.join(__dirname, "../public/uploads/fileRepository");
 
-// Ensure directory exists
-if (!fs.existsSync(uploadPath)) {
-  fs.mkdirSync(uploadPath, { recursive: true });
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Multer setup for file uploads
+// multer storage - UPDATED PATH
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "public/uploads/data_uploads/");
+    cb(null, uploadDir); 
   },
   filename: (req, file, cb) => {
     cb(null, Date.now() + "-" + file.originalname);
@@ -47,10 +45,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-
-
-// Upload a file
-// Upload a file
+// UPLOAD A FILE
 router.post("/upload", upload.single("file"), async (req, res) => {
   try {
     const { folder_id, adminid } = req.body;
@@ -60,24 +55,48 @@ router.post("/upload", upload.single("file"), async (req, res) => {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    // Extract file info
-    const storedFileName = file.filename; // e.g., 1762404284765-test.xlsx
+    // extract file info
+    const storedFileName = file.filename; // includes timestamp
     const originalFileName = file.originalname;
-    const filePath = path.join("public/uploads/data_uploads", storedFileName);
+    const fileType = file.mimetype;
+    const fileSize = file.size;
+    
+    //FIX: updated file path to match fileRepository structure
+    const filePath = `/uploads/fileRepository/${storedFileName}`;
 
-
-    // Insert into DB using the stored file name and correct path
+    //first step: Insert into file_repository_files
     const result = await pool.query(
       `INSERT INTO file_repository_files 
-      (folder_id, file_name, file_path, file_type, file_size, adminid)
-      VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING *`,
-      [folder_id, storedFileName, filePath, file.mimetype, file.size, adminid, finalChartType]
+        (folder_id, file_name, file_path, file_type, file_size, adminid)
+        VALUES ($1,$2,$3,$4,$5,$6)
+        RETURNING *`,
+      [folder_id || null, storedFileName, filePath, fileType, fileSize, adminid]
+    );
+
+    const fileId = result.rows[0].id;
+
+    // 2nd setp: insert dashboard event
+    await pool.query(
+      `INSERT INTO dashboard_events (event_type, title, details, file_id, meta)
+       VALUES ($1,$2,$3,$4,$5)`,
+      [
+        "file_upload",
+        "New dataset uploaded",
+        originalFileName,
+        fileId,
+        JSON.stringify({
+          adminid,
+          icon: "upload",
+          file_type: fileType,
+        }),
+      ]
     );
 
     res.status(200).json({
+      success: true,
       message: "File uploaded successfully",
       file: result.rows[0],
+      id: fileId // included file ID for logging
     });
 
   } catch (error) {
@@ -86,10 +105,40 @@ router.post("/upload", upload.single("file"), async (req, res) => {
   }
 });
 
-// Fetch uploaded files
+// GET UPLOADED FILES
 router.get("/data/uploads", async (req, res) => {
-  const result = await pool.query("SELECT * FROM data_uploads ORDER BY uploaded_at DESC");
-  res.json(result.rows);
+  try {
+    const result = await pool.query(
+      "SELECT * FROM file_repository_files ORDER BY created_at DESC"
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load files" });
+  }
+});
+
+// log when analytics report is generated
+router.post("/analytics/generated", async (req, res) => {
+  try {
+    const { title, details, file_id, adminid } = req.body;
+
+    await pool.query(
+      `INSERT INTO dashboard_events (event_type, title, details, file_id, meta)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [
+        "report_generated",
+        title || "New analytics report generated",
+        details || "Analytics report created",
+        file_id || null,
+        JSON.stringify({ adminid, icon: "chart-line" })
+      ]
+    );
+
+    res.json({ success: true, message: "Analytics event logged" });
+  } catch (err) {
+    console.error("Error logging analytics event:", err);
+    res.status(500).json({ success: false, message: "Failed to log event" });
+  }
 });
 
 export default router;
