@@ -1,20 +1,26 @@
-//analyticsReport.js
-(async function() {
 //analyticsReport.js - Enhanced with column selection
 document.addEventListener("DOMContentLoaded", async () => {
   const reportsGrid = document.querySelector(".reports-grid");
   const PYTHON_API_URL = "http://localhost:5000/api";
 
-  if (!reportsGrid) {
-    console.error("Reports grid element not found");
+  // Fetch uploaded files (data repository)
+  let uploadedFiles = [];
+  try {
+    const response = await fetch("http://localhost:3000/api/files/data");
+    uploadedFiles = await response.json();
+  } catch (err) {
+    console.error("Error fetching file data:", err);
+  }
+
+  if (!reportsGrid || uploadedFiles.length === 0) {
+    console.warn("No uploaded data found or missing grid element");
+    reportsGrid.innerHTML = "<p>No analytics available yet. Upload a file to generate reports.</p>";
     return;
   }
 
-  // show loading state
+  // Show loading state
   reportsGrid.innerHTML = "<p>Loading analytics with Python processing...</p>";
 
-  //log analytics event helper
-  async function logAnalyticsEvent(fileName, fileId) {
   // Batch process all files with Python backend
   const reports = [];
   
@@ -27,19 +33,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     const chartType = localStorage.getItem(`chartType_${displayName}`) || file.chart_type || "bar";
     
     try {
-      await fetch("http://localhost:3000/api/analytics/generated", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      // Call Python API for analytics processing
+      const response = await fetch(`${PYTHON_API_URL}/analytics/process`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
-          title: "New analytics report generated",
-          details: fileName,
-          file_id: fileId,
-          adminid: localStorage.getItem("adminid") || "unknown"
+          filename: actualFilename,
+          chart_type: chartType
         })
       });
-      console.log(`✅ Logged analytics event for ${fileName}`);
-    } catch (err) {
-      console.error("Failed to log analytics event:", err);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -84,172 +88,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  let reports = []; 
+  // Clear loading state
+  reportsGrid.innerHTML = "";
 
-  try {
-    // fetch uploaded files
-    const response = await fetch("http://localhost:3000/api/files/data");
-    const uploadedFiles = await response.json();
+  // Render dynamic reports
+  reports.forEach(report => {
+    const card = document.createElement("div");
+    card.className = "report-card";
 
-    console.log("📁 Fetched files:", uploadedFiles);
-
-    if (!uploadedFiles || uploadedFiles.length === 0) {
-      console.warn("No uploaded data found");
-      reportsGrid.innerHTML = "<p>No analytics available yet. Upload a file to generate reports.</p>";
-      return;
-    }
-
-    // process each file
-    for (let index = 0; index < uploadedFiles.length; index++) {
-      const file = uploadedFiles[index];
-
-      const actualFilename = file.file_name || file.filename;
-      const displayName = file.file_name || file.filename || `Report ${index + 1}`;
-      const chartType = localStorage.getItem(`chartType_${displayName}`) || "bar";
-
-      console.log(`🔄 Processing file ${index + 1}/${uploadedFiles.length}:`, actualFilename);
-
-      try {
-        const analyticsResponse = await fetch(`${PYTHON_API_URL}/analytics/process`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            filename: actualFilename,
-            chart_type: chartType
-          })
-        });
-
-        if (!analyticsResponse.ok) {
-          const errorText = await analyticsResponse.text();
-          console.error(`❌ HTTP ${analyticsResponse.status}:`, errorText);
-          throw new Error(`HTTP error! status: ${analyticsResponse.status}`);
-        }
-
-        const analyticsData = await analyticsResponse.json();
-
-        // log the event
-        await logAnalyticsEvent(displayName, file.id);
-
-        reports.push({
-          id: index + 1,
-          file_id: file.id,
-          title: displayName || `Report ${index + 1}`,
-          actualFilename: actualFilename,
-          metric: file.file_type || "Uploaded Dataset",
-          date: new Date(file.created_at).toLocaleDateString(),
-          recordsProcessed: analyticsData.statistics.count,
-          chartType: chartType,
-          chartImage: analyticsData.chart_image,
-          statistics: analyticsData.statistics,
-          interpretation: analyticsData.interpretation,
-          tableData: analyticsData.table_data,
-          fileInfo: analyticsData.file_info,
-          summary: analyticsData.summary
-        });
-
-        console.log(`✅ Successfully processed ${actualFilename}`);
-
-      } catch (error) {
-        console.error(`❌ Error processing ${actualFilename}:`, error);
-
-        reports.push({
-          id: index + 1,
-          file_id: file.id,
-          title: displayName || `Report ${index + 1}`,
-          actualFilename: actualFilename,
-          metric: "Error Processing",
-          date: new Date(file.created_at).toLocaleDateString(),
-          recordsProcessed: 0,
-          chartType: chartType,
-          error: error.message
-        });
-      }
-    }
-
-    // clear loading
-    reportsGrid.innerHTML = "";
-    console.log(`📊 Generated ${reports.length} reports`);
-
-    // render reports
-    reports.forEach(report => {
-      const card = document.createElement("div");
-      card.className = "report-card";
-
-      if (report.error) {
-        card.innerHTML = `
-          <div class="report-header">
-            <div>
-              <h3>${report.title}</h3>
-              <p class="error-text">Error: ${report.error}</p>
-            </div>
-          </div>
-        `;
-        reportsGrid.appendChild(card);
-        return;
-      }
-
+    if (report.error) {
       card.innerHTML = `
         <div class="report-header">
           <div>
             <h3>${report.title}</h3>
-            <p>${report.metric}</p>
+            <p class="error-text">Error: ${report.error}</p>
           </div>
-        </div>
-        <div class="chart-selector">
-          <label for="chartType-${report.id}">Chart Type:</label>
-          <select id="chartType-${report.id}" class="chart-type-select">
-            <option value="bar" ${report.chartType === "bar" ? "selected" : ""}>Bar Chart</option>
-            <option value="line" ${report.chartType === "line" ? "selected" : ""}>Line Chart</option>
-            <option value="pie" ${report.chartType === "pie" ? "selected" : ""}>Pie Chart</option>
-            <option value="histogram" ${report.chartType === "histogram" ? "selected" : ""}>Histogram</option>
-            <option value="box" ${report.chartType === "box" ? "selected" : ""}>Box Plot</option>
-          </select>
-        </div>
-        <div class="chart-container">
-          <img src="${report.chartImage}" alt="Chart" class="chart-preview-img" />
-        </div>
-        <div class="report-meta">
-          <span><i class="bi bi-calendar"></i> ${report.date}</span>
-          <span><i class="bi bi-database"></i> ${report.recordsProcessed} records</span>
-          ${report.summary?.outliers_detected ? `<span><i class="bi bi-exclamation-triangle"></i> ${report.summary.outliers_detected} outliers</span>` : ''}
-        </div>
-        <div class="quick-stats">
-          <div class="stat-mini">
-            <span class="stat-label">Mean</span>
-            <span class="stat-value">${report.statistics.mean.toFixed(2)}</span>
-          </div>
-          <div class="stat-mini">
-            <span class="stat-label">Median</span>
-            <span class="stat-value">${report.statistics.median.toFixed(2)}</span>
-          </div>
-          <div class="stat-mini">
-            <span class="stat-label">Std Dev</span>
-            <span class="stat-value">${report.statistics.std.toFixed(2)}</span>
-          </div>
-        </div>
-        <div class="report-actions">
-          <button class="view-btn" data-id="${report.id}">
-            <i class="bi bi-eye"></i> View Full Report
-          </button>
-          <button class="refresh-btn" data-id="${report.id}" data-filename="${report.actualFilename}">
-            <i class="bi bi-arrow-clockwise"></i> Refresh
-          </button>
-          <button class="delete-btn" data-file-id="${report.file_id}">
-            <i class="bi bi-trash"></i>
-          </button>
         </div>
       `;
-
       reportsGrid.appendChild(card);
-    });
+      return;
+    }
 
-  } catch (err) {
-    console.error("Error loading analytics:", err);
-    reportsGrid.innerHTML = '<div class="analytics-error"><i class="bi bi-exclamation-triangle"></i><p>Failed to load analytics. Please try again.</p></div>';
-  }
-
-// dito mga event handlers
-  // delete button handler
     // Build column selector if multiple columns available
     let columnSelector = '';
     if (report.availableColumns && report.availableColumns.length > 1) {
@@ -411,7 +270,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    if (!confirm("Are you sure you want to delete this file permanently?")) return;
+    const confirmDelete = confirm("Are you sure you want to delete this file permanently? This action cannot be undone.");
+    if (!confirmDelete) return;
 
     btn.disabled = true;
     btn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
@@ -422,67 +282,38 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      alert("File deleted successfully.");
       alert("File permanently deleted.");
       btn.closest(".report-card").remove();
       
       if (reportsGrid.children.length === 0) {
-        reportsGrid.innerHTML = "<p>No analytics available.</p>";
+        reportsGrid.innerHTML = "<p>No analytics available yet. Upload a file to generate reports.</p>";
       }
 
     } catch (error) {
-      console.error("Delete error:", error);
-      alert(`Failed to delete: ${error.message}`);
+      console.error("Error deleting permanently:", error);
+      alert(`Failed to delete file: ${error.message}`);
       btn.disabled = false;
       btn.innerHTML = '<i class="bi bi-trash"></i>';
     }
   });
 
-  // chart type change handler
-  document.addEventListener("change", async (e) => {
-    if (!e.target.classList.contains("chart-type-select")) return;
-
-    const reportId = e.target.id.split("-")[1];
-    const selectedType = e.target.value;
-    const report = reports.find(r => r.id == reportId);
-    
-    if (!report) return;
-
-    const card = e.target.closest(".report-card");
-    const chartContainer = card.querySelector(".chart-container");
-    const originalContent = chartContainer.innerHTML;
-    chartContainer.innerHTML = '<p>Regenerating chart...</p>';
-
-    try {
-      const response = await fetch(`${PYTHON_API_URL}/analytics/process`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          filename: report.actualFilename,
-          chart_type: selectedType
-        })
-      });
-
-      if (!response.ok) throw new Error('Failed to regenerate');
-
-      const analyticsData = await response.json();
+  // Handle chart type changes
+  document.querySelectorAll(".chart-type-select").forEach(select => {
+    select.addEventListener("change", async (e) => {
+      const reportId = e.target.id.split("-")[1];
+      const selectedType = e.target.value;
+      const report = reports.find(r => r.id == reportId);
       
-      chartContainer.innerHTML = `<img src="${analyticsData.chart_image}" alt="Chart" class="chart-preview-img" />`;
-      
-      report.chartImage = analyticsData.chart_image;
-      report.chartType = selectedType;
-      report.statistics = analyticsData.statistics;
+      if (!report) return;
 
-      localStorage.setItem(`chartType_${report.title}`, selectedType);
+      const card = e.target.closest(".report-card");
+      const chartContainer = card.querySelector(".chart-container");
+      const originalContent = chartContainer.innerHTML;
+      chartContainer.innerHTML = '<p>Regenerating chart...</p>';
 
-    } catch (error) {
-      console.error('Regenerate error:', error);
-      chartContainer.innerHTML = originalContent;
-      alert('Failed to regenerate chart.');
-    }
       // Get currently selected column if available
       const columnSelector = card.querySelector(".column-select-dropdown");
       const selectedColumn = columnSelector ? columnSelector.value : null;
@@ -523,7 +354,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
-  // refresh button handler
+  // Handle refresh button
   document.body.addEventListener("click", async (e) => {
     const btn = e.target.closest(".refresh-btn");
     if (!btn) return;
@@ -535,7 +366,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!report) return;
 
     btn.disabled = true;
-    btn.innerHTML = '<i class="bi bi-arrow-clockwise spin"></i>';
+    btn.innerHTML = '<i class="bi bi-arrow-clockwise spin"></i> Refreshing...';
 
     const card = btn.closest(".report-card");
     const columnSelector = card.querySelector(".column-select-dropdown");
@@ -544,7 +375,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       const response = await fetch(`${PYTHON_API_URL}/analytics/process`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           filename: filename,
           chart_type: report.chartType,
@@ -552,23 +385,24 @@ document.addEventListener("DOMContentLoaded", async () => {
         })
       });
 
-      if (!response.ok) throw new Error('Refresh failed');
+      if (!response.ok) {
+        throw new Error('Failed to refresh analytics');
+      }
 
       const analyticsData = await response.json();
       
       Object.assign(report, {
         chartImage: analyticsData.chart_image,
         statistics: analyticsData.statistics,
-        interpretation: analyticsData.interpretation
+        interpretation: analyticsData.interpretation,
+        tableData: analyticsData.table_data
       });
 
-      const card = btn.closest(".report-card");
-      card.querySelector(".chart-container").innerHTML = 
-        `<img src="${analyticsData.chart_image}" alt="Chart" class="chart-preview-img" />`;
       const chartContainer = card.querySelector(".chart-container");
       chartContainer.innerHTML = `<img src="${analyticsData.chart_image}" alt="Chart" class="chart-preview-img" />`;
 
-      card.querySelector(".quick-stats").innerHTML = `
+      const quickStats = card.querySelector(".quick-stats");
+      quickStats.innerHTML = `
         <div class="stat-mini">
           <span class="stat-label">Mean</span>
           <span class="stat-value">${analyticsData.statistics.mean.toFixed(2)}</span>
@@ -583,32 +417,30 @@ document.addEventListener("DOMContentLoaded", async () => {
         </div>
       `;
 
-      alert('Refreshed successfully!');
+      alert('Analytics refreshed successfully!');
 
     } catch (error) {
-      console.error('Refresh error:', error);
-      alert('Failed to refresh.');
+      console.error('Error refreshing analytics:', error);
+      alert('Failed to refresh analytics. Please try again.');
     } finally {
       btn.disabled = false;
       btn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Refresh';
     }
   });
 
-  // view button handler
+  // Handle "View Report" click
   document.body.addEventListener("click", (e) => {
     const btn = e.target.closest(".view-btn");
     if (!btn) return;
-    
     const reportId = btn.dataset.id;
     const report = reports.find(r => r.id == reportId);
     if (report) openReportDetails(report);
   });
 
-  // modal function
   function openReportDetails(report) {
     const modal = document.getElementById("reportModal");
     if (!modal) {
-      alert("Modal not found!");
+      alert("Modal not found! Make sure #reportModal exists in your HTML.");
       return;
     }
 
@@ -626,19 +458,45 @@ document.addEventListener("DOMContentLoaded", async () => {
       </div>
 
       <div class="stats-section">
-        <div class="stat-card blue"><strong>Mean</strong><p>${stats.mean.toFixed(2)}</p></div>
-        <div class="stat-card green"><strong>Median</strong><p>${stats.median.toFixed(2)}</p></div>
-        <div class="stat-card purple"><strong>Mode</strong><p>${stats.mode.toFixed(2)}</p></div>
-        <div class="stat-card orange"><strong>Std Dev</strong><p>${stats.std.toFixed(2)}</p></div>
-        <div class="stat-card red"><strong>Min</strong><p>${stats.min.toFixed(2)}</p></div>
-        <div class="stat-card teal"><strong>Max</strong><p>${stats.max.toFixed(2)}</p></div>
-        <div class="stat-card yellow"><strong>Q1</strong><p>${stats.q1.toFixed(2)}</p></div>
-        <div class="stat-card pink"><strong>Q3</strong><p>${stats.q3.toFixed(2)}</p></div>
+        <div class="stat-card blue">
+          <strong>Mean</strong>
+          <p>${stats.mean.toFixed(2)}</p>
+        </div>
+        <div class="stat-card green">
+          <strong>Median</strong>
+          <p>${stats.median.toFixed(2)}</p>
+        </div>
+        <div class="stat-card purple">
+          <strong>Mode</strong>
+          <p>${stats.mode.toFixed(2)}</p>
+        </div>
+        <div class="stat-card orange">
+          <strong>Std Dev</strong>
+          <p>${stats.std.toFixed(2)}</p>
+        </div>
+        <div class="stat-card red">
+          <strong>Min</strong>
+          <p>${stats.min.toFixed(2)}</p>
+        </div>
+        <div class="stat-card teal">
+          <strong>Max</strong>
+          <p>${stats.max.toFixed(2)}</p>
+        </div>
+        <div class="stat-card yellow">
+          <strong>Q1</strong>
+          <p>${stats.q1.toFixed(2)}</p>
+        </div>
+        <div class="stat-card pink">
+          <strong>Q3</strong>
+          <p>${stats.q3.toFixed(2)}</p>
+        </div>
       </div>
 
       <div class="insight">
         <strong>🔍 Analysis Summary</strong>
-        <div class="interpretation-text">${report.interpretation}</div>
+        <div class="interpretation-text">
+          ${report.interpretation}
+        </div>
       </div>
 
       ${report.fileInfo ? `
@@ -658,12 +516,24 @@ document.addEventListener("DOMContentLoaded", async () => {
         <strong>📈 Advanced Statistics</strong>
         <table class="stats-table">
           <tr>
-            <td><strong>Variance:</strong></td><td>${stats.variance.toFixed(2)}</td>
-            <td><strong>Range:</strong></td><td>${stats.range.toFixed(2)}</td>
+            <td><strong>Variance:</strong></td>
+            <td>${stats.variance.toFixed(2)}</td>
+            <td><strong>Range:</strong></td>
+            <td>${stats.range.toFixed(2)}</td>
           </tr>
+          ${stats.skewness !== undefined ? `
           <tr>
-            <td><strong>Sum:</strong></td><td>${stats.sum.toFixed(2)}</td>
-            <td><strong>Count:</strong></td><td>${stats.count}</td>
+            <td><strong>Skewness:</strong></td>
+            <td>${stats.skewness.toFixed(3)}</td>
+            <td><strong>Kurtosis:</strong></td>
+            <td>${stats.kurtosis.toFixed(3)}</td>
+          </tr>
+          ` : ''}
+          <tr>
+            <td><strong>Sum:</strong></td>
+            <td>${stats.sum.toFixed(2)}</td>
+            <td><strong>Count:</strong></td>
+            <td>${stats.count}</td>
           </tr>
         </table>
       </div>
@@ -675,22 +545,30 @@ document.addEventListener("DOMContentLoaded", async () => {
             <tr>${report.tableData.headers.map(h => `<th>${h}</th>`).join("")}</tr>
           </thead>
           <tbody>
-            ${report.tableData.rows.slice(0, 50).map(row => `
+            ${report.tableData.rows.map(row => `
               <tr>${row.map(cell => `<td>${typeof cell === 'number' ? cell.toFixed(2) : cell}</td>`).join("")}</tr>
             `).join("")}
           </tbody>
         </table>
+      </div>
+
+      <div class="export-options">
+        <button class="export-pdf-btn" onclick="alert('PDF export feature coming soon!')">
+          <i class="bi bi-file-pdf"></i> Export as PDF
+        </button>
+        <button class="export-csv-btn" onclick="alert('CSV export feature coming soon!')">
+          <i class="bi bi-file-spreadsheet"></i> Export as CSV
+        </button>
       </div>
     `;
 
     modal.classList.add("active");
   }
 
-  // close modal 
+  // Close modal
   document.body.addEventListener("click", (e) => {
     if (e.target.classList.contains("modal-overlay") || e.target.classList.contains("close-modal")) {
-      document.getElementById("reportModal")?.classList.remove("active");
+      document.getElementById("reportModal").classList.remove("active");
     }
   });
-
-})(); 
+});
