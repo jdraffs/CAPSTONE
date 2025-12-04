@@ -1,15 +1,17 @@
-// fileRepository.js
+// fileRepository.js - PART 1
+// Copy this first, then append Part 2 below it
+
 document.addEventListener("DOMContentLoaded", () => {
   const container = document.getElementById("mainContent");
   let currentFolderId = null;
   let currentFilter = "all";
   let favorites = new Set(JSON.parse(localStorage.getItem("favorites") || "[]"));
   let trash = new Set(JSON.parse(localStorage.getItem("trash") || "[]"));
-  let selectedItems = new Set(); // Track selected items: "type-id" format
-  let lastSelectedIndex = -1; // Track last selected item for shift-click
-  let lastClickTime = 0; // Track last click time for double-click detection
-  let lastClickedItem = null; // Track last clicked item for double-click
-  const DOUBLE_CLICK_DELAY = 300; // milliseconds
+  let selectedItems = new Set();
+  let lastSelectedIndex = -1;
+  let lastClickTime = 0;
+  let lastClickedItem = null;
+  const DOUBLE_CLICK_DELAY = 300;
   const API_BASE = "http://localhost:3000/api/files";
 
   window.folderMap = window.folderMap || {};
@@ -21,17 +23,191 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.setItem("trash", JSON.stringify([...trash]));
   }
 
-  // Clear selection
+  // ===== FILE PREVIEW MODAL =====
+  function createPreviewModal() {
+    const modal = document.createElement("div");
+    modal.id = "filePreviewModal";
+    modal.innerHTML = `
+      <div class="modal-overlay">
+        <div class="modal-container">
+          <div class="modal-header">
+            <h3 id="modalFileName">File Preview</h3>
+            <button class="modal-close" onclick="window.closePreviewModal()">
+              <i class="fa fa-times"></i>
+            </button>
+          </div>
+          <div class="modal-body" id="modalBody">
+            <div class="loading">Loading...</div>
+          </div>
+          <div class="modal-footer">
+            <button class="modal-btn download-modal-btn" onclick="window.downloadCurrentFile()">
+              <i class="fa fa-download"></i> Download
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && document.getElementById('filePreviewModal')) {
+        window.closePreviewModal();
+      }
+    });
+    
+    document.querySelector('.modal-overlay').addEventListener('click', function(e) {
+      if (e.target === this) {
+        window.closePreviewModal();
+      }
+    });
+  }
+
+  window.closePreviewModal = function() {
+    const modal = document.getElementById("filePreviewModal");
+    if (modal) modal.remove();
+    window.currentPreviewFile = null;
+  };
+
+  window.downloadCurrentFile = function() {
+    if (!window.currentPreviewFile) return;
+    const link = document.createElement("a");
+    link.href = window.currentPreviewFile.file_path;
+    link.download = window.currentPreviewFile.file_name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  async function openFilePreview(file) {
+    window.currentPreviewFile = file;
+    
+    const existingModal = document.getElementById("filePreviewModal");
+    if (existingModal) existingModal.remove();
+    
+    createPreviewModal();
+    
+    const modalBody = document.getElementById("modalBody");
+    const modalFileName = document.getElementById("modalFileName");
+    modalFileName.textContent = file.file_name;
+
+    const fileExt = file.file_name.split('.').pop().toLowerCase();
+    const fileType = file.file_type;
+
+    try {
+      // Excel/CSV files - Display as table
+      if (fileExt === 'xlsx' || fileExt === 'xls' || fileExt === 'csv' || fileType.includes('spreadsheet') || fileType === 'text/csv') {
+        modalBody.innerHTML = '<div class="loading">Loading spreadsheet data...</div>';
+        
+        try {
+          const response = await fetch(file.file_path);
+          const arrayBuffer = await response.arrayBuffer();
+          
+          let workbook;
+          if (fileExt === 'csv' || fileType === 'text/csv') {
+            const data = new Uint8Array(arrayBuffer);
+            const text = new TextDecoder().decode(data);
+            workbook = XLSX.read(text, { type: 'string' });
+          } else {
+            workbook = XLSX.read(arrayBuffer, { type: 'array' });
+          }
+          
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const htmlTable = XLSX.utils.sheet_to_html(firstSheet, { id: "preview-table" });
+          
+          modalBody.innerHTML = `
+            <div style="width: 100%; height: 70vh; overflow: auto;">
+              <style>
+                #preview-table { 
+                  border-collapse: collapse; 
+                  width: 100%; 
+                  font-size: 14px;
+                  background: white;
+                }
+                #preview-table td, #preview-table th { 
+                  border: 1px solid #ddd; 
+                  padding: 8px 12px; 
+                  text-align: left;
+                }
+                #preview-table th { 
+                  background: #2797ec; 
+                  color: white; 
+                  font-weight: 600;
+                  position: sticky;
+                  top: 0;
+                  z-index: 10;
+                }
+                #preview-table tr:nth-child(even) { 
+                  background: #f9f9f9; 
+                }
+                #preview-table tr:hover { 
+                  background: #f0f7ff; 
+                }
+              </style>
+              ${htmlTable}
+            </div>
+          `;
+        } catch (err) {
+          console.error("Error parsing spreadsheet:", err);
+          modalBody.innerHTML = `
+            <div style="padding: 20px; text-align: center; color: #d32f2f;">
+              <i class="fa fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 15px;"></i>
+              <p>Error loading spreadsheet data.</p>
+              <button class="modal-btn" onclick="window.downloadCurrentFile()" style="margin-top: 15px;">
+                <i class="fa fa-download"></i> Download File
+              </button>
+            </div>
+          `;
+        }
+      }
+      // JSON files - Display formatted
+      else if (fileExt === 'json' || fileType === 'application/json') {
+        const response = await fetch(file.file_path);
+        const jsonData = await response.json();
+        const formatted = JSON.stringify(jsonData, null, 2);
+        modalBody.innerHTML = `
+          <pre style="white-space: pre-wrap; padding: 20px; max-height: 70vh; overflow: auto; background: #f5f5f5; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.5;">${escapeHtml(formatted)}</pre>
+        `;
+      }
+      // Unsupported - offer download
+      else {
+        modalBody.innerHTML = `
+          <div style="padding: 20px; text-align: center;">
+            <i class="fa fa-file" style="font-size: 64px; color: #666; margin-bottom: 20px;"></i>
+            <p>Preview not available for this file type.</p>
+            <button class="modal-btn" onclick="window.downloadCurrentFile()" style="margin-top: 15px;">
+              <i class="fa fa-download"></i> Download File
+            </button>
+          </div>
+        `;
+      }
+    } catch (error) {
+      console.error("Error loading file preview:", error);
+      modalBody.innerHTML = `
+        <div style="padding: 20px; text-align: center; color: #d32f2f;">
+          <i class="fa fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 15px;"></i>
+          <p>Error loading file preview.</p>
+          <button class="modal-btn" onclick="window.downloadCurrentFile()" style="margin-top: 15px;">
+            <i class="fa fa-download"></i> Download Instead
+          </button>
+        </div>
+      `;
+    }
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
   function clearSelection() {
     selectedItems.clear();
     updateBulkActionsUI();
-    // Remove visual selection from all items
     document.querySelectorAll(".repository-item.selected").forEach(item => {
       item.classList.remove("selected");
     });
   }
 
-  // Toggle item selection
   function toggleItemSelection(id, type, itemElement, itemIndex) {
     const itemKey = `${type}-${id}`;
     
@@ -41,22 +217,18 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       selectedItems.add(itemKey);
       itemElement.classList.add("selected");
-      lastSelectedIndex = itemIndex; // Update last selected index
+      lastSelectedIndex = itemIndex;
     }
     
     updateBulkActionsUI();
   }
 
-  // Handle shift-click range selection
   function handleShiftSelection(currentIndex, allItems) {
-    if (lastSelectedIndex === -1 || lastSelectedIndex === currentIndex) {
-      return; // No range to select
-    }
+    if (lastSelectedIndex === -1 || lastSelectedIndex === currentIndex) return;
 
     const start = Math.min(lastSelectedIndex, currentIndex);
     const end = Math.max(lastSelectedIndex, currentIndex);
 
-    // Select all items in range
     for (let i = start; i <= end; i++) {
       const item = allItems[i];
       if (item) {
@@ -73,7 +245,6 @@ document.addEventListener("DOMContentLoaded", () => {
     updateBulkActionsUI();
   }
 
-  // Update bulk actions UI based on selection
   function updateBulkActionsUI() {
     const bulkActionsDiv = document.getElementById("bulkActions");
     const selectionCount = document.getElementById("selectionCount");
@@ -90,7 +261,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Bulk download selected files
   async function bulkDownload() {
     const fileItems = Array.from(selectedItems).filter(item => item.startsWith('file-'));
     
@@ -100,16 +270,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     for (const itemKey of fileItems) {
-      const fileId = itemKey.split('-')[1];
-      
       try {
-        // Find file data from DOM or fetch it
         const fileElement = document.querySelector(`[data-item-id="${itemKey}"]`);
         if (fileElement) {
           const filePath = fileElement.dataset.filePath;
           const fileName = fileElement.dataset.fileName;
           
-          // Trigger download
           const link = document.createElement("a");
           link.href = filePath;
           link.download = fileName;
@@ -117,11 +283,10 @@ document.addEventListener("DOMContentLoaded", () => {
           link.click();
           document.body.removeChild(link);
           
-          // Small delay between downloads
           await new Promise(resolve => setTimeout(resolve, 300));
         }
       } catch (error) {
-        console.error(`Error downloading file ${fileId}:`, error);
+        console.error(`Error downloading file:`, error);
       }
     }
     
@@ -129,7 +294,6 @@ document.addEventListener("DOMContentLoaded", () => {
     clearSelection();
   }
 
-  // Bulk move to trash
   function bulkMoveToTrash() {
     if (selectedItems.size === 0) return;
     
@@ -146,7 +310,6 @@ document.addEventListener("DOMContentLoaded", () => {
     alert(`${count} item(s) moved to trash.`);
   }
 
-  // Bulk delete permanently
   async function bulkDeletePermanently() {
     if (selectedItems.size === 0) return;
     
@@ -177,7 +340,6 @@ document.addEventListener("DOMContentLoaded", () => {
     alert(`${successCount} of ${count} item(s) deleted permanently.`);
   }
 
-  // Permanently delete file by id
   async function deleteFilePermanent(id) {
     try {
       const response = await fetch(`${API_BASE}/files/${id}`, { method: "DELETE" });
@@ -193,7 +355,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Permanently delete folder by id
+// fileRepository.js - PART 2
+// Append this after Part 1
+
   async function deleteFolderPermanent(folderId) {
     try {
       const response = await fetch(`${API_BASE}/folders/${folderId}`, { method: "DELETE" });
@@ -256,7 +420,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Empty trash
   async function emptyTrashAll() {
     if (trash.size === 0) {
       alert("Trash is already empty.");
@@ -305,12 +468,12 @@ document.addEventListener("DOMContentLoaded", () => {
     return trash.has(`${type}-${id}`);
   }
 
-  // Fetch folders & files
   async function fetchFoldersAndFiles() {
     try {
       let foldersRes, filesRes;
 
-      const needAllFolders = ["favorites", "recent", "trash"].includes(currentFilter) || currentFolderId !== null && !window.folderMap[currentFolderId];
+      const needAllFolders = ["favorites", "recent", "trash"].includes(currentFilter) || 
+                             currentFolderId !== null && !window.folderMap[currentFolderId];
 
       if (["favorites", "recent", "trash"].includes(currentFilter) || needAllFolders) {
         [foldersRes, filesRes] = await Promise.all([
@@ -412,13 +575,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function render(folders, files) {
     container.innerHTML = "";
-    clearSelection(); // Clear selection when re-rendering
+    clearSelection();
 
-    // Create a flat list of all items for shift-click range selection
     const allItems = [];
     let itemIndex = 0;
 
-    // ===== header start =====
     const headerWrapper = document.createElement("div");
     headerWrapper.className = "repository-header-wrapper";
 
@@ -428,7 +589,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const leftControls = document.createElement("div");
     leftControls.className = "header-left-controls";
 
-    // Show "Empty Trash" or bulk actions
     if (currentFilter === 'trash') {
       const emptyTrashBtn = document.createElement("button");
       emptyTrashBtn.textContent = "Empty Trash";
@@ -441,7 +601,6 @@ document.addEventListener("DOMContentLoaded", () => {
       leftControls.appendChild(emptyTrashBtn);
     }
 
-    // Bulk actions div (hidden by default)
     const bulkActionsDiv = document.createElement("div");
     bulkActionsDiv.id = "bulkActions";
     bulkActionsDiv.className = "bulk-actions";
@@ -524,11 +683,9 @@ document.addEventListener("DOMContentLoaded", () => {
     rightControls.appendChild(filters);
     header.appendChild(leftControls);
     header.appendChild(rightControls);
-
     headerWrapper.appendChild(header);
     container.appendChild(headerWrapper);
 
-    // ===== breadcrumb =====
     const breadcrumb = document.createElement("div");
     breadcrumb.className = "breadcrumb-trail";
 
@@ -559,19 +716,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     container.appendChild(breadcrumb);
 
-    // Items grid
     const itemsDiv = document.createElement("div");
     itemsDiv.className = "repository-items";
 
     folders.forEach((folder) => {
-      const itemDiv = createRepositoryItem(folder, "folder", folders, files, itemIndex, allItems);
+      const itemDiv = createRepositoryItem(folder, "folder", itemIndex, allItems);
       allItems.push({ id: folder.id, type: "folder", element: itemDiv, index: itemIndex });
       itemIndex++;
       itemsDiv.appendChild(itemDiv);
     });
 
     files.forEach((file) => {
-      const itemDiv = createRepositoryItem(file, "file", folders, files, itemIndex, allItems);
+      const itemDiv = createRepositoryItem(file, "file", itemIndex, allItems);
       allItems.push({ id: file.id, type: "file", element: itemDiv, index: itemIndex });
       itemIndex++;
       itemsDiv.appendChild(itemDiv);
@@ -580,7 +736,7 @@ document.addEventListener("DOMContentLoaded", () => {
     container.appendChild(itemsDiv);
   }
 
-  function createRepositoryItem(item, type, allFolders, allFiles, itemIndex, allItemsList) {
+  function createRepositoryItem(item, type, itemIndex, allItemsList) {
     const itemDiv = document.createElement("div");
     itemDiv.className = "repository-item";
     
@@ -588,7 +744,6 @@ document.addEventListener("DOMContentLoaded", () => {
     itemDiv.dataset.itemId = itemKey;
     itemDiv.dataset.itemIndex = itemIndex;
     
-    // Store file data for downloads
     if (type === "file") {
       itemDiv.dataset.filePath = item.file_path;
       itemDiv.dataset.fileName = item.file_name;
@@ -605,31 +760,27 @@ document.addEventListener("DOMContentLoaded", () => {
     nameSpan.title = name;
     itemDiv.appendChild(nameSpan);
 
-    // Check if already selected
     if (selectedItems.has(itemKey)) {
       itemDiv.classList.add("selected");
     }
 
-    // Favorite highlight
     if (isFavorite(item.id, type)) {
       itemDiv.style.backgroundColor = "rgba(255, 193, 7, 0.15)";
       itemDiv.style.border = "1px solid #ffc107";
     }
 
-    // Click handler - NEW BEHAVIOR
     itemDiv.addEventListener("click", (e) => {
       if (e.target.classList.contains("dot-menu") || e.target.closest(".dot-menu")) {
-        return; // Don't handle selection if clicking menu
+        return;
       }
 
       const currentTime = Date.now();
-      const isDoubleClick = (currentTime - lastClickTime < DOUBLE_CLICK_DELAY) && (lastClickedItem === itemKey);
+      const isDoubleClick = (currentTime - lastClickTime < DOUBLE_CLICK_DELAY) && 
+                           (lastClickedItem === itemKey);
 
-      // Update last click tracking
       lastClickTime = currentTime;
       lastClickedItem = itemKey;
 
-      // Handle double-click
       if (isDoubleClick) {
         if (type === "folder") {
           if (currentFilter === "favorites") {
@@ -639,31 +790,22 @@ document.addEventListener("DOMContentLoaded", () => {
           currentFolderId = item.id;
           fetchFoldersAndFiles();
         } else {
-          // Open file in Google Sheets
-          const fileUrl = `http://localhost:3000${item.file_path}`;
-          const googleSheetsImportUrl =
-            `https://docs.google.com/spreadsheets/u/0/create?usp=drive_web&authuser=0&hl=en&copy=true&url=${encodeURIComponent(fileUrl)}`;
-          window.open(googleSheetsImportUrl, "_blank");
+          openFilePreview(item);
         }
         return;
       }
 
-      // Handle shift-click for range selection
       if (e.shiftKey) {
         handleShiftSelection(itemIndex, allItemsList);
         return;
       }
 
-      // Handle ctrl/cmd-click for multi-select (toggle)
       if (e.ctrlKey || e.metaKey) {
         toggleItemSelection(item.id, type, itemDiv, itemIndex);
         return;
       }
 
-      // Single click - just select the item (NEW DEFAULT BEHAVIOR)
-      // Clear previous selection if not using ctrl/shift
       if (!selectedItems.has(itemKey)) {
-        // Clear all other selections
         document.querySelectorAll(".repository-item.selected").forEach(el => {
           el.classList.remove("selected");
         });
@@ -680,7 +822,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const menu = document.createElement("div");
     menu.className = "dropdown-menu hidden";
 
-    // Favorite button
     const favoriteBtn = document.createElement("button");
     favoriteBtn.className = "favorite-btn";
     favoriteBtn.type = "button";
@@ -693,7 +834,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     menu.appendChild(favoriteBtn);
 
-    // Trash view: Restore + Delete
     if (currentFilter === "trash") {
       const restoreBtn = document.createElement("button");
       restoreBtn.className = "restore-btn";
@@ -730,7 +870,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       menu.appendChild(permDeleteBtn);
     } else {
-      // Normal view: Move to Trash
       const moveTrashBtn = document.createElement("button");
       moveTrashBtn.className = "move-trash-btn";
       moveTrashBtn.type = "button";
@@ -744,13 +883,11 @@ document.addEventListener("DOMContentLoaded", () => {
       menu.appendChild(moveTrashBtn);
     }
 
-    // Download button (files only)
     if (type === "file") {
       const downloadBtn = document.createElement("button");
       downloadBtn.className = "download-btn";
       downloadBtn.type = "button";
       downloadBtn.textContent = "Download";
-
       downloadBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         e.preventDefault();
@@ -768,7 +905,6 @@ document.addEventListener("DOMContentLoaded", () => {
       menu.appendChild(downloadBtn);
     }
 
-    // Menu toggle
     dots.addEventListener("click", (e) => {
       e.stopPropagation();
       e.preventDefault();
@@ -789,12 +925,10 @@ document.addEventListener("DOMContentLoaded", () => {
     return itemDiv;
   }
 
-  // Expose functions to window for onclick handlers
   window.bulkDownload = bulkDownload;
   window.bulkMoveToTrash = bulkMoveToTrash;
   window.bulkDeletePermanently = bulkDeletePermanently;
   window.clearSelection = clearSelection;
 
-  // Initial load
   fetchFoldersAndFiles();
 });

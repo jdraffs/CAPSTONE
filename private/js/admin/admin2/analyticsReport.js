@@ -1,5 +1,7 @@
 //analyticsReport.js
 (async function() {
+//analyticsReport.js - Enhanced with column selection
+document.addEventListener("DOMContentLoaded", async () => {
   const reportsGrid = document.querySelector(".reports-grid");
   const PYTHON_API_URL = "http://localhost:5000/api";
 
@@ -13,6 +15,17 @@
 
   //log analytics event helper
   async function logAnalyticsEvent(fileName, fileId) {
+  // Batch process all files with Python backend
+  const reports = [];
+  
+  for (let index = 0; index < uploadedFiles.length; index++) {
+    const file = uploadedFiles[index];
+    
+    const actualFilename = file.filename || file.originalName || file.displayName;
+    const displayName = file.displayName || file.originalName || file.filename;
+    
+    const chartType = localStorage.getItem(`chartType_${displayName}`) || file.chart_type || "bar";
+    
     try {
       await fetch("http://localhost:3000/api/analytics/generated", {
         method: "POST",
@@ -27,6 +40,47 @@
       console.log(`✅ Logged analytics event for ${fileName}`);
     } catch (err) {
       console.error("Failed to log analytics event:", err);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const analyticsData = await response.json();
+
+      reports.push({
+        id: index + 1,
+        file_id: file.id,
+        title: displayName || `Report ${index + 1}`,
+        actualFilename: actualFilename,
+        metric: file.type || "Uploaded Dataset",
+        date: new Date(file.uploaded_at).toLocaleDateString(),
+        recordsProcessed: analyticsData.statistics.count,
+        chartType: chartType,
+        chartImage: analyticsData.chart_image,
+        statistics: analyticsData.statistics,
+        interpretation: analyticsData.interpretation,
+        tableData: analyticsData.table_data,
+        fileInfo: analyticsData.file_info,
+        summary: analyticsData.summary,
+        availableColumns: analyticsData.file_info?.available_columns || [],
+        columnDescriptions: analyticsData.file_info?.column_descriptions || {},
+        currentColumn: analyticsData.file_info?.analyzed_column || "Default Column"
+      });
+
+    } catch (error) {
+      console.error(`Error processing ${file.filename}:`, error);
+      
+      reports.push({
+        id: index + 1,
+        file_id: file.id,
+        title: displayName || `Report ${index + 1}`,
+        actualFilename: actualFilename,
+        metric: "Error Processing",
+        date: new Date(file.uploaded_at).toLocaleDateString(),
+        recordsProcessed: 0,
+        chartType: chartType,
+        error: error.message
+      });
     }
   }
 
@@ -196,6 +250,156 @@
 
 // dito mga event handlers
   // delete button handler
+    // Build column selector if multiple columns available
+    let columnSelector = '';
+    if (report.availableColumns && report.availableColumns.length > 1) {
+      columnSelector = `
+        <div class="column-selector">
+          <label for="columnSelect-${report.id}">Select Data Column:</label>
+          <select id="columnSelect-${report.id}" class="column-select-dropdown">
+            ${report.availableColumns.map(col => `
+              <option value="${col.raw_name}" ${col.display_name === report.currentColumn ? 'selected' : ''}>
+                ${col.display_name} (${col.data_count} values)
+              </option>
+            `).join('')}
+          </select>
+        </div>
+      `;
+    }
+
+    card.innerHTML = `
+      <div class="report-header">
+        <div>
+          <h3>${report.title}</h3>
+          <p>${report.metric}</p>
+          <p class="current-column-display"><strong>Analyzing:</strong> ${report.currentColumn}</p>
+        </div>
+      </div>
+      ${columnSelector}
+      <div class="chart-selector">
+        <label for="chartType-${report.id}">Chart Type:</label>
+        <select id="chartType-${report.id}" class="chart-type-select">
+          <option value="bar" ${report.chartType === "bar" ? "selected" : ""}>Bar Chart</option>
+          <option value="line" ${report.chartType === "line" ? "selected" : ""}>Line Chart</option>
+          <option value="pie" ${report.chartType === "pie" ? "selected" : ""}>Pie Chart</option>
+          <option value="histogram" ${report.chartType === "histogram" ? "selected" : ""}>Histogram</option>
+          <option value="box" ${report.chartType === "box" ? "selected" : ""}>Box Plot</option>
+        </select>
+      </div>
+      <div class="chart-container">
+        <img src="${report.chartImage}" alt="Chart" class="chart-preview-img" />
+      </div>
+      <div class="report-meta">
+        <span><i class="bi bi-calendar"></i> ${report.date}</span>
+        <span><i class="bi bi-database"></i> ${report.recordsProcessed} records</span>
+        ${report.summary?.outliers_detected ? `<span><i class="bi bi-exclamation-triangle"></i> ${report.summary.outliers_detected} outliers</span>` : ''}
+      </div>
+      <div class="quick-stats">
+        <div class="stat-mini">
+          <span class="stat-label">Mean</span>
+          <span class="stat-value">${report.statistics.mean.toFixed(2)}</span>
+        </div>
+        <div class="stat-mini">
+          <span class="stat-label">Median</span>
+          <span class="stat-value">${report.statistics.median.toFixed(2)}</span>
+        </div>
+        <div class="stat-mini">
+          <span class="stat-label">Std Dev</span>
+          <span class="stat-value">${report.statistics.std.toFixed(2)}</span>
+        </div>
+      </div>
+      <div class="report-actions">
+        <button class="view-btn" data-id="${report.id}">
+          <i class="bi bi-eye"></i> View Full Report
+        </button>
+        <button class="refresh-btn" data-id="${report.id}" data-filename="${report.actualFilename || report.title}">
+          <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
+        <button class="delete-btn" data-file-id="${report.file_id}">
+          <i class="bi bi-trash"></i>
+        </button>
+      </div>
+    `;
+
+    reportsGrid.appendChild(card);
+  });
+
+  // Handle column selection changes
+  document.body.addEventListener("change", async (e) => {
+    if (!e.target.classList.contains("column-select-dropdown")) return;
+
+    const reportId = e.target.id.split("-")[1];
+    const selectedColumn = e.target.value;
+    const report = reports.find(r => r.id == reportId);
+    
+    if (!report) return;
+
+    const card = e.target.closest(".report-card");
+    const chartContainer = card.querySelector(".chart-container");
+    const columnDisplay = card.querySelector(".current-column-display");
+    const originalContent = chartContainer.innerHTML;
+    
+    chartContainer.innerHTML = '<p>Loading data for selected column...</p>';
+
+    try {
+      const response = await fetch(`${PYTHON_API_URL}/analytics/process`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          filename: report.actualFilename || report.title,
+          chart_type: report.chartType,
+          column: selectedColumn  // Send the selected column
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to load column data');
+      }
+
+      const analyticsData = await response.json();
+      
+      // Update chart
+      chartContainer.innerHTML = `<img src="${analyticsData.chart_image}" alt="Chart" class="chart-preview-img" />`;
+      
+      // Update report data
+      report.chartImage = analyticsData.chart_image;
+      report.statistics = analyticsData.statistics;
+      report.interpretation = analyticsData.interpretation;
+      report.tableData = analyticsData.table_data;
+      report.currentColumn = analyticsData.file_info.analyzed_column;
+
+      // Update column display
+      if (columnDisplay) {
+        columnDisplay.innerHTML = `<strong>Analyzing:</strong> ${report.currentColumn}`;
+      }
+
+      // Update quick stats
+      const quickStats = card.querySelector(".quick-stats");
+      quickStats.innerHTML = `
+        <div class="stat-mini">
+          <span class="stat-label">Mean</span>
+          <span class="stat-value">${analyticsData.statistics.mean.toFixed(2)}</span>
+        </div>
+        <div class="stat-mini">
+          <span class="stat-label">Median</span>
+          <span class="stat-value">${analyticsData.statistics.median.toFixed(2)}</span>
+        </div>
+        <div class="stat-mini">
+          <span class="stat-label">Std Dev</span>
+          <span class="stat-value">${analyticsData.statistics.std.toFixed(2)}</span>
+        </div>
+      `;
+
+    } catch (error) {
+      console.error('Error loading column data:', error);
+      chartContainer.innerHTML = originalContent;
+      alert('Failed to load data for selected column. Please try again.');
+    }
+  });
+
+  // Handle delete button
   document.body.addEventListener("click", async (e) => {
     const btn = e.target.closest(".delete-btn");
     if (!btn) return;
@@ -222,6 +426,7 @@
       }
 
       alert("File deleted successfully.");
+      alert("File permanently deleted.");
       btn.closest(".report-card").remove();
       
       if (reportsGrid.children.length === 0) {
@@ -278,6 +483,44 @@
       chartContainer.innerHTML = originalContent;
       alert('Failed to regenerate chart.');
     }
+      // Get currently selected column if available
+      const columnSelector = card.querySelector(".column-select-dropdown");
+      const selectedColumn = columnSelector ? columnSelector.value : null;
+
+      try {
+        const response = await fetch(`${PYTHON_API_URL}/analytics/process`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            filename: report.actualFilename || report.title,
+            chart_type: selectedType,
+            column: selectedColumn
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to regenerate chart');
+        }
+
+        const analyticsData = await response.json();
+        
+        chartContainer.innerHTML = `<img src="${analyticsData.chart_image}" alt="Chart" class="chart-preview-img" />`;
+        
+        report.chartImage = analyticsData.chart_image;
+        report.chartType = selectedType;
+        report.statistics = analyticsData.statistics;
+        report.interpretation = analyticsData.interpretation;
+
+        localStorage.setItem(`chartType_${report.title}`, selectedType);
+
+      } catch (error) {
+        console.error('Error regenerating chart:', error);
+        chartContainer.innerHTML = originalContent;
+        alert('Failed to regenerate chart. Please try again.');
+      }
+    });
   });
 
   // refresh button handler
@@ -294,13 +537,18 @@
     btn.disabled = true;
     btn.innerHTML = '<i class="bi bi-arrow-clockwise spin"></i>';
 
+    const card = btn.closest(".report-card");
+    const columnSelector = card.querySelector(".column-select-dropdown");
+    const selectedColumn = columnSelector ? columnSelector.value : null;
+
     try {
       const response = await fetch(`${PYTHON_API_URL}/analytics/process`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           filename: filename,
-          chart_type: report.chartType
+          chart_type: report.chartType,
+          column: selectedColumn
         })
       });
 
@@ -317,6 +565,8 @@
       const card = btn.closest(".report-card");
       card.querySelector(".chart-container").innerHTML = 
         `<img src="${analyticsData.chart_image}" alt="Chart" class="chart-preview-img" />`;
+      const chartContainer = card.querySelector(".chart-container");
+      chartContainer.innerHTML = `<img src="${analyticsData.chart_image}" alt="Chart" class="chart-preview-img" />`;
 
       card.querySelector(".quick-stats").innerHTML = `
         <div class="stat-mini">
@@ -369,6 +619,7 @@
 
     reportDetails.innerHTML = `
       <h2>${report.title}</h2>
+      <p class="current-column-display"><strong>Currently Analyzing:</strong> ${report.currentColumn}</p>
       
       <div class="chart-full">
         <img src="${report.chartImage}" alt="Full Chart" style="max-width: 100%; height: auto;" />
@@ -396,6 +647,10 @@
           <p><strong>Total Rows:</strong> ${report.fileInfo.total_rows.toLocaleString()}</p>
           <p><strong>Total Columns:</strong> ${report.fileInfo.total_columns}</p>
           <p><strong>Analyzed Column:</strong> ${report.fileInfo.analyzed_column}</p>
+          ${report.fileInfo.available_columns && report.fileInfo.available_columns.length > 1 ? 
+            `<p><strong>Available Data Columns:</strong> ${report.fileInfo.available_columns.map(c => c.display_name).join(', ')}</p>` 
+            : ''}
+          ${report.summary?.is_sampled ? `<p><strong>Note:</strong> Large dataset - showing sample of ${report.summary.original_length.toLocaleString()} records</p>` : ''}
         </div>
       ` : ''}
 
