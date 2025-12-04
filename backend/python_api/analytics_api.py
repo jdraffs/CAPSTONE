@@ -1,4 +1,4 @@
-#analytics_api.py
+#analytics_api.py - Fixed for proper enrollment data structure
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import pandas as pd
@@ -49,7 +49,7 @@ def find_file_with_timestamp(filename):
 
 
 def load_file_data(filename):
-    """Load and parse uploaded file - simplified version"""
+    """Load and parse uploaded file with proper enrollment structure detection"""
     print(f"🔍 Looking for file: {filename}")
     
     actual_filename = find_file_with_timestamp(filename)
@@ -67,200 +67,154 @@ def load_file_data(filename):
     file_ext = os.path.splitext(actual_filename)[1].lower()
     
     try:
-        # Read file based on extension
-        if file_ext == '.csv':
-            df = pd.read_csv(filepath, low_memory=False)
-        elif file_ext in ['.xlsx', '.xls']:
-            # Read first few rows without header to analyze structure
-            df_preview = pd.read_excel(filepath, header=None, nrows=5, engine='openpyxl' if file_ext == '.xlsx' else 'xlrd')
-            
-            # Find which row has the actual column headers
-            # Look for the row with most non-empty text values
-            best_header_row = 0
-            max_text_count = 0
-            
-            for idx in range(min(4, len(df_preview))):
-                row = df_preview.iloc[idx]
-                # Count non-numeric, non-empty cells (likely headers)
-                text_count = sum(1 for val in row if pd.notna(val) and not isinstance(val, (int, float)))
-                if text_count > max_text_count:
-                    max_text_count = text_count
-                    best_header_row = idx
-            
-            print(f"📋 Detected header row at index: {best_header_row}")
-            
-            # Now read the full file with the correct header row
-            df = pd.read_excel(filepath, header=best_header_row, engine='openpyxl' if file_ext == '.xlsx' else 'xlrd')
-            
-            # Clean up column names - remove "Unnamed" and use meaningful names
-            new_columns = []
-            for i, col in enumerate(df.columns):
-                col_str = str(col)
-                if 'Unnamed' in col_str or pd.isna(col):
-                    # Use first non-null value from this column as name, or default
-                    first_val = None
-                    for val in df.iloc[:3, i]:  # Check first 3 rows
-                        if pd.notna(val) and str(val).strip():
-                            first_val = str(val).strip()
-                            break
-                    
-                    if first_val and not first_val.replace('.','').replace('-','').isdigit():
-                        new_columns.append(first_val)
-                    else:
-                        new_columns.append(f"Column_{i+1}")
-                else:
-                    new_columns.append(col_str.strip())
-            
-            df.columns = new_columns
-            print(f"📋 Renamed columns: {df.columns.tolist()}")
-            
-        elif file_ext == '.json':
-            df = pd.read_json(filepath)
-        else:
-            raise ValueError(f"Unsupported file type: {file_ext}")
+        # Read the Excel file without header first to detect structure
+        df_raw = pd.read_excel(filepath, header=None, engine='openpyxl' if file_ext == '.xlsx' else 'xlrd')
         
-        print(f"✅ Successfully loaded file with {len(df)} rows and {len(df.columns)} columns")
+        print(f"📋 Raw file preview:\n{df_raw.head(5)}")
+        
+        # Find the title row (should contain "Statistical Data of Enrollment")
+        title_row = None
+        for idx in range(min(3, len(df_raw))):
+            row_text = ' '.join([str(val) for val in df_raw.iloc[idx] if pd.notna(val)])
+            if 'Statistical Data of Enrollment' in row_text or 'STATISTICAL DATA' in row_text.upper():
+                title_row = idx
+                print(f"📋 Found title at row {idx}")
+                break
+        
+        # Find main headers row (TOTAL ENROLLEES, 1ST YEAR ENROLLED, etc.)
+        main_header_row = None
+        sub_header_row = None
+        
+        for idx in range(title_row + 1 if title_row is not None else 0, min(5, len(df_raw))):
+            row_text = ' '.join([str(val) for val in df_raw.iloc[idx] if pd.notna(val)]).upper()
+            if 'TOTAL ENROLLEES' in row_text or 'ENROLLEES' in row_text:
+                main_header_row = idx
+                sub_header_row = idx + 1
+                print(f"📋 Found main headers at row {idx}")
+                print(f"📋 Sub headers at row {idx + 1}")
+                break
+        
+        if main_header_row is None:
+            raise ValueError("Could not find enrollment data structure headers")
+        
+        # Extract main headers and sub headers
+        main_headers = df_raw.iloc[main_header_row].tolist()
+        sub_headers = df_raw.iloc[sub_header_row].tolist()
+        
+        print(f"📊 Main headers: {main_headers}")
+        print(f"📊 Sub headers: {sub_headers}")
+        
+        # Build proper column names combining main headers and sub headers
+        column_names = ['School Year']  # First column is always School Year
+        column_descriptions = {}
+        current_main = None
+        
+        for i in range(1, len(main_headers)):
+            main_val = str(main_headers[i]).strip() if pd.notna(main_headers[i]) else ''
+            sub_val = str(sub_headers[i]).strip() if pd.notna(sub_headers[i]) else ''
+            
+            # Update current main header if we have a new one
+            if main_val and main_val not in ['nan', '']:
+                current_main = main_val
+            
+            # Create combined column name
+            if current_main and sub_val and sub_val not in ['nan', '']:
+                # Clean up the names
+                main_clean = current_main.replace('\n', ' ').strip()
+                sub_clean = sub_val.replace('\n', ' ').strip().upper()
+                
+                # Format: "Main Header - Sub Header"
+                col_name = f"{main_clean} - {sub_clean}"
+                column_names.append(col_name)
+                column_descriptions[col_name] = col_name
+            else:
+                column_names.append(f"Column_{i}")
+        
+        print(f"✅ Built column names: {column_names}")
+        
+        # Read the actual data starting from the row after sub headers
+        data_start_row = sub_header_row + 1
+        df = pd.read_excel(filepath, header=None, skiprows=data_start_row, 
+                          engine='openpyxl' if file_ext == '.xlsx' else 'xlrd')
+        
+        # Ensure we have the right number of columns
+        if len(df.columns) < len(column_names):
+            column_names = column_names[:len(df.columns)]
+        elif len(df.columns) > len(column_names):
+            for i in range(len(column_names), len(df.columns)):
+                column_names.append(f"Extra_Column_{i}")
+        
+        df.columns = column_names
+        
+        print(f"✅ Data loaded with {len(df)} rows")
         print(f"📊 Columns: {df.columns.tolist()}")
         print(f"📊 First few rows:\n{df.head(3)}")
         
-        # Handle large files
-        original_rows = len(df)
-        if len(df) > 10000:
-            print(f"⚠️ Large file detected ({len(df)} rows). Using first 10,000 rows.")
-            df = df.head(10000)
-        
-        # Find numeric columns and detect enrollment data structure
+        # Find numeric columns (exclude School Year)
         numeric_cols = []
-        column_descriptions = {}  # Store descriptive names for columns
-        enrollment_structure = {
-            'total_1st_sem': None,
-            'total_2nd_sem': None,
-            'first_year_1st_sem': None,
-            'first_year_2nd_sem': None,
-            'old_students_1st_sem': None,
-            'old_students_2nd_sem': None,
-            'not_enrolled_1st_sem': None,
-            'not_enrolled_2nd_sem': None,
-            'dropout_1st_sem': None,
-            'dropout_2nd_sem': None
-        }
-        
-        # Read the actual header row to understand structure better
-        # Look for category headers in the row above
-        df_header_check = pd.read_excel(filepath, header=None, nrows=3, engine='openpyxl' if file_ext == '.xlsx' else 'xlrd')
-        category_row = df_header_check.iloc[1] if len(df_header_check) > 1 else None  # Row with TOTAL ENROLLEES, 1ST YEAR ENROLLED, etc.
-        semester_row = df_header_check.iloc[2] if len(df_header_check) > 2 else None  # Row with 1ST SEM, 2ND SEM
-        
-        for col_idx, col in enumerate(df.columns):
-            # Try to convert column to numeric
+        for col in df.columns[1:]:  # Skip first column (School Year)
             numeric_series = pd.to_numeric(df[col], errors='coerce')
-            # If more than 30% of values are numeric, consider it a numeric column (lowered threshold for sparse data)
             valid_count = numeric_series.notna().sum()
-            if valid_count > len(df) * 0.3:
+            if valid_count > len(df) * 0.3:  # At least 30% valid numeric data
                 numeric_cols.append(col)
                 df[col] = numeric_series
-                
-                # Detect what this column represents based on position and headers
-                descriptive_name = None
-                
-                # Try to get category and semester from header rows
-                if category_row is not None and semester_row is not None:
-                    actual_col_idx = df.columns.tolist().index(col) + 1  # +1 because School Year is column 0
-                    if actual_col_idx < len(category_row):
-                        category = str(category_row.iloc[actual_col_idx]).strip().upper() if pd.notna(category_row.iloc[actual_col_idx]) else ""
-                        semester = str(semester_row.iloc[actual_col_idx]).strip().upper() if pd.notna(semester_row.iloc[actual_col_idx]) else ""
-                        
-                        # Build descriptive name
-                        if "TOTAL" in category and "ENROLLEES" in category:
-                            if "1ST" in semester:
-                                descriptive_name = "Total Enrollees - 1st Semester"
-                                enrollment_structure['total_1st_sem'] = col
-                            elif "2ND" in semester:
-                                descriptive_name = "Total Enrollees - 2nd Semester"
-                                enrollment_structure['total_2nd_sem'] = col
-                        
-                        elif "1ST YEAR" in category or "FIRST YEAR" in category:
-                            if "1ST" in semester:
-                                descriptive_name = "1st Year Enrolled - 1st Semester"
-                                enrollment_structure['first_year_1st_sem'] = col
-                            elif "2ND" in semester:
-                                descriptive_name = "1st Year Enrolled - 2nd Semester"
-                                enrollment_structure['first_year_2nd_sem'] = col
-                        
-                        elif "OLD" in category and "STUDENT" in category:
-                            if "1ST" in semester:
-                                descriptive_name = "Old Students - 1st Semester"
-                                enrollment_structure['old_students_1st_sem'] = col
-                            elif "2ND" in semester:
-                                descriptive_name = "Old Students - 2nd Semester"
-                                enrollment_structure['old_students_2nd_sem'] = col
-                        
-                        elif "NOT" in category and "ENROLLED" in category:
-                            if "1ST" in semester:
-                                descriptive_name = "Not Enrolled - 1st Semester"
-                                enrollment_structure['not_enrolled_1st_sem'] = col
-                            elif "2ND" in semester:
-                                descriptive_name = "Not Enrolled - 2nd Semester"
-                                enrollment_structure['not_enrolled_2nd_sem'] = col
-                        
-                        elif "DROP" in category or "DROPOUT" in category:
-                            if "1ST" in semester:
-                                descriptive_name = "Drop-out Rate - 1st Semester"
-                                enrollment_structure['dropout_1st_sem'] = col
-                            elif "2ND" in semester:
-                                descriptive_name = "Drop-out Rate - 2nd Semester"
-                                enrollment_structure['dropout_2nd_sem'] = col
-                
-                # If we couldn't detect from headers, use column name
-                if not descriptive_name:
-                    col_str = str(col).strip()
-                    if col_str and not col_str.startswith('Column_') and not col_str.startswith('Unnamed'):
-                        descriptive_name = col_str
-                    else:
-                        descriptive_name = f"Data Series {col_idx + 1}"
-                
-                column_descriptions[col] = descriptive_name
         
         if not numeric_cols:
-            print(f"❌ No numeric columns found")
-            print(f"Column types: {df.dtypes.to_dict()}")
-            print(f"Sample data:\n{df.head()}")
-            raise ValueError("No numeric columns found in file. Please ensure your file contains numeric data.")
+            raise ValueError("No numeric columns found in the enrollment data")
         
-        print(f"✅ Found {len(numeric_cols)} numeric columns: {numeric_cols}")
-        print(f"📝 Column descriptions: {column_descriptions}")
-        print(f"📊 Detected enrollment structure: {enrollment_structure}")
+        print(f"✅ Found {len(numeric_cols)} numeric columns")
         
-        # Use first numeric column by default (will be selectable later)
+        # Build enrollment structure mapping
+        enrollment_structure = {}
+        for col in numeric_cols:
+            col_upper = col.upper()
+            if 'TOTAL ENROLLEES' in col_upper:
+                if '1ST SEM' in col_upper:
+                    enrollment_structure['total_1st_sem'] = col
+                elif '2ND SEM' in col_upper:
+                    enrollment_structure['total_2nd_sem'] = col
+            elif '1ST YEAR' in col_upper or 'FIRST YEAR' in col_upper:
+                if '1ST SEM' in col_upper:
+                    enrollment_structure['first_year_1st_sem'] = col
+                elif '2ND SEM' in col_upper:
+                    enrollment_structure['first_year_2nd_sem'] = col
+            elif 'OLD STUDENT' in col_upper:
+                if '1ST SEM' in col_upper:
+                    enrollment_structure['old_students_1st_sem'] = col
+                elif '2ND SEM' in col_upper:
+                    enrollment_structure['old_students_2nd_sem'] = col
+            elif 'NOT ENROLLED' in col_upper:
+                if '1ST SEM' in col_upper:
+                    enrollment_structure['not_enrolled_1st_sem'] = col
+                elif '2ND SEM' in col_upper:
+                    enrollment_structure['not_enrolled_2nd_sem'] = col
+            elif 'DROP' in col_upper:
+                if '1ST SEM' in col_upper:
+                    enrollment_structure['dropout_1st_sem'] = col
+                elif '2ND SEM' in col_upper:
+                    enrollment_structure['dropout_2nd_sem'] = col
+        
+        print(f"📊 Enrollment structure: {enrollment_structure}")
+        
+        # Use first numeric column by default
         column_name_raw = numeric_cols[0]
         column_name = column_descriptions.get(column_name_raw, column_name_raw)
         
-        # Extract data - convert to list and remove NaN
+        # Extract data
         data_series = pd.to_numeric(df[column_name_raw], errors='coerce')
         valid_data = data_series.dropna()
         data = valid_data.tolist()
         
-        print(f"✅ Extracted {len(data)} valid numeric values from column '{column_name}'")
+        # Get School Year labels
+        labels = df.loc[valid_data.index, 'School Year'].astype(str).tolist()
         
-        if len(data) == 0:
-            raise ValueError(f"Column '{column_name}' contains no valid numeric data")
+        print(f"✅ Extracted {len(data)} values from column '{column_name}'")
         
-        # Get labels from first column if it's not numeric
-        first_col = df.columns[0]
-        if first_col not in numeric_cols:
-            # Get labels corresponding to valid data indices
-            labels = df.loc[valid_data.index, first_col].astype(str).tolist()
-        else:
-            labels = [f"Row {i+1}" for i in range(len(data))]
-        
-        print(f"✅ Prepared {len(data)} values with {len(labels)} labels")
-        print(f"📊 Using descriptive column name: '{column_name}'")
-        
-        # Return all available columns for frontend selection
+        # Prepare available columns for selection
         available_columns = [
             {
                 'raw_name': col,
-                'display_name': column_descriptions[col],
+                'display_name': col,
                 'data_count': int(pd.to_numeric(df[col], errors='coerce').notna().sum())
             }
             for col in numeric_cols
@@ -277,9 +231,9 @@ def load_file_data(filename):
             'column_descriptions': column_descriptions,
             'available_columns': available_columns,
             'enrollment_structure': enrollment_structure,
-            'total_rows': original_rows,
+            'total_rows': len(df),
             'processed_rows': len(data),
-            'full_dataframe': df  # Include full dataframe for multi-column analysis
+            'full_dataframe': df
         }
         
     except Exception as e:
@@ -301,7 +255,7 @@ def process_analytics():
         
         filename = data['filename']
         chart_type = data.get('chart_type', 'bar')
-        selected_column = data.get('column', None)  # Allow column selection
+        selected_column = data.get('column', None)
         
         print(f"🔄 Processing: {filename} with chart type: {chart_type}")
         if selected_column:
@@ -320,12 +274,8 @@ def process_analytics():
             data_series = pd.to_numeric(df[selected_column], errors='coerce')
             valid_data = data_series.dropna()
             
-            # Get corresponding labels
-            first_col = df.columns[0]
-            if first_col not in file_data['numeric_columns']:
-                labels = df.loc[valid_data.index, first_col].astype(str).tolist()
-            else:
-                labels = [f"Row {i+1}" for i in range(len(valid_data))]
+            # Get corresponding School Year labels
+            labels = df.loc[valid_data.index, 'School Year'].astype(str).tolist()
             
             # Update file_data with selected column
             file_data['data'] = valid_data.tolist()
@@ -341,7 +291,7 @@ def process_analytics():
         if 'error' in analytics_result:
             return jsonify(analytics_result), 500
         
-        # Add file metadata including all available columns
+        # Add file metadata
         analytics_result['file_info'] = {
             'filename': filename,
             'total_columns': file_data['total_columns'],
@@ -422,7 +372,7 @@ def batch_process_analytics():
 
 @app.route('/api/analytics/files', methods=['GET'])
 def list_available_files():
-    """List all available files in the upload directory"""
+    """List all available files"""
     try:
         if not os.path.exists(UPLOAD_FOLDER):
             return jsonify({
@@ -449,8 +399,8 @@ def health_check():
     """Health check endpoint"""
     return jsonify({
         'status': 'healthy',
-        'service': 'Analytics API',
-        'version': '1.0.0',
+        'service': 'Analytics API - Enrollment Data',
+        'version': '2.0.0',
         'upload_folder': os.path.abspath(UPLOAD_FOLDER),
         'upload_folder_exists': os.path.exists(UPLOAD_FOLDER),
         'available_files': len([f for f in os.listdir(UPLOAD_FOLDER) 
@@ -463,7 +413,7 @@ def health_check():
 def index():
     """Root endpoint"""
     return jsonify({
-        'message': 'Analytics API is running',
+        'message': 'Analytics API for Enrollment Data',
         'endpoints': {
             'health': '/api/health',
             'process': '/api/analytics/process [POST]',
@@ -475,7 +425,7 @@ def index():
 
 if __name__ == '__main__':
     print("=" * 60)
-    print("🚀 Starting Analytics API Server")
+    print("🚀 Starting Analytics API Server - Enrollment Data")
     print("=" * 60)
     print(f"📁 Upload folder: {os.path.abspath(UPLOAD_FOLDER)}")
     print(f"📂 Folder exists: {os.path.exists(UPLOAD_FOLDER)}")
