@@ -17,11 +17,11 @@ const pool = new Pool({
   port: 5432,
 });
 
-// Ensure upload directory exists
+// basta ensure upload directory exists
 const uploadDir = "./public/uploads/fileRepository";
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-// Multer storage setup
+// multer storage setup
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => {
@@ -30,7 +30,7 @@ const storage = multer.diskStorage({
   },
 });
 
-// Only allow certain file types
+// only allow certain file types
 const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
@@ -49,8 +49,8 @@ const upload = multer({
   },
 });
 
-// ---------- Folder Routes ----------
-// Get all folders (or subfolders by parent_id) — updated to support all=true
+// folder routes toh
+// get all folders (or subfolders by parent_id) — updated to support all=true
 router.get("/folders", async (req, res) => {
   try {
     const { parent_id, all } = req.query;
@@ -81,14 +81,14 @@ router.get("/folders", async (req, res) => {
   }
 });
 
-// ---------- File Routes ----------
+// file routes toh
 
-// Upload File
+// upload file
+// MODIFY existing upload file endpoint to log events
 router.post("/upload", upload.single("file"), async (req, res) => {
   try {
     let { folder_id, adminid } = req.body;
     const filePath = `/uploads/fileRepository/${req.file.filename}`;
-
 
     if (folder_id === "null" || folder_id === "" || folder_id === undefined) {
       folder_id = null;
@@ -111,6 +111,21 @@ router.post("/upload", upload.single("file"), async (req, res) => {
       ]
     );
 
+    const fileId = result.rows[0].id;
+
+    // ADDED THIS: Log to dashboard_events
+    await pool.query(
+      `INSERT INTO dashboard_events (event_type, title, details, file_id, meta)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [
+        "repo_file_added",  //changed from "repo_update"
+        "Repository updated",
+        `File added: ${req.file.originalname}`,
+        fileId,
+        JSON.stringify({ adminid, action: "file_added", icon: "folder" })
+      ]
+    );
+
     res.json({ success: true, file: result.rows[0] });
   } catch (err) {
     console.error("Error uploading file:", err);
@@ -118,7 +133,7 @@ router.post("/upload", upload.single("file"), async (req, res) => {
   }
 });
 
-// Get all files in a folder — updated to support all=true
+// get all files in a folder — updated to support all=true
 router.get("/files", async (req, res) => {
   try {
     const { folder_id, all } = req.query;
@@ -148,22 +163,37 @@ router.get("/files", async (req, res) => {
   }
 });
 
-// Delete File
+// delete file
+//MODIFIED existing Delete File endpoint to log events
 router.delete("/files/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
     const result = await pool.query(
-      "SELECT file_path FROM file_repository_files WHERE id = $1",
+      "SELECT file_path, file_name FROM file_repository_files WHERE id = $1",
       [id]
     );
     if (result.rows.length === 0)
       return res.status(404).json({ success: false, message: "File not found" });
 
+    const fileName = result.rows[0].file_name;
     const filePath = `./public${result.rows[0].file_path}`;
     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
 
     await pool.query("DELETE FROM file_repository_files WHERE id = $1", [id]);
+
+    // UPDATED: Used "repo_file_deleted" as event_type
+    await pool.query(
+      `INSERT INTO dashboard_events (event_type, title, details, meta)
+       VALUES ($1, $2, $3, $4)`,
+      [
+        "repo_file_deleted",  // changed from "repo_update"
+        "Repository updated",
+        `File deleted: ${fileName}`,
+        JSON.stringify({ action: "file_deleted", icon: "trash" })
+      ]
+    );
+
     res.json({ success: true, message: "File deleted successfully" });
   } catch (err) {
     console.error("Error deleting file:", err);
@@ -171,7 +201,7 @@ router.delete("/files/:id", async (req, res) => {
   }
 });
 
-// Example route in fileRepositoryRoute.js
+// sample route in fileRepositoryRoute.js
 router.get("/files/data", async (req, res) => {
   try {
     const { id } = req.query;
@@ -184,10 +214,10 @@ router.get("/files/data", async (req, res) => {
     const file = result.rows[0];
     console.log("Fetched file record:", file); // 👈 add this line
 
-    // Use correct full path
+    //correct full path
     const filePath = path.join(process.cwd(), "public", file.file_path.replace(/^\/+/, ""));
 
-    console.log("Resolved file path:", filePath); // 👈 add this too
+    console.log("Resolved file path:", filePath); // add daw this line
 
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ success: false, message: "File not found on disk" });
