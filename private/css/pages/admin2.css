@@ -776,3 +776,10 @@
     font-size: 20px;
   }
 }
+.updates-icon.red {
+  color: #bb1f1f;
+}
+
+.updates-icon.green {
+  color: #10b981;
+}

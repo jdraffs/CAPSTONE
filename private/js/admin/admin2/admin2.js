@@ -1,10 +1,10 @@
 // admin2.js 
-// HELPER: Logout
+// HELPER: logout
 function logout() {
   window.location.href = '/public/index.html'; 
 }
 
-// HELPER: Fetch and update total recent uploads 
+// HELPER: fetch and update total recent uploads 
 async function updateRecentUploadsCount() {
   try {
     const response = await fetch('http://localhost:3000/api/recent-uploads');
@@ -34,10 +34,10 @@ async function loadAnalyticsOverview() {
   }
 
   try {
-    // Show loading state
+    // show loading state
     analyticsContainer.innerHTML = '<div class="analytics-loading"><i class="bi bi-hourglass-split"></i> Loading analytics...</div>';
 
-    // Fetch uploaded files from file repository
+    // fetch uploaded files from file repository
     const response = await fetch("http://localhost:3000/api/files/data");
     const uploadedFiles = await response.json();
 
@@ -46,7 +46,7 @@ async function loadAnalyticsOverview() {
       return;
     }
 
-    // Process analytics for the most recent files (limit to 3 for overview)
+    // process analytics for the most recent files (limit lang to 3 for overview)
     const recentFiles = uploadedFiles.slice(0, 3);
     const analyticsResults = [];
 
@@ -56,7 +56,7 @@ async function loadAnalyticsOverview() {
       const chartType = localStorage.getItem(`chartType_${displayName}`) || 'bar';
 
       try {
-        // Call Python API for analytics processing
+        // call python API for analytics processing
         const analyticsResponse = await fetch(`${PYTHON_API_URL}/analytics/process`, {
           method: 'POST',
           headers: {
@@ -87,7 +87,7 @@ async function loadAnalyticsOverview() {
       }
     }
 
-    // Render analytics overview
+    // render analytics overview
     renderAnalyticsOverview(analyticsResults);
 
   } catch (err) {
@@ -96,7 +96,7 @@ async function loadAnalyticsOverview() {
   }
 }
 
-// HELPER: Render analytics overview cards
+// HELPER: render analytics overview cards
 function renderAnalyticsOverview(analyticsResults) {
   const analyticsContainer = document.getElementById('analyticsOverviewContainer');
   
@@ -105,10 +105,10 @@ function renderAnalyticsOverview(analyticsResults) {
     return;
   }
 
-  // Clear container
+  // clear container
   analyticsContainer.innerHTML = '';
 
-  // Create analytics summary stats at the top
+  // create analytics summary stats at the top
   const totalRecords = analyticsResults.reduce((sum, result) => sum + result.recordsProcessed, 0);
   const avgMean = analyticsResults.reduce((sum, result) => sum + result.statistics.mean, 0) / analyticsResults.length;
 
@@ -139,7 +139,7 @@ function renderAnalyticsOverview(analyticsResults) {
   `;
   analyticsContainer.appendChild(summaryDiv);
 
-  // Create grid for analytics cards
+  // create grid for analytics cards
   const gridDiv = document.createElement('div');
   gridDiv.className = 'analytics-grid';
 
@@ -184,7 +184,7 @@ function renderAnalyticsOverview(analyticsResults) {
 
   analyticsContainer.appendChild(gridDiv);
 
-  // Add "View All Analytics" button
+  // dinagdag yung "view analytics reports" button
   const viewAllBtn = document.createElement('button');
   viewAllBtn.className = 'view-all-analytics-btn';
   viewAllBtn.innerHTML = '<i class="bi bi-arrow-right-circle"></i> View All Analytics Reports';
@@ -194,8 +194,11 @@ function renderAnalyticsOverview(analyticsResults) {
   analyticsContainer.appendChild(viewAllBtn);
 }
 
-// MAIN DOM LOGIC
-document.addEventListener('DOMContentLoaded', () => {
+// MAIN INITIALIZATION - SINGLE DOMContentLoaded
+
+document.addEventListener('DOMContentLoaded', async () => {
+  // PART 1: BASIC UI SETUP
+  
   // NAV HIGHLIGHTING 
   const navItems = document.querySelectorAll('.nav-item');
   const currentPath = window.location.pathname;
@@ -206,13 +209,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!link) return;
     const href = link.getAttribute('href');
 
-    // case 1: links with an actual page
     if (href.endsWith('.html')) {
       const linkFile = href.split('/').pop();
       item.classList.toggle('active', linkFile === currentFile);
-    }
-    // case 2: dashboard or hash links
-    else if (href.startsWith('#') && currentFile === 'admin2.html') {
+    } else if (href.startsWith('#') && currentFile === 'admin2.html') {
       item.classList.toggle('active', href === '#overview');
     }
   });
@@ -260,38 +260,192 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(updateDateTime, 1000);
   updateDateTime();
 
-  // RECENT UPLOADS 
-  updateRecentUploadsCount();
+  // PART 2: RECENT UPDATES SYSTEM
+  
+  const updatesTbody = document.querySelector(".updates-table tbody");
+  const updatesModalBody = document.getElementById("updatesModalTableBody");
+  const viewAllBtn = document.getElementById("viewAllUpdatesBtn");
+  const updatesModal = document.getElementById("updatesModal");
+  const updatesClose = document.querySelector(".updates-close");
 
-  // LOAD ANALYTICS OVERVIEW
-  loadAnalyticsOverview();
-});
-
-// Recent Updates Modal 
-const updatesModal = document.getElementById("updatesModal");
-const viewAllUpdatesBtn = document.getElementById("viewAllUpdatesBtn");
-const closeUpdatesBtn = document.querySelector(".updates-close");
-const updatesModalTableBody = document.getElementById("updatesModalTableBody");
-
-if (viewAllUpdatesBtn) {
-  viewAllUpdatesBtn.addEventListener("click", () => {
-    const tableRows = document.querySelectorAll(".updates-table tbody tr");
-    updatesModalTableBody.innerHTML = "";
-    tableRows.forEach(row => {
-      updatesModalTableBody.innerHTML += row.outerHTML;
-    });
-    updatesModal.style.display = "flex";
-  });
-}
-
-if (closeUpdatesBtn) {
-  closeUpdatesBtn.addEventListener("click", () => {
-    updatesModal.style.display = "none";
-  });
-}
-
-window.addEventListener("click", (e) => {
-  if (e.target === updatesModal) {
-    updatesModal.style.display = "none";
+  // fetch recent events from API
+  async function fetchRecentEvents(limit = 7) {
+    try {
+      const res = await fetch(`http://localhost:3000/api/events/recent?limit=${limit}`);
+      const json = await res.json();
+      return json.success ? json.events : [];
+    } catch (e) {
+      console.error("Failed to load events:", e);
+      return [];
+    }
   }
+
+  // convert timestamp to "time ago" format
+  function timeAgo(timestamp) {
+    const now = new Date();
+    const past = new Date(timestamp);
+    const diffMs = now - past;
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHr = Math.floor(diffMin / 60);
+    const diffDay = Math.floor(diffHr / 24);
+
+    if (diffSec < 60) return `${diffSec} seconds ago`;
+    if (diffMin < 60) return `${diffMin} minute${diffMin > 1 ? 's' : ''} ago`;
+    if (diffHr < 24) return `${diffHr} hour${diffHr > 1 ? 's' : ''} ago`;
+    if (diffDay < 7) return `${diffDay} day${diffDay > 1 ? 's' : ''} ago`;
+    if (diffDay < 30) return `${Math.floor(diffDay / 7)} week${Math.floor(diffDay / 7) > 1 ? 's' : ''} ago`;
+    return past.toLocaleDateString();
+  }
+
+  // get icon HTML based on event type
+function getIconForEventType(type) {
+  const iconMap = {
+    file_upload: '<i class="fa-solid fa-upload updates-icon blue"></i>',
+    report_generated: '<i class="fa-solid fa-chart-line updates-icon purple"></i>',
+    repo_update: '<i class="fa-solid fa-folder updates-icon orange"></i>',
+    
+    // NEW:binago q icons
+    repo_file_added: '<i class="fa-solid fa-folder-plus updates-icon yellow"></i>',
+    repo_file_deleted: '<i class="fa-solid fa-trash updates-icon red"></i>',
+    
+    chart_created: '<i class="fa-solid fa-chart-simple updates-icon green"></i>',
+  };
+  return iconMap[type] || '<i class="fa-solid fa-info-circle updates-icon"></i>';
+}
+
+  // render events in the dashboard table
+  function renderEventsList(events) {
+    if (!updatesTbody) return;
+    
+    updatesTbody.innerHTML = "";
+    
+    if (events.length === 0) {
+      updatesTbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No recent updates</td></tr>';
+      return;
+    }
+
+    events.forEach(event => {
+      const tr = document.createElement("tr");
+      const icon = getIconForEventType(event.event_type);
+      tr.innerHTML = `
+        <td>${icon} ${event.title}</td>
+        <td>${event.details || ""}</td>
+        <td>${timeAgo(event.created_at)}</td>
+      `;
+      updatesTbody.appendChild(tr);
+    });
+  }
+
+  // render all events in modal
+  function renderModalAll(events) {
+    if (!updatesModalBody) return;
+    
+    updatesModalBody.innerHTML = "";
+    
+    if (events.length === 0) {
+      updatesModalBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No updates available</td></tr>';
+      return;
+    }
+
+    events.forEach(event => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${event.title}</td>
+        <td>${event.details || ""}</td>
+        <td>${new Date(event.created_at).toLocaleString()}</td>
+      `;
+      updatesModalBody.appendChild(tr);
+    });
+  }
+
+  // update summary card counts
+  async function updateSummaryCounts() {
+    try {
+      // fetch all events for counting
+      const allEvents = await fetchRecentEvents(1000);
+      
+      // count by type
+      const fileUploads = allEvents.filter(e => e.event_type === "file_upload").length;
+      const reportsGenerated = allEvents.filter(e => e.event_type === "report_generated").length;
+      const repoUpdates = allEvents.filter(e => e.event_type === "repo_update").length;
+
+      // update card values (use data-count to trigger animation)
+      const datasetsCard = document.querySelector(".summary-card.faculty .card-number");
+      const reportsCard = document.querySelector(".summary-card.alumni .card-number");
+      const repoCard = document.querySelector(".summary-card.research .card-number");
+
+      if (datasetsCard) {
+        datasetsCard.setAttribute('data-count', fileUploads);
+        datasetsCard.textContent = '0'; // reset to trigger animation
+      }
+      if (reportsCard) {
+        reportsCard.setAttribute('data-count', reportsGenerated);
+        reportsCard.textContent = '0';
+      }
+      if (repoCard) {
+        repoCard.setAttribute('data-count', repoUpdates);
+        repoCard.textContent = '0';
+      }
+
+      // re-trigger counter animation
+      counters.forEach(counter => {
+        const updateCount = () => {
+          const target = +counter.getAttribute('data-count');
+          const current = +counter.innerText;
+          const increment = Math.ceil(target / 100) || 1;
+          if (current < target) {
+            counter.innerText = Math.min(current + increment, target);
+            setTimeout(updateCount, 20);
+          } else {
+            counter.innerText = target;
+          }
+        };
+        updateCount();
+      });
+
+    } catch (err) {
+      console.error("Failed to update summary counts:", err);
+    }
+  }
+
+  // modal controls
+  if (viewAllBtn) {
+    viewAllBtn.addEventListener("click", () => {
+      if (updatesModal) updatesModal.style.display = "flex";
+    });
+  }
+
+  if (updatesClose) {
+    updatesClose.addEventListener("click", () => {
+      if (updatesModal) updatesModal.style.display = "none";
+    });
+  }
+
+  window.addEventListener("click", (e) => {
+    if (e.target === updatesModal) {
+      updatesModal.style.display = "none";
+    }
+  });
+
+  // PART 3: LOAD ALL DATA
+  
+  // initial load
+  const recentEvents = await fetchRecentEvents(7);
+  const allEvents = await fetchRecentEvents(100);
+  
+  renderEventsList(recentEvents);
+  renderModalAll(allEvents);
+  await updateSummaryCounts();
+
+  // load other dashboard components
+  updateRecentUploadsCount();
+  loadAnalyticsOverview();
+
+  // optional pero auto-refresh every 30 seconds
+  setInterval(async () => {
+    const freshEvents = await fetchRecentEvents(7);
+    renderEventsList(freshEvents);
+    await updateSummaryCounts();
+  }, 30000);
 });
