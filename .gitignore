@@ -20,3 +20,6 @@ backend/package-lock.json
 backend/package.json
 
 README.md
+
+__pycache__/
+*.pyc
