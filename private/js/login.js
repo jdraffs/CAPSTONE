@@ -22,6 +22,8 @@ document.getElementById('admin-login-form').addEventListener('submit', async (e)
         window.location.href = '/private/html/adminPages/adminAve/admin1.html';
       } else if (data.adminid === 'adminEnierga') {
         window.location.href = '/private/html/adminPages/adminEnierga/admin2.html';
+      } else if (data.adminid === 'adminSalao') {
+        window.location.href = '/private/html/adminPages/adminSalao/superAdmin.html';
       } else {
         alert('Unknown admin ID.');
       }
