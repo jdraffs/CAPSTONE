@@ -202,8 +202,18 @@ main {
 .header-right {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 2px;
 }
+
+.profile-button, .notification-button {
+    padding: 12px 15px;
+    border-radius: 100%;
+}
+
+.profile-button:hover, .notification-button:hover {
+  background-color: #e5e5e5;
+}
+
 /* Dashboard Content */
 .dashboard-content {
     padding: 0px 30px;

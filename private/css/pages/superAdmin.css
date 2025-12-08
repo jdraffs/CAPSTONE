@@ -11,16 +11,6 @@
   color: #a91c1c;
 }
 
-.profile-button {
-  padding: 10px;
-  width: 15px;
-  border-radius: 100%;
-}
-
-.profile-button:hover {
-  background-color: #e5e5e5;
-}
-
 /* Profile Dropdown */
 .profile-dropdown {
   position: absolute;
