@@ -146,15 +146,15 @@
                     <section class="quick-actions">
                         <h2>Quick Actions</h2>
                         <div class="actions-grid">
-                            <button class="action-btn" onclick="window.location.href='./dataUploads.html'">
+                            <button class="action-btn" id="quickUploadAction">
                                 <i class="fas fa-plus"></i>
                                 <span>Upload New Data</span>
                             </button>
-                            <button class="action-btn" onclick="window.location.href='./analyticsReport.html'">
+                            <button class="action-btn" id="quickAnalyticsAction">
                                 <i class="fas fa-chart-line"></i>
                                 <span>View Analytics</span>
                             </button>
-                            <button class="action-btn" onclick="window.location.href='./fileRepository.html'">
+                            <button class="action-btn" id="quickRepositoryAction">
                                 <i class="fas fa-folder-open"></i>
                                 <span>Manage Repository</span>
                             </button>
@@ -298,6 +298,90 @@
             </div>
         </div>
     </section>
+
+    <!-- 1. UPLOAD NEW DATA MODAL -->
+<div id="uploadModal" class="quick-modal">
+    <div class="quick-modal-overlay"></div>
+    <div class="quick-modal-content">
+        <div class="quick-modal-header">
+            <h3><i class="fa fa-cloud-upload"></i> Quick Upload</h3>
+            <button class="quick-modal-close">&times;</button>
+        </div>
+        <div class="quick-modal-body">
+            <p>Upload a file directly to your repository</p>
+            
+            <div class="quick-upload-box">
+                <input type="file" id="quickFileInput" accept=".csv,.xlsx,.xls,.json" style="display: none;">
+                <label for="quickFileInput" class="quick-upload-label">
+                    <i class="fa fa-file-arrow-up"></i>
+                    <span>Choose File</span>
+                    <small>CSV, Excel, or JSON</small>
+                </label>
+            </div>
+
+            <div id="quickFileInfo" class="quick-file-info"></div>
+            
+            <div id="quickPreviewArea" class="quick-preview-area" style="display: none;">
+                <h4>Preview (First 5 rows)</h4>
+                <div id="quickTablePreview"></div>
+            </div>
+
+            <button id="quickUploadBtn" class="quick-modal-btn primary" disabled>
+                <i class="fa fa-upload"></i> Upload File
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 2. VIEW ANALYTICS MODAL -->
+<div id="analyticsModal" class="quick-modal">
+    <div class="quick-modal-overlay"></div>
+    <div class="quick-modal-content large">
+        <div class="quick-modal-header">
+            <h3><i class="fa fa-chart-line"></i> Recent Analytics</h3>
+            <button class="quick-modal-close">&times;</button>
+        </div>
+        <div class="quick-modal-body">
+            <p>View and interact with your recent analytics reports</p>
+            
+            <div id="quickAnalyticsContent" class="quick-analytics-grid">
+                <div class="loading-state">
+                    <i class="fa fa-spinner fa-spin"></i>
+                    <p>Loading analytics...</p>
+                </div>
+            </div>
+
+            <button class="quick-modal-btn secondary" onclick="window.location.href='./analyticsReport.html'">
+                <i class="fa fa-arrow-right"></i> View All Analytics
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 3. MANAGE REPOSITORY MODAL -->
+<div id="repositoryModal" class="quick-modal">
+    <div class="quick-modal-overlay"></div>
+    <div class="quick-modal-content large">
+        <div class="quick-modal-header">
+            <h3><i class="fa fa-folder-open"></i> Recent Files</h3>
+            <button class="quick-modal-close">&times;</button>
+        </div>
+        <div class="quick-modal-body">
+            <p>Quick access to your recently uploaded files</p>
+            
+            <div id="quickRepoContent" class="quick-repo-list">
+                <div class="loading-state">
+                    <i class="fa fa-spinner fa-spin"></i>
+                    <p>Loading files...</p>
+                </div>
+            </div>
+
+            <button class="quick-modal-btn secondary" onclick="window.location.href='./fileRepository.html'">
+                <i class="fa fa-arrow-right"></i> Open Full Repository
+            </button>
+        </div>
+    </div>
+</div>
 
 <!-- SCRIPTS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
