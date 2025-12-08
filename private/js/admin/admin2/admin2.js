@@ -449,3 +449,592 @@ function getIconForEventType(type) {
     await updateSummaryCounts();
   }, 30000);
 });
+
+
+// QUICK ACTIONS MODALS FUNCTIONALITY
+
+(function() {
+  // Modal elements
+  const uploadModal = document.getElementById('uploadModal');
+  const analyticsModal = document.getElementById('analyticsModal');
+  const repositoryModal = document.getElementById('repositoryModal');
+
+  // Action buttons
+  const quickUploadAction = document.getElementById('quickUploadAction');
+  const quickAnalyticsAction = document.getElementById('quickAnalyticsAction');
+  const quickRepositoryAction = document.getElementById('quickRepositoryAction');
+
+  // Upload modal elements
+  const quickFileInput = document.getElementById('quickFileInput');
+  const quickFileInfo = document.getElementById('quickFileInfo');
+  const quickPreviewArea = document.getElementById('quickPreviewArea');
+  const quickTablePreview = document.getElementById('quickTablePreview');
+  const quickUploadBtn = document.getElementById('quickUploadBtn');
+
+  let selectedQuickFile = null;
+  let quickFileData = [];
+
+
+  // MODAL OPEN/CLOSE HANDLERS
+  function openModal(modal) {
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal(modal) {
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  // Open modals
+  if (quickUploadAction) {
+    quickUploadAction.addEventListener('click', () => {
+      openModal(uploadModal);
+      resetUploadModal();
+    });
+  }
+
+  if (quickAnalyticsAction) {
+    quickAnalyticsAction.addEventListener('click', () => {
+      openModal(analyticsModal);
+      loadQuickAnalytics();
+    });
+  }
+
+  if (quickRepositoryAction) {
+    quickRepositoryAction.addEventListener('click', () => {
+      openModal(repositoryModal);
+      loadQuickRepository();
+    });
+  }
+
+  // Close modals
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('quick-modal-overlay') || 
+        e.target.classList.contains('quick-modal-close')) {
+      closeModal(uploadModal);
+      closeModal(analyticsModal);
+      closeModal(repositoryModal);
+    }
+  });
+
+  // ESC key to close
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeModal(uploadModal);
+      closeModal(analyticsModal);
+      closeModal(repositoryModal);
+    }
+  });
+
+
+  // 1. UPLOAD MODAL FUNCTIONALITY
+
+  function resetUploadModal() {
+    selectedQuickFile = null;
+    quickFileData = [];
+    quickFileInput.value = '';
+    quickFileInfo.innerHTML = '';
+    quickFileInfo.classList.remove('show', 'error');
+    quickPreviewArea.style.display = 'none';
+    quickTablePreview.innerHTML = '';
+    quickUploadBtn.disabled = true;
+    quickUploadBtn.innerHTML = '<i class="fa fa-upload"></i> Upload File';
+  }
+
+  // File selection
+  if (quickFileInput) {
+    quickFileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      selectedQuickFile = file;
+      const fileSize = (file.size / 1024).toFixed(1);
+      
+      quickFileInfo.innerHTML = `
+        <i class="fa fa-file"></i>
+        <strong>${file.name}</strong> (${fileSize} KB)
+      `;
+      quickFileInfo.classList.add('show');
+      quickFileInfo.classList.remove('error');
+
+      // Parse and preview
+      const fileName = file.name.toLowerCase();
+      
+      try {
+        if (fileName.endsWith('.csv')) {
+          await parseQuickCSV(file);
+        } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+          await parseQuickExcel(file);
+        } else if (fileName.endsWith('.json')) {
+          await parseQuickJSON(file);
+        } else {
+          throw new Error('Unsupported file format');
+        }
+        
+        quickUploadBtn.disabled = false;
+      } catch (err) {
+        quickFileInfo.innerHTML = `
+          <i class="fa fa-exclamation-circle"></i>
+          Error: ${err.message}
+        `;
+        quickFileInfo.classList.add('error');
+        quickUploadBtn.disabled = true;
+      }
+    });
+  }
+
+  // Parse CSV
+  function parseQuickCSV(file) {
+    return new Promise((resolve, reject) => {
+      if (typeof Papa === 'undefined') {
+        reject(new Error('PapaParse library not loaded'));
+        return;
+      }
+
+      Papa.parse(file, {
+        header: true,
+        preview: 5,
+        skipEmptyLines: true,
+        complete: (results) => {
+          if (results.data && results.data.length > 0) {
+            quickFileData = results.data;
+            renderQuickPreview(results.data);
+            resolve();
+          } else {
+            reject(new Error('No data found in CSV'));
+          }
+        },
+        error: (err) => reject(err)
+      });
+    });
+  }
+
+  // Parse Excel
+  function parseQuickExcel(file) {
+    return new Promise((resolve, reject) => {
+      if (typeof XLSX === 'undefined') {
+        reject(new Error('XLSX library not loaded'));
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheet = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheet];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+          
+          if (jsonData.length > 0) {
+            quickFileData = jsonData.slice(0, 5);
+            renderQuickPreview(quickFileData);
+            resolve();
+          } else {
+            reject(new Error('No data found in Excel'));
+          }
+        } catch (err) {
+          reject(err);
+        }
+      };
+      reader.onerror = () => reject(new Error('Error reading Excel file'));
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  // Parse JSON
+  function parseQuickJSON(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          const data = Array.isArray(parsed) ? parsed : [parsed];
+          
+          if (data.length > 0) {
+            quickFileData = data.slice(0, 5);
+            renderQuickPreview(quickFileData);
+            resolve();
+          } else {
+            reject(new Error('No data found in JSON'));
+          }
+        } catch (err) {
+          reject(new Error('Invalid JSON format'));
+        }
+      };
+      reader.onerror = () => reject(new Error('Error reading JSON file'));
+      reader.readAsText(file);
+    });
+  }
+
+  // Render preview table
+  function renderQuickPreview(data) {
+    if (!data || data.length === 0) return;
+
+    const headers = Object.keys(data[0]);
+    const table = document.createElement('table');
+
+    // Header
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    headers.forEach(h => {
+      const th = document.createElement('th');
+      th.textContent = h;
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    // Body (max 5 rows)
+    const tbody = document.createElement('tbody');
+    data.slice(0, 5).forEach(row => {
+      const tr = document.createElement('tr');
+      headers.forEach(h => {
+        const td = document.createElement('td');
+        td.textContent = row[h] ?? '';
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+
+    quickTablePreview.innerHTML = '';
+    quickTablePreview.appendChild(table);
+    quickPreviewArea.style.display = 'block';
+  }
+
+  // Upload file
+  if (quickUploadBtn) {
+    quickUploadBtn.addEventListener('click', async () => {
+      if (!selectedQuickFile) return;
+
+      quickUploadBtn.disabled = true;
+      quickUploadBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Uploading...';
+
+      try {
+        const adminid = localStorage.getItem('adminid') || '1';
+        const formData = new FormData();
+        formData.append('file', selectedQuickFile);
+        formData.append('adminid', adminid);
+        formData.append('folder_id', null);
+
+        const res = await fetch('http://localhost:3000/api/files/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await res.json();
+
+        if (result.success) {
+          quickFileInfo.innerHTML = `
+            <i class="fa fa-check-circle"></i>
+            <strong>${selectedQuickFile.name}</strong> uploaded successfully!
+          `;
+          quickUploadBtn.innerHTML = '<i class="fa fa-check"></i> Uploaded!';
+          quickUploadBtn.style.background = '#10b981';
+
+          // Refresh dashboard counts
+          setTimeout(async () => {
+            await fetchRecentEvents(7);
+            await updateSummaryCounts();
+            
+            setTimeout(() => {
+              closeModal(uploadModal);
+              alert('File uploaded successfully!');
+            }, 1500);
+          }, 1000);
+
+        } else {
+          throw new Error(result.message || 'Upload failed');
+        }
+      } catch (err) {
+        quickFileInfo.innerHTML = `
+          <i class="fa fa-exclamation-circle"></i>
+          Upload failed: ${err.message}
+        `;
+        quickFileInfo.classList.add('error');
+        quickUploadBtn.disabled = false;
+        quickUploadBtn.innerHTML = '<i class="fa fa-upload"></i> Upload File';
+      }
+    });
+  }
+
+
+  // 2. ANALYTICS MODAL FUNCTIONALITY
+
+  async function loadQuickAnalytics() {
+    const container = document.getElementById('quickAnalyticsContent');
+    const PYTHON_API_URL = 'http://localhost:5000/api';
+
+    container.innerHTML = '<div class="loading-state"><i class="fa fa-spinner fa-spin"></i><p>Loading analytics...</p></div>';
+
+    try {
+      // Fetch recent files
+      const response = await fetch('http://localhost:3000/api/files/data');
+      const files = await response.json();
+
+      if (!files || files.length === 0) {
+        container.innerHTML = '<div class="loading-state"><i class="fa fa-inbox"></i><p>No analytics available yet.</p></div>';
+        return;
+      }
+
+      // Get last 3 files for preview
+      const recentFiles = files.slice(0, 3);
+      const analyticsCards = [];
+
+      for (let file of recentFiles) {
+        const actualFilename = file.file_name || file.filename;
+        const displayName = file.file_name || file.filename;
+        const chartType = localStorage.getItem(`chartType_${displayName}`) || 'bar';
+
+        try {
+          const analyticsResponse = await fetch(`${PYTHON_API_URL}/analytics/process`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              filename: actualFilename,
+              chart_type: chartType
+            })
+          });
+
+          if (!analyticsResponse.ok) continue;
+
+          const analyticsData = await analyticsResponse.json();
+
+          analyticsCards.push({
+            id: file.id,
+            filename: actualFilename,
+            displayName: displayName,
+            chartType: chartType,
+            chartImage: analyticsData.chart_image,
+            statistics: analyticsData.statistics
+          });
+
+        } catch (err) {
+          console.error(`Error processing ${actualFilename}:`, err);
+        }
+      }
+
+      // Render analytics cards
+      if (analyticsCards.length === 0) {
+        container.innerHTML = '<div class="loading-state"><i class="fa fa-exclamation-triangle"></i><p>Failed to load analytics.</p></div>';
+        return;
+      }
+
+      container.innerHTML = '';
+
+      analyticsCards.forEach(card => {
+        const cardEl = document.createElement('div');
+        cardEl.className = 'quick-analytics-card';
+        cardEl.innerHTML = `
+          <h4><i class="fa fa-chart-bar"></i> ${card.displayName}</h4>
+          
+          <div class="chart-preview">
+            <img src="${card.chartImage}" alt="Chart">
+          </div>
+
+          <div class="chart-controls">
+            <select class="quick-chart-type" data-id="${card.id}" data-filename="${card.filename}">
+              <option value="bar" ${card.chartType === 'bar' ? 'selected' : ''}>Bar</option>
+              <option value="line" ${card.chartType === 'line' ? 'selected' : ''}>Line</option>
+              <option value="pie" ${card.chartType === 'pie' ? 'selected' : ''}>Pie</option>
+              <option value="histogram" ${card.chartType === 'histogram' ? 'selected' : ''}>Histogram</option>
+            </select>
+          </div>
+
+          <div class="stats-mini">
+            <div class="stat">
+              <span class="stat-label">Mean</span>
+              <span class="stat-value">${card.statistics.mean.toFixed(2)}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Median</span>
+              <span class="stat-value">${card.statistics.median.toFixed(2)}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Std Dev</span>
+              <span class="stat-value">${card.statistics.std.toFixed(2)}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Count</span>
+              <span class="stat-value">${card.statistics.count}</span>
+            </div>
+          </div>
+        `;
+        container.appendChild(cardEl);
+      });
+
+      // Handle chart type changes
+      document.querySelectorAll('.quick-chart-type').forEach(select => {
+        select.addEventListener('change', async (e) => {
+          const filename = e.target.dataset.filename;
+          const newType = e.target.value;
+          const card = e.target.closest('.quick-analytics-card');
+          const chartPreview = card.querySelector('.chart-preview');
+
+          chartPreview.innerHTML = '<i class="fa fa-spinner fa-spin" style="font-size: 32px; color: #a91c1c;"></i>';
+
+          try {
+            const response = await fetch(`${PYTHON_API_URL}/analytics/process`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ filename, chart_type: newType })
+            });
+
+            if (!response.ok) throw new Error('Failed to regenerate');
+
+            const data = await response.json();
+            chartPreview.innerHTML = `<img src="${data.chart_image}" alt="Chart">`;
+
+            // Update stats
+            const statsMini = card.querySelector('.stats-mini');
+            statsMini.innerHTML = `
+              <div class="stat">
+                <span class="stat-label">Mean</span>
+                <span class="stat-value">${data.statistics.mean.toFixed(2)}</span>
+              </div>
+              <div class="stat">
+                <span class="stat-label">Median</span>
+                <span class="stat-value">${data.statistics.median.toFixed(2)}</span>
+              </div>
+              <div class="stat">
+                <span class="stat-label">Std Dev</span>
+                <span class="stat-value">${data.statistics.std.toFixed(2)}</span>
+              </div>
+              <div class="stat">
+                <span class="stat-label">Count</span>
+                <span class="stat-value">${data.statistics.count}</span>
+              </div>
+            `;
+
+            localStorage.setItem(`chartType_${filename}`, newType);
+
+          } catch (err) {
+            chartPreview.innerHTML = '<p style="color: #ef4444;">Failed to regenerate chart</p>';
+          }
+        });
+      });
+
+    } catch (err) {
+      console.error('Error loading quick analytics:', err);
+      container.innerHTML = '<div class="loading-state"><i class="fa fa-exclamation-triangle"></i><p>Error loading analytics.</p></div>';
+    }
+  }
+
+
+  // 3. REPOSITORY MODAL FUNCTIONALITY
+  async function loadQuickRepository() {
+    const container = document.getElementById('quickRepoContent');
+
+    container.innerHTML = '<div class="loading-state"><i class="fa fa-spinner fa-spin"></i><p>Loading files...</p></div>';
+
+    try {
+      const response = await fetch('http://localhost:3000/api/files/files?all=true');
+      const result = await response.json();
+
+      if (!result.success || !result.files || result.files.length === 0) {
+        container.innerHTML = '<div class="loading-state"><i class="fa fa-inbox"></i><p>No files in repository.</p></div>';
+        return;
+      }
+
+      // Get last 5 files
+      const recentFiles = result.files.slice(0, 5);
+
+      container.innerHTML = '';
+
+      recentFiles.forEach(file => {
+        const fileEl = document.createElement('div');
+        fileEl.className = 'quick-repo-item';
+        
+        const fileExt = file.file_name ? file.file_name.split('.').pop().toUpperCase() : 'FILE';
+        const uploadDate = new Date(file.created_at).toLocaleDateString();
+
+        fileEl.innerHTML = `
+          <div class="file-icon">
+            <i class="fa fa-file-${getFileIconType(file.file_name)}"></i>
+          </div>
+          <div class="file-info">
+            <div class="file-name">${file.file_name || 'Unknown'}</div>
+            <div class="file-meta">${fileExt} • ${uploadDate}</div>
+          </div>
+          <div class="file-actions">
+            <button class="action-icon-btn" title="Download" onclick="window.downloadQuickFile('${file.file_path}', '${file.file_name}')">
+              <i class="fa fa-download"></i>
+            </button>
+            <button class="action-icon-btn" title="Open in new tab" onclick="window.open('${file.file_path}', '_blank')">
+              <i class="fa fa-external-link-alt"></i>
+            </button>
+            <button class="action-icon-btn" title="Delete" onclick="window.deleteQuickFile(${file.id}, this)">
+              <i class="fa fa-trash"></i>
+            </button>
+          </div>
+        `;
+        container.appendChild(fileEl);
+      });
+
+    } catch (err) {
+      console.error('Error loading repository:', err);
+      container.innerHTML = '<div class="loading-state"><i class="fa fa-exclamation-triangle"></i><p>Error loading files.</p></div>';
+    }
+  }
+
+  function getFileIconType(filename) {
+    if (!filename) return 'alt';
+    const ext = filename.split('.').pop().toLowerCase();
+    const iconMap = {
+      'csv': 'csv',
+      'xlsx': 'excel',
+      'xls': 'excel',
+      'json': 'code',
+      'pdf': 'pdf',
+      'doc': 'word',
+      'docx': 'word'
+    };
+    return iconMap[ext] || 'alt';
+  }
+
+  // Global functions for repository actions
+  window.downloadQuickFile = function(filePath, fileName) {
+    const link = document.createElement('a');
+    link.href = filePath;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  window.deleteQuickFile = async function(fileId, btnElement) {
+    if (!confirm('Are you sure you want to delete this file?')) return;
+
+    btnElement.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+    btnElement.disabled = true;
+
+    try {
+      const response = await fetch(`http://localhost:3000/api/files/files/${fileId}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) throw new Error('Delete failed');
+
+      // Remove from UI
+      btnElement.closest('.quick-repo-item').remove();
+
+      // Refresh dashboard
+      await fetchRecentEvents(7);
+      await updateSummaryCounts();
+
+      // Show success
+      const container = document.getElementById('quickRepoContent');
+      if (container.children.length === 0) {
+        container.innerHTML = '<div class="loading-state"><i class="fa fa-inbox"></i><p>No files in repository.</p></div>';
+      }
+
+    } catch (err) {
+      alert('Failed to delete file: ' + err.message);
+      btnElement.innerHTML = '<i class="fa fa-trash"></i>';
+      btnElement.disabled = false;
+    }
+  };
+
+})();
