@@ -1,8 +1,13 @@
+// formsrepositoryRoute.js - CLEANED VERSION
+// Assumptions:
+// 1) Files must ALWAYS belong to a folder (no root files)
+// 2) Root folders are identified by parent_id IS NULL
+// 3) Remove unnecessary NULL/undefined handling and noisy logs
+
 import express from "express";
 import multer from "multer";
 import pkg from "pg";
 import fs from "fs";
-import path from "path";
 
 const router = express.Router();
 const { Pool } = pkg;
@@ -23,112 +28,140 @@ if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 // Multer storage setup
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const uniqueName = Date.now() + "-" + file.originalname;
-    cb(null, uniqueName);
-  },
+  filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
 });
 
-// Only allow certain file types
 const upload = multer({
   storage,
-  fileFilter: (req, file, cb) => {
-    const allowed = [
-      "application/pdf",
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "image/jpeg",
-      "image/png",
-      "video/mp4",
-    ];
-    if (allowed.includes(file.mimetype)) cb(null, true);
-    else cb(new Error("Invalid file type"));
-  },
+  limits: { fileSize: 50 * 1024 * 1024 },
 });
+
+const ADMIN_ID = "adminave";
 
 // ---------- Folder Routes ----------
 
 // Create Folder
 router.post("/folders", async (req, res) => {
   try {
-    const { name, parent_id, adminid } = req.body;
+    const { name, parent_id } = req.body;
+
     const result = await pool.query(
       `INSERT INTO forms_repository_folders (name, parent_id, adminid)
        VALUES ($1, $2, $3)
        RETURNING *`,
-      [name, parent_id || null, adminid]
+      [name, parent_id ?? null, ADMIN_ID]
     );
+
     res.json({ success: true, folder: result.rows[0] });
   } catch (err) {
-    console.error("Error creating folder:", err);
-    res.status(500).json({ success: false, message: "Failed to create folder" });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// Get all folders (or subfolders by parent_id)
+// Get Folders
 router.get("/folders", async (req, res) => {
   try {
     const { parent_id } = req.query;
-    const query = parent_id
-      ? "SELECT * FROM forms_repository_folders WHERE parent_id = $1 ORDER BY created_at DESC"
-      : "SELECT * FROM forms_repository_folders WHERE parent_id IS NULL ORDER BY created_at DESC";
-    const result = await pool.query(query, parent_id ? [parent_id] : []);
+
+    let query = `SELECT * FROM forms_repository_folders WHERE adminid = $1`;
+    const params = [ADMIN_ID];
+
+    if (parent_id !== undefined) {
+      if (parent_id === "null") {
+        query += " AND parent_id IS NULL";
+      } else {
+        query += " AND parent_id = $2";
+        params.push(parseInt(parent_id));
+      }
+    }
+
+    query += " ORDER BY id DESC";
+
+    const result = await pool.query(query, params);
     res.json({ success: true, folders: result.rows });
   } catch (err) {
-    console.error("Error fetching folders:", err);
-    res.status(500).json({ success: false, message: "Failed to fetch folders" });
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Delete Folder (block root folders)
+router.delete("/folders/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const check = await pool.query(
+      "SELECT parent_id, name FROM forms_repository_folders WHERE id = $1",
+      [id]
+    );
+
+    if (!check.rows.length) {
+      return res.status(404).json({ success: false, message: "Folder not found" });
+    }
+
+    if (check.rows[0].parent_id === null) {
+      return res.status(403).json({ success: false, message: "Root folders cannot be deleted" });
+    }
+
+    await pool.query("DELETE FROM forms_repository_folders WHERE id = $1", [id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
 // ---------- File Routes ----------
-// Upload File
+
+// Upload File (folder_id REQUIRED)
 router.post("/files", upload.single("file"), async (req, res) => {
   try {
-    let { folder_id, adminid } = req.body;
-    const filePath = `/uploads/forms_repository/${req.file.filename}`;
+    const { folder_id } = req.body;
 
-    // Convert "null" or empty folder_id to actual null
-    if (folder_id === "null" || folder_id === "" || folder_id === undefined) {
-      folder_id = null;
-    } else {
-      folder_id = parseInt(folder_id); // ensure it's a number
+    if (!folder_id) {
+      return res.status(400).json({ success: false, message: "folder_id is required" });
     }
 
+    const filePath = `/uploads/forms_repository/${req.file.filename}`;
+
     const result = await pool.query(
-      `INSERT INTO forms_repository_files 
+      `INSERT INTO forms_repository_files
        (folder_id, file_name, file_path, file_type, file_size, adminid)
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
       [
-        folder_id,
+        parseInt(folder_id),
         req.file.originalname,
         filePath,
         req.file.mimetype,
         req.file.size,
-        adminid,
+        ADMIN_ID,
       ]
     );
 
     res.json({ success: true, file: result.rows[0] });
   } catch (err) {
-    console.error("Error uploading file:", err);
-    res.status(500).json({ success: false, message: "File upload failed" });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
-
-// Get all files in a folder
+// Get Files (folder_id REQUIRED)
 router.get("/files", async (req, res) => {
   try {
     const { folder_id } = req.query;
-    const query = folder_id
-      ? "SELECT * FROM forms_repository_files WHERE folder_id = $1 ORDER BY created_at DESC"
-      : "SELECT * FROM forms_repository_files WHERE folder_id IS NULL ORDER BY created_at DESC";
-    const result = await pool.query(query, folder_id ? [folder_id] : []);
+
+    if (!folder_id) {
+      return res.status(400).json({ success: false, message: "folder_id is required" });
+    }
+
+    const result = await pool.query(
+      `SELECT * FROM forms_repository_files
+       WHERE adminid = $1 AND folder_id = $2
+       ORDER BY id DESC`,
+      [ADMIN_ID, parseInt(folder_id)]
+    );
+
     res.json({ success: true, files: result.rows });
   } catch (err) {
-    console.error("Error fetching files:", err);
-    res.status(500).json({ success: false, message: "Failed to fetch files" });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
@@ -141,39 +174,18 @@ router.delete("/files/:id", async (req, res) => {
       "SELECT file_path FROM forms_repository_files WHERE id = $1",
       [id]
     );
-    if (result.rows.length === 0)
+
+    if (!result.rows.length) {
       return res.status(404).json({ success: false, message: "File not found" });
+    }
 
     const filePath = `./public${result.rows[0].file_path}`;
     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
 
     await pool.query("DELETE FROM forms_repository_files WHERE id = $1", [id]);
-    res.json({ success: true, message: "File deleted successfully" });
+    res.json({ success: true });
   } catch (err) {
-    console.error("Error deleting file:", err);
-    res.status(500).json({ success: false, message: "Failed to delete file" });
-  }
-});
-
-// DELETE folder
-router.delete("/folders/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    // Delete the folder (and cascade deletes files)
-    const result = await pool.query(
-      "DELETE FROM forms_repository_folders WHERE id = $1 RETURNING *",
-      [id]
-    );
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({ success: false, message: "Folder not found" });
-    }
-
-    res.json({ success: true, message: "Folder deleted successfully" });
-  } catch (err) {
-    console.error("Error deleting folder:", err);
-    res.status(500).json({ success: false, message: "Failed to delete folder" });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
