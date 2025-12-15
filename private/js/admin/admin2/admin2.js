@@ -224,21 +224,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // COUNTERS 
-  const counters = document.querySelectorAll('.card-number');
-  counters.forEach(counter => {
-    const updateCount = () => {
-      const target = +counter.getAttribute('data-count');
-      const current = +counter.innerText;
-      const increment = Math.ceil(target / 100);
-      if (current < target) {
-        counter.innerText = Math.min(current + increment, target);
-        setTimeout(updateCount, 20);
-      } else {
-        counter.innerText = target;
-      }
-    };
-    updateCount();
-  });
+
 
   // DATE/TIME 
   function updateDateTime() {
@@ -360,54 +346,70 @@ function getIconForEventType(type) {
   }
 
   // update summary card counts
-  async function updateSummaryCounts() {
-    try {
-      // fetch all events for counting
-      const allEvents = await fetchRecentEvents(1000);
-      
-      // count by type
-      const fileUploads = allEvents.filter(e => e.event_type === "file_upload").length;
-      const reportsGenerated = allEvents.filter(e => e.event_type === "report_generated").length;
-      const repoUpdates = allEvents.filter(e => e.event_type === "repo_update").length;
+// admin2.js - REPLACE the updateSummaryCounts function
 
-      // update card values (use data-count to trigger animation)
-      const datasetsCard = document.querySelector(".summary-card.faculty .card-number");
-      const reportsCard = document.querySelector(".summary-card.alumni .card-number");
-      const repoCard = document.querySelector(".summary-card.research .card-number");
+// Update summary card counts with real data
+async function updateSummaryCounts() {
+  try {
+    // Fetch stats from backend
+    const response = await fetch('http://localhost:3000/api/dashboard/stats');
+    const result = await response.json();
 
-      if (datasetsCard) {
-        datasetsCard.setAttribute('data-count', fileUploads);
-        datasetsCard.textContent = '0'; // reset to trigger animation
+    if (result.success) {
+      const stats = result.stats;
+
+      // Update Card 1: Total Updates
+      const updatesCard = document.getElementById('totalUpdatesCount');
+      if (updatesCard) {
+        animateCount(updatesCard, parseInt(updatesCard.textContent) || 0, stats.totalUpdates);
       }
+
+      // Update Card 2: Reports Generated
+      const reportsCard = document.getElementById('totalReportsCount');
       if (reportsCard) {
-        reportsCard.setAttribute('data-count', reportsGenerated);
-        reportsCard.textContent = '0';
+        animateCount(reportsCard, parseInt(reportsCard.textContent) || 0, stats.totalReports);
       }
+
+      // Update Card 3: Repository Items
+      const repoCard = document.getElementById('totalRepoItemsCount');
       if (repoCard) {
-        repoCard.setAttribute('data-count', repoUpdates);
-        repoCard.textContent = '0';
+        animateCount(repoCard, parseInt(repoCard.textContent) || 0, stats.totalRepoItems);
       }
 
-      // re-trigger counter animation
-      counters.forEach(counter => {
-        const updateCount = () => {
-          const target = +counter.getAttribute('data-count');
-          const current = +counter.innerText;
-          const increment = Math.ceil(target / 100) || 1;
-          if (current < target) {
-            counter.innerText = Math.min(current + increment, target);
-            setTimeout(updateCount, 20);
-          } else {
-            counter.innerText = target;
-          }
-        };
-        updateCount();
-      });
+      console.log('✅ Dashboard stats updated:', stats);
+    } else {
+      console.error('Failed to fetch dashboard stats');
+    }
+  } catch (err) {
+    console.error('Error updating summary counts:', err);
+  }
+}
 
-    } catch (err) {
-      console.error("Failed to update summary counts:", err);
+// Animate count from current value to target value
+function animateCount(element, start, end) {
+  const duration = 1000; // 1 second
+  const startTime = performance.now();
+  const difference = end - start;
+
+  function update(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    
+    // Easing function for smooth animation
+    const easeOutQuad = progress * (2 - progress);
+    const current = Math.floor(start + (difference * easeOutQuad));
+    
+    element.textContent = current;
+    
+    if (progress < 1) {
+      requestAnimationFrame(update);
+    } else {
+      element.textContent = end; // Ensure we end at exact value
     }
   }
+  
+  requestAnimationFrame(update);
+}
 
   // modal controls
   if (viewAllBtn) {
