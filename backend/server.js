@@ -23,6 +23,7 @@ import formsrepositoryRoute from './routes/formsrepositoryRoute.js';
 import fileRepositoryRoute from "./routes/fileRepositoryRoute.js";
 import dataUploadsRoute from "./routes/dataUploadsRoute.js";
 import eventsRoute from "./routes/eventsRoute.js";
+import dashboardStatsRoute from "./routes/dashboardStatsRoute.js";
 
 // initialize 
 dotenv.config();
@@ -50,6 +51,7 @@ app.use('/api/forms', formsrepositoryRoute);
 app.use("/uploads", express.static("uploads")); // serve uploaded files
 app.use("/api", dataUploadsRoute);
 app.use("/api", eventsRoute);
+app.use("/api", dashboardStatsRoute);
 
 
 

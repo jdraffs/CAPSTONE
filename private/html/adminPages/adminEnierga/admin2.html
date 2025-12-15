@@ -108,58 +108,42 @@
                     <h1> Welcome, Admin! </h1>
                     <p id="datetime" class="datetime"></p>
                     <!-- Summary Cards-->
-                    <section class="summary-cards">
-                        <div class="card-grid">
-                            <div class="summary-card faculty">
-                                <div class="card-icon faculty">
-                                    <i class="fas fa-file"></i>
+                        <section class="summary-cards">
+                            <div class="card-grid">
+                                <!-- Card 1: Total Updates -->
+                                <div class="summary-card faculty">
+                                    <div class="card-icon faculty">
+                                        <i class="fas fa-bell"></i>
+                                    </div>
+                                    <div class="card-content">
+                                        <h3 class="card-number" id="totalUpdatesCount">0</h3>
+                                        <p class="card-label">Recent System Updates</p>
+                                    </div>
                                 </div>
-                                <div class="card-content">
-                                    <h3 class="card-number" data-count="12">0</h3>
-                                    <p class="card-label">Total Datasets Uploaded</p>
+
+                                <!-- Card 2: Reports Generated -->
+                                <div class="summary-card alumni">
+                                    <div class="card-icon alumni">
+                                        <i class="fas fa-chart-line"></i>
+                                    </div>
+                                    <div class="card-content">
+                                        <h3 class="card-number" id="totalReportsCount">0</h3>
+                                        <p class="card-label">Reports Generated</p>
+                                    </div>
+                                </div>
+
+                                <!-- Card 3: Repository Items -->
+                                <div class="summary-card research">
+                                    <div class="card-icon research">
+                                        <i class="fas fa-folder-open"></i>
+                                    </div>
+                                    <div class="card-content research">
+                                        <h3 class="card-number" id="totalRepoItemsCount">0</h3>
+                                        <p class="card-label">Repository Items</p>
+                                    </div>
                                 </div>
                             </div>
-
-                            <div class="summary-card alumni">
-                                <div class="card-icon alumni">
-                                    <i class="fas fa-chart-line"></i>
-                                </div>
-                                <div class="card-content">
-                                    <h3 class="card-number" id="recentUploadsCount"></h3>
-                                    <p class="card-label">Reports Generated</p>
-                                </div>
-                            </div>
-
-                            <div class="summary-card research">
-                                <div class="card-icon research">
-                                    <i class="fas fa-folder-open"></i>
-                                </div>
-                                <div class="card-content research">
-                                    <h3 class="card-number" data-count="2">0</h3>
-                                    <p class="card-label">Repository Items</p>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Quick Actions -->
-                    <section class="quick-actions">
-                        <h2>Quick Actions</h2>
-                        <div class="actions-grid">
-                            <button class="action-btn" id="quickUploadAction">
-                                <i class="fas fa-plus"></i>
-                                <span>Upload New Data</span>
-                            </button>
-                            <button class="action-btn" id="quickAnalyticsAction">
-                                <i class="fas fa-chart-line"></i>
-                                <span>View Analytics</span>
-                            </button>
-                            <button class="action-btn" id="quickRepositoryAction">
-                                <i class="fas fa-folder-open"></i>
-                                <span>Manage Repository</span>
-                            </button>
-                        </div>
-                    </section>
+                        </section>
 
                     <!-- recent updates table -->
                     <section class="updates-section">
