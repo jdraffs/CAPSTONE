@@ -11,8 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-        <!--SIDEBAR-->
-    <section class="sidebar">
+        <section class="sidebar">
         <div class="logo">
             <img class="logoimage" src="/public/assets/images/PUPLogo.webp" alt="PUP Logo">
             <div class="logotitlewrap">
@@ -84,10 +83,7 @@
                     </li>
                 </ul>
             </div>
-            </div> <!-- End of sidebar-scroll -->
-
-
-            <div class="sidebar-footer">
+            </div> <div class="sidebar-footer">
                 <div class="user-info">
                     <div class="user-avatar">
                         <i class="fas fa-user-circle"></i>
@@ -100,9 +96,7 @@
         </nav>
     </section>
 
-        <!--MAIN CONTENT-->
-    <main class="main">
-        <!--TOP-->
+        <main class="main">
         <header class="dashboard-header">
             <div class="header-left">
                 <h1 class="page-title" id="pageTitle">NSTP</h1>
@@ -120,7 +114,6 @@
                 </div>
             </div>
         </header>
-            <!--DASHBOARD CONTENT-->
             <div class="main-content" id="mainContent">
                 
                 <div class="post-container">
@@ -130,20 +123,16 @@
                         </div>
                     </div>
 
-                    <!-- Post Button -->
                     <button class="post-btn" id="openPostModal">
                         <i class="fa-solid fa-plus"></i> Post
                     </button>
 
-                    <!-- Post Modal -->
                     <div class="post-modal" id="postModal">
                     <div class="post-modal-content">
                         <h2>Create a Post</h2>
 
-                        <!-- Title Input -->
                         <input type="text" id="postTitle" placeholder="Enter title..." class="post-title" />
 
-                        <!-- Toolbar -->
                         <div class="post-toolbar">
                         <button data-command="bold"><i class="fa-solid fa-bold"></i></button>
                         <button data-command="italic"><i class="fa-solid fa-italic"></i></button>
@@ -157,17 +146,16 @@
                         </select>
                         </div>
 
-                        <!-- Rich Text Area -->
                         <div id="postText" class="post-editor" contenteditable="true" placeholder="Write your post..."></div>
 
-                        <!-- File Upload -->
-                        <div class="post-upload">
-                        <label for="fileUpload"><i class="fa-solid fa-paperclip"></i> Attach file</label>
-                        <input type="file" id="fileUpload" style="display:none" />
-                        <span id="fileName"></span>
+                        <div class="file-upload-section">
+                          <label for="fileUpload" class="file-upload-label">
+                            <i class="fa fa-paperclip"></i> Attach Files (Max 3)
+                          </label>
+                          <input type="file" id="fileUpload" multiple accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.webp,.txt">
+                          <div id="fileList" class="file-list"></div>
                         </div>
 
-                        <!-- Buttons -->
                         <div class="post-modal-actions">
                         <button id="cancelPost">Cancel</button>
                         <button id="submitPost">Post</button>
@@ -179,8 +167,7 @@
 
             </div>
     </main>
-    <!-- SCRIPTS -->
-<script src="/private/js/admin/admin1/admin1.js"></script>
+    <script src="/private/js/admin/admin1/admin1.js"></script>
 <script src="/private/js/admin/admin1/nstp.js"></script>
 </body>
 </html>
