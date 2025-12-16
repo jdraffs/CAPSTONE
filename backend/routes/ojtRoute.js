@@ -1,3 +1,4 @@
+// ojtRoute.js - Enhanced with multi-file upload
 import express from 'express';
 import multer from 'multer';
 import pkg from 'pg';
@@ -17,10 +18,10 @@ const pool = new Pool({
 });
 
 // Ensure upload directory exists
-const uploadDir = './public/uploads/ojt';
+const uploadDir = './public/uploads/forms_repository';
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-// Multer storage setup
+// Multer storage setup - store in forms_repository folder
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => {
@@ -28,101 +29,253 @@ const storage = multer.diskStorage({
     cb(null, uniqueName);
   }
 });
-const upload = multer({ storage });
 
-// CREATE POST
-router.post('/create', upload.single('image'), async (req, res) => {
-  try {
-    const { title, content, adminid } = req.body;
-    const imagePath = req.file ? `/uploads/ojt/${req.file.filename}` : null;
-
-    const query = `
-      INSERT INTO ojt_posts (title, content, image_path, adminid)
-      VALUES ($1, $2, $3, $4)
-      RETURNING *;
-    `;
-    const values = [title, content, imagePath, adminid];
-    const result = await pool.query(query, values);
-
-    res.json({ success: true, post: result.rows[0] });
-  } catch (err) {
-    console.error('Error inserting post:', err);
-    res.status(500).json({ success: false, message: 'Database insert failed' });
+const upload = multer({ 
+  storage,
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-powerpoint',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'text/plain'
+    ];
+    
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only documents, images, and spreadsheets are allowed.'));
+    }
   }
 });
 
-// FETCH ALL POSTS
+// Helper function to get or create OJT folder in forms repository
+async function getOJTFolderId(adminid) {
+  const checkFolder = await pool.query(
+    'SELECT id FROM forms_repository_folders WHERE name = $1 AND adminid = $2 AND parent_id IS NULL',
+    ['OJT', adminid]
+  );
+
+  if (checkFolder.rows.length > 0) {
+    return checkFolder.rows[0].id;
+  }
+
+  const createFolder = await pool.query(
+    'INSERT INTO forms_repository_folders (name, adminid, parent_id) VALUES ($1, $2, NULL) RETURNING id',
+    ['OJT', adminid]
+  );
+
+  return createFolder.rows[0].id;
+}
+
+// Helper function to save file to forms_repository_files table
+async function saveFileToRepository(folderId, file, adminid) {
+  const filePath = `/uploads/forms_repository/${file.filename}`;
+  
+  const result = await pool.query(
+    `INSERT INTO forms_repository_files 
+     (folder_id, file_name, file_path, file_type, file_size, adminid)
+     VALUES ($1, $2, $3, $4, $5, $6)
+     RETURNING *`,
+    [folderId, file.originalname, filePath, file.mimetype, file.size, adminid]
+  );
+
+  return result.rows[0];
+}
+
+// CREATE OJT POST (supports up to 3 files)
+router.post('/create', upload.array('files', 3), async (req, res) => {
+  const client = await pool.connect();
+  
+  try {
+    await client.query('BEGIN');
+
+    const { title, content, adminid } = req.body;
+
+    const postQuery = `
+      INSERT INTO ojt_posts (title, content, adminid)
+      VALUES ($1, $2, $3)
+      RETURNING *;
+    `;
+    const postResult = await client.query(postQuery, [title, content, adminid]);
+    const post = postResult.rows[0];
+
+    if (req.files && req.files.length > 0) {
+      const ojtFolderId = await getOJTFolderId(adminid);
+
+      for (const file of req.files) {
+        const savedFile = await saveFileToRepository(ojtFolderId, file, adminid);
+        await client.query(
+          'INSERT INTO ojt_post_files (post_id, file_id) VALUES ($1, $2)',
+          [post.id, savedFile.id]
+        );
+      }
+    }
+
+    await client.query('COMMIT');
+    res.json({ success: true, post });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Error creating OJT post:', err);
+    res.status(500).json({ success: false, message: 'Failed to create post' });
+  } finally {
+    client.release();
+  }
+});
+
+// FETCH ALL OJT POSTS (with files)
 router.get('/posts', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM ojt_posts ORDER BY created_at DESC');
+    const postsQuery = `
+      SELECT 
+        p.*,
+        json_agg(
+          json_build_object(
+            'id', f.id,
+            'file_name', f.file_name,
+            'file_path', f.file_path,
+            'file_type', f.file_type,
+            'file_size', f.file_size
+          )
+        ) FILTER (WHERE f.id IS NOT NULL) as files
+      FROM ojt_posts p
+      LEFT JOIN ojt_post_files pf ON p.id = pf.post_id
+      LEFT JOIN forms_repository_files f ON pf.file_id = f.id
+      GROUP BY p.id
+      ORDER BY p.created_at DESC
+    `;
+    
+    const result = await pool.query(postsQuery);
     res.json({ success: true, posts: result.rows });
   } catch (err) {
-    console.error('Error fetching posts:', err);
+    console.error('Error fetching OJT posts:', err);
     res.status(500).json({ success: false, message: 'Failed to fetch posts' });
   }
 });
 
-// DELETE POST
+// DELETE OJT POST
 router.delete('/delete/:id', async (req, res) => {
+  const client = await pool.connect();
+  
   try {
+    await client.query('BEGIN');
+
     const { id } = req.params;
 
-    // Get image path first (to delete from folder)
-    const result = await pool.query('SELECT image_path FROM ojt_posts WHERE id = $1', [id]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ success: false, message: 'Post not found' });
+    const filesQuery = `
+      SELECT f.id, f.file_path
+      FROM forms_repository_files f
+      JOIN ojt_post_files pf ON f.id = pf.file_id
+      WHERE pf.post_id = $1
+    `;
+    const filesResult = await client.query(filesQuery, [id]);
+
+    for (const file of filesResult.rows) {
+      const fullPath = path.join('./public', file.file_path);
+      if (fs.existsSync(fullPath)) {
+        fs.unlinkSync(fullPath);
+      }
     }
 
-    const imagePath = result.rows[0].image_path;
-    if (imagePath) {
-      const fullPath = path.join('./public', imagePath);
-      if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
+    for (const file of filesResult.rows) {
+      await client.query('DELETE FROM forms_repository_files WHERE id = $1', [file.id]);
     }
 
-    await pool.query('DELETE FROM ojt_posts WHERE id = $1', [id]);
+    await client.query('DELETE FROM ojt_post_files WHERE post_id = $1', [id]);
+    await client.query('DELETE FROM ojt_posts WHERE id = $1', [id]);
+
+    await client.query('COMMIT');
     res.json({ success: true, message: 'Post deleted successfully' });
   } catch (err) {
-    console.error('Error deleting post:', err);
+    await client.query('ROLLBACK');
+    console.error('Error deleting OJT post:', err);
     res.status(500).json({ success: false, message: 'Failed to delete post' });
+  } finally {
+    client.release();
   }
 });
 
-// UPDATE POST
-router.put('/update/:id', upload.single('image'), async (req, res) => {
+// UPDATE OJT POST
+router.put('/update/:id', upload.array('files', 3), async (req, res) => {
+  const client = await pool.connect();
+  
   try {
+    await client.query('BEGIN');
+
     const { id } = req.params;
-    const { title, content } = req.body;
+    const { title, content, adminid, keepFiles } = req.body;
 
-    // Get the old image (if exists)
-    const oldPost = await pool.query('SELECT image_path FROM ojt_posts WHERE id = $1', [id]);
-    if (oldPost.rows.length === 0) {
-      return res.status(404).json({ success: false, message: 'Post not found' });
-    }
+    const filesToKeep = keepFiles ? JSON.parse(keepFiles) : [];
 
-    let imagePath = oldPost.rows[0].image_path;
-
-    // If a new image is uploaded, replace old one
-    if (req.file) {
-      if (imagePath) {
-        const oldImageFullPath = path.join('./public', imagePath);
-        if (fs.existsSync(oldImageFullPath)) fs.unlinkSync(oldImageFullPath);
-      }
-      imagePath = `/uploads/ojt/${req.file.filename}`;
-    }
-
-    const query = `
+    const updateQuery = `
       UPDATE ojt_posts
-      SET title = $1, content = $2, image_path = $3
-      WHERE id = $4
+      SET title = $1, content = $2
+      WHERE id = $3
       RETURNING *;
     `;
-    const values = [title, content, imagePath, id];
-    const result = await pool.query(query, values);
+    const result = await client.query(updateQuery, [title, content, id]);
 
+    if (!filesToKeep || filesToKeep.length === 0) {
+      const existingFiles = await client.query(
+        `SELECT f.id, f.file_path
+         FROM forms_repository_files f
+         JOIN ojt_post_files pf ON f.id = pf.file_id
+         WHERE pf.post_id = $1`,
+        [id]
+      );
+
+      for (const file of existingFiles.rows) {
+        const fullPath = path.join('./public', file.file_path);
+        if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
+        await client.query('DELETE FROM forms_repository_files WHERE id = $1', [file.id]);
+      }
+    } else {
+      const existingFiles = await client.query(
+        `SELECT f.id, f.file_path
+         FROM forms_repository_files f
+         JOIN ojt_post_files pf ON f.id = pf.file_id
+         WHERE pf.post_id = $1`,
+        [id]
+      );
+
+      for (const file of existingFiles.rows) {
+        if (!filesToKeep.includes(file.id.toString())) {
+          const fullPath = path.join('./public', file.file_path);
+          if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
+          await client.query('DELETE FROM forms_repository_files WHERE id = $1', [file.id]);
+        }
+      }
+    }
+
+    if (req.files && req.files.length > 0) {
+      const ojtFolderId = await getOJTFolderId(adminid);
+
+      for (const file of req.files) {
+        const savedFile = await saveFileToRepository(ojtFolderId, file, adminid);
+        await client.query(
+          'INSERT INTO ojt_post_files (post_id, file_id) VALUES ($1, $2)',
+          [id, savedFile.id]
+        );
+      }
+    }
+
+    await client.query('COMMIT');
     res.json({ success: true, post: result.rows[0] });
   } catch (err) {
-    console.error('Error updating post:', err);
+    await client.query('ROLLBACK');
+    console.error('Error updating OJT post:', err);
     res.status(500).json({ success: false, message: 'Failed to update post' });
+  } finally {
+    client.release();
   }
 });
 
