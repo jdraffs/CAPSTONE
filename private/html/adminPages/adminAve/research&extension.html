@@ -1,3 +1,4 @@
+<!-- research&extension.html  -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -161,10 +162,12 @@
                         <div id="postText" class="post-editor" contenteditable="true" placeholder="Write your post..."></div>
 
                         <!-- File Upload -->
-                        <div class="post-upload">
-                        <label for="fileUpload"><i class="fa-solid fa-paperclip"></i> Attach file</label>
-                        <input type="file" id="fileUpload" style="display:none" />
-                        <span id="fileName"></span>
+                        <div class="file-upload-section">
+                          <label for="fileUpload" class="file-upload-label">
+                            <i class="fa fa-paperclip"></i> Attach Files (Max 3)
+                          </label>
+                          <input type="file" id="fileUpload" multiple accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.webp,.txt">
+                          <div id="fileList" class="file-list"></div>
                         </div>
 
                         <!-- Buttons -->
