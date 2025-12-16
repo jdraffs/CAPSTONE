@@ -323,7 +323,7 @@
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   padding: 15px 25px;
-  margin-bottom: 20px;
+  margin: 25px 0px;
 }
 
 .repository-header {
