@@ -1,4 +1,4 @@
-// research&extension.js - Enhanced with multi-file upload support
+// research&extension.js - Enhanced with MS Teams style file display
 const openBtn = document.getElementById('openPostModal');
 const modal = document.getElementById('postModal');
 const cancelBtn = document.getElementById('cancelPost');
@@ -113,6 +113,10 @@ function getFileIcon(mimeType) {
   return 'fa-file';
 }
 
+function isImageFile(mimeType) {
+  return mimeType.includes('image/');
+}
+
 function formatFileSize(bytes) {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;
@@ -215,18 +219,40 @@ async function loadPosts() {
         let filesHtml = '';
         if (post.files && post.files.length > 0) {
           filesHtml = '<div class="post-files">';
+          
           post.files.forEach(file => {
             const icon = getFileIcon(file.file_type);
-            filesHtml += `
-              <div class="post-file-item">
-                <i class="fa ${icon}"></i>
-                <a href="http://localhost:3000${file.file_path}" target="_blank" download="${file.file_name}">
-                  ${file.file_name}
-                </a>
-                <span class="file-size">(${formatFileSize(file.file_size)})</span>
-              </div>
-            `;
+            
+            if (isImageFile(file.file_type)) {
+              filesHtml += `
+                <div class="post-file-item image">
+                  <img src="http://localhost:3000${file.file_path}" alt="${file.file_name}">
+                  <div class="download-icon">
+                    <i class="fa fa-download"></i>
+                  </div>
+                  <div class="image-overlay">
+                    <a href="http://localhost:3000${file.file_path}" target="_blank" download="${file.file_name}">
+                      ${file.file_name}
+                    </a>
+                    <span class="file-size">${formatFileSize(file.file_size)}</span>
+                  </div>
+                </div>
+              `;
+            } else {
+              filesHtml += `
+                <div class="post-file-item document">
+                  <i class="fa ${icon} file-icon"></i>
+                  <div class="file-details">
+                    <a href="http://localhost:3000${file.file_path}" target="_blank" download="${file.file_name}">
+                      ${file.file_name}
+                    </a>
+                    <span class="file-size">${formatFileSize(file.file_size)}</span>
+                  </div>
+                </div>
+              `;
+            }
           });
+          
           filesHtml += '</div>';
         }
 

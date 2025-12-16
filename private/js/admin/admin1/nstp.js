@@ -1,4 +1,4 @@
-// nstp.js - Enhanced with multi-file upload support
+// nstp.js - Enhanced with MS Teams style file display
 const openBtn = document.getElementById('openPostModal');
 const modal = document.getElementById('postModal');
 const cancelBtn = document.getElementById('cancelPost');
@@ -13,7 +13,7 @@ const fontSizeSelect = document.getElementById('fontSize');
 
 let editingPostId = null;
 let selectedFiles = [];
-let existingFiles = []; // For tracking files when editing
+let existingFiles = [];
 
 openBtn.addEventListener('click', () => {
   modal.style.display = 'flex';
@@ -40,11 +40,8 @@ function clearForm() {
   editingPostId = null;
 }
 
-// Handle file selection (up to 3 files)
 fileUpload.addEventListener('change', (e) => {
   const newFiles = Array.from(e.target.files);
-  
-  // Check total files (new + existing)
   const totalFiles = selectedFiles.length + existingFiles.length + newFiles.length;
   
   if (totalFiles > 3) {
@@ -54,15 +51,13 @@ fileUpload.addEventListener('change', (e) => {
   }
   
   selectedFiles = [...selectedFiles, ...newFiles];
-  fileUpload.value = ''; // Reset input so same file can be added again if removed
+  fileUpload.value = '';
   updateFileList();
 });
 
-// Display selected and existing files
 function updateFileList() {
   fileListContainer.innerHTML = '';
   
-  // Display existing files (when editing)
   existingFiles.forEach((file, index) => {
     const fileItem = document.createElement('div');
     fileItem.className = 'file-item';
@@ -77,7 +72,6 @@ function updateFileList() {
     fileListContainer.appendChild(fileItem);
   });
   
-  // Display newly selected files
   selectedFiles.forEach((file, index) => {
     const fileItem = document.createElement('div');
     fileItem.className = 'file-item';
@@ -92,7 +86,6 @@ function updateFileList() {
     fileListContainer.appendChild(fileItem);
   });
   
-  // Add click handlers for remove buttons
   document.querySelectorAll('.remove-file-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -110,7 +103,6 @@ function updateFileList() {
   });
 }
 
-// Get appropriate icon based on file type
 function getFileIcon(mimeType) {
   if (mimeType.includes('pdf')) return 'fa-file-pdf';
   if (mimeType.includes('word')) return 'fa-file-word';
@@ -121,7 +113,10 @@ function getFileIcon(mimeType) {
   return 'fa-file';
 }
 
-// Format file size for display
+function isImageFile(mimeType) {
+  return mimeType.includes('image/');
+}
+
 function formatFileSize(bytes) {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;
@@ -130,7 +125,6 @@ function formatFileSize(bytes) {
   return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
 }
 
-// Toolbar functionality
 toolbarButtons.forEach(button => {
   button.addEventListener('click', () => {
     const command = button.getAttribute('data-command');
@@ -146,7 +140,6 @@ fontSizeSelect.addEventListener('change', () => {
   document.execCommand('fontSize', false, fontSizeSelect.value);
 });
 
-// CREATE OR UPDATE POST
 submitBtn.addEventListener('click', async (e) => {
   e.preventDefault();
   
@@ -163,12 +156,10 @@ submitBtn.addEventListener('click', async (e) => {
   formData.append('content', content);
   formData.append('adminid', 'adminave');
 
-  // Add new files
   selectedFiles.forEach(file => {
     formData.append('files', file);
   });
   
-  // When editing, send IDs of files to keep
   if (editingPostId && existingFiles.length > 0) {
     const keepFileIds = existingFiles.map(f => f.id);
     formData.append('keepFiles', JSON.stringify(keepFileIds));
@@ -206,14 +197,12 @@ submitBtn.addEventListener('click', async (e) => {
   }
 });
 
-// Close modal when clicking outside
 window.addEventListener('click', e => {
   if (e.target === modal) {
     modal.style.display = 'none';
   }
 });
 
-// LOAD EXISTING NSTP POSTS
 async function loadPosts() {
   feed.innerHTML = '';
   
@@ -227,22 +216,43 @@ async function loadPosts() {
         postElem.classList.add('nstp-post');
         postElem.dataset.id = post.id;
 
-        // Build files HTML
         let filesHtml = '';
         if (post.files && post.files.length > 0) {
           filesHtml = '<div class="post-files">';
+          
           post.files.forEach(file => {
             const icon = getFileIcon(file.file_type);
-            filesHtml += `
-              <div class="post-file-item">
-                <i class="fa ${icon}"></i>
-                <a href="http://localhost:3000${file.file_path}" target="_blank" download="${file.file_name}">
-                  ${file.file_name}
-                </a>
-                <span class="file-size">(${formatFileSize(file.file_size)})</span>
-              </div>
-            `;
+            
+            if (isImageFile(file.file_type)) {
+              filesHtml += `
+                <div class="post-file-item image">
+                  <img src="http://localhost:3000${file.file_path}" alt="${file.file_name}">
+                  <div class="download-icon">
+                    <i class="fa fa-download"></i>
+                  </div>
+                  <div class="image-overlay">
+                    <a href="http://localhost:3000${file.file_path}" target="_blank" download="${file.file_name}">
+                      ${file.file_name}
+                    </a>
+                    <span class="file-size">${formatFileSize(file.file_size)}</span>
+                  </div>
+                </div>
+              `;
+            } else {
+              filesHtml += `
+                <div class="post-file-item document">
+                  <i class="fa ${icon} file-icon"></i>
+                  <div class="file-details">
+                    <a href="http://localhost:3000${file.file_path}" target="_blank" download="${file.file_name}">
+                      ${file.file_name}
+                    </a>
+                    <span class="file-size">${formatFileSize(file.file_size)}</span>
+                  </div>
+                </div>
+              `;
+            }
           });
+          
           filesHtml += '</div>';
         }
 
@@ -257,22 +267,17 @@ async function loadPosts() {
           <div class="post-divider"><span>${new Date(post.created_at).toLocaleString()}</span></div>
         `;
 
-        // Edit button
         postElem.querySelector('.post-edit').addEventListener('click', () => {
           editingPostId = post.id;
           postTitle.value = post.title;
           postText.innerHTML = post.content;
-          
-          // Load existing files
           existingFiles = post.files || [];
           selectedFiles = [];
           updateFileList();
-          
           submitBtn.textContent = 'Update';
           modal.style.display = 'flex';
         });
 
-        // Delete button
         postElem.querySelector('.post-delete').addEventListener('click', async () => {
           if (confirm('Are you sure you want to delete this NSTP post and all its files?')) {
             try {
