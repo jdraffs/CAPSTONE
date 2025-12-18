@@ -1,4 +1,4 @@
-// nstp.js - Enhanced with MS Teams style file display
+// nstp.js - Fixed version with proper file handling and image ordering
 const openBtn = document.getElementById('openPostModal');
 const modal = document.getElementById('postModal');
 const cancelBtn = document.getElementById('cancelPost');
@@ -55,37 +55,49 @@ fileUpload.addEventListener('change', (e) => {
   updateFileList();
 });
 
+function sortFilesByType(files) {
+  // Sort files so images come first
+  return files.sort((a, b) => {
+    const aIsImage = isImageFile(a.file_type || a.type);
+    const bIsImage = isImageFile(b.file_type || b.type);
+    
+    if (aIsImage && !bIsImage) return -1;
+    if (!aIsImage && bIsImage) return 1;
+    return 0;
+  });
+}
+
 function updateFileList() {
   fileListContainer.innerHTML = '';
   
-  existingFiles.forEach((file, index) => {
+  // Combine and sort all files (images first)
+  const allFiles = [
+    ...existingFiles.map((file, index) => ({ ...file, isExisting: true, originalIndex: index })),
+    ...selectedFiles.map((file, index) => ({ ...file, isExisting: false, originalIndex: index }))
+  ];
+  
+  const sortedFiles = sortFilesByType(allFiles);
+  
+  sortedFiles.forEach((file) => {
     const fileItem = document.createElement('div');
     fileItem.className = 'file-item';
+    
+    const fileName = file.file_name || file.name;
+    const fileSize = file.file_size || file.size;
+    const fileType = file.file_type || file.type;
+    
     fileItem.innerHTML = `
-      <i class="fa ${getFileIcon(file.file_type)}"></i>
-      <span class="file-name">${file.file_name}</span>
-      <span class="file-size">${formatFileSize(file.file_size)}</span>
-      <button type="button" class="remove-file-btn" data-existing-index="${index}">
+      <i class="fa ${getFileIcon(fileType)}"></i>
+      <span class="file-name">${fileName}</span>
+      <span class="file-size">${formatFileSize(fileSize)}</span>
+      <button type="button" class="remove-file-btn" ${file.isExisting ? `data-existing-index="${file.originalIndex}"` : `data-new-index="${file.originalIndex}"`}>
         <i class="fa fa-times"></i>
       </button>
     `;
     fileListContainer.appendChild(fileItem);
   });
   
-  selectedFiles.forEach((file, index) => {
-    const fileItem = document.createElement('div');
-    fileItem.className = 'file-item';
-    fileItem.innerHTML = `
-      <i class="fa ${getFileIcon(file.type)}"></i>
-      <span class="file-name">${file.name}</span>
-      <span class="file-size">${formatFileSize(file.size)}</span>
-      <button type="button" class="remove-file-btn" data-new-index="${index}">
-        <i class="fa fa-times"></i>
-      </button>
-    `;
-    fileListContainer.appendChild(fileItem);
-  });
-  
+  // Add event listeners to remove buttons
   document.querySelectorAll('.remove-file-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -114,7 +126,7 @@ function getFileIcon(mimeType) {
 }
 
 function isImageFile(mimeType) {
-  return mimeType.includes('image/');
+  return mimeType && mimeType.includes('image/');
 }
 
 function formatFileSize(bytes) {
@@ -156,11 +168,13 @@ submitBtn.addEventListener('click', async (e) => {
   formData.append('content', content);
   formData.append('adminid', 'adminave');
 
+  // Add new files
   selectedFiles.forEach(file => {
     formData.append('files', file);
   });
   
-  if (editingPostId && existingFiles.length > 0) {
+  // FIXED: Send the IDs as numbers in an array
+  if (editingPostId) {
     const keepFileIds = existingFiles.map(f => f.id);
     formData.append('keepFiles', JSON.stringify(keepFileIds));
   }
@@ -218,9 +232,12 @@ async function loadPosts() {
 
         let filesHtml = '';
         if (post.files && post.files.length > 0) {
+          // Sort files so images appear first
+          const sortedFiles = sortFilesByType([...post.files]);
+          
           filesHtml = '<div class="post-files">';
           
-          post.files.forEach(file => {
+          sortedFiles.forEach(file => {
             const icon = getFileIcon(file.file_type);
             
             if (isImageFile(file.file_type)) {
@@ -258,8 +275,13 @@ async function loadPosts() {
 
         postElem.innerHTML = `
           <div class="nstp-actions">
-            <button class="post-edit"><i class="fa-solid fa-pen"></i></button>
-            <button class="post-delete"><i class="fa-solid fa-xmark"></i></button>
+            <button class="post-menu-btn">
+              <i class="fa-solid fa-ellipsis-v"></i>
+            </button>
+            <div class="post-menu-dropdown" style="display: none;">
+              <button class="post-edit"><i class="fa-solid fa-pen"></i> Edit</button>
+              <button class="post-delete"><i class="fa-solid fa-trash"></i> Delete</button>
+            </div>
           </div>
           <h1>${post.title}</h1>
           <div class="post-content">${post.content}</div>
@@ -267,7 +289,26 @@ async function loadPosts() {
           <div class="post-divider"><span>${new Date(post.created_at).toLocaleString()}</span></div>
         `;
 
-        postElem.querySelector('.post-edit').addEventListener('click', () => {
+        // Dropdown menu toggle
+        const menuBtn = postElem.querySelector('.post-menu-btn');
+        const dropdown = postElem.querySelector('.post-menu-dropdown');
+        
+        menuBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          document.querySelectorAll('.post-menu-dropdown').forEach(d => {
+            if (d !== dropdown) d.style.display = 'none';
+          });
+          dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        });
+
+        document.addEventListener('click', () => {
+          dropdown.style.display = 'none';
+        });
+
+        postElem.querySelector('.post-edit').addEventListener('click', (e) => {
+          e.stopPropagation();
+          dropdown.style.display = 'none';
+          
           editingPostId = post.id;
           postTitle.value = post.title;
           postText.innerHTML = post.content;
@@ -278,7 +319,10 @@ async function loadPosts() {
           modal.style.display = 'flex';
         });
 
-        postElem.querySelector('.post-delete').addEventListener('click', async () => {
+        postElem.querySelector('.post-delete').addEventListener('click', async (e) => {
+          e.stopPropagation();
+          dropdown.style.display = 'none';
+          
           if (confirm('Are you sure you want to delete this NSTP post and all its files?')) {
             try {
               const response = await fetch(`http://localhost:3000/api/nstp/delete/${post.id}`, { 
