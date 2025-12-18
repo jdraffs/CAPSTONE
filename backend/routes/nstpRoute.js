@@ -1,4 +1,4 @@
-// nstpRoute.js - Enhanced with multi-file upload
+// nstpRoute.js - Fixed file ID handling in update
 import express from 'express';
 import multer from 'multer';
 import pkg from 'pg';
@@ -8,7 +8,6 @@ import fs from 'fs';
 const router = express.Router();
 const { Pool } = pkg;
 
-// PostgreSQL connection
 const pool = new Pool({
   user: 'postgres',
   host: 'localhost',
@@ -17,11 +16,9 @@ const pool = new Pool({
   port: 5432
 });
 
-// Ensure upload directory exists
 const uploadDir = './public/uploads/forms_repository';
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-// Multer storage setup - store in forms_repository folder
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => {
@@ -32,9 +29,8 @@ const storage = multer.diskStorage({
 
 const upload = multer({ 
   storage,
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
+  limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    // Accept documents, images, presentations, spreadsheets
     const allowedTypes = [
       'application/pdf',
       'application/msword',
@@ -59,9 +55,7 @@ const upload = multer({
   }
 });
 
-// Helper function to get or create NSTP folder in forms repository
 async function getNSTPFolderId(adminid) {
-  // First, check if NSTP folder exists
   const checkFolder = await pool.query(
     'SELECT id FROM forms_repository_folders WHERE name = $1 AND adminid = $2 AND parent_id IS NULL',
     ['NSTP', adminid]
@@ -71,7 +65,6 @@ async function getNSTPFolderId(adminid) {
     return checkFolder.rows[0].id;
   }
 
-  // If not, create it
   const createFolder = await pool.query(
     'INSERT INTO forms_repository_folders (name, adminid, parent_id) VALUES ($1, $2, NULL) RETURNING id',
     ['NSTP', adminid]
@@ -80,7 +73,6 @@ async function getNSTPFolderId(adminid) {
   return createFolder.rows[0].id;
 }
 
-// Helper function to save file to forms_repository_files table
 async function saveFileToRepository(folderId, file, adminid) {
   const filePath = `/uploads/forms_repository/${file.filename}`;
   
@@ -95,7 +87,6 @@ async function saveFileToRepository(folderId, file, adminid) {
   return result.rows[0];
 }
 
-// CREATE NSTP POST (supports up to 3 files)
 router.post('/create', upload.array('files', 3), async (req, res) => {
   const client = await pool.connect();
   
@@ -104,7 +95,6 @@ router.post('/create', upload.array('files', 3), async (req, res) => {
 
     const { title, content, adminid } = req.body;
 
-    // Create the post first
     const postQuery = `
       INSERT INTO nstp_posts (title, content, adminid)
       VALUES ($1, $2, $3)
@@ -113,15 +103,11 @@ router.post('/create', upload.array('files', 3), async (req, res) => {
     const postResult = await client.query(postQuery, [title, content, adminid]);
     const post = postResult.rows[0];
 
-    // If files were uploaded, save them to forms repository
     if (req.files && req.files.length > 0) {
       const nstpFolderId = await getNSTPFolderId(adminid);
 
       for (const file of req.files) {
-        // Save file to forms_repository_files table
         const savedFile = await saveFileToRepository(nstpFolderId, file, adminid);
-
-        // Link file to post via junction table
         await client.query(
           'INSERT INTO nstp_post_files (post_id, file_id) VALUES ($1, $2)',
           [post.id, savedFile.id]
@@ -130,7 +116,6 @@ router.post('/create', upload.array('files', 3), async (req, res) => {
     }
 
     await client.query('COMMIT');
-
     res.json({ success: true, post });
   } catch (err) {
     await client.query('ROLLBACK');
@@ -141,7 +126,6 @@ router.post('/create', upload.array('files', 3), async (req, res) => {
   }
 });
 
-// FETCH ALL NSTP POSTS (with files)
 router.get('/posts', async (req, res) => {
   try {
     const postsQuery = `
@@ -171,7 +155,6 @@ router.get('/posts', async (req, res) => {
   }
 });
 
-// DELETE NSTP POST
 router.delete('/delete/:id', async (req, res) => {
   const client = await pool.connect();
   
@@ -180,7 +163,6 @@ router.delete('/delete/:id', async (req, res) => {
 
     const { id } = req.params;
 
-    // Get all files associated with this post
     const filesQuery = `
       SELECT f.id, f.file_path
       FROM forms_repository_files f
@@ -189,7 +171,6 @@ router.delete('/delete/:id', async (req, res) => {
     `;
     const filesResult = await client.query(filesQuery, [id]);
 
-    // Delete physical files
     for (const file of filesResult.rows) {
       const fullPath = path.join('./public', file.file_path);
       if (fs.existsSync(fullPath)) {
@@ -197,19 +178,14 @@ router.delete('/delete/:id', async (req, res) => {
       }
     }
 
-    // Delete file records from forms_repository_files
     for (const file of filesResult.rows) {
       await client.query('DELETE FROM forms_repository_files WHERE id = $1', [file.id]);
     }
 
-    // Delete junction table records (CASCADE should handle this, but being explicit)
     await client.query('DELETE FROM nstp_post_files WHERE post_id = $1', [id]);
-
-    // Delete the post
     await client.query('DELETE FROM nstp_posts WHERE id = $1', [id]);
 
     await client.query('COMMIT');
-
     res.json({ success: true, message: 'Post deleted successfully' });
   } catch (err) {
     await client.query('ROLLBACK');
@@ -220,7 +196,6 @@ router.delete('/delete/:id', async (req, res) => {
   }
 });
 
-// UPDATE NSTP POST
 router.put('/update/:id', upload.array('files', 3), async (req, res) => {
   const client = await pool.connect();
   
@@ -230,10 +205,20 @@ router.put('/update/:id', upload.array('files', 3), async (req, res) => {
     const { id } = req.params;
     const { title, content, adminid, keepFiles } = req.body;
 
-    // Parse keepFiles (array of file IDs to keep)
-    const filesToKeep = keepFiles ? JSON.parse(keepFiles) : [];
+    // FIXED: Convert keepFiles to numbers for proper comparison
+    let filesToKeep = [];
+    if (keepFiles) {
+      try {
+        const parsed = JSON.parse(keepFiles);
+        // Ensure all IDs are numbers
+        filesToKeep = parsed.map(id => parseInt(id, 10));
+      } catch (e) {
+        console.error('Error parsing keepFiles:', e);
+      }
+    }
 
-    // Update post content
+    console.log('Files to keep:', filesToKeep); // Debug log
+
     const updateQuery = `
       UPDATE nstp_posts
       SET title = $1, content = $2
@@ -242,38 +227,28 @@ router.put('/update/:id', upload.array('files', 3), async (req, res) => {
     `;
     const result = await client.query(updateQuery, [title, content, id]);
 
-    // Handle file updates
-    if (!filesToKeep || filesToKeep.length === 0) {
-      // Delete all existing files if user didn't keep any
-      const existingFiles = await client.query(
-        `SELECT f.id, f.file_path
-         FROM forms_repository_files f
-         JOIN nstp_post_files pf ON f.id = pf.file_id
-         WHERE pf.post_id = $1`,
-        [id]
-      );
+    // Get all existing files for this post
+    const existingFiles = await client.query(
+      `SELECT f.id, f.file_path
+       FROM forms_repository_files f
+       JOIN nstp_post_files pf ON f.id = pf.file_id
+       WHERE pf.post_id = $1`,
+      [id]
+    );
 
-      for (const file of existingFiles.rows) {
+    console.log('Existing files:', existingFiles.rows.map(f => f.id)); // Debug log
+
+    // Delete files that are NOT in the keepFiles array
+    for (const file of existingFiles.rows) {
+      if (!filesToKeep.includes(file.id)) {
+        console.log('Deleting file:', file.id); // Debug log
         const fullPath = path.join('./public', file.file_path);
-        if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
-        await client.query('DELETE FROM forms_repository_files WHERE id = $1', [file.id]);
-      }
-    } else {
-      // Delete files that weren't kept
-      const existingFiles = await client.query(
-        `SELECT f.id, f.file_path
-         FROM forms_repository_files f
-         JOIN nstp_post_files pf ON f.id = pf.file_id
-         WHERE pf.post_id = $1`,
-        [id]
-      );
-
-      for (const file of existingFiles.rows) {
-        if (!filesToKeep.includes(file.id.toString())) {
-          const fullPath = path.join('./public', file.file_path);
-          if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
-          await client.query('DELETE FROM forms_repository_files WHERE id = $1', [file.id]);
+        if (fs.existsSync(fullPath)) {
+          fs.unlinkSync(fullPath);
         }
+        await client.query('DELETE FROM forms_repository_files WHERE id = $1', [file.id]);
+      } else {
+        console.log('Keeping file:', file.id); // Debug log
       }
     }
 
@@ -291,7 +266,6 @@ router.put('/update/:id', upload.array('files', 3), async (req, res) => {
     }
 
     await client.query('COMMIT');
-
     res.json({ success: true, post: result.rows[0] });
   } catch (err) {
     await client.query('ROLLBACK');
