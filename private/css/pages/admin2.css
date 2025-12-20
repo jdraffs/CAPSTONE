@@ -1,6 +1,102 @@
-/* Admin Dashboard Styles */
+/* admin2.css */
 .fa-bell, .fa-user {
   color: #822020;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.fa-bell:hover, .fa-user:hover {
+  color: #a91c1c;
+}
+
+/* Profile Dropdown */
+.profile-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 10px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 220px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.profile-dropdown.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.dropdown-header {
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.dropdown-header i {
+  font-size: 32px;
+  color: #822020;
+}
+
+.dropdown-user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.dropdown-username {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.dropdown-role {
+  font-size: 12px;
+  color: #666;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: #f0f0f0;
+  margin: 5px 0;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 15px;
+  color: #333;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background: #f8f9fa;
+}
+
+.dropdown-item i {
+  font-size: 16px;
+  width: 20px;
+  color: #666;
+}
+
+.dropdown-item.logout {
+  color: #dc3545;
+}
+
+.dropdown-item.logout i {
+  color: #dc3545;
+}
+
+.dropdown-item.logout:hover {
+  background: #fff5f5;
 }
 
 .content-page {
@@ -181,7 +277,6 @@
    ANALYTICS OVERVIEW SECTION - NEW
    ======================================== */
 
-/* Analytics Overview Container */
 .analytics-overview-section {
   margin: 10px 0px 30px 0px;
   padding: 0;
@@ -217,7 +312,6 @@
   padding: 0;
 }
 
-/* Loading State */
 .analytics-loading {
   text-align: center;
   padding: 60px 20px;
@@ -246,7 +340,6 @@
   100% { transform: rotate(360deg); }
 }
 
-/* Empty State */
 .analytics-empty,
 .analytics-error {
   text-align: center;
@@ -275,7 +368,6 @@
   margin: 10px 0;
 }
 
-/* Analytics Summary Stats */
 .analytics-summary {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -319,7 +411,6 @@
   opacity: 0.9;
 }
 
-/* Analytics Grid */
 .analytics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -327,7 +418,6 @@
   margin-bottom: 30px;
 }
 
-/* Analytics Card */
 .analytics-card {
   background: white;
   border-radius: 12px;
@@ -341,7 +431,6 @@
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
-/* Analytics Card Header */
 .analytics-card-header {
   padding: 20px;
   border-bottom: 1px solid #f0f0f0;
@@ -379,7 +468,6 @@
   font-weight: 500;
 }
 
-/* Analytics Chart Preview */
 .analytics-chart-preview {
   padding: 20px;
   background: #fafafa;
@@ -397,7 +485,6 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
-/* Analytics Mini Stats */
 .analytics-stats-mini {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -434,7 +521,6 @@
   color: #2c3e50;
 }
 
-/* View All Analytics Button */
 .view-all-analytics-btn {
   width: 100%;
   padding: 15px 30px;
@@ -463,11 +549,6 @@
   font-size: 20px;
 }
 
-/* ========================================
-   END ANALYTICS OVERVIEW SECTION
-   ======================================== */
-
-/*Notifications Panel*/
 .notifications-panel {
   padding: 20px;
   background: #fff;
@@ -551,7 +632,6 @@
   color: #888;
 }
 
-/* Priority colors */
 .notification-item.high {
   border-left-color: #e53935;
 }
@@ -577,7 +657,6 @@
   background-color: #1e88e5;
 }
 
-/*Charts - OLD PLACEHOLDER (can be removed if not used)*/
 .charts-section {
   margin: 2rem auto;
 }
@@ -604,7 +683,6 @@
   color: #333;
 }
 
-/*main content of each page */
 .content-page {
   display: none;
 }
@@ -613,7 +691,6 @@
   display: block;
 }
 
-/* recent updates section */
 .updates-section {
     background: #fff;
     border-radius: 10px;
@@ -672,8 +749,8 @@
 .orange { color: #f59e0b; }
 .green { color: #10b981; }
 .yellow { color: #eab308; }
+.updates-icon.red { color: #bb1f1f; }
 
-/* modal */
 .updates-modal {
     display: none;
     position: fixed;
@@ -724,67 +801,7 @@
     to { opacity: 1; transform: scale(1); }
 }
 
-
-/* RESPONSIVE DESIGN FOR ANALYTICS */
-
-@media (max-width: 768px) {
-  .analytics-summary {
-    grid-template-columns: 1fr;
-  }
-  
-  .analytics-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .analytics-stats-mini {
-    grid-template-columns: 1fr;
-  }
-  
-  #analyticsOverviewContainer {
-    padding: 0;
-  }
-
-  .analytics-header h2 {
-    font-size: 24px;
-  }
-
-  .summary-stat {
-    flex-direction: row;
-  }
-}
-
-@media (max-width: 480px) {
-  .summary-stat {
-    padding: 20px 15px;
-  }
-  
-  .summary-stat i {
-    font-size: 32px;
-  }
-  
-  .summary-stat h4 {
-    font-size: 24px;
-  }
-  
-  .analytics-card-header {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .analytics-header h2 {
-    font-size: 20px;
-  }
-}
-.updates-icon.red {
-  color: #bb1f1f;
-}
-
-.updates-icon.green {
-  color: #10b981;
-}
-
 /* QUICK ACTION MODALS */
-
 .quick-modal {
     display: none;
     position: fixed;
@@ -929,7 +946,6 @@
     background: #fef2f2;
 }
 
-/* Upload Modal Specific */
 .quick-upload-box {
     background: #f9fafb;
     border: 2px dashed #d1d5db;
@@ -1030,7 +1046,6 @@
     color: #6b7280;
 }
 
-/* Analytics Modal Specific */
 .quick-analytics-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -1107,7 +1122,7 @@
     font-size: 11px;
     color: #6b7280;
     display: block;
-    margin-bottom: 4px;
+    margin-bottom: 4px
 }
 
 .quick-analytics-card .stat-value {

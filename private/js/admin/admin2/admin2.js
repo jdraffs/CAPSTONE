@@ -1,7 +1,86 @@
-// admin2.js 
+// admin2.js - PART 1: CORE FUNCTIONS & PROFILE DROPDOWN
 // HELPER: logout
 function logout() {
   window.location.href = '/public/index.html'; 
+}
+
+// HELPER: Profile Dropdown Functionality
+function initializeProfileDropdown() {
+  const profileLink = document.querySelector('.profile-link');
+  
+  if (!profileLink) return;
+  
+  // Create dropdown menu
+  const dropdown = document.createElement('div');
+  dropdown.className = 'profile-dropdown';
+  dropdown.innerHTML = `
+    <div class="dropdown-header">
+      <i class="fas fa-user-circle"></i>
+      <div class="dropdown-user-info">
+        <span class="dropdown-username">Admin</span>
+        <span class="dropdown-role">Administrator</span>
+      </div>
+    </div>
+    <div class="dropdown-divider"></div>
+    <a href="#" class="dropdown-item" id="viewProfile">
+      <i class="fas fa-user"></i>
+      <span>View Profile</span>
+    </a>
+    <a href="#" class="dropdown-item" id="settings">
+      <i class="fas fa-cog"></i>
+      <span>Settings</span>
+    </a>
+    <div class="dropdown-divider"></div>
+    <a href="#" class="dropdown-item logout" id="logoutBtn">
+      <i class="fas fa-sign-out-alt"></i>
+      <span>Logout</span>
+    </a>
+  `;
+  
+  // Insert dropdown after profile link
+  profileLink.parentElement.style.position = 'relative';
+  profileLink.parentElement.appendChild(dropdown);
+  
+  // Toggle dropdown on click
+  profileLink.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    dropdown.classList.toggle('show');
+  });
+  
+  // Close dropdown when clicking outside
+  document.addEventListener('click', function(e) {
+    if (!dropdown.contains(e.target) && e.target !== profileLink) {
+      dropdown.classList.remove('show');
+    }
+  });
+  
+  // Handle dropdown items
+  document.getElementById('viewProfile').addEventListener('click', function(e) {
+    e.preventDefault();
+    alert('View Profile functionality - To be implemented');
+    dropdown.classList.remove('show');
+  });
+  
+  document.getElementById('settings').addEventListener('click', function(e) {
+    e.preventDefault();
+    alert('Settings functionality - To be implemented');
+    dropdown.classList.remove('show');
+  });
+  
+  // Handle logout
+  document.getElementById('logoutBtn').addEventListener('click', function(e) {
+    e.preventDefault();
+    if (confirm('Are you sure you want to logout?')) {
+      // Clear any session data
+      sessionStorage.clear();
+      localStorage.clear();
+      
+      // Redirect to login page
+      window.location.href = '/public/index.html';
+    }
+    dropdown.classList.remove('show');
+  });
 }
 
 // HELPER: fetch and update total recent uploads 
@@ -34,10 +113,8 @@ async function loadAnalyticsOverview() {
   }
 
   try {
-    // show loading state
     analyticsContainer.innerHTML = '<div class="analytics-loading"><i class="bi bi-hourglass-split"></i> Loading analytics...</div>';
 
-    // fetch uploaded files from file repository
     const response = await fetch("http://localhost:3000/api/files/data");
     const uploadedFiles = await response.json();
 
@@ -46,7 +123,6 @@ async function loadAnalyticsOverview() {
       return;
     }
 
-    // process analytics for the most recent files (limit lang to 3 for overview)
     const recentFiles = uploadedFiles.slice(0, 3);
     const analyticsResults = [];
 
@@ -56,7 +132,6 @@ async function loadAnalyticsOverview() {
       const chartType = localStorage.getItem(`chartType_${displayName}`) || 'bar';
 
       try {
-        // call python API for analytics processing
         const analyticsResponse = await fetch(`${PYTHON_API_URL}/analytics/process`, {
           method: 'POST',
           headers: {
@@ -87,7 +162,6 @@ async function loadAnalyticsOverview() {
       }
     }
 
-    // render analytics overview
     renderAnalyticsOverview(analyticsResults);
 
   } catch (err) {
@@ -105,10 +179,8 @@ function renderAnalyticsOverview(analyticsResults) {
     return;
   }
 
-  // clear container
   analyticsContainer.innerHTML = '';
 
-  // create analytics summary stats at the top
   const totalRecords = analyticsResults.reduce((sum, result) => sum + result.recordsProcessed, 0);
   const avgMean = analyticsResults.reduce((sum, result) => sum + result.statistics.mean, 0) / analyticsResults.length;
 
@@ -139,7 +211,6 @@ function renderAnalyticsOverview(analyticsResults) {
   `;
   analyticsContainer.appendChild(summaryDiv);
 
-  // create grid for analytics cards
   const gridDiv = document.createElement('div');
   gridDiv.className = 'analytics-grid';
 
@@ -184,7 +255,6 @@ function renderAnalyticsOverview(analyticsResults) {
 
   analyticsContainer.appendChild(gridDiv);
 
-  // dinagdag yung "view analytics reports" button
   const viewAllBtn = document.createElement('button');
   viewAllBtn.className = 'view-all-analytics-btn';
   viewAllBtn.innerHTML = '<i class="bi bi-arrow-right-circle"></i> View All Analytics Reports';
@@ -194,9 +264,13 @@ function renderAnalyticsOverview(analyticsResults) {
   analyticsContainer.appendChild(viewAllBtn);
 }
 
-// MAIN INITIALIZATION - SINGLE DOMContentLoaded
+// admin2.js - PART 2: MAIN INITIALIZATION & QUICK ACTIONS MODALS
 
+// MAIN INITIALIZATION - SINGLE DOMContentLoaded
 document.addEventListener('DOMContentLoaded', async () => {
+  // Initialize profile dropdown FIRST
+  initializeProfileDropdown();
+
   // PART 1: BASIC UI SETUP
   
   // NAV HIGHLIGHTING 
@@ -222,9 +296,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (toggle) {
     toggle.onclick = () => document.querySelector('.sidebar').classList.toggle('open');
   }
-
-  // COUNTERS 
-
 
   // DATE/TIME 
   function updateDateTime() {
@@ -285,20 +356,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // get icon HTML based on event type
-function getIconForEventType(type) {
-  const iconMap = {
-    file_upload: '<i class="fa-solid fa-upload updates-icon blue"></i>',
-    report_generated: '<i class="fa-solid fa-chart-line updates-icon purple"></i>',
-    repo_update: '<i class="fa-solid fa-folder updates-icon orange"></i>',
-    
-    // NEW:binago q icons
-    repo_file_added: '<i class="fa-solid fa-folder-plus updates-icon yellow"></i>',
-    repo_file_deleted: '<i class="fa-solid fa-trash updates-icon red"></i>',
-    
-    chart_created: '<i class="fa-solid fa-chart-simple updates-icon green"></i>',
-  };
-  return iconMap[type] || '<i class="fa-solid fa-info-circle updates-icon"></i>';
-}
+  function getIconForEventType(type) {
+    const iconMap = {
+      file_upload: '<i class="fa-solid fa-upload updates-icon blue"></i>',
+      report_generated: '<i class="fa-solid fa-chart-line updates-icon purple"></i>',
+      repo_update: '<i class="fa-solid fa-folder updates-icon orange"></i>',
+      repo_file_added: '<i class="fa-solid fa-folder-plus updates-icon yellow"></i>',
+      repo_file_deleted: '<i class="fa-solid fa-trash updates-icon red"></i>',
+      chart_created: '<i class="fa-solid fa-chart-simple updates-icon green"></i>',
+    };
+    return iconMap[type] || '<i class="fa-solid fa-info-circle updates-icon"></i>';
+  }
 
   // render events in the dashboard table
   function renderEventsList(events) {
@@ -345,71 +413,63 @@ function getIconForEventType(type) {
     });
   }
 
-  // update summary card counts
-// admin2.js - REPLACE the updateSummaryCounts function
+  // Update summary card counts with real data
+  async function updateSummaryCounts() {
+    try {
+      const response = await fetch('http://localhost:3000/api/dashboard/stats');
+      const result = await response.json();
 
-// Update summary card counts with real data
-async function updateSummaryCounts() {
-  try {
-    // Fetch stats from backend
-    const response = await fetch('http://localhost:3000/api/dashboard/stats');
-    const result = await response.json();
+      if (result.success) {
+        const stats = result.stats;
 
-    if (result.success) {
-      const stats = result.stats;
+        const updatesCard = document.getElementById('totalUpdatesCount');
+        if (updatesCard) {
+          animateCount(updatesCard, parseInt(updatesCard.textContent) || 0, stats.totalUpdates);
+        }
 
-      // Update Card 1: Total Updates
-      const updatesCard = document.getElementById('totalUpdatesCount');
-      if (updatesCard) {
-        animateCount(updatesCard, parseInt(updatesCard.textContent) || 0, stats.totalUpdates);
+        const reportsCard = document.getElementById('totalReportsCount');
+        if (reportsCard) {
+          animateCount(reportsCard, parseInt(reportsCard.textContent) || 0, stats.totalReports);
+        }
+
+        const repoCard = document.getElementById('totalRepoItemsCount');
+        if (repoCard) {
+          animateCount(repoCard, parseInt(repoCard.textContent) || 0, stats.totalRepoItems);
+        }
+
+        console.log('✅ Dashboard stats updated:', stats);
+      } else {
+        console.error('Failed to fetch dashboard stats');
       }
-
-      // Update Card 2: Reports Generated
-      const reportsCard = document.getElementById('totalReportsCount');
-      if (reportsCard) {
-        animateCount(reportsCard, parseInt(reportsCard.textContent) || 0, stats.totalReports);
-      }
-
-      // Update Card 3: Repository Items
-      const repoCard = document.getElementById('totalRepoItemsCount');
-      if (repoCard) {
-        animateCount(repoCard, parseInt(repoCard.textContent) || 0, stats.totalRepoItems);
-      }
-
-      console.log('✅ Dashboard stats updated:', stats);
-    } else {
-      console.error('Failed to fetch dashboard stats');
-    }
-  } catch (err) {
-    console.error('Error updating summary counts:', err);
-  }
-}
-
-// Animate count from current value to target value
-function animateCount(element, start, end) {
-  const duration = 1000; // 1 second
-  const startTime = performance.now();
-  const difference = end - start;
-
-  function update(currentTime) {
-    const elapsed = currentTime - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-    
-    // Easing function for smooth animation
-    const easeOutQuad = progress * (2 - progress);
-    const current = Math.floor(start + (difference * easeOutQuad));
-    
-    element.textContent = current;
-    
-    if (progress < 1) {
-      requestAnimationFrame(update);
-    } else {
-      element.textContent = end; // Ensure we end at exact value
+    } catch (err) {
+      console.error('Error updating summary counts:', err);
     }
   }
-  
-  requestAnimationFrame(update);
-}
+
+  // Animate count from current value to target value
+  function animateCount(element, start, end) {
+    const duration = 1000;
+    const startTime = performance.now();
+    const difference = end - start;
+
+    function update(currentTime) {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      const easeOutQuad = progress * (2 - progress);
+      const current = Math.floor(start + (difference * easeOutQuad));
+      
+      element.textContent = current;
+      
+      if (progress < 1) {
+        requestAnimationFrame(update);
+      } else {
+        element.textContent = end;
+      }
+    }
+    
+    requestAnimationFrame(update);
+  }
 
   // modal controls
   if (viewAllBtn) {
@@ -432,7 +492,6 @@ function animateCount(element, start, end) {
 
   // PART 3: LOAD ALL DATA
   
-  // initial load
   const recentEvents = await fetchRecentEvents(7);
   const allEvents = await fetchRecentEvents(100);
   
@@ -440,11 +499,10 @@ function animateCount(element, start, end) {
   renderModalAll(allEvents);
   await updateSummaryCounts();
 
-  // load other dashboard components
   updateRecentUploadsCount();
   loadAnalyticsOverview();
 
-  // optional pero auto-refresh every 30 seconds
+  // auto-refresh every 30 seconds
   setInterval(async () => {
     const freshEvents = await fetchRecentEvents(7);
     renderEventsList(freshEvents);
@@ -454,19 +512,15 @@ function animateCount(element, start, end) {
 
 
 // QUICK ACTIONS MODALS FUNCTIONALITY
-
 (function() {
-  // Modal elements
   const uploadModal = document.getElementById('uploadModal');
   const analyticsModal = document.getElementById('analyticsModal');
   const repositoryModal = document.getElementById('repositoryModal');
 
-  // Action buttons
   const quickUploadAction = document.getElementById('quickUploadAction');
   const quickAnalyticsAction = document.getElementById('quickAnalyticsAction');
   const quickRepositoryAction = document.getElementById('quickRepositoryAction');
 
-  // Upload modal elements
   const quickFileInput = document.getElementById('quickFileInput');
   const quickFileInfo = document.getElementById('quickFileInfo');
   const quickPreviewArea = document.getElementById('quickPreviewArea');
@@ -476,8 +530,6 @@ function animateCount(element, start, end) {
   let selectedQuickFile = null;
   let quickFileData = [];
 
-
-  // MODAL OPEN/CLOSE HANDLERS
   function openModal(modal) {
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
@@ -488,7 +540,6 @@ function animateCount(element, start, end) {
     document.body.style.overflow = '';
   }
 
-  // Open modals
   if (quickUploadAction) {
     quickUploadAction.addEventListener('click', () => {
       openModal(uploadModal);
@@ -510,7 +561,6 @@ function animateCount(element, start, end) {
     });
   }
 
-  // Close modals
   document.addEventListener('click', (e) => {
     if (e.target.classList.contains('quick-modal-overlay') || 
         e.target.classList.contains('quick-modal-close')) {
@@ -520,7 +570,6 @@ function animateCount(element, start, end) {
     }
   });
 
-  // ESC key to close
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       closeModal(uploadModal);
@@ -528,9 +577,6 @@ function animateCount(element, start, end) {
       closeModal(repositoryModal);
     }
   });
-
-
-  // 1. UPLOAD MODAL FUNCTIONALITY
 
   function resetUploadModal() {
     selectedQuickFile = null;
@@ -544,7 +590,6 @@ function animateCount(element, start, end) {
     quickUploadBtn.innerHTML = '<i class="fa fa-upload"></i> Upload File';
   }
 
-  // File selection
   if (quickFileInput) {
     quickFileInput.addEventListener('change', async (e) => {
       const file = e.target.files[0];
@@ -560,7 +605,6 @@ function animateCount(element, start, end) {
       quickFileInfo.classList.add('show');
       quickFileInfo.classList.remove('error');
 
-      // Parse and preview
       const fileName = file.name.toLowerCase();
       
       try {
@@ -586,7 +630,6 @@ function animateCount(element, start, end) {
     });
   }
 
-  // Parse CSV
   function parseQuickCSV(file) {
     return new Promise((resolve, reject) => {
       if (typeof Papa === 'undefined') {
@@ -612,7 +655,6 @@ function animateCount(element, start, end) {
     });
   }
 
-  // Parse Excel
   function parseQuickExcel(file) {
     return new Promise((resolve, reject) => {
       if (typeof XLSX === 'undefined') {
@@ -645,7 +687,6 @@ function animateCount(element, start, end) {
     });
   }
 
-  // Parse JSON
   function parseQuickJSON(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -670,14 +711,12 @@ function animateCount(element, start, end) {
     });
   }
 
-  // Render preview table
   function renderQuickPreview(data) {
     if (!data || data.length === 0) return;
 
     const headers = Object.keys(data[0]);
     const table = document.createElement('table');
 
-    // Header
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
     headers.forEach(h => {
@@ -688,7 +727,6 @@ function animateCount(element, start, end) {
     thead.appendChild(headerRow);
     table.appendChild(thead);
 
-    // Body (max 5 rows)
     const tbody = document.createElement('tbody');
     data.slice(0, 5).forEach(row => {
       const tr = document.createElement('tr');
@@ -706,7 +744,6 @@ function animateCount(element, start, end) {
     quickPreviewArea.style.display = 'block';
   }
 
-  // Upload file
   if (quickUploadBtn) {
     quickUploadBtn.addEventListener('click', async () => {
       if (!selectedQuickFile) return;
@@ -736,16 +773,11 @@ function animateCount(element, start, end) {
           quickUploadBtn.innerHTML = '<i class="fa fa-check"></i> Uploaded!';
           quickUploadBtn.style.background = '#10b981';
 
-          // Refresh dashboard counts
-          setTimeout(async () => {
-            await fetchRecentEvents(7);
-            await updateSummaryCounts();
-            
-            setTimeout(() => {
-              closeModal(uploadModal);
-              alert('File uploaded successfully!');
-            }, 1500);
-          }, 1000);
+          setTimeout(() => {
+            closeModal(uploadModal);
+            alert('File uploaded successfully!');
+            window.location.reload();
+          }, 1500);
 
         } else {
           throw new Error(result.message || 'Upload failed');
@@ -762,9 +794,6 @@ function animateCount(element, start, end) {
     });
   }
 
-
-  // 2. ANALYTICS MODAL FUNCTIONALITY
-
   async function loadQuickAnalytics() {
     const container = document.getElementById('quickAnalyticsContent');
     const PYTHON_API_URL = 'http://localhost:5000/api';
@@ -772,7 +801,6 @@ function animateCount(element, start, end) {
     container.innerHTML = '<div class="loading-state"><i class="fa fa-spinner fa-spin"></i><p>Loading analytics...</p></div>';
 
     try {
-      // Fetch recent files
       const response = await fetch('http://localhost:3000/api/files/data');
       const files = await response.json();
 
@@ -781,7 +809,6 @@ function animateCount(element, start, end) {
         return;
       }
 
-      // Get last 3 files for preview
       const recentFiles = files.slice(0, 3);
       const analyticsCards = [];
 
@@ -818,7 +845,6 @@ function animateCount(element, start, end) {
         }
       }
 
-      // Render analytics cards
       if (analyticsCards.length === 0) {
         container.innerHTML = '<div class="loading-state"><i class="fa fa-exclamation-triangle"></i><p>Failed to load analytics.</p></div>';
         return;
@@ -867,65 +893,12 @@ function animateCount(element, start, end) {
         container.appendChild(cardEl);
       });
 
-      // Handle chart type changes
-      document.querySelectorAll('.quick-chart-type').forEach(select => {
-        select.addEventListener('change', async (e) => {
-          const filename = e.target.dataset.filename;
-          const newType = e.target.value;
-          const card = e.target.closest('.quick-analytics-card');
-          const chartPreview = card.querySelector('.chart-preview');
-
-          chartPreview.innerHTML = '<i class="fa fa-spinner fa-spin" style="font-size: 32px; color: #a91c1c;"></i>';
-
-          try {
-            const response = await fetch(`${PYTHON_API_URL}/analytics/process`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ filename, chart_type: newType })
-            });
-
-            if (!response.ok) throw new Error('Failed to regenerate');
-
-            const data = await response.json();
-            chartPreview.innerHTML = `<img src="${data.chart_image}" alt="Chart">`;
-
-            // Update stats
-            const statsMini = card.querySelector('.stats-mini');
-            statsMini.innerHTML = `
-              <div class="stat">
-                <span class="stat-label">Mean</span>
-                <span class="stat-value">${data.statistics.mean.toFixed(2)}</span>
-              </div>
-              <div class="stat">
-                <span class="stat-label">Median</span>
-                <span class="stat-value">${data.statistics.median.toFixed(2)}</span>
-              </div>
-              <div class="stat">
-                <span class="stat-label">Std Dev</span>
-                <span class="stat-value">${data.statistics.std.toFixed(2)}</span>
-              </div>
-              <div class="stat">
-                <span class="stat-label">Count</span>
-                <span class="stat-value">${data.statistics.count}</span>
-              </div>
-            `;
-
-            localStorage.setItem(`chartType_${filename}`, newType);
-
-          } catch (err) {
-            chartPreview.innerHTML = '<p style="color: #ef4444;">Failed to regenerate chart</p>';
-          }
-        });
-      });
-
     } catch (err) {
       console.error('Error loading quick analytics:', err);
       container.innerHTML = '<div class="loading-state"><i class="fa fa-exclamation-triangle"></i><p>Error loading analytics.</p></div>';
     }
   }
 
-
-  // 3. REPOSITORY MODAL FUNCTIONALITY
   async function loadQuickRepository() {
     const container = document.getElementById('quickRepoContent');
 
@@ -940,7 +913,6 @@ function animateCount(element, start, end) {
         return;
       }
 
-      // Get last 5 files
       const recentFiles = result.files.slice(0, 5);
 
       container.innerHTML = '';
@@ -996,7 +968,6 @@ function animateCount(element, start, end) {
     return iconMap[ext] || 'alt';
   }
 
-  // Global functions for repository actions
   window.downloadQuickFile = function(filePath, fileName) {
     const link = document.createElement('a');
     link.href = filePath;
@@ -1019,14 +990,8 @@ function animateCount(element, start, end) {
 
       if (!response.ok) throw new Error('Delete failed');
 
-      // Remove from UI
       btnElement.closest('.quick-repo-item').remove();
 
-      // Refresh dashboard
-      await fetchRecentEvents(7);
-      await updateSummaryCounts();
-
-      // Show success
       const container = document.getElementById('quickRepoContent');
       if (container.children.length === 0) {
         container.innerHTML = '<div class="loading-state"><i class="fa fa-inbox"></i><p>No files in repository.</p></div>';
