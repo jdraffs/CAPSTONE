@@ -6,7 +6,7 @@ function logout() {
 
 // HELPER: Profile Dropdown Functionality
 function initializeProfileDropdown() {
-  const profileLink = document.querySelector('.profile-link');
+  const profileLink = document.querySelector('.profile-button');
   
   if (!profileLink) return;
   
