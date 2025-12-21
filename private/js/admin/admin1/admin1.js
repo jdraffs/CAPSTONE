@@ -1,6 +1,86 @@
+// admin1.js
 // === HELPER: Logout ===
 function logout() {
   window.location.href = '/public/index.html'; // adjust path if needed
+}
+
+// === HELPER: Profile Dropdown ===
+function initializeProfileDropdown() {
+  const profileLink = document.querySelector('.profile-button');
+  
+  if (!profileLink) return;
+  
+  // Create dropdown menu
+  const dropdown = document.createElement('div');
+  dropdown.className = 'profile-dropdown';
+  dropdown.innerHTML = `
+    <div class="dropdown-header">
+      <i class="fas fa-user-circle"></i>
+      <div class="dropdown-user-info">
+        <span class="dropdown-username">Admin</span>
+        <span class="dropdown-role">Administrator</span>
+      </div>
+    </div>
+    <div class="dropdown-divider"></div>
+    <a href="#" class="dropdown-item" id="viewProfile">
+      <i class="fas fa-user"></i>
+      <span>View Profile</span>
+    </a>
+    <a href="#" class="dropdown-item" id="settings">
+      <i class="fas fa-cog"></i>
+      <span>Settings</span>
+    </a>
+    <div class="dropdown-divider"></div>
+    <a href="#" class="dropdown-item logout" id="logoutBtn">
+      <i class="fas fa-sign-out-alt"></i>
+      <span>Logout</span>
+    </a>
+  `;
+  
+  // Insert dropdown after profile link
+  profileLink.parentElement.style.position = 'relative';
+  profileLink.parentElement.appendChild(dropdown);
+  
+  // Toggle dropdown on click
+  profileLink.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    dropdown.classList.toggle('show');
+  });
+  
+  // Close dropdown when clicking outside
+  document.addEventListener('click', function(e) {
+    if (!dropdown.contains(e.target) && e.target !== profileLink) {
+      dropdown.classList.remove('show');
+    }
+  });
+  
+  // Handle dropdown items
+  document.getElementById('viewProfile').addEventListener('click', function(e) {
+    e.preventDefault();
+    alert('View Profile functionality - To be implemented');
+    dropdown.classList.remove('show');
+  });
+  
+  document.getElementById('settings').addEventListener('click', function(e) {
+    e.preventDefault();
+    alert('Settings functionality - To be implemented');
+    dropdown.classList.remove('show');
+  });
+  
+  // Handle logout
+  document.getElementById('logoutBtn').addEventListener('click', function(e) {
+    e.preventDefault();
+    if (confirm('Are you sure you want to logout?')) {
+      // Clear any session data
+      sessionStorage.clear();
+      localStorage.clear();
+      
+      // Redirect to login page
+      window.location.href = '/public/index.html';
+    }
+    dropdown.classList.remove('show');
+  });
 }
 
 // === HELPER: Fetch and update total recent uploads ===
@@ -24,6 +104,9 @@ async function updateRecentUploadsCount() {
 
 // === MAIN DOM LOGIC ===
 document.addEventListener('DOMContentLoaded', () => {
+  // Initialize profile dropdown
+  initializeProfileDropdown();
+
   // --- NAV HIGHLIGHTING ---
   const navItems = document.querySelectorAll('.nav-item');
   const currentPath = window.location.pathname;
@@ -44,29 +127,6 @@ document.addEventListener('DOMContentLoaded', () => {
       item.classList.toggle('active', href === '#overview');
     }
   });
-
-  // --- TAB SWITCHING ---
-  // document.querySelectorAll('.nav-link').forEach(link => {
-  //   link.addEventListener('click', e => {
-  //     e.preventDefault();
-
-  //     // Update active nav item
-  //     document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-  //     link.closest('.nav-item').classList.add('active');
-
-  //     // Hide all pages
-  //     document.querySelectorAll('.content-page').forEach(page => page.classList.remove('active', 'fade-up'));
-
-  //     // Show selected page
-  //     const pageName = link.getAttribute('data-page');
-  //     const pageDiv = document.getElementById(pageName + '-page');
-  //     if (pageDiv) {
-  //       pageDiv.classList.add('active');
-  //       void pageDiv.offsetWidth; // trigger reflow for animation
-  //       pageDiv.classList.add('fade-up');
-  //     }
-  //   });
-  // });
 
   // --- MOBILE MENU TOGGLE ---
   const toggle = document.getElementById('mobileMenuToggle');
@@ -114,4 +174,3 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- RECENT UPLOADS ---
   updateRecentUploadsCount();
 });
-

@@ -1,4 +1,4 @@
-// research&extensionRoute.js - Enhanced with multi-file upload
+// research&extensionRoute.js - Fixed file ID handling in update
 import express from 'express';
 import multer from 'multer';
 import pkg from 'pg';
@@ -8,7 +8,6 @@ import fs from 'fs';
 const router = express.Router();
 const { Pool } = pkg;
 
-// PostgreSQL connection
 const pool = new Pool({
   user: 'postgres',
   host: 'localhost',
@@ -17,11 +16,9 @@ const pool = new Pool({
   port: 5432
 });
 
-// Ensure upload directory exists
 const uploadDir = './public/uploads/forms_repository';
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-// Multer storage setup - store in forms_repository folder
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => {
@@ -58,7 +55,6 @@ const upload = multer({
   }
 });
 
-// Helper function to get or create Research & Extension folder
 async function getResearchExtensionFolderId(adminid) {
   const checkFolder = await pool.query(
     'SELECT id FROM forms_repository_folders WHERE name = $1 AND adminid = $2 AND parent_id IS NULL',
@@ -77,7 +73,6 @@ async function getResearchExtensionFolderId(adminid) {
   return createFolder.rows[0].id;
 }
 
-// Helper function to save file to forms_repository_files table
 async function saveFileToRepository(folderId, file, adminid) {
   const filePath = `/uploads/forms_repository/${file.filename}`;
   
@@ -92,7 +87,6 @@ async function saveFileToRepository(folderId, file, adminid) {
   return result.rows[0];
 }
 
-// CREATE Research & Extension POST (supports up to 3 files)
 router.post('/create', upload.array('files', 3), async (req, res) => {
   const client = await pool.connect();
   
@@ -132,7 +126,6 @@ router.post('/create', upload.array('files', 3), async (req, res) => {
   }
 });
 
-// FETCH ALL Research & Extension POSTS (with files)
 router.get('/posts', async (req, res) => {
   try {
     const postsQuery = `
@@ -162,7 +155,6 @@ router.get('/posts', async (req, res) => {
   }
 });
 
-// DELETE Research & Extension POST
 router.delete('/delete/:id', async (req, res) => {
   const client = await pool.connect();
   
@@ -204,7 +196,6 @@ router.delete('/delete/:id', async (req, res) => {
   }
 });
 
-// UPDATE Research & Extension POST
 router.put('/update/:id', upload.array('files', 3), async (req, res) => {
   const client = await pool.connect();
   
@@ -214,7 +205,17 @@ router.put('/update/:id', upload.array('files', 3), async (req, res) => {
     const { id } = req.params;
     const { title, content, adminid, keepFiles } = req.body;
 
-    const filesToKeep = keepFiles ? JSON.parse(keepFiles) : [];
+    let filesToKeep = [];
+    if (keepFiles) {
+      try {
+        const parsed = JSON.parse(keepFiles);
+        filesToKeep = parsed.map(id => parseInt(id, 10));
+      } catch (e) {
+        console.error('Error parsing keepFiles:', e);
+      }
+    }
+
+    console.log('Files to keep:', filesToKeep);
 
     const updateQuery = `
       UPDATE researchextension_posts
@@ -224,35 +225,26 @@ router.put('/update/:id', upload.array('files', 3), async (req, res) => {
     `;
     const result = await client.query(updateQuery, [title, content, id]);
 
-    if (!filesToKeep || filesToKeep.length === 0) {
-      const existingFiles = await client.query(
-        `SELECT f.id, f.file_path
-         FROM forms_repository_files f
-         JOIN researchextension_post_files pf ON f.id = pf.file_id
-         WHERE pf.post_id = $1`,
-        [id]
-      );
+    const existingFiles = await client.query(
+      `SELECT f.id, f.file_path
+       FROM forms_repository_files f
+       JOIN researchextension_post_files pf ON f.id = pf.file_id
+       WHERE pf.post_id = $1`,
+      [id]
+    );
 
-      for (const file of existingFiles.rows) {
+    console.log('Existing files:', existingFiles.rows.map(f => f.id));
+
+    for (const file of existingFiles.rows) {
+      if (!filesToKeep.includes(file.id)) {
+        console.log('Deleting file:', file.id);
         const fullPath = path.join('./public', file.file_path);
-        if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
-        await client.query('DELETE FROM forms_repository_files WHERE id = $1', [file.id]);
-      }
-    } else {
-      const existingFiles = await client.query(
-        `SELECT f.id, f.file_path
-         FROM forms_repository_files f
-         JOIN researchextension_post_files pf ON f.id = pf.file_id
-         WHERE pf.post_id = $1`,
-        [id]
-      );
-
-      for (const file of existingFiles.rows) {
-        if (!filesToKeep.includes(file.id.toString())) {
-          const fullPath = path.join('./public', file.file_path);
-          if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
-          await client.query('DELETE FROM forms_repository_files WHERE id = $1', [file.id]);
+        if (fs.existsSync(fullPath)) {
+          fs.unlinkSync(fullPath);
         }
+        await client.query('DELETE FROM forms_repository_files WHERE id = $1', [file.id]);
+      } else {
+        console.log('Keeping file:', file.id);
       }
     }
 
