@@ -187,7 +187,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   function exportAllReports(reportsList) {
     if (reportsList.length === 0) {
-      alert("No reports available to export.");
+      toast.warning("No reports available to export.");
       return;
     }
 
@@ -214,7 +214,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     link.click();
     document.body.removeChild(link);
     
-    alert(`Exported ${reportsList.length} reports successfully!`);
+    toast.success(`Exported ${reportsList.length} reports successfully!`);
   }
 
   function renderReports(reportsList) {
@@ -388,7 +388,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         } catch (error) {
           console.error('Error loading column data:', error);
           chartContainer.innerHTML = originalContent;
-          alert('Failed to load data for selected column. Please try again.');
+          toast.error('Failed to load data for selected column. Please try again.');
         }
       });
     });
@@ -441,7 +441,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         } catch (error) {
           console.error('Error regenerating chart:', error);
           chartContainer.innerHTML = originalContent;
-          alert('Failed to regenerate chart. Please try again.');
+          toast.error('Failed to regenerate chart. Please try again.');
         }
       });
     });
@@ -455,7 +455,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const fileId = btn.dataset.fileId;
     
     if (!fileId) {
-      alert("Error: File ID not found");
+      toast.error("Error: File ID not found");
       return;
     }
 
@@ -474,7 +474,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      alert("File permanently deleted.");
+      toast.warning("File permanently deleted.");
       
       // Remove from reports array
       reports = reports.filter(r => r.file_id != fileId);
@@ -492,7 +492,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     } catch (error) {
       console.error("Error deleting permanently:", error);
-      alert(`Failed to delete file: ${error.message}`);
+      toast.error(`Failed to delete file: ${error.message}`);
       btn.disabled = false;
       btn.innerHTML = '<i class="bi bi-trash"></i>';
     }
@@ -561,11 +561,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         </div>
       `;
 
-      alert('Analytics refreshed successfully!');
+      toast.success('Analytics refreshed successfully!');
 
     } catch (error) {
       console.error('Error refreshing analytics:', error);
-      alert('Failed to refresh analytics. Please try again.');
+      toast.error('Failed to refresh analytics. Please try again.');
     } finally {
       btn.disabled = false;
       btn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Refresh';
@@ -584,7 +584,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   function openReportDetails(report) {
     const modal = document.getElementById("reportModal");
     if (!modal) {
-      alert("Modal not found! Make sure #reportModal exists in your HTML.");
+      toast.error("Modal not found! Make sure #reportModal exists in your HTML.");
       return;
     }
 

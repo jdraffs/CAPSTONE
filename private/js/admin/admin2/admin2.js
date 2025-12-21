@@ -743,7 +743,7 @@ function animateCount(element, start, end) {
             
             setTimeout(() => {
               closeModal(uploadModal);
-              alert('File uploaded successfully!');
+              toast.success('File uploaded successfully!');
             }, 1500);
           }, 1000);
 
@@ -1033,7 +1033,7 @@ function animateCount(element, start, end) {
       }
 
     } catch (err) {
-      alert('Failed to delete file: ' + err.message);
+      toast.error('Failed to delete file: ' + err.message);
       btnElement.innerHTML = '<i class="fa fa-trash"></i>';
       btnElement.disabled = false;
     }

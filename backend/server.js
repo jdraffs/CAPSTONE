@@ -50,6 +50,7 @@ app.use("/uploads", express.static("uploads")); // serve uploaded files
 app.use("/api", dataUploadsRoute);
 app.use("/api", eventsRoute);
 app.use("/api", dashboardStatsRoute);
+app.use('/private', express.static(path.join(__dirname, '../private')));
 
 
 
