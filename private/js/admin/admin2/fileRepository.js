@@ -265,7 +265,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const fileItems = Array.from(selectedItems).filter(item => item.startsWith('file-'));
     
     if (fileItems.length === 0) {
-      alert("No files selected for download. Please select files only.");
+      toast.warning("No files selected for download. Please select files only.");
       return;
     }
 
@@ -290,7 +290,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
     
-    alert(`${fileItems.length} file(s) downloaded successfully!`);
+    toast.success(`${fileItems.length} file(s) downloaded successfully!`);
     clearSelection();
   }
 
@@ -307,7 +307,7 @@ document.addEventListener("DOMContentLoaded", () => {
     saveTrash();
     clearSelection();
     fetchFoldersAndFiles();
-    alert(`${count} item(s) moved to trash.`);
+    window.toast.success(`${count} item(s) moved to trash.`);
   }
 
   async function bulkDeletePermanently() {
@@ -337,7 +337,7 @@ document.addEventListener("DOMContentLoaded", () => {
     
     clearSelection();
     await fetchFoldersAndFiles();
-    alert(`${successCount} of ${count} item(s) deleted permanently.`);
+    toast.success(`${successCount} of ${count} item(s) deleted permanently.`);
   }
 
   async function deleteFilePermanent(id) {
@@ -420,29 +420,29 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  async function emptyTrashAll() {
-    if (trash.size === 0) {
-      alert("Trash is already empty.");
-      return;
-    }
-
-    if (!confirm("Permanently delete everything in Trash? This cannot be undone.")) return;
-
-    const items = Array.from(trash);
-    for (const entry of items) {
-      const [type, id] = entry.split('-');
-      if (type === 'file') {
-        await deleteFilePermanent(id);
-      } else if (type === 'folder') {
-        await deleteFolderPermanent(id);
-      }
-      trash.delete(entry);
-    }
-    
-    saveTrash();
-    await fetchFoldersAndFiles();
-    alert("Trash emptied.");
+async function emptyTrashAll() {
+  if (trash.size === 0) {
+    toast.warning("Trash is already empty.");
+    return;
   }
+
+  if (!confirm("Permanently delete everything in Trash? This cannot be undone.")) return;
+
+  const items = Array.from(trash);
+  for (const entry of items) {
+    const [type, id] = entry.split('-');
+    if (type === 'file') {
+      await deleteFilePermanent(id);
+    } else if (type === 'folder') {
+      await deleteFolderPermanent(id);
+    }
+    trash.delete(entry);
+  }
+  
+  saveTrash();
+  await fetchFoldersAndFiles();
+  toast.success("Trash has been emptied successfully.", "Trash Emptied"); // ✅ CHANGED
+}
 
   function toggleFavorite(id, type) {
     const favId = `${type}-${id}`;
@@ -784,7 +784,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (isDoubleClick) {
         if (type === "folder") {
           if (currentFilter === "favorites") {
-            alert("Please switch to 'All' view to navigate into folders");
+            toast.warning("Please switch to 'All' view to navigate into folders");
             return;
           }
           currentFolderId = item.id;
@@ -835,19 +835,21 @@ document.addEventListener("DOMContentLoaded", () => {
     menu.appendChild(favoriteBtn);
 
     if (currentFilter === "trash") {
-      const restoreBtn = document.createElement("button");
-      restoreBtn.className = "restore-btn";
-      restoreBtn.type = "button";
-      restoreBtn.textContent = "Restore";
-      restoreBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        trash.delete(`${type}-${item.id}`);
-        saveTrash();
-        menu.classList.add("hidden");
-        fetchFoldersAndFiles();
-      });
-      menu.appendChild(restoreBtn);
+    const restoreBtn = document.createElement("button");
+    restoreBtn.className = "restore-btn";
+    restoreBtn.type = "button";
+    restoreBtn.textContent = "Restore";
+    restoreBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      trash.delete(`${type}-${item.id}`);
+      saveTrash();
+      menu.classList.add("hidden");
+      fetchFoldersAndFiles();
+      
+      toast.success(`"${name}" has been restored.`, 'Restored');
+    });
+    menu.appendChild(restoreBtn);
 
       const permDeleteBtn = document.createElement("button");
       permDeleteBtn.className = "delete-perm-btn";
@@ -857,7 +859,29 @@ document.addEventListener("DOMContentLoaded", () => {
         e.stopPropagation();
         e.preventDefault();
         
+      permDeleteBtn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        
+        // Keep confirm for delete confirmation (critical action)
         if (!confirm(`Permanently delete "${name}"? This cannot be undone.`)) return;
+
+        // Show loading state
+        permDeleteBtn.disabled = true;
+        permDeleteBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+
+        if (type === "file") {
+          await deleteFilePermanent(item.id);
+        } else {
+          await deleteFolderPermanent(item.id);
+        }
+        
+        menu.classList.add("hidden");
+        await fetchFoldersAndFiles();
+        
+        // Show success toast after deletion
+        toast.success(`"${name}" has been permanently deleted.`, 'Deleted');
+      });
 
         if (type === "file") {
           await deleteFilePermanent(item.id);
@@ -879,30 +903,36 @@ document.addEventListener("DOMContentLoaded", () => {
         e.preventDefault();
         toggleTrash(item.id, type);
         menu.classList.add("hidden");
+        
+        // ✅ ADD THIS:
+        toast.info(`"${name}" moved to trash.`, 'Moved to Trash');
       });
       menu.appendChild(moveTrashBtn);
     }
 
     if (type === "file") {
-      const downloadBtn = document.createElement("button");
-      downloadBtn.className = "download-btn";
-      downloadBtn.type = "button";
-      downloadBtn.textContent = "Download";
-      downloadBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        e.preventDefault();
+const downloadBtn = document.createElement("button");
+downloadBtn.className = "download-btn";
+downloadBtn.type = "button";
+downloadBtn.textContent = "Download";
+downloadBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  e.preventDefault();
 
-        const link = document.createElement("a");
-        link.href = item.file_path;
-        link.download = item.file_name;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+  const link = document.createElement("a");
+  link.href = item.file_path;
+  link.download = item.file_name;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 
-        menu.classList.add("hidden");
-      });
+  menu.classList.add("hidden");
+  
+  // ✅ ADD THIS:
+  toast.success(`"${item.file_name}" is being downloaded.`, 'Download Started');
+});
 
-      menu.appendChild(downloadBtn);
+menu.appendChild(downloadBtn);
     }
 
     dots.addEventListener("click", (e) => {

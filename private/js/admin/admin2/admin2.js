@@ -773,6 +773,16 @@ document.addEventListener('DOMContentLoaded', async () => {
           quickUploadBtn.innerHTML = '<i class="fa fa-check"></i> Uploaded!';
           quickUploadBtn.style.background = '#10b981';
 
+          // Refresh dashboard counts
+          setTimeout(async () => {
+            await fetchRecentEvents(7);
+            await updateSummaryCounts();
+            
+            setTimeout(() => {
+              closeModal(uploadModal);
+              toast.success('File uploaded successfully!');
+            }, 1500);
+          }, 1000);
           setTimeout(() => {
             closeModal(uploadModal);
             alert('File uploaded successfully!');
@@ -998,7 +1008,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
     } catch (err) {
-      alert('Failed to delete file: ' + err.message);
+      toast.error('Failed to delete file: ' + err.message);
       btnElement.innerHTML = '<i class="fa fa-trash"></i>';
       btnElement.disabled = false;
     }

@@ -66,7 +66,7 @@ window.addEventListener("DOMContentLoaded", () => {
   if (uploadBtn) {
     uploadBtn.addEventListener("click", async () => {
       if (!selectedFile) {
-        alert("Please choose a file first!");
+        toast.warning("Please choose a file first!");
         return;
       }
 
