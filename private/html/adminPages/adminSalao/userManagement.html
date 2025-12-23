@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/private/css/layout/post.css">
-    <link rel="stylesheet" href="/private/css/pages/fileRepository.css">
     <link rel="stylesheet" href="/private/css/layout/dashboardsidebar.css">
     <link href="https://fonts.googleapis.com/css2.?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -40,9 +39,19 @@
             </div>
 
             <div class="nav-section">
-                <h3 class="nav-title">User Management</h3>
+                <h3 class="nav-title">Management</h3>
+
                 <ul class="nav-list">
                     <li class="nav-item">
+                        <a class="nav-link" href="/private/html/adminPages/adminSalao/analyticsDashboard.html">
+                            <i class="fa-solid fa-chart-line"></i>
+                            <span>Analytics Dashboard</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <ul class="nav-list">
+                    <li class="nav-item active">
                         <a class="nav-link" href="/private/html/adminPages/adminSalao/userManagement.html">
                             <i class="fa-solid fa-copy"></i>
                             <span>User Management</span>
@@ -52,23 +61,12 @@
 
                 <ul class="nav-list">
                     <li class="nav-item">
-                        <a class="nav-link" href="/private/html/adminPages/adminSalao/analyticsDashboard.html">
-                            <i class="fa-solid fa-chart-line"></i>
-                            <span>System Analytics</span>
-                        </a>
-                    </li>
-                </ul>
-
-                <ul class="nav-list">
-                    <li class="nav-item">
                         <a class="nav-link" href="#">
                             <i class="fa-solid fa-box-archive"></i>
-                            <span>Placeholder</span>
+                            <span>Role Management</span>
                         </a>
                     </li>
                 </ul>
-
-
             </div>
             </div> <!-- End of sidebar-scroll -->
 
@@ -114,6 +112,6 @@
         </div>
     </main>
     <!-- SCRIPTS -->
-<script src="/private/js/admin/admin2/admin2.js"></script>
+<script src="/private/js/admin/superAdmin/superAdmin.js"></script>
 </body>
 </html>

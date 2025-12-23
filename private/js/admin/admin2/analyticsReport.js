@@ -1,4 +1,4 @@
-//analyticsReport.js - Enhanced with search, filter, export, and working summary cards - PART 1
+//analyticsReport.js - PART 1 - Main Logic with Activity Logging
 document.addEventListener("DOMContentLoaded", async () => {
   const reportsGrid = document.querySelector(".reports-grid");
   const searchInput = document.querySelector(".search-input");
@@ -10,6 +10,59 @@ document.addEventListener("DOMContentLoaded", async () => {
   let uploadedFiles = [];
   let reports = [];
   let filteredReports = [];
+
+  // ==================== ACTIVITY LOGGING FUNCTIONS ====================
+  
+  // Get current admin ID from session/localStorage
+  function getCurrentAdminId() {
+    // You should get this from your login session
+    // For now, assuming it's stored in localStorage or session
+    return localStorage.getItem('currentAdminId') || sessionStorage.getItem('adminId') || '2'; // Default to admin2
+  }
+
+  // Log activity to centralized storage (for SuperAdmin to see)
+  async function logAdminActivity(actionType, message, details = {}) {
+    const adminId = getCurrentAdminId();
+    
+    const activityLog = {
+      type: actionType, // 'upload', 'delete', 'update', 'error'
+      message: message,
+      adminId: adminId,
+      timestamp: new Date().toISOString(),
+      details: details
+    };
+
+    try {
+      // Try to send to backend API first
+      const response = await fetch('http://localhost:3000/api/activity-logs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(activityLog)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to log to server');
+      }
+      console.log(`✅ Activity logged: ${actionType} - ${message}`);
+    } catch (error) {
+      console.warn('Could not log to server, using localStorage fallback');
+      
+      // Fallback to localStorage
+      let logs = JSON.parse(localStorage.getItem('analytics_activity_logs') || '[]');
+      logs.push(activityLog);
+      
+      // Keep only last 500 logs
+      if (logs.length > 500) {
+        logs = logs.slice(-500);
+      }
+      
+      localStorage.setItem('analytics_activity_logs', JSON.stringify(logs));
+    }
+  }
+
+  // ==================== END ACTIVITY LOGGING FUNCTIONS ====================
 
   try {
     const response = await fetch("http://localhost:3000/api/files/data");
@@ -124,13 +177,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   function applyFilters(searchTerm, fileType) {
     filteredReports = reports.filter(report => {
-      // Search filter
       const matchesSearch = !searchTerm || 
         report.title.toLowerCase().includes(searchTerm) ||
         report.currentColumn.toLowerCase().includes(searchTerm) ||
         report.metric.toLowerCase().includes(searchTerm);
 
-      // File type filter
       const matchesType = fileType === "All Types" || 
         report.fileExtension === fileType;
 
@@ -141,13 +192,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function updateSummaryCards(reportsList, filesList) {
-    // Total Reports
     const totalReportsCard = document.querySelector(".summary-card:nth-child(1) .summary-value");
     if (totalReportsCard) {
       totalReportsCard.textContent = reportsList.length;
     }
 
-    // Total Records Tracked
     const totalRecords = reportsList.reduce((sum, report) => {
       return sum + (report.recordsProcessed || 0);
     }, 0);
@@ -160,7 +209,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       totalRecordsLabel.textContent = "Total Records Tracked";
     }
 
-    // Most Recent Report
     const mostRecentReport = reportsList.sort((a, b) => 
       b.uploadedAt - a.uploadedAt
     )[0];
@@ -171,7 +219,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         : mostRecentReport.title;
     }
 
-    // Average Records per Report
     const avgRecords = reportsList.length > 0 
       ? Math.round(totalRecords / reportsList.length) 
       : 0;
@@ -191,7 +238,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // Create CSV content
     let csvContent = "Report Title,File Type,Date Uploaded,Records Processed,Current Column,Mean,Median,Std Dev,Min,Max\n";
 
     reportsList.forEach(report => {
@@ -201,7 +247,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     });
 
-    // Create download link
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
@@ -242,7 +287,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
 
-      // Build column selector if multiple columns available
       let columnSelector = '';
       if (report.availableColumns && report.availableColumns.length > 1) {
         columnSelector = `
@@ -316,13 +360,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       reportsGrid.appendChild(card);
     });
 
-    // Re-attach event listeners for dynamically created elements
     attachCardEventListeners();
   }
-  // PART 2 - Event Listeners and Helper Functions
 
+  // ==================== EVENT LISTENERS WITH LOGGING ====================
+  
   function attachCardEventListeners() {
-    // Handle column selection changes
+    // Column selection changes WITH LOGGING
     document.querySelectorAll(".column-select-dropdown").forEach(select => {
       select.addEventListener("change", async (e) => {
         const reportId = e.target.id.split("-")[1];
@@ -385,15 +429,27 @@ document.addEventListener("DOMContentLoaded", async () => {
             </div>
           `;
 
+          await logAdminActivity('update', `Changed analysis column for ${report.title} to ${report.currentColumn}`, {
+            reportId: report.id,
+            reportTitle: report.title,
+            newColumn: report.currentColumn,
+            action: 'column_change'
+          });
+
         } catch (error) {
           console.error('Error loading column data:', error);
           chartContainer.innerHTML = originalContent;
           toast.error('Failed to load data for selected column. Please try again.');
+          
+          await logAdminActivity('error', `Failed to change column for ${report.title}`, {
+            reportId: report.id,
+            error: error.message
+          });
         }
       });
     });
 
-    // Handle chart type changes
+    // Chart type changes WITH LOGGING
     document.querySelectorAll(".chart-type-select").forEach(select => {
       select.addEventListener("change", async (e) => {
         const reportId = e.target.id.split("-")[1];
@@ -438,16 +494,28 @@ document.addEventListener("DOMContentLoaded", async () => {
 
           localStorage.setItem(`chartType_${report.title}`, selectedType);
 
+          await logAdminActivity('update', `Changed chart type for ${report.title} to ${selectedType}`, {
+            reportId: report.id,
+            reportTitle: report.title,
+            newChartType: selectedType,
+            action: 'chart_type_change'
+          });
+
         } catch (error) {
           console.error('Error regenerating chart:', error);
           chartContainer.innerHTML = originalContent;
           toast.error('Failed to regenerate chart. Please try again.');
+          
+          await logAdminActivity('error', `Failed to change chart type for ${report.title}`, {
+            reportId: report.id,
+            error: error.message
+          });
         }
       });
     });
   }
 
-  // Handle delete button
+  // DELETE button WITH LOGGING
   document.body.addEventListener("click", async (e) => {
     const btn = e.target.closest(".delete-btn");
     if (!btn) return;
@@ -461,6 +529,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const confirmDelete = confirm("Are you sure you want to delete this file permanently? This action cannot be undone.");
     if (!confirmDelete) return;
+
+    const report = reports.find(r => r.file_id == fileId);
+    const reportTitle = report ? report.title : 'Unknown Report';
 
     btn.disabled = true;
     btn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
@@ -476,14 +547,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       toast.warning("File permanently deleted.");
       
-      // Remove from reports array
+      await logAdminActivity('delete', `Deleted analytics report: ${reportTitle}`, {
+        fileId: fileId,
+        reportTitle: reportTitle,
+        action: 'file_deletion'
+      });
+      
       reports = reports.filter(r => r.file_id != fileId);
       filteredReports = filteredReports.filter(r => r.file_id != fileId);
       
-      // Update summary cards
       updateSummaryCards(reports, uploadedFiles);
-      
-      // Re-render
       renderReports(filteredReports);
       
       if (reports.length === 0) {
@@ -493,12 +566,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     } catch (error) {
       console.error("Error deleting permanently:", error);
       toast.error(`Failed to delete file: ${error.message}`);
+      
+      await logAdminActivity('error', `Failed to delete report: ${reportTitle}`, {
+        fileId: fileId,
+        error: error.message
+      });
+      
       btn.disabled = false;
       btn.innerHTML = '<i class="bi bi-trash"></i>';
     }
   });
 
-  // Handle refresh button
+  // REFRESH button
   document.body.addEventListener("click", async (e) => {
     const btn = e.target.closest(".refresh-btn");
     if (!btn) return;
@@ -572,7 +651,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // Handle "View Report" click
+  // VIEW REPORT button
   document.body.addEventListener("click", (e) => {
     const btn = e.target.closest(".view-btn");
     if (!btn) return;
@@ -581,264 +660,436 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (report) openReportDetails(report);
   });
 
-  function openReportDetails(report) {
-    const modal = document.getElementById("reportModal");
-    if (!modal) {
-      toast.error("Modal not found! Make sure #reportModal exists in your HTML.");
-      return;
-    }
+  // Continue in Part 2...
+  window.openReportDetails = openReportDetails;
+  window.addExportListeners = addExportListeners;
+  window.exportReportAsCSV = exportReportAsCSV;
+  window.exportReportAsPDF = exportReportAsPDF;
+});
 
-    const reportDetails = modal.querySelector(".report-details");
-    if (!reportDetails) return;
+//analyticsReport.js - PART 2 - Modal Details & Export Functions
+// This continues from Part 1 - Place these functions BEFORE the closing DOMContentLoaded
 
-    const stats = report.statistics;
+function openReportDetails(report) {
+  const modal = document.getElementById("reportModal");
+  if (!modal) {
+    toast.error("Modal not found! Make sure #reportModal exists in your HTML.");
+    return;
+  }
 
-    reportDetails.innerHTML = `
-      <h2>${report.title}</h2>
-      <p class="current-column-display"><strong>Currently Analyzing:</strong> ${report.currentColumn}</p>
+  const reportDetails = modal.querySelector(".report-details");
+  if (!reportDetails) return;
+
+  const stats = report.statistics;
+
+  reportDetails.innerHTML = `
+    <h2>${report.title}</h2>
+    <p class="current-column-display"><strong>Currently Analyzing:</strong> ${report.currentColumn}</p>
+    
+    <div class="chart-full">
+      <img src="${report.chartImage}" alt="Full Chart" style="max-width: 100%; height: auto;" />
+    </div>
+
+    <div class="stats-section">
+      <div class="stat-card blue">
+        <strong>Mean</strong>
+        <p>${stats.mean.toFixed(2)}</p>
+      </div>
+      <div class="stat-card green">
+        <strong>Median</strong>
+        <p>${stats.median.toFixed(2)}</p>
+      </div>
+      <div class="stat-card purple">
+        <strong>Mode</strong>
+        <p>${stats.mode.toFixed(2)}</p>
+      </div>
+      <div class="stat-card orange">
+        <strong>Std Dev</strong>
+        <p>${stats.std.toFixed(2)}</p>
+      </div>
+      <div class="stat-card red">
+        <strong>Min</strong>
+        <p>${stats.min.toFixed(2)}</p>
+      </div>
+      <div class="stat-card teal">
+        <strong>Max</strong>
+        <p>${stats.max.toFixed(2)}</p>
+      </div>
+      <div class="stat-card yellow">
+        <strong>Q1</strong>
+        <p>${stats.q1.toFixed(2)}</p>
+      </div>
+      <div class="stat-card pink">
+        <strong>Q3</strong>
+        <p>${stats.q3.toFixed(2)}</p>
+      </div>
+    </div>
+
+    <div class="insight">
+      <strong>🔍 Analysis Summary</strong>
+      <div class="interpretation-text">
+        ${report.interpretation}
+      </div>
+    </div>
+
+    ${report.fileInfo ? `
+      <div class="file-info">
+        <strong>📊 File Information</strong>
+        <p><strong>Total Rows:</strong> ${report.fileInfo.total_rows.toLocaleString()}</p>
+        <p><strong>Total Columns:</strong> ${report.fileInfo.total_columns}</p>
+        <p><strong>Analyzed Column:</strong> ${report.fileInfo.analyzed_column}</p>
+        ${report.fileInfo.available_columns && report.fileInfo.available_columns.length > 1 ? 
+          `<p><strong>Available Data Columns:</strong> ${report.fileInfo.available_columns.map(c => c.display_name).join(', ')}</p>` 
+          : ''}
+        ${report.summary?.is_sampled ? `<p><strong>Note:</strong> Large dataset - showing sample of ${report.summary.original_length.toLocaleString()} records</p>` : ''}
+      </div>
+    ` : ''}
+
+    <div class="advanced-stats">
+      <strong>📈 Advanced Statistics</strong>
+      <table class="stats-table">
+        <tr>
+          <td><strong>Variance:</strong></td>
+          <td>${stats.variance.toFixed(2)}</td>
+          <td><strong>Range:</strong></td>
+          <td>${stats.range.toFixed(2)}</td>
+        </tr>
+        ${stats.skewness !== undefined ? `
+        <tr>
+          <td><strong>Skewness:</strong></td>
+          <td>${stats.skewness.toFixed(3)}</td>
+          <td><strong>Kurtosis:</strong></td>
+          <td>${stats.kurtosis.toFixed(3)}</td>
+        </tr>
+        ` : ''}
+        <tr>
+          <td><strong>Sum:</strong></td>
+          <td>${stats.sum.toFixed(2)}</td>
+          <td><strong>Count:</strong></td>
+          <td>${stats.count}</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="data-table-container">
+      <strong>📋 Data Table</strong>
+      <table class="data-table">
+        <thead>
+          <tr>${report.tableData.headers.map(h => `<th>${h}</th>`).join("")}</tr>
+        </thead>
+        <tbody>
+          ${report.tableData.rows.map(row => `
+            <tr>${row.map(cell => `<td>${typeof cell === 'number' ? cell.toFixed(2) : cell}</td>`).join("")}</tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="export-options">
+      <button class="export-pdf-btn" data-report-id="${report.id}">
+        <i class="bi bi-file-pdf"></i> Export as PDF
+      </button>
+      <button class="export-csv-btn" data-report-id="${report.id}">
+        <i class="bi bi-file-spreadsheet"></i> Export as CSV
+      </button>
+    </div>
+  `;
+
+  modal.classList.add("active");
+  addExportListeners(report);
+}
+
+function addExportListeners(report) {
+  // Export as CSV
+  const csvBtn = document.querySelector('.export-csv-btn');
+  if (csvBtn) {
+    csvBtn.onclick = () => exportReportAsCSV(report);
+  }
+
+  // Export as PDF
+  const pdfBtn = document.querySelector('.export-pdf-btn');
+  if (pdfBtn) {
+    pdfBtn.onclick = () => exportReportAsPDF(report);
+  }
+}
+
+function exportReportAsCSV(report) {
+  let csvContent = `Report: ${report.title}\nDate: ${report.date}\nAnalyzed Column: ${report.currentColumn}\n\n`;
+  
+  // Add statistics
+  csvContent += "Statistics\n";
+  csvContent += "Metric,Value\n";
+  const stats = report.statistics;
+  csvContent += `Mean,${stats.mean.toFixed(2)}\n`;
+  csvContent += `Median,${stats.median.toFixed(2)}\n`;
+  csvContent += `Mode,${stats.mode.toFixed(2)}\n`;
+  csvContent += `Std Dev,${stats.std.toFixed(2)}\n`;
+  csvContent += `Min,${stats.min.toFixed(2)}\n`;
+  csvContent += `Max,${stats.max.toFixed(2)}\n`;
+  csvContent += `Q1,${stats.q1.toFixed(2)}\n`;
+  csvContent += `Q3,${stats.q3.toFixed(2)}\n`;
+  csvContent += `Variance,${stats.variance.toFixed(2)}\n`;
+  csvContent += `Range,${stats.range.toFixed(2)}\n\n`;
+
+  // Add data table
+  csvContent += "Data Table\n";
+  csvContent += report.tableData.headers.join(",") + "\n";
+  report.tableData.rows.forEach(row => {
+    csvContent += row.map(cell => typeof cell === 'number' ? cell.toFixed(2) : cell).join(",") + "\n";
+  });
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  
+  link.setAttribute("href", url);
+  link.setAttribute("download", `${report.title.replace(/[^a-z0-9]/gi, '_')}_report.csv`);
+  link.style.visibility = 'hidden';
+  
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  toast.success('Report exported as CSV successfully!');
+}
+
+function exportReportAsPDF(report) {
+  const printWindow = window.open('', '_blank');
+  const stats = report.statistics;
+  
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>${report.title} - Analytics Report</title>
+      <style>
+        body { 
+          font-family: Arial, sans-serif; 
+          padding: 20px; 
+          max-width: 1200px;
+          margin: 0 auto;
+        }
+        h1 { 
+          color: #333; 
+          border-bottom: 3px solid #4a90e2;
+          padding-bottom: 10px;
+        }
+        h2 {
+          color: #4a90e2;
+          margin-top: 30px;
+        }
+        .section { 
+          margin: 20px 0; 
+          page-break-inside: avoid;
+        }
+        table { 
+          width: 100%; 
+          border-collapse: collapse; 
+          margin: 10px 0; 
+        }
+        th, td { 
+          border: 1px solid #ddd; 
+          padding: 8px; 
+          text-align: left; 
+        }
+        th { 
+          background-color: #f2f2f2; 
+          font-weight: bold;
+        }
+        .chart { 
+          max-width: 100%; 
+          margin: 20px 0; 
+          border: 1px solid #ddd;
+          padding: 10px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stats-grid { 
+          display: grid; 
+          grid-template-columns: repeat(4, 1fr); 
+          gap: 15px;
+          margin: 20px 0;
+        }
+        .stat-box { 
+          border: 1px solid #ddd; 
+          padding: 15px;
+          background: #f9f9f9;
+          border-radius: 5px;
+        }
+        .stat-box strong {
+          display: block;
+          color: #666;
+          font-size: 12px;
+          margin-bottom: 5px;
+        }
+        .stat-box .value {
+          font-size: 24px;
+          font-weight: bold;
+          color: #4a90e2;
+        }
+        .metadata {
+          background: #f0f8ff;
+          padding: 15px;
+          border-left: 4px solid #4a90e2;
+          margin: 20px 0;
+        }
+        .interpretation {
+          background: #fffaf0;
+          padding: 15px;
+          border-left: 4px solid #ffa500;
+          margin: 20px 0;
+          line-height: 1.6;
+        }
+        @media print {
+          body { padding: 0; }
+          .section { page-break-inside: avoid; }
+        }
+      </style>
+    </head>
+    <body>
+      <h1>${report.title}</h1>
       
-      <div class="chart-full">
-        <img src="${report.chartImage}" alt="Full Chart" style="max-width: 100%; height: auto;" />
+      <div class="metadata">
+        <p><strong>Date:</strong> ${report.date}</p>
+        <p><strong>Analyzed Column:</strong> ${report.currentColumn}</p>
+        <p><strong>Records Processed:</strong> ${report.recordsProcessed.toLocaleString()}</p>
+        ${report.fileInfo ? `
+          <p><strong>Total Rows:</strong> ${report.fileInfo.total_rows.toLocaleString()}</p>
+          <p><strong>Total Columns:</strong> ${report.fileInfo.total_columns}</p>
+        ` : ''}
       </div>
 
-      <div class="stats-section">
-        <div class="stat-card blue">
-          <strong>Mean</strong>
-          <p>${stats.mean.toFixed(2)}</p>
-        </div>
-        <div class="stat-card green">
-          <strong>Median</strong>
-          <p>${stats.median.toFixed(2)}</p>
-        </div>
-        <div class="stat-card purple">
-          <strong>Mode</strong>
-          <p>${stats.mode.toFixed(2)}</p>
-        </div>
-        <div class="stat-card orange">
-          <strong>Std Dev</strong>
-          <p>${stats.std.toFixed(2)}</p>
-        </div>
-        <div class="stat-card red">
-          <strong>Min</strong>
-          <p>${stats.min.toFixed(2)}</p>
-        </div>
-        <div class="stat-card teal">
-          <strong>Max</strong>
-          <p>${stats.max.toFixed(2)}</p>
-        </div>
-        <div class="stat-card yellow">
-          <strong>Q1</strong>
-          <p>${stats.q1.toFixed(2)}</p>
-        </div>
-        <div class="stat-card pink">
-          <strong>Q3</strong>
-          <p>${stats.q3.toFixed(2)}</p>
+      <div class="section">
+        <h2>📊 Chart Visualization</h2>
+        <img src="${report.chartImage}" class="chart" />
+      </div>
+
+      <div class="section">
+        <h2>📈 Statistics Summary</h2>
+        <div class="stats-grid">
+          <div class="stat-box">
+            <strong>Mean</strong>
+            <div class="value">${stats.mean.toFixed(2)}</div>
+          </div>
+          <div class="stat-box">
+            <strong>Median</strong>
+            <div class="value">${stats.median.toFixed(2)}</div>
+          </div>
+          <div class="stat-box">
+            <strong>Mode</strong>
+            <div class="value">${stats.mode.toFixed(2)}</div>
+          </div>
+          <div class="stat-box">
+            <strong>Std Dev</strong>
+            <div class="value">${stats.std.toFixed(2)}</div>
+          </div>
+          <div class="stat-box">
+            <strong>Min</strong>
+            <div class="value">${stats.min.toFixed(2)}</div>
+          </div>
+          <div class="stat-box">
+            <strong>Max</strong>
+            <div class="value">${stats.max.toFixed(2)}</div>
+          </div>
+          <div class="stat-box">
+            <strong>Q1 (25%)</strong>
+            <div class="value">${stats.q1.toFixed(2)}</div>
+          </div>
+          <div class="stat-box">
+            <strong>Q3 (75%)</strong>
+            <div class="value">${stats.q3.toFixed(2)}</div>
+          </div>
         </div>
       </div>
 
-      <div class="insight">
-        <strong>🔍 Analysis Summary</strong>
-        <div class="interpretation-text">
+      <div class="section">
+        <h2>🔍 Analysis Interpretation</h2>
+        <div class="interpretation">
           ${report.interpretation}
         </div>
       </div>
 
-      ${report.fileInfo ? `
-        <div class="file-info">
-          <strong>📊 File Information</strong>
-          <p><strong>Total Rows:</strong> ${report.fileInfo.total_rows.toLocaleString()}</p>
-          <p><strong>Total Columns:</strong> ${report.fileInfo.total_columns}</p>
-          <p><strong>Analyzed Column:</strong> ${report.fileInfo.analyzed_column}</p>
-          ${report.fileInfo.available_columns && report.fileInfo.available_columns.length > 1 ? 
-            `<p><strong>Available Data Columns:</strong> ${report.fileInfo.available_columns.map(c => c.display_name).join(', ')}</p>` 
-            : ''}
-          ${report.summary?.is_sampled ? `<p><strong>Note:</strong> Large dataset - showing sample of ${report.summary.original_length.toLocaleString()} records</p>` : ''}
-        </div>
-      ` : ''}
-
-      <div class="advanced-stats">
-        <strong>📈 Advanced Statistics</strong>
-        <table class="stats-table">
+      <div class="section">
+        <h2>📋 Advanced Statistics</h2>
+        <table>
           <tr>
-            <td><strong>Variance:</strong></td>
+            <th>Metric</th>
+            <th>Value</th>
+            <th>Metric</th>
+            <th>Value</th>
+          </tr>
+          <tr>
+            <td><strong>Variance</strong></td>
             <td>${stats.variance.toFixed(2)}</td>
-            <td><strong>Range:</strong></td>
+            <td><strong>Range</strong></td>
             <td>${stats.range.toFixed(2)}</td>
           </tr>
           ${stats.skewness !== undefined ? `
           <tr>
-            <td><strong>Skewness:</strong></td>
+            <td><strong>Skewness</strong></td>
             <td>${stats.skewness.toFixed(3)}</td>
-            <td><strong>Kurtosis:</strong></td>
+            <td><strong>Kurtosis</strong></td>
             <td>${stats.kurtosis.toFixed(3)}</td>
           </tr>
           ` : ''}
           <tr>
-            <td><strong>Sum:</strong></td>
+            <td><strong>Sum</strong></td>
             <td>${stats.sum.toFixed(2)}</td>
-            <td><strong>Count:</strong></td>
+            <td><strong>Count</strong></td>
             <td>${stats.count}</td>
           </tr>
         </table>
       </div>
 
-      <div class="data-table-container">
-        <strong>📋 Data Table</strong>
-        <table class="data-table">
+      <div class="section">
+        <h2>📋 Data Table (Sample)</h2>
+        <table>
           <thead>
             <tr>${report.tableData.headers.map(h => `<th>${h}</th>`).join("")}</tr>
           </thead>
           <tbody>
-            ${report.tableData.rows.map(row => `
-              <tr>${row.map(cell => `<td>${typeof cell === 'number' ? cell.toFixed(2) : cell}</td>`).join("")}</tr>
-            `).join("")}
+            ${report.tableData.rows.slice(0, 20).map(row => 
+              `<tr>${row.map(cell => `<td>${typeof cell === 'number' ? cell.toFixed(2) : cell}</td>`).join("")}</tr>`
+            ).join("")}
           </tbody>
         </table>
+        ${report.tableData.rows.length > 20 ? `<p><em>Showing first 20 rows of ${report.tableData.rows.length} total rows</em></p>` : ''}
       </div>
 
-      <div class="export-options">
-        <button class="export-pdf-btn" data-report-id="${report.id}">
-          <i class="bi bi-file-pdf"></i> Export as PDF
-        </button>
-        <button class="export-csv-btn" data-report-id="${report.id}">
-          <i class="bi bi-file-spreadsheet"></i> Export as CSV
-        </button>
+      <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #ddd; text-align: center; color: #888;">
+        <p>Generated on ${new Date().toLocaleString()} | Analytics Report System</p>
       </div>
-    `;
 
-    modal.classList.add("active");
-
-    // Add export event listeners
-    addExportListeners(report);
-  }
-
-  function addExportListeners(report) {
-    // Export as CSV
-    const csvBtn = document.querySelector('.export-csv-btn');
-    if (csvBtn) {
-      csvBtn.onclick = () => exportReportAsCSV(report);
-    }
-
-    // Export as PDF
-    const pdfBtn = document.querySelector('.export-pdf-btn');
-    if (pdfBtn) {
-      pdfBtn.onclick = () => exportReportAsPDF(report);
-    }
-  }
-
-  function exportReportAsCSV(report) {
-    let csvContent = `Report: ${report.title}\nDate: ${report.date}\nAnalyzed Column: ${report.currentColumn}\n\n`;
-    
-    // Add statistics
-    csvContent += "Statistics\n";
-    csvContent += "Metric,Value\n";
-    const stats = report.statistics;
-    csvContent += `Mean,${stats.mean.toFixed(2)}\n`;
-    csvContent += `Median,${stats.median.toFixed(2)}\n`;
-    csvContent += `Mode,${stats.mode.toFixed(2)}\n`;
-    csvContent += `Std Dev,${stats.std.toFixed(2)}\n`;
-    csvContent += `Min,${stats.min.toFixed(2)}\n`;
-    csvContent += `Max,${stats.max.toFixed(2)}\n`;
-    csvContent += `Q1,${stats.q1.toFixed(2)}\n`;
-    csvContent += `Q3,${stats.q3.toFixed(2)}\n\n`;
-
-    // Add data table
-    csvContent += "Data Table\n";
-    csvContent += report.tableData.headers.join(",") + "\n";
-    report.tableData.rows.forEach(row => {
-      csvContent += row.map(cell => typeof cell === 'number' ? cell.toFixed(2) : cell).join(",") + "\n";
-    });
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    
-    link.setAttribute("href", url);
-    link.setAttribute("download", `${report.title.replace(/[^a-z0-9]/gi, '_')}_report.csv`);
-    link.style.visibility = 'hidden';
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
-
-  function exportReportAsPDF(report) {
-    // Create printable HTML content
-    const printWindow = window.open('', '_blank');
-    const stats = report.statistics;
-    
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>${report.title} - Analytics Report</title>
-        <style>
-          body { font-family: Arial, sans-serif; padding: 20px; }
-          h1 { color: #333; }
-          .section { margin: 20px 0; }
-          table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-          th { background-color: #f2f2f2; }
-          .chart { max-width: 100%; margin: 20px 0; }
-          .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-          .stat-box { border: 1px solid #ddd; padding: 10px; }
-        </style>
-      </head>
-      <body>
-        <h1>${report.title}</h1>
-        <p><strong>Date:</strong> ${report.date}</p>
-        <p><strong>Analyzed Column:</strong> ${report.currentColumn}</p>
-        <p><strong>Records Processed:</strong> ${report.recordsProcessed}</p>
-
-        <div class="section">
-          <h2>Chart Visualization</h2>
-          <img src="${report.chartImage}" class="chart" />
-        </div>
-
-        <div class="section">
-          <h2>Statistics Summary</h2>
-          <div class="stats-grid">
-            <div class="stat-box"><strong>Mean:</strong> ${stats.mean.toFixed(2)}</div>
-            <div class="stat-box"><strong>Median:</strong> ${stats.median.toFixed(2)}</div>
-            <div class="stat-box"><strong>Mode:</strong> ${stats.mode.toFixed(2)}</div>
-            <div class="stat-box"><strong>Std Dev:</strong> ${stats.std.toFixed(2)}</div>
-            <div class="stat-box"><strong>Min:</strong> ${stats.min.toFixed(2)}</div>
-            <div class="stat-box"><strong>Max:</strong> ${stats.max.toFixed(2)}</div>
-            <div class="stat-box"><strong>Q1:</strong> ${stats.q1.toFixed(2)}</div>
-            <div class="stat-box"><strong>Q3:</strong> ${stats.q3.toFixed(2)}</div>
-          </div>
-        </div>
-
-        <div class="section">
-          <h2>Data Table</h2>
-          <table>
-            <thead>
-              <tr>${report.tableData.headers.map(h => `<th>${h}</th>`).join("")}</tr>
-            </thead>
-            <tbody>
-              ${report.tableData.rows.map(row => 
-                `<tr>${row.map(cell => `<td>${typeof cell === 'number' ? cell.toFixed(2) : cell}</td>`).join("")}</tr>`
-              ).join("")}
-            </tbody>
-          </table>
-        </div>
-
-        <script>
-          window.onload = function() {
+      <script>
+        window.onload = function() {
+          setTimeout(function() {
             window.print();
-          }
-        </script>
-      </body>
-      </html>
-    `);
-    
-    printWindow.document.close();
-  }
+          }, 500);
+        }
+      </script>
+    </body>
+    </html>
+  `);
+  
+  printWindow.document.close();
+  toast.success('Opening print dialog for PDF export...');
+}
 
-  // Close modal
-  document.body.addEventListener("click", (e) => {
-    if (e.target.classList.contains("modal-overlay") || e.target.classList.contains("close-modal")) {
-      document.getElementById("reportModal").classList.remove("active");
+// Close modal
+document.body.addEventListener("click", (e) => {
+  if (e.target.classList.contains("modal-overlay") || e.target.classList.contains("close-modal")) {
+    const modal = document.getElementById("reportModal");
+    if (modal) {
+      modal.classList.remove("active");
     }
-  });
+  }
+});
+
+// ESC key to close modal
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    const modal = document.getElementById("reportModal");
+    if (modal && modal.classList.contains("active")) {
+      modal.classList.remove("active");
+    }
+  }
 });
