@@ -1,4 +1,4 @@
-//server.js
+//server.js - Updated with Activity Logs Route
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -23,6 +23,7 @@ import fileRepositoryRoute from "./routes/fileRepositoryRoute.js";
 import dataUploadsRoute from "./routes/dataUploadsRoute.js";
 import eventsRoute from "./routes/eventsRoute.js";
 import dashboardStatsRoute from "./routes/dashboardStatsRoute.js";
+import activityLogsRoute from "./routes/activityLogsRoute.js"; // NEW ROUTE
 
 // initialize 
 dotenv.config();
@@ -50,33 +51,37 @@ app.use("/uploads", express.static("uploads")); // serve uploaded files
 app.use("/api", dataUploadsRoute);
 app.use("/api", eventsRoute);
 app.use("/api", dashboardStatsRoute);
+app.use("/api", activityLogsRoute); // ADD THIS LINE
 app.use('/private', express.static(path.join(__dirname, '../private')));
 
-
-
+// UPDATED /api/files/data endpoint to include proper adminid
 app.get("/api/files/data", async (req, res) => {
   try {
-    // fetch file metadata from DB
+    // fetch file metadata from DB with adminid
     const result = await pool.query(`
       SELECT 
         id, 
         file_name AS filename, 
         file_type AS type, 
         file_size, 
-        adminid, 
+        adminid,  -- CRITICAL: Include adminid from database
         created_at AS uploaded_at,
-        file_path
+        file_path,
+        chart_type
       FROM file_repository_files
       ORDER BY created_at DESC
     `);
 
     const files = result.rows;
+    console.log(`📊 Fetched ${files.length} files from database`);
 
     const enrichedFiles = files.map(file => {
       const dbPath = file.file_path || ""; // stored path from DB
       const filename = dbPath.split("/").pop();
       const absolutePath = path.resolve(__dirname, "public/uploads/fileRepository", filename);
 
+      // Log which admin uploaded which file
+      console.log(`📄 File: ${file.filename}, Admin ID: ${file.adminid}`);
 
       if (fs.existsSync(absolutePath)) {
         try {
