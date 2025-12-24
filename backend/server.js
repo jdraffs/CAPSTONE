@@ -73,15 +73,10 @@ app.get("/api/files/data", async (req, res) => {
     `);
 
     const files = result.rows;
-    console.log(`📊 Fetched ${files.length} files from database`);
-
     const enrichedFiles = files.map(file => {
       const dbPath = file.file_path || ""; // stored path from DB
       const filename = dbPath.split("/").pop();
       const absolutePath = path.resolve(__dirname, "public/uploads/fileRepository", filename);
-
-      // Log which admin uploaded which file
-      console.log(`📄 File: ${file.filename}, Admin ID: ${file.adminid}`);
 
       if (fs.existsSync(absolutePath)) {
         try {

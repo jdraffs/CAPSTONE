@@ -256,15 +256,11 @@
   display: flex;
   gap: 15px;
   padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: white;
+  border: 2px solid #667eea;
   border-radius: 12px;
-  color: white;
+  color: #364daf;
   transition: all 0.3s ease;
-}
-
-.admin-stat-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
 }
 
 .admin-avatar {

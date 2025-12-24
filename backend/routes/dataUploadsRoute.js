@@ -254,8 +254,7 @@ router.post("/activity-logs", async (req, res) => {
         JSON.stringify(details)
       ]
     );
-
-    console.log(`✅ Activity log stored: ${type} - ${message}`);
+    
     res.json({ success: true, message: "Activity logged successfully" });
   } catch (error) {
     console.error("Error storing activity log:", error);

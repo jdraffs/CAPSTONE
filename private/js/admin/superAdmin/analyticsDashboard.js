@@ -1,61 +1,49 @@
-// analyticsDashboard.js - SuperAdmin Analytics Dashboard - PART 1 (FIXED)
+// analyticsDashboard.js - SuperAdmin Analytics Dashboard - FIXED
 document.addEventListener("DOMContentLoaded", async () => {
   const mainContent = document.getElementById("mainContent");
   const PYTHON_API_URL = "http://localhost:5000/api";
   
   let uploadedFiles = [];
   let reports = [];
-  let activityLogs = [];
 
-  // Get current admin ID from session/localStorage
-  const CURRENT_ADMIN_ID = 'superadmin'; // SuperAdmin identifier
+  const CURRENT_ADMIN_ID = 'superadmin';
 
-  // Initialize dashboard
+  // ✅ ADDED: Admin name mapping
+  const ADMIN_NAMES = {
+    '1': 'adminEnierga',
+    '2': 'adminAve',
+    'admin1': 'adminEnierga',
+    'admin2': 'adminAve',
+    'adminEnierga': 'adminEnierga',
+    'adminAve': 'adminAve'
+  };
+
+  function getAdminDisplayName(adminId) {
+    return ADMIN_NAMES[adminId] || `Admin ${adminId}`;
+  }
+
   await initializeDashboard();
 
   async function initializeDashboard() {
     mainContent.innerHTML = '<div class="loading-state"><i class="fas fa-spinner fa-spin"></i> Loading analytics dashboard...</div>';
 
     try {
-      // Fetch uploaded files with proper admin tracking
       const response = await fetch("http://localhost:3000/api/files/data");
       uploadedFiles = await response.json();
 
       console.log("📊 Fetched files:", uploadedFiles);
-
-      // Load activity logs from database or localStorage
-      await loadActivityLogs();
 
       if (uploadedFiles.length === 0) {
         renderEmptyState();
         return;
       }
 
-      // Process all analytics
       await processAllAnalytics();
-      
-      // Render complete dashboard
       renderDashboard();
 
     } catch (err) {
       console.error("Error initializing dashboard:", err);
       mainContent.innerHTML = '<div class="error-state"><i class="fas fa-exclamation-triangle"></i> Failed to load analytics data</div>';
-    }
-  }
-
-  async function loadActivityLogs() {
-    // Try to fetch from database first, fallback to localStorage
-    try {
-      const response = await fetch("http://localhost:3000/api/activity-logs");
-      if (response.ok) {
-        activityLogs = await response.json();
-      } else {
-        // Fallback to localStorage
-        activityLogs = JSON.parse(localStorage.getItem('analytics_activity_logs') || '[]');
-      }
-    } catch (error) {
-      console.warn("Failed to load activity logs from server, using localStorage");
-      activityLogs = JSON.parse(localStorage.getItem('analytics_activity_logs') || '[]');
     }
   }
 
@@ -67,9 +55,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const actualFilename = file.filename || file.file_name || file.originalName || file.displayName;
       const displayName = file.displayName || file.originalName || file.file_name || file.filename;
       
-      // Use the adminid from database - this is the FIX for problem #1 and #2
       const fileAdminId = file.adminid || 'Unknown';
-      
       const chartType = localStorage.getItem(`chartType_${displayName}`) || file.chart_type || "bar";
 
       try {
@@ -106,11 +92,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           columnDescriptions: analyticsData.file_info?.column_descriptions || {},
           currentColumn: analyticsData.file_info?.analyzed_column || "Default Column",
           fileExtension: actualFilename.split('.').pop().toUpperCase(),
-          adminId: fileAdminId // CRITICAL FIX - Use actual admin ID from database
+          adminId: fileAdminId
         });
-
-        // Log successful processing - but DON'T log SuperAdmin's viewing activity
-        // Only log if this is an actual upload action
 
       } catch (error) {
         console.error(`Error processing ${actualFilename}:`, error);
@@ -118,7 +101,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  function renderDashboard() {
+  async function renderDashboard() {
+    // Render admin activity first to get the HTML
+    const adminActivityHtml = await renderAdminActivity();
+    
     mainContent.innerHTML = `
       <!-- Executive Summary Cards -->
       <div class="executive-summary">
@@ -131,10 +117,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         ${renderKeyInsights()}
       </div>
 
-      <!-- Admin Activity Overview - FIXED -->
+      <!-- Admin Activity Overview -->
       <div class="admin-activity-section">
         <h2 class="section-title"><i class="fas fa-users-cog"></i> Admin Activity Overview</h2>
-        ${renderAdminActivity()}
+        ${adminActivityHtml}
       </div>
 
       <!-- Analytics Reports Grid -->
@@ -142,10 +128,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="section-header">
           <h2 class="section-title"><i class="fas fa-chart-bar"></i> Analytics Reports</h2>
           <div class="filter-controls">
-            <select id="adminFilter" class="filter-select">
-              <option value="all">All Admins</option>
-              ${getUniqueAdmins().map(admin => `<option value="${admin}">Admin ${admin}</option>`).join('')}
-            </select>
             <select id="timeFilter" class="filter-select">
               <option value="all">All Time</option>
               <option value="today">Today</option>
@@ -157,17 +139,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="reports-grid" id="reportsGrid">
           ${renderReportsGrid()}
         </div>
-      </div>
-
-      <!-- Activity Logs - FIXED to show admin actions only -->
-      <div class="activity-logs-section">
-        <div class="section-header">
-          <h2 class="section-title"><i class="fas fa-history"></i> Admin Activity Logs</h2>
-          <button class="clear-logs-btn" onclick="clearActivityLogs()">
-            <i class="fas fa-trash-alt"></i> Clear Logs
-          </button>
-        </div>
-        ${renderActivityLogs()}
       </div>
 
       <!-- Report Details Modal -->
@@ -293,10 +264,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     return insights;
   }
 
-  function renderAdminActivity() {
+  // ✅ UPDATED: Fetch activity logs from database to get last activity
+  async function renderAdminActivity() {
     const adminStats = {};
     
-    // Build stats from actual reports data
+    // Build stats from reports data (uploads)
     reports.forEach(report => {
       const adminId = report.adminId || 'Unknown';
       if (!adminStats[adminId]) {
@@ -313,7 +285,26 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     });
 
-    // FIXED - Check if we have any admin activity
+    // ✅ ADDED: Fetch activity logs to get most recent activity (including deletions)
+    try {
+      const response = await fetch('http://localhost:3000/api/activity-logs');
+      const activityLogs = await response.json();
+      
+      // Update last activity based on all logged activities
+      activityLogs.forEach(log => {
+        const adminId = log.adminid;
+        const logTimestamp = new Date(log.timestamp);
+        
+        if (adminStats[adminId]) {
+          if (logTimestamp > adminStats[adminId].lastActivity) {
+            adminStats[adminId].lastActivity = logTimestamp;
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching activity logs:', error);
+    }
+
     if (Object.keys(adminStats).length === 0) {
       return '<p class="no-data">No admin activity recorded yet.</p>';
     }
@@ -326,7 +317,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               <i class="fas fa-user-shield"></i>
             </div>
             <div class="admin-info">
-              <h4>Admin ${adminId}</h4>
+              <h4>${getAdminDisplayName(adminId)}</h4>
               <div class="admin-metrics">
                 <span><i class="fas fa-upload"></i> ${stats.uploads} uploads</span>
                 <span><i class="fas fa-database"></i> ${stats.totalRecords.toLocaleString()} records</span>
@@ -348,10 +339,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       <div class="analytics-report-card" data-report-id="${report.id}">
         <div class="report-card-header">
           <h3>${report.title}</h3>
-          <span class="admin-badge">Admin ${report.adminId}</span>
+          <span class="admin-badge">${getAdminDisplayName(report.adminId)}</span>
         </div>
         
-        <!-- ADDED: Column Selector (FIX #4) -->
         ${report.availableColumns && report.availableColumns.length > 1 ? `
           <div class="column-selector">
             <label>Analyzing Column:</label>
@@ -401,8 +391,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     `).join('');
   }
 
-  // analyticsDashboard.js - PART 2 (FIXED - Continued)
-
   function generateExecutiveSummary(report) {
     const stats = report.statistics;
     const columnName = report.currentColumn.toLowerCase();
@@ -436,64 +424,23 @@ document.addEventListener("DOMContentLoaded", async () => {
     return summary;
   }
 
-  function renderActivityLogs() {
-    // FIXED - Filter to show only admin actions (uploads, deletions, etc.), NOT SuperAdmin viewing
-    const adminActionLogs = activityLogs.filter(log => 
-      log.adminId && 
-      log.adminId !== CURRENT_ADMIN_ID && 
-      log.adminId !== 'SuperAdmin' &&
-      log.adminId !== 'superadmin'
-    );
-
-    if (adminActionLogs.length === 0) {
-      return '<p class="no-logs">No admin activity logs yet</p>';
-    }
-
-    const recentLogs = adminActionLogs.slice(-50).reverse();
-
-    return `
-      <div class="logs-container">
-        ${recentLogs.map(log => `
-          <div class="log-entry ${log.type}">
-            <div class="log-icon">
-              <i class="${getLogIcon(log.type)}"></i>
-            </div>
-            <div class="log-content">
-              <p class="log-message">${log.message}</p>
-              <span class="log-meta">
-                Admin ${log.adminId} • ${formatTimeAgo(new Date(log.timestamp))}
-              </span>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    `;
-  }
-
   function attachEventListeners() {
-    // Filter listeners
-    const adminFilter = document.getElementById('adminFilter');
+    // ✅ REMOVED: adminFilter listener
     const timeFilter = document.getElementById('timeFilter');
     
-    if (adminFilter) {
-      adminFilter.addEventListener('change', applyFilters);
-    }
     if (timeFilter) {
       timeFilter.addEventListener('change', applyFilters);
     }
 
-    // Modal close
     document.querySelectorAll('.modal-close, .modal-overlay').forEach(el => {
       el.addEventListener('click', closeModal);
     });
 
-    // ADDED: Column selector change listeners (FIX #4)
     document.querySelectorAll('.column-select-dropdown').forEach(select => {
       select.addEventListener('change', handleColumnChange);
     });
   }
 
-  // NEW FUNCTION - Handle column selection changes (FIX #4)
   async function handleColumnChange(event) {
     const select = event.target;
     const reportId = select.dataset.reportId;
@@ -527,14 +474,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       const analyticsData = await response.json();
       
-      // Update report data
       report.chartImage = analyticsData.chart_image;
       report.statistics = analyticsData.statistics;
       report.interpretation = analyticsData.interpretation;
       report.tableData = analyticsData.table_data;
       report.currentColumn = analyticsData.file_info.analyzed_column;
 
-      // Update UI
       chartContainer.innerHTML = `<img src="${analyticsData.chart_image}" alt="Chart Preview" />`;
       
       const statsContainer = card.querySelector('.report-stats-mini');
@@ -567,15 +512,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
+  // ✅ UPDATED: Removed adminFilter from applyFilters
   function applyFilters() {
-    const adminFilter = document.getElementById('adminFilter').value;
     const timeFilter = document.getElementById('timeFilter').value;
     
     let filteredReports = [...reports];
-
-    if (adminFilter !== 'all') {
-      filteredReports = filteredReports.filter(r => r.adminId == adminFilter);
-    }
 
     if (timeFilter !== 'all') {
       const now = new Date();
@@ -596,7 +537,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         ? filteredReports.map(report => renderSingleReportCard(report)).join('')
         : '<p class="no-data">No reports match the selected filters</p>';
       
-      // Re-attach column selector listeners
       document.querySelectorAll('.column-select-dropdown').forEach(select => {
         select.addEventListener('change', handleColumnChange);
       });
@@ -608,7 +548,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       <div class="analytics-report-card" data-report-id="${report.id}">
         <div class="report-card-header">
           <h3>${report.title}</h3>
-          <span class="admin-badge">Admin ${report.adminId}</span>
+          <span class="admin-badge">${getAdminDisplayName(report.adminId)}</span>
         </div>
         
         ${report.availableColumns && report.availableColumns.length > 1 ? `
@@ -657,7 +597,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     `;
   }
 
-  // Global functions
   window.viewReportDetails = function(reportId) {
     const report = reports.find(r => r.id === reportId);
     if (!report) return;
@@ -668,7 +607,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     detailsContainer.innerHTML = `
       <h2>${report.title}</h2>
       <div class="modal-admin-info">
-        <span class="admin-badge-large">Uploaded by Admin ${report.adminId}</span>
+        <span class="admin-badge-large">Uploaded by ${getAdminDisplayName(report.adminId)}</span>
         <span class="upload-date-large">${report.date}</span>
       </div>
       
@@ -701,29 +640,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     modal.classList.add('active');
   };
 
-  window.clearActivityLogs = function() {
-    if (confirm('Are you sure you want to clear all activity logs?')) {
-      activityLogs = [];
-      localStorage.setItem('analytics_activity_logs', JSON.stringify(activityLogs));
-      renderDashboard();
-    }
-  };
-
   function closeModal() {
     document.getElementById('reportModal').classList.remove('active');
-  }
-
-  // Helper functions
-  function getLogIcon(type) {
-    const icons = {
-      success: 'fas fa-check-circle',
-      error: 'fas fa-times-circle',
-      warning: 'fas fa-exclamation-triangle',
-      info: 'fas fa-info-circle',
-      upload: 'fas fa-cloud-upload-alt',
-      delete: 'fas fa-trash-alt'
-    };
-    return icons[type] || 'fas fa-circle';
   }
 
   function getUniqueAdmins() {
