@@ -349,7 +349,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             <i class="bi bi-eye"></i> View Full Report
           </button>
           <button class="refresh-btn" data-id="${report.id}" data-filename="${report.actualFilename || report.title}">
-            <i class="bi bi-arrow-clockwise"></i> Refresh
+            <i class="fas fa-sync-alt"></i>
           </button>
           <button class="delete-btn" data-file-id="${report.file_id}">
             <i class="bi bi-trash"></i>
@@ -589,7 +589,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!report) return;
 
     btn.disabled = true;
-    btn.innerHTML = '<i class="bi bi-arrow-clockwise spin"></i> Refreshing...';
+    btn.innerHTML = '<div class="loading-state"><i class="fas fa-spinner fa-spin"></i></div>';
 
     const card = btn.closest(".report-card");
     const columnSelector = card.querySelector(".column-select-dropdown");
@@ -647,7 +647,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       toast.error('Failed to refresh analytics. Please try again.');
     } finally {
       btn.disabled = false;
-      btn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Refresh';
+      btn.innerHTML = '<i class="fas fa-sync-alt"></i>';
     }
   });
 
