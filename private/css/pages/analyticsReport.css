@@ -286,35 +286,13 @@
   gap: 6px;
   transition: 0.3s;
   height: 40px;
+  max-width: 30%;
+  margin-right: auto;
   flex: 1;
 }
 
 .view-btn:hover {
   background: #0069d9;
-}
-
-.refresh-btn {
-  background: #2abd7d;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  transition: all 0.3s;
-  flex: 1;
-}
-
-.refresh-btn:hover {
-  background: #0f7e4e;
-  transform: translateY(-2px);
-}
-
-.refresh-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 
 .delete-btn {

@@ -88,9 +88,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       setTimeout(() => notification.remove(), 300);
     }, 3000);
   }
-
-  // Call this function in your initializeDashboard function, before the try block
-  // Add this line after mainContent.innerHTML = '<div class="loading-state">...
+  
   createRefreshButton();
 
   function getAdminDisplayName(adminId) {
