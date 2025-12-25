@@ -1,16 +1,3 @@
-/* superAdmin.css - Cleaned Version */
-
-/* Header Icons */
-.fa-bell, .fa-user {
-  color: #822020;
-  cursor: pointer;
-  transition: color 0.3s ease;
-}
-
-.fa-bell:hover, .fa-user:hover {
-  color: #a91c1c;
-}
-
 /* Profile Dropdown */
 .profile-dropdown {
   position: absolute;

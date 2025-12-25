@@ -18,6 +18,81 @@ document.addEventListener("DOMContentLoaded", async () => {
     'adminAve': 'adminAve'
   };
 
+    // Add this near the top of your file, after the DOM content loaded event
+  function createRefreshButton() {
+    const headerRight = document.querySelector('.header-right');
+    
+    const refreshBtn = document.createElement('div');
+    refreshBtn.innerHTML = `
+      <button class="refresh-btn" id="refreshDashboard" title="Refresh Dashboard">
+        <i class="fas fa-sync-alt"></i>
+      </button>
+    `;
+    
+    // Insert before notifications
+    headerRight.insertBefore(refreshBtn.firstElementChild, headerRight.firstChild);
+    
+    // Add click event
+    document.getElementById('refreshDashboard').addEventListener('click', handleRefresh);
+  }
+
+  async function handleRefresh() {
+    const refreshBtn = document.getElementById('refreshDashboard');
+    const icon = refreshBtn.querySelector('i');
+    
+    // Add spinning animation
+    icon.classList.add('fa-spin');
+    refreshBtn.disabled = true;
+    
+    try {
+      // Re-fetch data and re-render
+      const response = await fetch("http://localhost:3000/api/files/data");
+      uploadedFiles = await response.json();
+      
+      if (uploadedFiles.length === 0) {
+        renderEmptyState();
+      } else {
+        await processAllAnalytics();
+        renderDashboard();
+      }
+      
+      // Show success feedback
+      showRefreshNotification('Dashboard refreshed successfully!', 'success');
+    } catch (error) {
+      console.error('Refresh error:', error);
+      showRefreshNotification('Failed to refresh dashboard', 'error');
+    } finally {
+      // Remove spinning animation
+      icon.classList.remove('fa-spin');
+      refreshBtn.disabled = false;
+    }
+  }
+
+  function showRefreshNotification(message, type) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `refresh-notification ${type}`;
+    notification.innerHTML = `
+      <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+      <span>${message}</span>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Trigger animation
+    setTimeout(() => notification.classList.add('show'), 10);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+      notification.classList.remove('show');
+      setTimeout(() => notification.remove(), 300);
+    }, 3000);
+  }
+
+  // Call this function in your initializeDashboard function, before the try block
+  // Add this line after mainContent.innerHTML = '<div class="loading-state">...
+  createRefreshButton();
+
   function getAdminDisplayName(adminId) {
     return ADMIN_NAMES[adminId] || `Admin ${adminId}`;
   }
