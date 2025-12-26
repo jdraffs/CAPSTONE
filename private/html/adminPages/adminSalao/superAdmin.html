@@ -1,15 +1,13 @@
-<!-- superAdmin.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - SuperAdmin</title>
     <link rel="stylesheet" href="/private/css/pages/superAdmin.css">
     <link rel="stylesheet" href="/private/css/layout/dashboardsidebar.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 </head>
 <body>
     <!--SIDEBAR-->
@@ -26,57 +24,54 @@
 
         <nav class="sidebar-nav">
             <div class="sidebar-scroll">
-            <div class="nav-section">
-                <h3 class="nav-title">Main</h3>
-                <ul class="nav-list">
-                    <li class="nav-item active">
-                        <a class="nav-link" href="/private/html/adminPages/adminSalao/superAdmin.html">
-                            <i class="fas fa-tachometer-alt"></i>
-                            <span>Dashboard</span>
-                        </a>
-                    </li>
-                </ul>
+                <div class="nav-section">
+                    <h3 class="nav-title">Main</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item active">
+                            <a class="nav-link" href="/private/html/adminPages/adminSalao/superAdmin.html">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <h3 class="nav-title">Management</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/adminSalao/analyticsDashboard.html">
+                                <i class="fa-solid fa-chart-line"></i>
+                                <span>Analytics Dashboard</span>
+                            </a>
+                        </li>
+                    </ul>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/adminSalao/userManagement.html">
+                                <i class="fa-solid fa-copy"></i>
+                                <span>User Management</span>
+                            </a>
+                        </li>
+                    </ul>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/adminSalao/roleManagement.html">
+                                <i class="fa-solid fa-box-archive"></i>
+                                <span>Role Management</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </div>
-
-            <div class="nav-section">
-                <h3 class="nav-title">Management</h3>
-
-                <ul class="nav-list">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/private/html/adminPages/adminSalao/analyticsDashboard.html">
-                            <i class="fa-solid fa-chart-line"></i>
-                            <span>Analytics Dashboard</span>
-                        </a>
-                    </li>
-                </ul>
-
-                <ul class="nav-list">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/private/html/adminPages/adminSalao/userManagement.html">
-                            <i class="fa-solid fa-copy"></i>
-                            <span>User Management</span>
-                        </a>
-                    </li>
-                </ul>
-
-                <ul class="nav-list">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/private/html/adminPages/adminSalao/roleManagement.html">
-                            <i class="fa-solid fa-box-archive"></i>
-                            <span>Role Management</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-            </div> <!-- End of sidebar-scroll -->
 
             <div class="sidebar-footer">
                 <div class="user-info">
                     <div class="user-avatar">
-                    <i class="fas fa-user-circle"></i>
+                        <i class="fas fa-user-circle"></i>
                     </div>
                     <div class="user-details">
-                        <span class="user-name">Admin</span>
+                        <span class="user-name">SuperAdmin</span>
                     </div>
                 </div>
             </div>
@@ -85,208 +80,316 @@
     
     <!--MAIN CONTENT-->
     <main class="main">
-        <!--TOP-->
         <header class="dashboard-header">
             <div class="header-left">
-                <h1 class="page-title" id="pageTitle">Dashboard</h1>
+                <h1 class="page-title">Dashboard</h1>
             </div>
             <div class="header-right">
                 <div class="notification-button">
-                    <a class="notif-link" href="#notifications" data-page="overview">
-                    <i class="fa fa-bell" aria-hidden="true"></i>
+                    <a class="notif-link" href="#notifications">
+                        <i class="fa fa-bell" aria-hidden="true"></i>
+                        <span class="notification-badge" id="notificationBadge">0</span>
                     </a>
                 </div>
                 <div class="profile-button">
-                    <a class="profile-link" data-page="profile">
-                    <i class="fa fa-user" aria-hidden="true"></i>
+                    <a class="profile-link">
+                        <i class="fa fa-user" aria-hidden="true"></i>
                     </a>
                 </div>
             </div>
         </header>
-            <!--DASHBOARD CONTENT-->
-            <div class="dashboard-content" id="dashboardContent">
-                <!-- Overview Content-->
-                <div class="content-page active" id="overview-page">
-                    <h1> Welcome, SuperAdmin! </h1>
-                    <p id="datetime" class="datetime"></p>
-                    <!-- Summary Cards-->
-                    <section class="summary-cards">
-                        <div class="card-grid">
-                            <div class="summary-card faculty">
-                                <div class="card-icon faculty">
+
+        <div class="dashboard-content">
+            <!-- Welcome Section -->
+            <section class="welcome-section">
+                <div class="welcome-content">
+                    <h1 class="welcome-title">Welcome back, <span id="adminName">SuperAdmin</span>!</h1>
+                    <p class="welcome-subtitle" id="welcomeSubtitle">Here's what's happening with your system today</p>
+                    <div class="datetime-display">
+                        <i class="far fa-clock"></i>
+                        <span id="currentDateTime">Loading...</span>
+                    </div>
+                </div>
+                <div class="system-status">
+                    <div class="status-indicator" id="systemStatus">
+                        <div class="status-dot operational"></div>
+                        <div class="status-text">
+                            <span class="status-label">System Status</span>
+                            <span class="status-value">Operational</span>
+                        </div>
+                    </div>
+                    <div class="last-sync">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Last sync: <span id="lastSync">Just now</span></span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Key Metrics Cards -->
+            <section class="metrics-section">
+                <div class="metrics-grid">
+                    <!-- Total Datasets -->
+                    <div class="metric-card gradient-blue">
+                        <div class="metric-icon">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="totalDatasets">
+                                <div class="skeleton-loader"></div>
+                            </div>
+                            <div class="metric-label">Total Datasets</div>
+                            <div class="metric-subtext">All-time uploads</div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Uploads (24h) -->
+                    <div class="metric-card gradient-green">
+                        <div class="metric-icon">
+                            <i class="fas fa-arrow-up"></i>
+                        </div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="recentUploads">
+                                <div class="skeleton-loader"></div>
+                            </div>
+                            <div class="metric-label">Recent Uploads</div>
+                            <div class="metric-subtext">Last 24 hours</div>
+                        </div>
+                    </div>
+
+                    <!-- Total Reports -->
+                    <div class="metric-card gradient-purple">
+                        <div class="metric-icon">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="totalReports">
+                                <div class="skeleton-loader"></div>
+                            </div>
+                            <div class="metric-label">Reports Generated</div>
+                            <div class="metric-subtext">Analytics available</div>
+                        </div>
+                    </div>
+
+                    <!-- Repository Files -->
+                    <div class="metric-card gradient-orange">
+                        <div class="metric-icon">
+                            <i class="fas fa-folder-open"></i>
+                        </div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="repositoryFiles">
+                                <div class="skeleton-loader"></div>
+                            </div>
+                            <div class="metric-label">Repository Items</div>
+                            <div class="metric-subtext">Files stored</div>
+                        </div>
+                    </div>
+
+                    <!-- Storage Usage -->
+                    <div class="metric-card gradient-teal">
+                        <div class="metric-icon">
+                            <i class="fas fa-hdd"></i>
+                        </div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="storageUsed">
+                                <div class="skeleton-loader"></div>
+                            </div>
+                            <div class="metric-label">Storage Used</div>
+                            <div class="metric-subtext" id="storageSubtext">of 100GB</div>
+                        </div>
+                        <div class="storage-progress">
+                            <div class="storage-bar">
+                                <div class="storage-fill" id="storageFill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Last Upload -->
+                    <div class="metric-card gradient-pink">
+                        <div class="metric-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="metric-content">
+                            <div class="metric-value small" id="lastUploadTime">
+                                <div class="skeleton-loader"></div>
+                            </div>
+                            <div class="metric-label">Last Upload</div>
+                            <div class="metric-subtext" id="lastUploadName">No recent uploads</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Two Column Layout -->
+            <div class="content-columns">
+                <!-- Left Column -->
+                <div class="left-column">
+                    <!-- Data Upload Insights -->
+                    <section class="insights-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-chart-line"></i> Upload Insights</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="insight-item">
+                                <div class="insight-icon trending" id="trendIcon">
+                                    <i class="fas fa-arrow-up"></i>
+                                </div>
+                                <div class="insight-content">
+                                    <div class="insight-label">Upload Trend</div>
+                                    <div class="insight-value" id="uploadTrend">Loading...</div>
+                                </div>
+                            </div>
+
+                            <div class="insight-item">
+                                <div class="insight-icon">
                                     <i class="fas fa-file"></i>
                                 </div>
-                                <div class="card-content">
-                                    <h3 class="card-number" data-count="12">0</h3>
-                                    <p class="card-label">Total Datasets Uploaded</p>
+                                <div class="insight-content">
+                                    <div class="insight-label">Most Recent Dataset</div>
+                                    <div class="insight-value" id="recentDatasetName">No uploads yet</div>
                                 </div>
                             </div>
 
-                            <div class="summary-card alumni">
-                                <div class="card-icon alumni">
-                                    <i class="fas fa-chart-line"></i>
+                            <div class="file-type-breakdown">
+                                <h4>File Type Distribution</h4>
+                                <div class="file-types" id="fileTypeBreakdown">
+                                    <div class="skeleton-loader"></div>
                                 </div>
-                                <div class="card-content">
-                                    <h3 class="card-number" id="recentUploadsCount"></h3>
-                                    <p class="card-label">Reports Generated</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Analytics Snapshot -->
+                    <section class="insights-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-brain"></i> Analytics Snapshot</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="analytics-stats">
+                                <div class="stat-item">
+                                    <div class="stat-number" id="analyticsCount">0</div>
+                                    <div class="stat-label">Available Reports</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-number" id="lastReportTime">N/A</div>
+                                    <div class="stat-label">Last Generated</div>
                                 </div>
                             </div>
 
-                            <div class="summary-card research">
-                                <div class="card-icon research">
-                                    <i class="fas fa-folder-open"></i>
-                                </div>
-                                <div class="card-content research">
-                                    <h3 class="card-number" data-count="2">0</h3>
-                                    <p class="card-label">Repository Items</p>
-                                </div>
+                            <div class="recent-report">
+                                <div class="report-label">Most Recent Report</div>
+                                <div class="report-name" id="recentReportName">No reports available</div>
+                            </div>
+
+                            <div class="insight-message" id="analyticsInsight">
+                                <i class="fas fa-lightbulb"></i>
+                                <p>Analyzing your data...</p>
                             </div>
                         </div>
                     </section>
 
                     <!-- Quick Actions -->
-                    <section class="quick-actions">
-                        <h2>Quick Actions</h2>
-                        <div class="actions-grid">
-                            <button class="action-btn" onclick="window.location.href='./dataUploads.html'">
-                                <i class="fas fa-plus"></i>
-                                <span>Upload New Data</span>
-                            </button>
-                            <button class="action-btn" onclick="window.location.href='./analyticsReport.html'">
-                                <i class="fas fa-chart-line"></i>
-                                <span>View Analytics</span>
-                            </button>
-                            <button class="action-btn" onclick="window.location.href='./fileRepository.html'">
-                                <i class="fas fa-folder-open"></i>
-                                <span>Manage Repository</span>
-                            </button>
+                    <section class="quick-actions-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
                         </div>
-                    </section>
-
-                    <!-- recent updates table -->
-                    <section class="updates-section">
-                        <div class="updates-header">
-                            <h2>Recent System Updates</h2>
-                            <button id="viewAllUpdatesBtn" class="updates-viewall">View All</button>
-                        </div>
-
-                        <div class="updates-table-wrapper">
-                            <table class="updates-table">
-                                <thead>
-                                    <tr>
-                                        <th>Event</th>
-                                        <th>Details</th>
-                                        <th>Timestamp</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td><i class="fa-solid fa-upload updates-icon blue"></i> New dataset uploaded</td>
-                                        <td>enrollment_2025.xlsx</td>
-                                        <td>3 hours ago</td>
-                                    </tr>
-                                    <tr>
-                                        <td><i class="fa-solid fa-chart-line updates-icon purple"></i> New analytics report generated</td>
-                                        <td>Dropouts Summary</td>
-                                        <td>Yesterday</td>
-                                    </tr>
-                                    <tr>
-                                        <td><i class="fa-solid fa-folder updates-icon orange"></i> Repository updated</td>
-                                        <td>2 new files added</td>
-                                        <td>2 days ago</td>
-                                    </tr>
-                                    <tr>
-                                        <td><i class="fa-solid fa-upload updates-icon blue"></i> New dataset uploaded</td>
-                                        <td>dropouts_2025.xlsx</td>
-                                        <td>3 days ago</td>
-                                    </tr>
-                                    <tr>
-                                        <td><i class="fa-solid fa-chart-simple updates-icon green"></i> Chart visualization created</td>
-                                        <td>Graduates tracking chart</td>
-                                        <td>4 days ago</td>
-                                    </tr>
-                                    <tr>
-                                        <td><i class="fa-solid fa-folder updates-icon orange"></i> Repository updated</td>
-                                        <td>5 files archived</td>
-                                        <td>1 week ago</td>
-                                    </tr>
-                                    <tr>
-                                        <td><i class="fa-solid fa-upload updates-icon blue"></i> New dataset uploaded</td>
-                                        <td>graduates_2025.csv</td>
-                                        <td>1 week ago</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
-
-                    <!-- modal -->
-                    <div id="updatesModal" class="updates-modal">
-                        <div class="updates-modal-content">
-                            <span class="updates-close">&times;</span>
-                            <h3>All Updates</h3>
-                            <div class="updates-modal-body">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Event</th>
-                                            <th>Details</th>
-                                            <th>Timestamp</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="updatesModalTableBody">
-                                        <!-- filled dynamically via JS -->
-                                    </tbody>
-                                </table>
+                        <div class="card-body">
+                            <div class="actions-grid">
+                                <button class="action-button blue" onclick="window.location.href='./dataUploads.html'">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span>Upload Dataset</span>
+                                </button>
+                                <button class="action-button purple" onclick="window.location.href='./analyticsDashboard.html'">
+                                    <i class="fas fa-chart-bar"></i>
+                                    <span>View Analytics</span>
+                                </button>
+                                <button class="action-button orange" onclick="window.location.href='./fileRepository.html'">
+                                    <i class="fas fa-folder"></i>
+                                    <span>File Repository</span>
+                                </button>
+                                <button class="action-button green" id="generateVisualizationBtn">
+                                    <i class="fas fa-chart-area"></i>
+                                    <span>New Visualization</span>
+                                </button>
                             </div>
                         </div>
-                    </div>
-                                        <!-- Analytics Overview Section - NEW -->
+                    </section>
+                </div>
+
+                <!-- Right Column -->
+                <div class="right-column">
+                    <!-- Recent Activity Feed -->
+                    <section class="activity-feed-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-history"></i> Recent Activity</h3>
+                            <button class="view-all-btn" id="viewAllActivitiesBtn">View All</button>
+                        </div>
+                        <div class="card-body">
+                            <div class="activity-list" id="activityList">
+                                <!-- Activities will be loaded here -->
+                                <div class="skeleton-activity">
+                                    <div class="skeleton-loader"></div>
+                                    <div class="skeleton-loader"></div>
+                                    <div class="skeleton-loader"></div>
+                                </div>
+                            </div>
+                            <div class="activity-auto-refresh">
+                                <i class="fas fa-sync-alt"></i>
+                                <span>Auto-refreshing every 60s</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- System Notifications -->
+                    <section class="notifications-card" id="systemNotifications">
+                        <div class="card-header">
+                            <h3><i class="fas fa-bell"></i> System Alerts</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="notifications-list" id="notificationsList">
+                                <!-- Notifications will be loaded here -->
+                            </div>
+                        </div>
+                    </section>
                 </div>
             </div>
+        </div>
     </main>
 
-    <!-- CONTENTS FOR EACH SECTION -->
-    <section>
-        <div class="content-page" id="ojt-page">
-            <div class="page-placeholder">
-                <h2>MS TEAMS CONTENT</h2>
-                <p>-Manage faculty accounts (create faculty accounts, view list of all faculty, activate/deactivate account, reset faculty password) -Manage Alumni Submissions (approve or reject requests)</p>
+    <!-- Activity Modal -->
+    <div id="activityModal" class="modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3><i class="fas fa-history"></i> All System Activities</h3>
+                <button class="modal-close" id="closeActivityModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="activity-filters">
+                    <select id="activityTypeFilter" class="filter-select">
+                        <option value="all">All Activities</option>
+                        <option value="upload">Uploads</option>
+                        <option value="report">Reports</option>
+                        <option value="repository">Repository</option>
+                        <option value="visualization">Visualizations</option>
+                    </select>
+                    <select id="activityTimeFilter" class="filter-select">
+                        <option value="all">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                    </select>
+                </div>
+                <div class="modal-activity-list" id="modalActivityList">
+                    <!-- Full activity list -->
+                </div>
             </div>
         </div>
+    </div>
 
-        <div class="content-page" id="research-extension-page">
-            <div class="page-placeholder">
-                <h2>MS TEAMS CONTENT</h2>
-                <p>-Manage news & updates (Add/Edit/Delete News article with upload image, View Engagement or number of views) -Manage Research Extensions </p>
-            </div>
-        </div>
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
 
-        <div class="content-page" id="nstp-page">
-            <div class="page-placeholder">
-                <h2>MS TEAMS CONTENT</h2>
-                <p>-Approve Faculty Profile Edits, -Approve Research Outputs (Flipbook display) </p>
-            </div>
-        </div>
-
-        <div class="content-page" id="forms-repository-page">
-            <div class="page-placeholder">
-                <h2>MS TEAMS CONTENT</h2>
-                <p>Configure system preferences</p>
-            </div>
-        </div>
-
-        <div class="content-page" id="announcements-memos-page">
-            <div class="page-placeholder">
-                <h2>MS TEAMS CONTENT</h2>
-                <p>Configure system preferences</p>
-            </div>
-        </div>
-    </section>
-
-<!-- SCRIPTS -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-<script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="/private/js/admin/superAdmin/superAdmin.js"></script>
+    <!-- Scripts -->
+    <script src="/private/js/admin/superAdmin/superAdminDashboard.js"></script>
 </body>
 </html>
