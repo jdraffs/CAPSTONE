@@ -1,4 +1,4 @@
-// userManagement.js - COMPLETE FILE - PART 1 OF 2
+// userManagement.js - UPDATED WITH ROLE INTEGRATION - PART 1 OF 2
 // ========================================================
 // CONFIGURATION & GLOBAL VARIABLES
 // ========================================================
@@ -7,8 +7,11 @@ const API_BASE = 'http://localhost:3000/api';
 let currentAdminId = localStorage.getItem('adminid');
 let allUsers = [];
 let filteredUsers = [];
+let roles = []; // NEW: Store available roles
+let permissions = []; // NEW: Store permissions
 let currentFilter = 'all';
 let currentSearchTerm = '';
+let currentEditingUserId = null;
 
 // ========================================================
 // INITIALIZE ON PAGE LOAD
@@ -24,9 +27,50 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function initializeUserManagement() {
+  showLoadingState();
+  await Promise.all([
+    loadRoles(),
+    loadPermissions(),
+    loadUsers()
+  ]);
   injectHTML();
   attachEventListeners();
-  await loadUsers();
+  updateStats();
+  filterAndDisplayUsers();
+}
+
+// ========================================================
+// DATA LOADING - ROLES & PERMISSIONS
+// ========================================================
+async function loadRoles() {
+  try {
+    const response = await fetch(`${API_BASE}/roles`);
+    if (!response.ok) throw new Error('Failed to fetch roles');
+    roles = await response.json();
+  } catch (error) {
+    console.error('Error loading roles:', error);
+    // Fallback to default roles
+    roles = getDefaultRoles();
+  }
+}
+
+async function loadPermissions() {
+  try {
+    const response = await fetch(`${API_BASE}/permissions`);
+    if (!response.ok) throw new Error('Failed to fetch permissions');
+    permissions = await response.json();
+  } catch (error) {
+    console.error('Error loading permissions:', error);
+    permissions = [];
+  }
+}
+
+function getDefaultRoles() {
+  return [
+    { id: 1, name: 'Super Admin', user_count: 0, permissions: [] },
+    { id: 2, name: 'Data Manager', user_count: 0, permissions: [] },
+    { id: 3, name: 'Content Manager', user_count: 0, permissions: [] }
+  ];
 }
 
 // ========================================================
@@ -39,11 +83,13 @@ function injectHTML() {
     <div class="user-management-container">
       <!-- Header Section -->
       <div class="um-header">
-        <div class="um-header-left">
-          <h2>User Management</h2>
-          <p class="um-subtitle">Manage admin accounts and permissions</p>
-        </div>
         <div class="um-header-right">
+          <button class="btn-secondary" id="btnManageRoles">
+            <i class="fas fa-user-tag"></i> Manage Roles
+          </button>
+          <button class="btn-primary" id="btnCreateUser">
+            <i class="fas fa-user-plus"></i> Create User
+          </button>
           <button class="btn-primary" id="btnRefresh">
             <i class="fas fa-sync-alt"></i> Refresh
           </button>
@@ -80,12 +126,12 @@ function injectHTML() {
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon red">
-            <i class="fas fa-user-slash"></i>
+          <div class="stat-icon purple">
+            <i class="fas fa-user-tag"></i>
           </div>
           <div class="stat-content">
-            <h3 id="statSuspendedUsers">0</h3>
-            <p>Suspended Users</p>
+            <h3 id="statTotalRoles">${roles.length}</h3>
+            <p>Total Roles</p>
           </div>
         </div>
       </div>
@@ -97,23 +143,30 @@ function injectHTML() {
             All Users
           </button>
           <button class="filter-btn" data-filter="active">
-            Active
+            <i class="fas fa-circle status-active"></i> Active
           </button>
           <button class="filter-btn" data-filter="inactive">
-            Inactive
+            <i class="fas fa-circle status-inactive"></i> Inactive
           </button>
           <button class="filter-btn" data-filter="suspended">
-            Suspended
+            <i class="fas fa-circle status-suspended"></i> Suspended
           </button>
         </div>
         
-        <div class="um-search">
-          <i class="fas fa-search"></i>
-          <input 
-            type="text" 
-            id="searchUsers" 
-            placeholder="Search by ID, name, or email..."
-          />
+        <div class="um-filter-group">
+          <select id="roleFilter" class="filter-select">
+            <option value="">All Roles</option>
+            ${roles.map(role => `<option value="${role.id}">${role.name}</option>`).join('')}
+          </select>
+          
+          <div class="um-search">
+            <i class="fas fa-search"></i>
+            <input 
+              type="text" 
+              id="searchUsers" 
+              placeholder="Search by ID, name, or email..."
+            />
+          </div>
         </div>
       </div>
 
@@ -122,6 +175,9 @@ function injectHTML() {
         <table class="um-table">
           <thead>
             <tr>
+              <th>
+                <input type="checkbox" id="selectAll" title="Select All">
+              </th>
               <th>User ID</th>
               <th>Full Name</th>
               <th>Email/Username</th>
@@ -133,16 +189,35 @@ function injectHTML() {
           </thead>
           <tbody id="usersTableBody">
             <tr>
-              <td colspan="7" class="loading-cell">
+              <td colspan="8" class="loading-cell">
                 <i class="fas fa-spinner fa-spin"></i> Loading users...
               </td>
             </tr>
           </tbody>
         </table>
       </div>
+
+      <!-- Bulk Actions Bar (Hidden by default) -->
+      <div class="bulk-actions-bar" id="bulkActionsBar" style="display: none;">
+        <span class="selected-count">0 users selected</span>
+        <div class="bulk-actions">
+          <button class="bulk-btn" id="bulkActivate">
+            <i class="fas fa-check-circle"></i> Activate
+          </button>
+          <button class="bulk-btn" id="bulkDeactivate">
+            <i class="fas fa-pause-circle"></i> Deactivate
+          </button>
+          <button class="bulk-btn" id="bulkChangeRole">
+            <i class="fas fa-user-tag"></i> Change Role
+          </button>
+          <button class="bulk-btn danger" id="bulkDelete">
+            <i class="fas fa-trash-alt"></i> Delete
+          </button>
+        </div>
+      </div>
     </div>
 
-    <!-- Action Modals -->
+    <!-- Modals Container -->
     <div id="modalContainer"></div>
   `;
 }
@@ -151,9 +226,11 @@ function injectHTML() {
 // EVENT LISTENERS
 // ========================================================
 function attachEventListeners() {
-  // Refresh button
-  document.getElementById('btnRefresh').addEventListener('click', () => {
-    loadUsers();
+  // Header buttons
+  document.getElementById('btnRefresh').addEventListener('click', () => loadUsers());
+  document.getElementById('btnCreateUser').addEventListener('click', () => openCreateUserModal());
+  document.getElementById('btnManageRoles').addEventListener('click', () => {
+    window.location.href = '/private/html/adminPages/adminSalao/roleManagement.html';
   });
 
   // Filter buttons
@@ -166,26 +243,46 @@ function attachEventListeners() {
     });
   });
 
+  // Role filter
+  document.getElementById('roleFilter').addEventListener('change', filterAndDisplayUsers);
+
   // Search input
   document.getElementById('searchUsers').addEventListener('input', (e) => {
     currentSearchTerm = e.target.value.toLowerCase();
     filterAndDisplayUsers();
   });
+
+  // Select all checkbox
+  document.getElementById('selectAll').addEventListener('change', handleSelectAll);
+
+  // Bulk actions
+  document.getElementById('bulkActivate').addEventListener('click', () => handleBulkAction('activate'));
+  document.getElementById('bulkDeactivate').addEventListener('click', () => handleBulkAction('deactivate'));
+  document.getElementById('bulkChangeRole').addEventListener('click', () => openBulkChangeRoleModal());
+  document.getElementById('bulkDelete').addEventListener('click', () => handleBulkAction('delete'));
 }
 
 // ========================================================
-// DATA LOADING
+// DATA LOADING - USERS
 // ========================================================
 async function loadUsers() {
   try {
     const response = await fetch(`${API_BASE}/users`);
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch users');
-    }
+    if (!response.ok) throw new Error('Failed to fetch users');
 
     const data = await response.json();
     allUsers = data.users || [];
+    
+    // Enrich users with role information
+    allUsers = allUsers.map(user => {
+      const userRole = roles.find(r => r.name === user.role || r.id === user.role_id);
+      return {
+        ...user,
+        role_id: userRole?.id || null,
+        role_name: userRole?.name || user.role || 'No Role',
+        role_permissions: userRole?.permissions || []
+      };
+    });
     
     updateStats();
     filterAndDisplayUsers();
@@ -208,18 +305,27 @@ function updateStats() {
   document.getElementById('statTotalUsers').textContent = total;
   document.getElementById('statActiveUsers').textContent = active;
   document.getElementById('statInactiveUsers').textContent = inactive;
-  document.getElementById('statSuspendedUsers').textContent = suspended;
+  document.getElementById('statTotalRoles').textContent = roles.length;
 }
 
 // ========================================================
 // FILTER & DISPLAY
 // ========================================================
 function filterAndDisplayUsers() {
+  const selectedRoleId = document.getElementById('roleFilter').value;
+  
   // Apply status filter
   filteredUsers = allUsers.filter(user => {
-    if (currentFilter === 'all') return true;
-    return user.status === currentFilter;
+    if (currentFilter !== 'all' && user.status !== currentFilter) return false;
+    return true;
   });
+
+  // Apply role filter
+  if (selectedRoleId) {
+    filteredUsers = filteredUsers.filter(user => 
+      user.role_id === parseInt(selectedRoleId)
+    );
+  }
 
   // Apply search filter
   if (currentSearchTerm) {
@@ -228,6 +334,7 @@ function filterAndDisplayUsers() {
         ${user.adminid} 
         ${user.full_name || ''} 
         ${user.email || user.adminid}
+        ${user.role_name || ''}
       `.toLowerCase();
       
       return searchableText.includes(currentSearchTerm);
@@ -246,7 +353,7 @@ function displayUsers() {
   if (filteredUsers.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" class="empty-cell">
+        <td colspan="8" class="empty-cell">
           <i class="fas fa-inbox"></i>
           <p>No users found</p>
         </td>
@@ -257,6 +364,14 @@ function displayUsers() {
 
   tbody.innerHTML = filteredUsers.map(user => `
     <tr data-user-id="${user.adminid}">
+      <td>
+        <input 
+          type="checkbox" 
+          class="user-checkbox" 
+          data-user-id="${user.adminid}"
+          ${user.adminid === currentAdminId ? 'disabled' : ''}
+        >
+      </td>
       <td class="user-id">${user.adminid}</td>
       <td class="user-name">
         <div class="user-avatar">
@@ -266,7 +381,10 @@ function displayUsers() {
       </td>
       <td>${user.email || user.adminid}</td>
       <td>
-        <span class="role-badge">${user.role || 'Admin'}</span>
+        <span class="role-badge role-${user.role_id || 'default'}" title="${user.role_permissions.length} permissions">
+          <i class="fas fa-user-tag"></i>
+          ${user.role_name}
+        </span>
       </td>
       <td>
         <span class="status-badge status-${user.status || 'active'}">
@@ -277,9 +395,23 @@ function displayUsers() {
       <td class="actions-cell">
         <div class="action-buttons">
           <button 
+            class="btn-action btn-view" 
+            onclick="openUserDetailsModal('${user.adminid}')"
+            title="View Details"
+          >
+            <i class="fas fa-eye"></i>
+          </button>
+          <button 
             class="btn-action btn-edit" 
+            onclick="openEditUserModal('${user.adminid}')"
+            title="Edit User"
+          >
+            <i class="fas fa-edit"></i>
+          </button>
+          <button 
+            class="btn-action btn-more" 
             onclick="openUserActions('${user.adminid}')"
-            title="Actions"
+            title="More Actions"
           >
             <i class="fas fa-ellipsis-v"></i>
           </button>
@@ -287,10 +419,48 @@ function displayUsers() {
       </td>
     </tr>
   `).join('');
+
+  // Attach checkbox listeners
+  attachCheckboxListeners();
 }
 
 // ========================================================
-// UTILITY FUNCTIONS - FORMAT STATUS
+// CHECKBOX HANDLING
+// ========================================================
+function attachCheckboxListeners() {
+  document.querySelectorAll('.user-checkbox').forEach(cb => {
+    cb.addEventListener('change', updateBulkActionsBar);
+  });
+}
+
+function handleSelectAll(e) {
+  const isChecked = e.target.checked;
+  document.querySelectorAll('.user-checkbox:not([disabled])').forEach(cb => {
+    cb.checked = isChecked;
+  });
+  updateBulkActionsBar();
+}
+
+function updateBulkActionsBar() {
+  const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+  const count = selectedCheckboxes.length;
+  const bulkBar = document.getElementById('bulkActionsBar');
+  
+  if (count > 0) {
+    bulkBar.style.display = 'flex';
+    bulkBar.querySelector('.selected-count').textContent = `${count} user${count > 1 ? 's' : ''} selected`;
+  } else {
+    bulkBar.style.display = 'none';
+  }
+}
+
+function getSelectedUserIds() {
+  return Array.from(document.querySelectorAll('.user-checkbox:checked'))
+    .map(cb => cb.dataset.userId);
+}
+
+// ========================================================
+// UTILITY FUNCTIONS
 // ========================================================
 function formatStatus(status) {
   const statusMap = {
@@ -301,9 +471,6 @@ function formatStatus(status) {
   return statusMap[status] || status;
 }
 
-// ========================================================
-// UTILITY FUNCTIONS - FORMAT LAST LOGIN
-// ========================================================
 function formatLastLogin(timestamp) {
   if (!timestamp) return 'Never';
   
@@ -326,23 +493,301 @@ function formatLastLogin(timestamp) {
   });
 }
 
-// ========================================================
-// UTILITY FUNCTIONS - SHOW ERROR
-// ========================================================
-function showError(message) {
-  const tbody = document.getElementById('usersTableBody');
-  tbody.innerHTML = `
-    <tr>
-      <td colspan="7" class="error-cell">
-        <i class="fas fa-exclamation-triangle"></i>
-        <p>${message}</p>
-      </td>
-    </tr>
+function showLoadingState() {
+  const mainContent = document.getElementById('mainContent');
+  mainContent.innerHTML = `
+    <div class="loading-state">
+      <i class="fas fa-spinner fa-spin fa-3x"></i>
+      <p>Loading user management...</p>
+    </div>
   `;
 }
 
+function showError(message) {
+  const tbody = document.getElementById('usersTableBody');
+  if (tbody) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" class="error-cell">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>${message}</p>
+        </td>
+      </tr>
+    `;
+  }
+}
+
+// userManagement.js - UPDATED WITH ROLE INTEGRATION - PART 2 OF 2
 // ========================================================
-// USER ACTIONS MODAL
+// COPY THIS AND APPEND IT DIRECTLY AFTER PART 1
+// ========================================================
+
+// ========================================================
+// CREATE USER MODAL
+// ========================================================
+function openCreateUserModal() {
+  const modal = document.getElementById('modalContainer');
+  
+  modal.innerHTML = `
+    <div class="modal-overlay" onclick="closeModal()">
+      <div class="modal-content create-user-modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h3><i class="fas fa-user-plus"></i> Create New User</h3>
+          <button class="modal-close" onclick="closeModal()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        
+        <form id="createUserForm" class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="newUsername">Username/Admin ID <span class="required">*</span></label>
+              <input type="text" id="newUsername" required placeholder="e.g., admin123">
+            </div>
+            
+            <div class="form-group">
+              <label for="newFullName">Full Name <span class="required">*</span></label>
+              <input type="text" id="newFullName" required placeholder="e.g., John Doe">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="newEmail">Email Address</label>
+              <input type="email" id="newEmail" placeholder="e.g., user@pup.edu.ph">
+            </div>
+            
+            <div class="form-group">
+              <label for="newRole">Assign Role <span class="required">*</span></label>
+              <select id="newRole" required>
+                <option value="">-- Select Role --</option>
+                ${roles.map(role => `
+                  <option value="${role.id}">${role.name}</option>
+                `).join('')}
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="newPassword">Password <span class="required">*</span></label>
+              <div class="password-input-group">
+                <input type="password" id="newPassword" required placeholder="Minimum 8 characters">
+                <button type="button" class="toggle-password" onclick="togglePasswordVisibility('newPassword')">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="confirmPassword">Confirm Password <span class="required">*</span></label>
+              <div class="password-input-group">
+                <input type="password" id="confirmPassword" required placeholder="Re-enter password">
+                <button type="button" class="toggle-password" onclick="togglePasswordVisibility('confirmPassword')">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <button type="button" class="btn-link" onclick="generateRandomPassword()">
+              <i class="fas fa-random"></i> Generate Random Password
+            </button>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+            <button type="submit" class="btn-primary">
+              <i class="fas fa-user-plus"></i> Create User
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+  
+  modal.style.display = 'block';
+  
+  // Attach form submit handler
+  document.getElementById('createUserForm').addEventListener('submit', handleCreateUser);
+}
+
+// ========================================================
+// EDIT USER MODAL
+// ========================================================
+function openEditUserModal(userId) {
+  const user = allUsers.find(u => u.adminid === userId);
+  if (!user) return;
+
+  const modal = document.getElementById('modalContainer');
+  
+  modal.innerHTML = `
+    <div class="modal-overlay" onclick="closeModal()">
+      <div class="modal-content edit-user-modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h3><i class="fas fa-user-edit"></i> Edit User: ${user.adminid}</h3>
+          <button class="modal-close" onclick="closeModal()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        
+        <form id="editUserForm" class="modal-body">
+          <input type="hidden" id="editUserId" value="${user.adminid}">
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="editFullName">Full Name</label>
+              <input type="text" id="editFullName" value="${user.full_name || ''}" placeholder="Full Name">
+            </div>
+            
+            <div class="form-group">
+              <label for="editEmail">Email Address</label>
+              <input type="email" id="editEmail" value="${user.email || ''}" placeholder="Email">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="editRole">Role <span class="required">*</span></label>
+              <select id="editRole" required>
+                ${roles.map(role => `
+                  <option value="${role.id}" ${role.id === user.role_id ? 'selected' : ''}>
+                    ${role.name}
+                  </option>
+                `).join('')}
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="editStatus">Status</label>
+              <select id="editStatus">
+                <option value="active" ${user.status === 'active' ? 'selected' : ''}>Active</option>
+                <option value="inactive" ${user.status === 'inactive' ? 'selected' : ''}>Inactive</option>
+                <option value="suspended" ${user.status === 'suspended' ? 'selected' : ''}>Suspended</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+            <button type="submit" class="btn-primary">
+              <i class="fas fa-save"></i> Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+  
+  modal.style.display = 'block';
+  
+  // Attach form submit handler
+  document.getElementById('editUserForm').addEventListener('submit', handleEditUser);
+}
+
+// ========================================================
+// USER DETAILS MODAL
+// ========================================================
+function openUserDetailsModal(userId) {
+  const user = allUsers.find(u => u.adminid === userId);
+  if (!user) return;
+
+  const userRole = roles.find(r => r.id === user.role_id);
+
+  const modal = document.getElementById('modalContainer');
+  modal.innerHTML = `
+    <div class="modal-overlay" onclick="closeModal()">
+      <div class="modal-content details-modal large" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h3><i class="fas fa-id-card"></i> User Details: ${user.adminid}</h3>
+          <button class="modal-close" onclick="closeModal()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        
+        <div class="modal-body">
+          <!-- User Info Card -->
+          <div class="details-card">
+            <div class="details-header">
+              <div class="user-avatar-large">
+                <i class="fas fa-user-circle"></i>
+              </div>
+              <div class="user-header-info">
+                <h2>${user.full_name || user.adminid}</h2>
+                <p class="user-email">${user.email || user.adminid}</p>
+                <span class="status-badge status-${user.status || 'active'}">
+                  ${formatStatus(user.status || 'active')}
+                </span>
+              </div>
+            </div>
+
+            <div class="details-grid">
+              <div class="detail-item">
+                <div class="detail-label">User ID</div>
+                <div class="detail-value">${user.adminid}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Role</div>
+                <div class="detail-value">
+                  <span class="role-badge role-${user.role_id}">
+                    <i class="fas fa-user-tag"></i> ${user.role_name}
+                  </span>
+                </div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Created Date</div>
+                <div class="detail-value">${new Date(user.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Last Login</div>
+                <div class="detail-value">${formatLastLogin(user.last_login)}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Role Permissions -->
+          ${userRole && userRole.permissions && userRole.permissions.length > 0 ? `
+            <div class="details-section">
+              <h4><i class="fas fa-shield-alt"></i> Role Permissions (${userRole.permissions.length})</h4>
+              <div class="permissions-grid">
+                ${userRole.permissions.map(perm => `
+                  <div class="permission-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>${perm}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : `
+            <div class="details-section">
+              <h4><i class="fas fa-shield-alt"></i> Permissions</h4>
+              <p class="no-data">No permissions assigned to this role yet.</p>
+            </div>
+          `}
+
+          <!-- Quick Actions -->
+          <div class="details-actions">
+            <button class="btn-primary" onclick="closeModal(); openEditUserModal('${user.adminid}')">
+              <i class="fas fa-edit"></i> Edit User
+            </button>
+            <button class="btn-secondary" onclick="closeModal(); resetUserPassword('${user.adminid}')">
+              <i class="fas fa-key"></i> Reset Password
+            </button>
+            <button class="btn-secondary" onclick="closeModal(); viewUserActivity('${user.adminid}')">
+              <i class="fas fa-history"></i> View Activity
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  modal.style.display = 'block';
+}
+
+// ========================================================
+// USER ACTIONS MODAL (More Menu)
 // ========================================================
 function openUserActions(userId) {
   const user = allUsers.find(u => u.adminid === userId);
@@ -354,7 +799,7 @@ function openUserActions(userId) {
     <div class="modal-overlay" onclick="closeModal()">
       <div class="modal-content user-actions-modal" onclick="event.stopPropagation()">
         <div class="modal-header">
-          <h3>User Actions: ${user.adminid}</h3>
+          <h3>Actions: ${user.adminid}</h3>
           <button class="modal-close" onclick="closeModal()">
             <i class="fas fa-times"></i>
           </button>
@@ -443,10 +888,270 @@ function openUserActions(userId) {
   modal.style.display = 'block';
 }
 
-// userManagement.js - COMPLETE FILE - PART 2 OF 2
 // ========================================================
-// COPY THIS AND APPEND IT DIRECTLY AFTER PART 1
+// BULK CHANGE ROLE MODAL
 // ========================================================
+function openBulkChangeRoleModal() {
+  const selectedUserIds = getSelectedUserIds();
+  if (selectedUserIds.length === 0) return;
+
+  const modal = document.getElementById('modalContainer');
+  
+  modal.innerHTML = `
+    <div class="modal-overlay" onclick="closeModal()">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h3><i class="fas fa-user-tag"></i> Change Role for ${selectedUserIds.length} User(s)</h3>
+          <button class="modal-close" onclick="closeModal()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        
+        <form id="bulkChangeRoleForm" class="modal-body">
+          <div class="form-group">
+            <label for="bulkNewRole">Select New Role <span class="required">*</span></label>
+            <select id="bulkNewRole" required>
+              <option value="">-- Select Role --</option>
+              ${roles.map(role => `
+                <option value="${role.id}">${role.name}</option>
+              `).join('')}
+            </select>
+          </div>
+
+          <div class="info-box">
+            <i class="fas fa-info-circle"></i>
+            <p>This will change the role for all ${selectedUserIds.length} selected user(s).</p>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+            <button type="submit" class="btn-primary">
+              <i class="fas fa-check"></i> Apply Role Change
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+  
+  modal.style.display = 'block';
+  
+  document.getElementById('bulkChangeRoleForm').addEventListener('submit', handleBulkChangeRole);
+}
+
+// ========================================================
+// FORM HANDLERS
+// ========================================================
+async function handleCreateUser(e) {
+  e.preventDefault();
+
+  const username = document.getElementById('newUsername').value.trim();
+  const fullName = document.getElementById('newFullName').value.trim();
+  const email = document.getElementById('newEmail').value.trim();
+  const roleId = document.getElementById('newRole').value;
+  const password = document.getElementById('newPassword').value;
+  const confirmPassword = document.getElementById('confirmPassword').value;
+
+  // Validation
+  if (password !== confirmPassword) {
+    showToast('Passwords do not match', 'error');
+    return;
+  }
+
+  if (password.length < 8) {
+    showToast('Password must be at least 8 characters', 'error');
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        adminid: username,
+        password: password,
+        full_name: fullName,
+        email: email || username,
+        role_id: parseInt(roleId)
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create user');
+    }
+
+    await logActivity({
+      type: 'user_creation',
+      message: `Created new user account ${username}`,
+      adminId: currentAdminId,
+      details: { newUser: username, role: roleId }
+    });
+
+    showToast(`User "${username}" created successfully`, 'success');
+    closeModal();
+    await loadUsers();
+
+  } catch (error) {
+    console.error('Error creating user:', error);
+    showToast(error.message, 'error');
+  }
+}
+
+async function handleEditUser(e) {
+  e.preventDefault();
+
+  const userId = document.getElementById('editUserId').value;
+  const fullName = document.getElementById('editFullName').value.trim();
+  const email = document.getElementById('editEmail').value.trim();
+  const roleId = document.getElementById('editRole').value;
+  const status = document.getElementById('editStatus').value;
+
+  try {
+    const response = await fetch(`${API_BASE}/users/${userId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        full_name: fullName,
+        email: email,
+        role_id: parseInt(roleId),
+        status: status
+      })
+    });
+
+    if (!response.ok) throw new Error('Failed to update user');
+
+    await logActivity({
+      type: 'user_update',
+      message: `Updated user account ${userId}`,
+      adminId: currentAdminId,
+      details: { updatedUser: userId }
+    });
+
+    showToast(`User "${userId}" updated successfully`, 'success');
+    closeModal();
+    await loadUsers();
+
+  } catch (error) {
+    console.error('Error updating user:', error);
+    showToast('Failed to update user', 'error');
+  }
+}
+
+async function handleBulkChangeRole(e) {
+  e.preventDefault();
+
+  const newRoleId = document.getElementById('bulkNewRole').value;
+  const selectedUserIds = getSelectedUserIds();
+
+  try {
+    const response = await fetch(`${API_BASE}/users/bulk/change-role`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_ids: selectedUserIds,
+        role_id: parseInt(newRoleId)
+      })
+    });
+
+    if (!response.ok) throw new Error('Failed to change roles');
+
+    const role = roles.find(r => r.id === parseInt(newRoleId));
+    
+    await logActivity({
+      type: 'bulk_role_change',
+      message: `Changed role to "${role.name}" for ${selectedUserIds.length} user(s)`,
+      adminId: currentAdminId,
+      details: { count: selectedUserIds.length, roleId: newRoleId }
+    });
+
+    showToast(`Role changed for ${selectedUserIds.length} user(s)`, 'success');
+    closeModal();
+    await loadUsers();
+
+    // Clear selections
+    document.getElementById('selectAll').checked = false;
+    updateBulkActionsBar();
+
+  } catch (error) {
+    console.error('Error changing roles:', error);
+    showToast('Failed to change roles', 'error');
+  }
+}
+// ========================================================
+// APPEND THESE FUNCTIONS TO PART 2
+// ========================================================
+
+// ========================================================
+// BULK ACTIONS HANDLER
+// ========================================================
+async function handleBulkAction(action) {
+  const selectedUserIds = getSelectedUserIds();
+  if (selectedUserIds.length === 0) {
+    showToast('No users selected', 'warning');
+    return;
+  }
+
+  let confirmed = false;
+  let endpoint = '';
+  let body = { user_ids: selectedUserIds };
+  let successMessage = '';
+
+  switch(action) {
+    case 'activate':
+      confirmed = confirm(`Activate ${selectedUserIds.length} user(s)?`);
+      endpoint = `${API_BASE}/users/bulk/change-status`;
+      body.status = 'active';
+      successMessage = `${selectedUserIds.length} user(s) activated`;
+      break;
+    
+    case 'deactivate':
+      confirmed = confirm(`Deactivate ${selectedUserIds.length} user(s)?`);
+      endpoint = `${API_BASE}/users/bulk/change-status`;
+      body.status = 'inactive';
+      successMessage = `${selectedUserIds.length} user(s) deactivated`;
+      break;
+    
+    case 'delete':
+      confirmed = confirm(`⚠️ WARNING: Delete ${selectedUserIds.length} user(s)? This cannot be undone!`);
+      endpoint = `${API_BASE}/users/bulk/delete`;
+      successMessage = `${selectedUserIds.length} user(s) deleted`;
+      break;
+    
+    default:
+      return;
+  }
+
+  if (!confirmed) return;
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    if (!response.ok) throw new Error('Bulk action failed');
+
+    await logActivity({
+      type: `bulk_${action}`,
+      message: successMessage,
+      adminId: currentAdminId,
+      details: { userIds: selectedUserIds }
+    });
+
+    showToast(successMessage, 'success');
+    await loadUsers();
+
+    // Clear selections
+    document.getElementById('selectAll').checked = false;
+    updateBulkActionsBar();
+
+  } catch (error) {
+    console.error('Error performing bulk action:', error);
+    showToast('Bulk action failed', 'error');
+  }
+}
 
 // ========================================================
 // CHANGE USER STATUS
@@ -474,7 +1179,6 @@ async function changeUserStatus(userId, newStatus) {
 
     if (!response.ok) throw new Error('Failed to update status');
 
-    // Log activity
     await logActivity({
       type: 'user_status_change',
       message: `Changed status of ${userId} to ${newStatus}`,
@@ -516,7 +1220,6 @@ async function resetUserPassword(userId) {
 
     const data = await response.json();
 
-    // Log activity
     await logActivity({
       type: 'password_reset',
       message: `Reset password for user ${userId}`,
@@ -527,7 +1230,6 @@ async function resetUserPassword(userId) {
       }
     });
 
-    // Show temporary password modal
     showTempPasswordModal(userId, data.tempPassword);
 
   } catch (error) {
@@ -552,7 +1254,7 @@ async function viewUserActivity(userId) {
       <div class="modal-overlay" onclick="closeModal()">
         <div class="modal-content activity-modal" onclick="event.stopPropagation()">
           <div class="modal-header">
-            <h3>Activity History: ${userId}</h3>
+            <h3><i class="fas fa-history"></i> Activity History: ${userId}</h3>
             <button class="modal-close" onclick="closeModal()">
               <i class="fas fa-times"></i>
             </button>
@@ -581,6 +1283,7 @@ async function viewUserActivity(userId) {
         </div>
       </div>
     `;
+    modal.style.display = 'block';
 
   } catch (error) {
     console.error('Error loading activity logs:', error);
@@ -589,7 +1292,7 @@ async function viewUserActivity(userId) {
 }
 
 // ========================================================
-// DELETE USER - CONFIRMATION MODAL
+// DELETE USER
 // ========================================================
 function confirmDeleteUser(userId) {
   const modal = document.getElementById('modalContainer');
@@ -613,17 +1316,15 @@ function confirmDeleteUser(userId) {
         <div class="modal-footer">
           <button class="btn-secondary" onclick="closeModal()">Cancel</button>
           <button class="btn-danger" onclick="deleteUser('${userId}')">
-            Delete Account
+            <i class="fas fa-trash-alt"></i> Delete Account
           </button>
         </div>
       </div>
     </div>
   `;
+  modal.style.display = 'block';
 }
 
-// ========================================================
-// DELETE USER - EXECUTION
-// ========================================================
 async function deleteUser(userId) {
   try {
     const response = await fetch(`${API_BASE}/users/${userId}`, {
@@ -632,7 +1333,6 @@ async function deleteUser(userId) {
 
     if (!response.ok) throw new Error('Failed to delete user');
 
-    // Log activity
     await logActivity({
       type: 'user_deletion',
       message: `Deleted user account ${userId}`,
@@ -654,7 +1354,7 @@ async function deleteUser(userId) {
 }
 
 // ========================================================
-// SHOW TEMPORARY PASSWORD MODAL
+// HELPER MODALS
 // ========================================================
 function showTempPasswordModal(userId, tempPassword) {
   const modal = document.getElementById('modalContainer');
@@ -689,11 +1389,9 @@ function showTempPasswordModal(userId, tempPassword) {
       </div>
     </div>
   `;
+  modal.style.display = 'block';
 }
 
-// ========================================================
-// COPY TEMPORARY PASSWORD TO CLIPBOARD
-// ========================================================
 function copyTempPassword() {
   const code = document.getElementById('tempPasswordCode').textContent;
   navigator.clipboard.writeText(code).then(() => {
@@ -705,7 +1403,38 @@ function copyTempPassword() {
 }
 
 // ========================================================
-// GET ACTIVITY ICON
+// PASSWORD UTILITIES
+// ========================================================
+function togglePasswordVisibility(inputId) {
+  const input = document.getElementById(inputId);
+  const button = input.nextElementSibling;
+  const icon = button.querySelector('i');
+  
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.classList.remove('fa-eye');
+    icon.classList.add('fa-eye-slash');
+  } else {
+    input.type = 'password';
+    icon.classList.remove('fa-eye-slash');
+    icon.classList.add('fa-eye');
+  }
+}
+
+function generateRandomPassword() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*';
+  let password = '';
+  for (let i = 0; i < 12; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  
+  document.getElementById('newPassword').value = password;
+  document.getElementById('confirmPassword').value = password;
+  showToast('Random password generated', 'success');
+}
+
+// ========================================================
+// HELPER FUNCTIONS
 // ========================================================
 function getActivityIcon(type) {
   const icons = {
@@ -714,6 +1443,8 @@ function getActivityIcon(type) {
     'user_status_change': 'fa-user-edit',
     'password_reset': 'fa-key',
     'user_deletion': 'fa-trash-alt',
+    'user_creation': 'fa-user-plus',
+    'user_update': 'fa-edit',
     'file_upload': 'fa-upload',
     'file_delete': 'fa-trash',
     'data_upload': 'fa-database',
@@ -722,9 +1453,6 @@ function getActivityIcon(type) {
   return icons[type] || 'fa-circle';
 }
 
-// ========================================================
-// FORMAT ACTIVITY TIME
-// ========================================================
 function formatActivityTime(timestamp) {
   if (!timestamp) return 'Unknown';
   
@@ -738,13 +1466,11 @@ function formatActivityTime(timestamp) {
   });
 }
 
-// ========================================================
-// CLOSE MODAL
-// ========================================================
 function closeModal() {
   const modal = document.getElementById('modalContainer');
   modal.innerHTML = '';
   modal.style.display = 'none';
+  currentEditingUserId = null;
 }
 
 // ========================================================
@@ -759,7 +1485,6 @@ async function logActivity(activityData) {
     });
   } catch (error) {
     console.error('Error logging activity:', error);
-    // Don't show error to user - logging should be silent
   }
 }
 
@@ -767,7 +1492,6 @@ async function logActivity(activityData) {
 // TOAST NOTIFICATIONS
 // ========================================================
 function showToast(message, type = 'info') {
-  // Remove any existing toasts
   const existingToasts = document.querySelectorAll('.toast');
   existingToasts.forEach(t => t.remove());
 
@@ -786,18 +1510,12 @@ function showToast(message, type = 'info') {
   
   document.body.appendChild(toast);
   
-  // Trigger animation
-  setTimeout(() => {
-    toast.classList.add('show');
-  }, 100);
+  setTimeout(() => toast.classList.add('show'), 100);
   
-  // Auto remove after 3 seconds
   setTimeout(() => {
     toast.classList.remove('show');
     setTimeout(() => {
-      if (toast.parentNode) {
-        toast.remove();
-      }
+      if (toast.parentNode) toast.remove();
     }, 300);
   }, 3000);
 }
@@ -806,14 +1524,18 @@ function showToast(message, type = 'info') {
 // MAKE FUNCTIONS GLOBALLY ACCESSIBLE
 // ========================================================
 window.openUserActions = openUserActions;
+window.openUserDetailsModal = openUserDetailsModal;
+window.openEditUserModal = openEditUserModal;
 window.changeUserStatus = changeUserStatus;
 window.resetUserPassword = resetUserPassword;
 window.viewUserActivity = viewUserActivity;
 window.confirmDeleteUser = confirmDeleteUser;
 window.deleteUser = deleteUser;
 window.copyTempPassword = copyTempPassword;
+window.togglePasswordVisibility = togglePasswordVisibility;
+window.generateRandomPassword = generateRandomPassword;
 window.closeModal = closeModal;
-
 
 console.log('✅ User Management System Loaded Successfully');
 console.log('👤 Current Admin:', currentAdminId);
+console.log('📊 Roles Loaded:', roles.length);
