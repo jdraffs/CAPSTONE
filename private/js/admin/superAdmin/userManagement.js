@@ -7,8 +7,8 @@ const API_BASE = 'http://localhost:3000/api';
 let currentAdminId = localStorage.getItem('adminid');
 let allUsers = [];
 let filteredUsers = [];
-let roles = [];
-let permissions = [];
+let roles = []; // NEW: Store available roles
+let permissions = []; // NEW: Store permissions
 let currentFilter = 'all';
 let currentSearchTerm = '';
 let currentEditingUserId = null;
@@ -17,9 +17,6 @@ let currentEditingUserId = null;
 // INITIALIZE ON PAGE LOAD
 // ========================================================
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('🚀 User Management Initializing...');
-  console.log('Current Admin ID:', currentAdminId);
-  
   if (!currentAdminId) {
     alert('You must be logged in to access this page.');
     window.location.href = '/private/html/AdminLogin/login.html';
@@ -30,7 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function initializeUserManagement() {
-  console.log('📋 Starting initialization...');
   showLoadingState();
   await Promise.all([
     loadRoles(),
@@ -47,87 +43,25 @@ async function initializeUserManagement() {
 // DATA LOADING - ROLES & PERMISSIONS
 // ========================================================
 async function loadRoles() {
-  console.log('📥 Loading roles...');
   try {
     const response = await fetch(`${API_BASE}/roles`);
-    console.log('Roles response status:', response.status);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    console.log('Roles data:', data);
-    
-    if (data.success && data.roles) {
-      roles = data.roles;
-      console.log('✅ Roles loaded:', roles.length);
-    } else {
-      console.warn('⚠️ No roles found, using defaults');
-      roles = getDefaultRoles();
-    }
+    if (!response.ok) throw new Error('Failed to fetch roles');
+    roles = await response.json();
   } catch (error) {
-    console.error('❌ Error loading roles:', error);
+    console.error('Error loading roles:', error);
+    // Fallback to default roles
     roles = getDefaultRoles();
   }
 }
 
 async function loadPermissions() {
-  console.log('📥 Loading permissions...');
   try {
     const response = await fetch(`${API_BASE}/permissions`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    
-    if (data.success && data.permissions) {
-      permissions = data.permissions;
-      console.log('✅ Permissions loaded:', permissions.length);
-    } else {
-      permissions = [];
-    }
+    if (!response.ok) throw new Error('Failed to fetch permissions');
+    permissions = await response.json();
   } catch (error) {
-    console.error('❌ Error loading permissions:', error);
+    console.error('Error loading permissions:', error);
     permissions = [];
-  }
-}
-
-async function loadUsers() {
-  console.log('📥 Loading users...');
-  try {
-    const response = await fetch(`${API_BASE}/users`);
-    console.log('Users response status:', response.status);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    console.log('Users data:', data);
-    
-    if (data.success && data.users) {
-      allUsers = data.users.map(user => ({
-        ...user,
-        // Ensure role information is properly set
-        role_id: user.role_id,
-        role_name: user.role_name || 'No Role',
-        role_permissions: user.role_permissions || []
-      }));
-      
-      console.log('✅ Users loaded:', allUsers.length);
-      console.log('Sample user:', allUsers[0]);
-    } else {
-      console.warn('⚠️ No users found in response');
-      allUsers = [];
-    }
-    
-  } catch (error) {
-    console.error('❌ Error loading users:', error);
-    allUsers = [];
-    throw error;
   }
 }
 
@@ -143,22 +77,12 @@ function getDefaultRoles() {
 // HTML INJECTION
 // ========================================================
 function injectHTML() {
-  console.log('🎨 Injecting HTML...');
   const mainContent = document.getElementById('mainContent');
-  
-  if (!mainContent) {
-    console.error('❌ mainContent element not found!');
-    return;
-  }
   
   mainContent.innerHTML = `
     <div class="user-management-container">
       <!-- Header Section -->
       <div class="um-header">
-        <div class="um-header-left">
-          <h2>User Management</h2>
-          <p class="um-subtitle">Manage system users, roles, and permissions</p>
-        </div>
         <div class="um-header-right">
           <button class="btn-secondary" id="btnManageRoles">
             <i class="fas fa-user-tag"></i> Manage Roles
@@ -166,7 +90,7 @@ function injectHTML() {
           <button class="btn-primary" id="btnCreateUser">
             <i class="fas fa-user-plus"></i> Create User
           </button>
-          <button class="btn-secondary" id="btnRefresh">
+          <button class="btn-primary" id="btnRefresh">
             <i class="fas fa-sync-alt"></i> Refresh
           </button>
         </div>
@@ -296,48 +220,22 @@ function injectHTML() {
     <!-- Modals Container -->
     <div id="modalContainer"></div>
   `;
-  
-  console.log('✅ HTML injected successfully');
 }
 
 // ========================================================
 // EVENT LISTENERS
 // ========================================================
 function attachEventListeners() {
-  console.log('🔗 Attaching event listeners...');
-  
   // Header buttons
-  const btnRefresh = document.getElementById('btnRefresh');
-  const btnCreateUser = document.getElementById('btnCreateUser');
-  const btnManageRoles = document.getElementById('btnManageRoles');
-  
-  if (btnRefresh) {
-    btnRefresh.addEventListener('click', () => {
-      console.log('🔄 Refresh clicked');
-      loadUsers().then(() => {
-        updateStats();
-        filterAndDisplayUsers();
-      });
-    });
-  }
-  
-  if (btnCreateUser) {
-    btnCreateUser.addEventListener('click', () => {
-      console.log('➕ Create user clicked');
-      openCreateUserModal();
-    });
-  }
-  
-  if (btnManageRoles) {
-    btnManageRoles.addEventListener('click', () => {
-      window.location.href = '/private/html/adminPages/adminSalao/roleManagement.html';
-    });
-  }
+  document.getElementById('btnRefresh').addEventListener('click', () => loadUsers());
+  document.getElementById('btnCreateUser').addEventListener('click', () => openCreateUserModal());
+  document.getElementById('btnManageRoles').addEventListener('click', () => {
+    window.location.href = '/private/html/adminPages/adminSalao/roleManagement.html';
+  });
 
   // Filter buttons
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      console.log('🔍 Filter clicked:', e.target.dataset.filter);
       document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       e.target.classList.add('active');
       currentFilter = e.target.dataset.filter;
@@ -346,29 +244,16 @@ function attachEventListeners() {
   });
 
   // Role filter
-  const roleFilter = document.getElementById('roleFilter');
-  if (roleFilter) {
-    roleFilter.addEventListener('change', () => {
-      console.log('🔍 Role filter changed');
-      filterAndDisplayUsers();
-    });
-  }
+  document.getElementById('roleFilter').addEventListener('change', filterAndDisplayUsers);
 
   // Search input
-  const searchInput = document.getElementById('searchUsers');
-  if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
-      currentSearchTerm = e.target.value.toLowerCase();
-      console.log('🔍 Search term:', currentSearchTerm);
-      filterAndDisplayUsers();
-    });
-  }
+  document.getElementById('searchUsers').addEventListener('input', (e) => {
+    currentSearchTerm = e.target.value.toLowerCase();
+    filterAndDisplayUsers();
+  });
 
   // Select all checkbox
-  const selectAll = document.getElementById('selectAll');
-  if (selectAll) {
-    selectAll.addEventListener('change', handleSelectAll);
-  }
+  document.getElementById('selectAll').addEventListener('change', handleSelectAll);
 
   // Bulk actions
   document.getElementById('bulkActivate').addEventListener('click', () => handleBulkAction('activate'));
@@ -412,8 +297,6 @@ async function loadUsers() {
 // STATS UPDATE
 // ========================================================
 function updateStats() {
-  console.log('📊 Updating stats...');
-  
   const total = allUsers.length;
   const active = allUsers.filter(u => u.status === 'active').length;
   const inactive = allUsers.filter(u => u.status === 'inactive').length;
@@ -429,19 +312,13 @@ function updateStats() {
 // FILTER & DISPLAY
 // ========================================================
 function filterAndDisplayUsers() {
-  console.log('🔍 Filtering users...');
-  console.log('Current filter:', currentFilter);
-  console.log('Search term:', currentSearchTerm);
-  
-  const selectedRoleId = document.getElementById('roleFilter')?.value;
-  
-  // Start with all users
-  filteredUsers = [...allUsers];
+  const selectedRoleId = document.getElementById('roleFilter').value;
   
   // Apply status filter
-  if (currentFilter !== 'all') {
-    filteredUsers = filteredUsers.filter(user => user.status === currentFilter);
-  }
+  filteredUsers = allUsers.filter(user => {
+    if (currentFilter !== 'all' && user.status !== currentFilter) return false;
+    return true;
+  });
 
   // Apply role filter
   if (selectedRoleId) {
@@ -454,9 +331,9 @@ function filterAndDisplayUsers() {
   if (currentSearchTerm) {
     filteredUsers = filteredUsers.filter(user => {
       const searchableText = `
-        ${user.adminid || ''} 
+        ${user.adminid} 
         ${user.full_name || ''} 
-        ${user.email || ''}
+        ${user.email || user.adminid}
         ${user.role_name || ''}
       `.toLowerCase();
       
@@ -464,7 +341,6 @@ function filterAndDisplayUsers() {
     });
   }
 
-  console.log('✅ Filtered users:', filteredUsers.length);
   displayUsers();
 }
 
@@ -472,13 +348,7 @@ function filterAndDisplayUsers() {
 // DISPLAY USERS TABLE
 // ========================================================
 function displayUsers() {
-  console.log('🎨 Displaying users...');
   const tbody = document.getElementById('usersTableBody');
-  
-  if (!tbody) {
-    console.error('❌ Users table body not found!');
-    return;
-  }
   
   if (filteredUsers.length === 0) {
     tbody.innerHTML = `
@@ -489,7 +359,6 @@ function displayUsers() {
         </td>
       </tr>
     `;
-    console.log('⚠️ No users to display');
     return;
   }
 
@@ -508,13 +377,13 @@ function displayUsers() {
         <div class="user-avatar">
           <i class="fas fa-user-circle"></i>
         </div>
-        <span>${user.full_name || user.adminid}</span>
+        <span>${user.full_name || 'N/A'}</span>
       </td>
       <td>${user.email || user.adminid}</td>
       <td>
-        <span class="role-badge role-${user.role_id || 'default'}" title="${(user.role_permissions || []).length} permissions">
+        <span class="role-badge role-${user.role_id || 'default'}" title="${user.role_permissions.length} permissions">
           <i class="fas fa-user-tag"></i>
-          ${user.role_name || 'No Role'}
+          ${user.role_name}
         </span>
       </td>
       <td>
@@ -551,8 +420,6 @@ function displayUsers() {
     </tr>
   `).join('');
 
-  console.log('✅ Users displayed:', filteredUsers.length);
-  
   // Attach checkbox listeners
   attachCheckboxListeners();
 }
@@ -579,16 +446,11 @@ function updateBulkActionsBar() {
   const count = selectedCheckboxes.length;
   const bulkBar = document.getElementById('bulkActionsBar');
   
-  if (bulkBar) {
-    if (count > 0) {
-      bulkBar.style.display = 'flex';
-      const countSpan = bulkBar.querySelector('.selected-count');
-      if (countSpan) {
-        countSpan.textContent = `${count} user${count > 1 ? 's' : ''} selected`;
-      }
-    } else {
-      bulkBar.style.display = 'none';
-    }
+  if (count > 0) {
+    bulkBar.style.display = 'flex';
+    bulkBar.querySelector('.selected-count').textContent = `${count} user${count > 1 ? 's' : ''} selected`;
+  } else {
+    bulkBar.style.display = 'none';
   }
 }
 
@@ -633,14 +495,12 @@ function formatLastLogin(timestamp) {
 
 function showLoadingState() {
   const mainContent = document.getElementById('mainContent');
-  if (mainContent) {
-    mainContent.innerHTML = `
-      <div class="loading-state">
-        <i class="fas fa-spinner fa-spin fa-3x"></i>
-        <p>Loading user management...</p>
-      </div>
-    `;
-  }
+  mainContent.innerHTML = `
+    <div class="loading-state">
+      <i class="fas fa-spinner fa-spin fa-3x"></i>
+      <p>Loading user management...</p>
+    </div>
+  `;
 }
 
 function showError(message) {
@@ -666,7 +526,6 @@ function showError(message) {
 // CREATE USER MODAL
 // ========================================================
 function openCreateUserModal() {
-  console.log('➕ Opening create user modal...');
   const modal = document.getElementById('modalContainer');
   
   modal.innerHTML = `
@@ -758,14 +617,8 @@ function openCreateUserModal() {
 // EDIT USER MODAL
 // ========================================================
 function openEditUserModal(userId) {
-  console.log('✏️ Opening edit modal for:', userId);
   const user = allUsers.find(u => u.adminid === userId);
-  
-  if (!user) {
-    console.error('❌ User not found:', userId);
-    showToast('User not found', 'error');
-    return;
-  }
+  if (!user) return;
 
   const modal = document.getElementById('modalContainer');
   
@@ -837,13 +690,8 @@ function openEditUserModal(userId) {
 // USER DETAILS MODAL
 // ========================================================
 function openUserDetailsModal(userId) {
-  console.log('👁️ Opening details modal for:', userId);
   const user = allUsers.find(u => u.adminid === userId);
-  
-  if (!user) {
-    showToast('User not found', 'error');
-    return;
-  }
+  if (!user) return;
 
   const userRole = roles.find(r => r.id === user.role_id);
 
@@ -942,13 +790,8 @@ function openUserDetailsModal(userId) {
 // USER ACTIONS MODAL (More Menu)
 // ========================================================
 function openUserActions(userId) {
-  console.log('⚙️ Opening actions menu for:', userId);
   const user = allUsers.find(u => u.adminid === userId);
-  
-  if (!user) {
-    showToast('User not found', 'error');
-    return;
-  }
+  if (!user) return;
 
   const modal = document.getElementById('modalContainer');
   
@@ -1314,8 +1157,7 @@ async function handleBulkAction(action) {
 // CHANGE USER STATUS
 // ========================================================
 async function changeUserStatus(userId, newStatus) {
-  console.log('🔄 Changing status for:', userId, 'to:', newStatus);
-  
+  const user = allUsers.find(u => u.adminid === userId);
   const statusText = {
     'active': 'activated',
     'inactive': 'deactivated',
@@ -1332,28 +1174,29 @@ async function changeUserStatus(userId, newStatus) {
     const response = await fetch(`${API_BASE}/users/${userId}/status`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        status: newStatus,
-        updated_by: currentAdminId
-      })
+      body: JSON.stringify({ status: newStatus })
     });
 
-    const data = await response.json();
+    if (!response.ok) throw new Error('Failed to update status');
 
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to update status');
-    }
+    await logActivity({
+      type: 'user_status_change',
+      message: `Changed status of ${userId} to ${newStatus}`,
+      adminId: currentAdminId,
+      details: {
+        targetUser: userId,
+        oldStatus: user.status,
+        newStatus: newStatus
+      }
+    });
 
     showToast(`User ${userId} has been ${statusText[newStatus]} successfully`, 'success');
     closeModal();
-    
     await loadUsers();
-    updateStats();
-    filterAndDisplayUsers();
 
   } catch (error) {
-    console.error('❌ Error changing user status:', error);
-    showToast(error.message, 'error');
+    console.error('Error changing user status:', error);
+    showToast('Failed to update user status', 'error');
   }
 }
 
@@ -1361,8 +1204,6 @@ async function changeUserStatus(userId, newStatus) {
 // RESET PASSWORD
 // ========================================================
 async function resetUserPassword(userId) {
-  console.log('🔑 Resetting password for:', userId);
-  
   const confirmed = confirm(
     `Are you sure you want to reset the password for ${userId}?\n\nA temporary password will be generated.`
   );
@@ -1372,23 +1213,28 @@ async function resetUserPassword(userId) {
   try {
     const response = await fetch(`${API_BASE}/users/${userId}/reset-password`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        reset_by: currentAdminId
-      })
+      headers: { 'Content-Type': 'application/json' }
     });
+
+    if (!response.ok) throw new Error('Failed to reset password');
 
     const data = await response.json();
 
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to reset password');
-    }
+    await logActivity({
+      type: 'password_reset',
+      message: `Reset password for user ${userId}`,
+      adminId: currentAdminId,
+      details: {
+        targetUser: userId,
+        resetBy: currentAdminId
+      }
+    });
 
     showTempPasswordModal(userId, data.tempPassword);
 
   } catch (error) {
-    console.error('❌ Error resetting password:', error);
-    showToast(error.message, 'error');
+    console.error('Error resetting password:', error);
+    showToast('Failed to reset password', 'error');
   }
 }
 
@@ -1396,17 +1242,12 @@ async function resetUserPassword(userId) {
 // VIEW USER ACTIVITY
 // ========================================================
 async function viewUserActivity(userId) {
-  console.log('📜 Viewing activity for:', userId);
-  
   try {
-    const response = await fetch(`${API_BASE}/users/${userId}/activity-logs`);
-    const data = await response.json();
+    const response = await fetch(`${API_BASE}/activity-logs/admin/${userId}`);
+    
+    if (!response.ok) throw new Error('Failed to fetch activity logs');
 
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to fetch activity logs');
-    }
-
-    const logs = data.logs || [];
+    const logs = await response.json();
 
     const modal = document.getElementById('modalContainer');
     modal.innerHTML = `
@@ -1445,8 +1286,8 @@ async function viewUserActivity(userId) {
     modal.style.display = 'block';
 
   } catch (error) {
-    console.error('❌ Error loading activity logs:', error);
-    showToast(error.message, 'error');
+    console.error('Error loading activity logs:', error);
+    showToast('Failed to load activity logs', 'error');
   }
 }
 
@@ -1454,8 +1295,6 @@ async function viewUserActivity(userId) {
 // DELETE USER
 // ========================================================
 function confirmDeleteUser(userId) {
-  console.log('🗑️ Confirming delete for:', userId);
-  
   const modal = document.getElementById('modalContainer');
   
   modal.innerHTML = `
@@ -1487,29 +1326,26 @@ function confirmDeleteUser(userId) {
 }
 
 async function deleteUser(userId) {
-  console.log('🗑️ Deleting user:', userId);
-  
   try {
     const response = await fetch(`${API_BASE}/users/${userId}`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        deleted_by: currentAdminId
-      })
+      method: 'DELETE'
     });
 
-    const data = await response.json();
+    if (!response.ok) throw new Error('Failed to delete user');
 
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to delete user');
-    }
+    await logActivity({
+      type: 'user_deletion',
+      message: `Deleted user account ${userId}`,
+      adminId: currentAdminId,
+      details: {
+        deletedUser: userId,
+        deletedBy: currentAdminId
+      }
+    });
 
     showToast(`User ${userId} has been deleted successfully`, 'success');
     closeModal();
-    
     await loadUsers();
-    updateStats();
-    filterAndDisplayUsers();
 
   } catch (error) {
     console.error('Error deleting user:', error);
@@ -1605,14 +1441,10 @@ function getActivityIcon(type) {
     'login': 'fa-sign-in-alt',
     'logout': 'fa-sign-out-alt',
     'user_status_change': 'fa-user-edit',
-    'status_changed': 'fa-user-edit',
     'password_reset': 'fa-key',
     'user_deletion': 'fa-trash-alt',
-    'user_deleted': 'fa-trash-alt',
     'user_creation': 'fa-user-plus',
-    'user_created': 'fa-user-plus',
     'user_update': 'fa-edit',
-    'user_updated': 'fa-edit',
     'file_upload': 'fa-upload',
     'file_delete': 'fa-trash',
     'data_upload': 'fa-database',
@@ -1636,10 +1468,8 @@ function formatActivityTime(timestamp) {
 
 function closeModal() {
   const modal = document.getElementById('modalContainer');
-  if (modal) {
-    modal.innerHTML = '';
-    modal.style.display = 'none';
-  }
+  modal.innerHTML = '';
+  modal.style.display = 'none';
   currentEditingUserId = null;
 }
 
@@ -1662,9 +1492,6 @@ async function logActivity(activityData) {
 // TOAST NOTIFICATIONS
 // ========================================================
 function showToast(message, type = 'info') {
-  console.log(`📢 Toast: ${type} - ${message}`);
-  
-  // Remove existing toasts
   const existingToasts = document.querySelectorAll('.toast');
   existingToasts.forEach(t => t.remove());
 
