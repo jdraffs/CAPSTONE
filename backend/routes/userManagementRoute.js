@@ -4,9 +4,9 @@ import pool from '../db.js';
 
 const router = express.Router();
 
-// ========================================================
+
 // HELPER FUNCTION: Generate Random Password
-// ========================================================
+
 function generateTempPassword(length = 12) {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*';
   let password = '';
@@ -16,9 +16,9 @@ function generateTempPassword(length = 12) {
   return password;
 }
 
-// ========================================================
+
 // GET ALL USERS (WITH ROLE INFO)
-// ========================================================
+
 router.get('/users', async (req, res) => {
   try {
     const query = `
@@ -86,9 +86,9 @@ router.get('/users', async (req, res) => {
   }
 });
 
-// ========================================================
+
 // CREATE NEW USER
-// ========================================================
+
 router.post('/users', async (req, res) => {
   const client = await pool.connect();
   
@@ -167,9 +167,9 @@ router.post('/users', async (req, res) => {
   }
 });
 
-// ========================================================
+
 // UPDATE USER
-// ========================================================
+
 router.put('/users/:adminId', async (req, res) => {
   const client = await pool.connect();
   
@@ -222,9 +222,9 @@ router.put('/users/:adminId', async (req, res) => {
   }
 });
 
-// ========================================================
+
 // BULK CHANGE ROLE
-// ========================================================
+
 router.post('/users/bulk/change-role', async (req, res) => {
   const client = await pool.connect();
   
@@ -281,9 +281,9 @@ router.post('/users/bulk/change-role', async (req, res) => {
   }
 });
 
-// ========================================================
+
 // BULK STATUS CHANGE
-// ========================================================
+
 router.post('/users/bulk/change-status', async (req, res) => {
   const client = await pool.connect();
   
@@ -341,9 +341,9 @@ router.post('/users/bulk/change-status', async (req, res) => {
   }
 });
 
-// ========================================================
+
 // BULK DELETE USERS
-// ========================================================
+
 router.post('/users/bulk/delete', async (req, res) => {
   const client = await pool.connect();
   
@@ -406,9 +406,9 @@ router.post('/users/bulk/delete', async (req, res) => {
   }
 });
 
-// ========================================================
+
 // GET USER BY ID
-// ========================================================
+
 router.get('/users/:adminId', async (req, res) => {
   try {
     const { adminId } = req.params;
@@ -479,9 +479,9 @@ router.get('/users/:adminId', async (req, res) => {
   }
 });
 
-// ========================================================
+
 // UPDATE USER STATUS
-// ========================================================
+
 router.put('/users/:adminId/status', async (req, res) => {
   try {
     const { adminId } = req.params;
@@ -523,9 +523,9 @@ router.put('/users/:adminId/status', async (req, res) => {
   }
 });
 
-// ========================================================
+
 // RESET USER PASSWORD
-// ========================================================
+
 router.post('/users/:adminId/reset-password', async (req, res) => {
   try {
     const { adminId } = req.params;
@@ -570,9 +570,9 @@ router.post('/users/:adminId/reset-password', async (req, res) => {
   }
 });
 
-// ========================================================
+
 // DELETE USER
-// ========================================================
+
 router.delete('/users/:adminId', async (req, res) => {
   try {
     const { adminId } = req.params;
