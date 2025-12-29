@@ -1,8 +1,8 @@
-// userManagement.js - COMPLETE WORKING VERSION - PART 1 OF 3
-
-// =====================================================
+// userManagement.js - UPDATED WITH ROLE INTEGRATION - PART 1 OF 2
+// ========================================================
 // CONFIGURATION & GLOBAL VARIABLES
-// =====================================================
+// ========================================================
+
 const API_BASE = 'http://localhost:3000/api';
 let currentAdminId = localStorage.getItem('adminid');
 let allUsers = [];
@@ -13,9 +13,9 @@ let currentFilter = 'all';
 let currentSearchTerm = '';
 let currentEditingUserId = null;
 
-// =====================================================
-// INITIALIZATION
-// =====================================================
+// ========================================================
+// INITIALIZE ON PAGE LOAD
+// ========================================================
 document.addEventListener('DOMContentLoaded', () => {
   console.log('🚀 User Management Initializing...');
   console.log('Current Admin ID:', currentAdminId);
@@ -32,43 +32,20 @@ document.addEventListener('DOMContentLoaded', () => {
 async function initializeUserManagement() {
   console.log('📋 Starting initialization...');
   showLoadingState();
-  
-  try {
-    // Load data in parallel
-    await Promise.all([
-      loadRoles(),
-      loadPermissions(),
-      loadUsers()
-    ]);
-    
-    console.log('✅ Data loaded successfully');
-    console.log('Roles:', roles);
-    console.log('Users:', allUsers);
-    
-    // Inject HTML
-    injectHTML();
-    
-    // Attach event listeners
-    attachEventListeners();
-    
-    // Update statistics
-    updateStats();
-    
-    // Display users
-    filterAndDisplayUsers();
-    
-    console.log('✅ Initialization complete');
-    
-  } catch (error) {
-    console.error('❌ Initialization error:', error);
-    showError('Failed to initialize user management. Please refresh the page.');
-  }
+  await Promise.all([
+    loadRoles(),
+    loadPermissions(),
+    loadUsers()
+  ]);
+  injectHTML();
+  attachEventListeners();
+  updateStats();
+  filterAndDisplayUsers();
 }
 
-// =====================================================
-// DATA LOADING FUNCTIONS
-// =====================================================
-
+// ========================================================
+// DATA LOADING - ROLES & PERMISSIONS
+// ========================================================
 async function loadRoles() {
   console.log('📥 Loading roles...');
   try {
@@ -162,10 +139,9 @@ function getDefaultRoles() {
   ];
 }
 
-// =====================================================
+// ========================================================
 // HTML INJECTION
-// =====================================================
-
+// ========================================================
 function injectHTML() {
   console.log('🎨 Injecting HTML...');
   const mainContent = document.getElementById('mainContent');
@@ -324,10 +300,9 @@ function injectHTML() {
   console.log('✅ HTML injected successfully');
 }
 
-// =====================================================
+// ========================================================
 // EVENT LISTENERS
-// =====================================================
-
+// ========================================================
 function attachEventListeners() {
   console.log('🔗 Attaching event listeners...');
   
@@ -396,23 +371,46 @@ function attachEventListeners() {
   }
 
   // Bulk actions
-  const bulkActivate = document.getElementById('bulkActivate');
-  const bulkDeactivate = document.getElementById('bulkDeactivate');
-  const bulkChangeRole = document.getElementById('bulkChangeRole');
-  const bulkDelete = document.getElementById('bulkDelete');
-  
-  if (bulkActivate) bulkActivate.addEventListener('click', () => handleBulkAction('activate'));
-  if (bulkDeactivate) bulkDeactivate.addEventListener('click', () => handleBulkAction('deactivate'));
-  if (bulkChangeRole) bulkChangeRole.addEventListener('click', () => openBulkChangeRoleModal());
-  if (bulkDelete) bulkDelete.addEventListener('click', () => handleBulkAction('delete'));
-  
-  console.log('✅ Event listeners attached');
+  document.getElementById('bulkActivate').addEventListener('click', () => handleBulkAction('activate'));
+  document.getElementById('bulkDeactivate').addEventListener('click', () => handleBulkAction('deactivate'));
+  document.getElementById('bulkChangeRole').addEventListener('click', () => openBulkChangeRoleModal());
+  document.getElementById('bulkDelete').addEventListener('click', () => handleBulkAction('delete'));
 }
 
-// =====================================================
-// STATS UPDATE
-// =====================================================
+// ========================================================
+// DATA LOADING - USERS
+// ========================================================
+async function loadUsers() {
+  try {
+    const response = await fetch(`${API_BASE}/users`);
+    if (!response.ok) throw new Error('Failed to fetch users');
 
+    const data = await response.json();
+    allUsers = data.users || [];
+    
+    // Enrich users with role information
+    allUsers = allUsers.map(user => {
+      const userRole = roles.find(r => r.name === user.role || r.id === user.role_id);
+      return {
+        ...user,
+        role_id: userRole?.id || null,
+        role_name: userRole?.name || user.role || 'No Role',
+        role_permissions: userRole?.permissions || []
+      };
+    });
+    
+    updateStats();
+    filterAndDisplayUsers();
+    
+  } catch (error) {
+    console.error('Error loading users:', error);
+    showError('Failed to load users. Please try again.');
+  }
+}
+
+// ========================================================
+// STATS UPDATE
+// ========================================================
 function updateStats() {
   console.log('📊 Updating stats...');
   
@@ -421,23 +419,15 @@ function updateStats() {
   const inactive = allUsers.filter(u => u.status === 'inactive').length;
   const suspended = allUsers.filter(u => u.status === 'suspended').length;
 
-  const statTotalUsers = document.getElementById('statTotalUsers');
-  const statActiveUsers = document.getElementById('statActiveUsers');
-  const statInactiveUsers = document.getElementById('statInactiveUsers');
-  const statTotalRoles = document.getElementById('statTotalRoles');
-
-  if (statTotalUsers) statTotalUsers.textContent = total;
-  if (statActiveUsers) statActiveUsers.textContent = active;
-  if (statInactiveUsers) statInactiveUsers.textContent = inactive;
-  if (statTotalRoles) statTotalRoles.textContent = roles.length;
-  
-  console.log('✅ Stats updated:', { total, active, inactive, suspended });
+  document.getElementById('statTotalUsers').textContent = total;
+  document.getElementById('statActiveUsers').textContent = active;
+  document.getElementById('statInactiveUsers').textContent = inactive;
+  document.getElementById('statTotalRoles').textContent = roles.length;
 }
 
-// =====================================================
-// FILTER & DISPLAY FUNCTIONS
-// =====================================================
-
+// ========================================================
+// FILTER & DISPLAY
+// ========================================================
 function filterAndDisplayUsers() {
   console.log('🔍 Filtering users...');
   console.log('Current filter:', currentFilter);
@@ -478,6 +468,9 @@ function filterAndDisplayUsers() {
   displayUsers();
 }
 
+// ========================================================
+// DISPLAY USERS TABLE
+// ========================================================
 function displayUsers() {
   console.log('🎨 Displaying users...');
   const tbody = document.getElementById('usersTableBody');
@@ -564,10 +557,9 @@ function displayUsers() {
   attachCheckboxListeners();
 }
 
-// =====================================================
+// ========================================================
 // CHECKBOX HANDLING
-// =====================================================
-
+// ========================================================
 function attachCheckboxListeners() {
   document.querySelectorAll('.user-checkbox').forEach(cb => {
     cb.addEventListener('change', updateBulkActionsBar);
@@ -605,10 +597,9 @@ function getSelectedUserIds() {
     .map(cb => cb.dataset.userId);
 }
 
-// =====================================================
+// ========================================================
 // UTILITY FUNCTIONS
-// =====================================================
-
+// ========================================================
 function formatStatus(status) {
   const statusMap = {
     'active': 'Active',
@@ -666,13 +657,14 @@ function showError(message) {
   }
 }
 
-// userManagement.js - PART 2 OF 3
-// MODALS AND FORM HANDLERS
+// userManagement.js - UPDATED WITH ROLE INTEGRATION - PART 2 OF 2
+// ========================================================
+// COPY THIS AND APPEND IT DIRECTLY AFTER PART 1
+// ========================================================
 
-// =====================================================
+// ========================================================
 // CREATE USER MODAL
-// =====================================================
-
+// ========================================================
 function openCreateUserModal() {
   console.log('➕ Opening create user modal...');
   const modal = document.getElementById('modalContainer');
@@ -762,68 +754,9 @@ function openCreateUserModal() {
   document.getElementById('createUserForm').addEventListener('submit', handleCreateUser);
 }
 
-async function handleCreateUser(e) {
-  e.preventDefault();
-  console.log('📝 Handling create user...');
-
-  const username = document.getElementById('newUsername').value.trim();
-  const fullName = document.getElementById('newFullName').value.trim();
-  const email = document.getElementById('newEmail').value.trim();
-  const roleId = document.getElementById('newRole').value;
-  const password = document.getElementById('newPassword').value;
-  const confirmPassword = document.getElementById('confirmPassword').value;
-
-  // Validation
-  if (password !== confirmPassword) {
-    showToast('Passwords do not match', 'error');
-    return;
-  }
-
-  if (password.length < 8) {
-    showToast('Password must be at least 8 characters', 'error');
-    return;
-  }
-
-  try {
-    console.log('🔄 Sending create user request...');
-    const response = await fetch(`${API_BASE}/users`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        adminid: username,
-        password: password,
-        full_name: fullName,
-        email: email || `${username}@pup.edu.ph`,
-        role_id: parseInt(roleId),
-        created_by: currentAdminId
-      })
-    });
-
-    const data = await response.json();
-    console.log('Response:', data);
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to create user');
-    }
-
-    showToast(`User "${username}" created successfully`, 'success');
-    closeModal();
-    
-    // Reload users
-    await loadUsers();
-    updateStats();
-    filterAndDisplayUsers();
-
-  } catch (error) {
-    console.error('❌ Error creating user:', error);
-    showToast(error.message, 'error');
-  }
-}
-
-// =====================================================
+// ========================================================
 // EDIT USER MODAL
-// =====================================================
-
+// ========================================================
 function openEditUserModal(userId) {
   console.log('✏️ Opening edit modal for:', userId);
   const user = allUsers.find(u => u.adminid === userId);
@@ -900,54 +833,9 @@ function openEditUserModal(userId) {
   document.getElementById('editUserForm').addEventListener('submit', handleEditUser);
 }
 
-async function handleEditUser(e) {
-  e.preventDefault();
-  console.log('📝 Handling edit user...');
-
-  const userId = document.getElementById('editUserId').value;
-  const fullName = document.getElementById('editFullName').value.trim();
-  const email = document.getElementById('editEmail').value.trim();
-  const roleId = document.getElementById('editRole').value;
-  const status = document.getElementById('editStatus').value;
-
-  try {
-    console.log('🔄 Sending update request...');
-    const response = await fetch(`${API_BASE}/users/${userId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        full_name: fullName,
-        email: email,
-        role_id: parseInt(roleId),
-        status: status,
-        updated_by: currentAdminId
-      })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to update user');
-    }
-
-    showToast(`User "${userId}" updated successfully`, 'success');
-    closeModal();
-    
-    // Reload users
-    await loadUsers();
-    updateStats();
-    filterAndDisplayUsers();
-
-  } catch (error) {
-    console.error('❌ Error updating user:', error);
-    showToast(error.message, 'error');
-  }
-}
-
-// =====================================================
+// ========================================================
 // USER DETAILS MODAL
-// =====================================================
-
+// ========================================================
 function openUserDetailsModal(userId) {
   console.log('👁️ Opening details modal for:', userId);
   const user = allUsers.find(u => u.adminid === userId);
@@ -1050,10 +938,9 @@ function openUserDetailsModal(userId) {
   modal.style.display = 'block';
 }
 
-// =====================================================
-// USER ACTIONS MODAL (MORE MENU)
-// =====================================================
-
+// ========================================================
+// USER ACTIONS MODAL (More Menu)
+// ========================================================
 function openUserActions(userId) {
   console.log('⚙️ Opening actions menu for:', userId);
   const user = allUsers.find(u => u.adminid === userId);
@@ -1158,13 +1045,274 @@ function openUserActions(userId) {
   modal.style.display = 'block';
 }
 
-// userManagement.js - PART 3 OF 3
-// ACTION HANDLERS, UTILITIES, AND GLOBAL FUNCTIONS
+// ========================================================
+// BULK CHANGE ROLE MODAL
+// ========================================================
+function openBulkChangeRoleModal() {
+  const selectedUserIds = getSelectedUserIds();
+  if (selectedUserIds.length === 0) return;
 
-// =====================================================
-// USER ACTION HANDLERS
-// =====================================================
+  const modal = document.getElementById('modalContainer');
+  
+  modal.innerHTML = `
+    <div class="modal-overlay" onclick="closeModal()">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h3><i class="fas fa-user-tag"></i> Change Role for ${selectedUserIds.length} User(s)</h3>
+          <button class="modal-close" onclick="closeModal()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        
+        <form id="bulkChangeRoleForm" class="modal-body">
+          <div class="form-group">
+            <label for="bulkNewRole">Select New Role <span class="required">*</span></label>
+            <select id="bulkNewRole" required>
+              <option value="">-- Select Role --</option>
+              ${roles.map(role => `
+                <option value="${role.id}">${role.name}</option>
+              `).join('')}
+            </select>
+          </div>
 
+          <div class="info-box">
+            <i class="fas fa-info-circle"></i>
+            <p>This will change the role for all ${selectedUserIds.length} selected user(s).</p>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+            <button type="submit" class="btn-primary">
+              <i class="fas fa-check"></i> Apply Role Change
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+  
+  modal.style.display = 'block';
+  
+  document.getElementById('bulkChangeRoleForm').addEventListener('submit', handleBulkChangeRole);
+}
+
+// ========================================================
+// FORM HANDLERS
+// ========================================================
+async function handleCreateUser(e) {
+  e.preventDefault();
+
+  const username = document.getElementById('newUsername').value.trim();
+  const fullName = document.getElementById('newFullName').value.trim();
+  const email = document.getElementById('newEmail').value.trim();
+  const roleId = document.getElementById('newRole').value;
+  const password = document.getElementById('newPassword').value;
+  const confirmPassword = document.getElementById('confirmPassword').value;
+
+  // Validation
+  if (password !== confirmPassword) {
+    showToast('Passwords do not match', 'error');
+    return;
+  }
+
+  if (password.length < 8) {
+    showToast('Password must be at least 8 characters', 'error');
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        adminid: username,
+        password: password,
+        full_name: fullName,
+        email: email || username,
+        role_id: parseInt(roleId)
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create user');
+    }
+
+    await logActivity({
+      type: 'user_creation',
+      message: `Created new user account ${username}`,
+      adminId: currentAdminId,
+      details: { newUser: username, role: roleId }
+    });
+
+    showToast(`User "${username}" created successfully`, 'success');
+    closeModal();
+    await loadUsers();
+
+  } catch (error) {
+    console.error('Error creating user:', error);
+    showToast(error.message, 'error');
+  }
+}
+
+async function handleEditUser(e) {
+  e.preventDefault();
+
+  const userId = document.getElementById('editUserId').value;
+  const fullName = document.getElementById('editFullName').value.trim();
+  const email = document.getElementById('editEmail').value.trim();
+  const roleId = document.getElementById('editRole').value;
+  const status = document.getElementById('editStatus').value;
+
+  try {
+    const response = await fetch(`${API_BASE}/users/${userId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        full_name: fullName,
+        email: email,
+        role_id: parseInt(roleId),
+        status: status
+      })
+    });
+
+    if (!response.ok) throw new Error('Failed to update user');
+
+    await logActivity({
+      type: 'user_update',
+      message: `Updated user account ${userId}`,
+      adminId: currentAdminId,
+      details: { updatedUser: userId }
+    });
+
+    showToast(`User "${userId}" updated successfully`, 'success');
+    closeModal();
+    await loadUsers();
+
+  } catch (error) {
+    console.error('Error updating user:', error);
+    showToast('Failed to update user', 'error');
+  }
+}
+
+async function handleBulkChangeRole(e) {
+  e.preventDefault();
+
+  const newRoleId = document.getElementById('bulkNewRole').value;
+  const selectedUserIds = getSelectedUserIds();
+
+  try {
+    const response = await fetch(`${API_BASE}/users/bulk/change-role`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_ids: selectedUserIds,
+        role_id: parseInt(newRoleId)
+      })
+    });
+
+    if (!response.ok) throw new Error('Failed to change roles');
+
+    const role = roles.find(r => r.id === parseInt(newRoleId));
+    
+    await logActivity({
+      type: 'bulk_role_change',
+      message: `Changed role to "${role.name}" for ${selectedUserIds.length} user(s)`,
+      adminId: currentAdminId,
+      details: { count: selectedUserIds.length, roleId: newRoleId }
+    });
+
+    showToast(`Role changed for ${selectedUserIds.length} user(s)`, 'success');
+    closeModal();
+    await loadUsers();
+
+    // Clear selections
+    document.getElementById('selectAll').checked = false;
+    updateBulkActionsBar();
+
+  } catch (error) {
+    console.error('Error changing roles:', error);
+    showToast('Failed to change roles', 'error');
+  }
+}
+// ========================================================
+// APPEND THESE FUNCTIONS TO PART 2
+// ========================================================
+
+// ========================================================
+// BULK ACTIONS HANDLER
+// ========================================================
+async function handleBulkAction(action) {
+  const selectedUserIds = getSelectedUserIds();
+  if (selectedUserIds.length === 0) {
+    showToast('No users selected', 'warning');
+    return;
+  }
+
+  let confirmed = false;
+  let endpoint = '';
+  let body = { user_ids: selectedUserIds };
+  let successMessage = '';
+
+  switch(action) {
+    case 'activate':
+      confirmed = confirm(`Activate ${selectedUserIds.length} user(s)?`);
+      endpoint = `${API_BASE}/users/bulk/change-status`;
+      body.status = 'active';
+      successMessage = `${selectedUserIds.length} user(s) activated`;
+      break;
+    
+    case 'deactivate':
+      confirmed = confirm(`Deactivate ${selectedUserIds.length} user(s)?`);
+      endpoint = `${API_BASE}/users/bulk/change-status`;
+      body.status = 'inactive';
+      successMessage = `${selectedUserIds.length} user(s) deactivated`;
+      break;
+    
+    case 'delete':
+      confirmed = confirm(`⚠️ WARNING: Delete ${selectedUserIds.length} user(s)? This cannot be undone!`);
+      endpoint = `${API_BASE}/users/bulk/delete`;
+      successMessage = `${selectedUserIds.length} user(s) deleted`;
+      break;
+    
+    default:
+      return;
+  }
+
+  if (!confirmed) return;
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    if (!response.ok) throw new Error('Bulk action failed');
+
+    await logActivity({
+      type: `bulk_${action}`,
+      message: successMessage,
+      adminId: currentAdminId,
+      details: { userIds: selectedUserIds }
+    });
+
+    showToast(successMessage, 'success');
+    await loadUsers();
+
+    // Clear selections
+    document.getElementById('selectAll').checked = false;
+    updateBulkActionsBar();
+
+  } catch (error) {
+    console.error('Error performing bulk action:', error);
+    showToast('Bulk action failed', 'error');
+  }
+}
+
+// ========================================================
+// CHANGE USER STATUS
+// ========================================================
 async function changeUserStatus(userId, newStatus) {
   console.log('🔄 Changing status for:', userId, 'to:', newStatus);
   
@@ -1209,6 +1357,9 @@ async function changeUserStatus(userId, newStatus) {
   }
 }
 
+// ========================================================
+// RESET PASSWORD
+// ========================================================
 async function resetUserPassword(userId) {
   console.log('🔑 Resetting password for:', userId);
   
@@ -1241,6 +1392,9 @@ async function resetUserPassword(userId) {
   }
 }
 
+// ========================================================
+// VIEW USER ACTIVITY
+// ========================================================
 async function viewUserActivity(userId) {
   console.log('📜 Viewing activity for:', userId);
   
@@ -1296,6 +1450,9 @@ async function viewUserActivity(userId) {
   }
 }
 
+// ========================================================
+// DELETE USER
+// ========================================================
 function confirmDeleteUser(userId) {
   console.log('🗑️ Confirming delete for:', userId);
   
@@ -1355,182 +1512,14 @@ async function deleteUser(userId) {
     filterAndDisplayUsers();
 
   } catch (error) {
-    console.error('❌ Error deleting user:', error);
-    showToast(error.message, 'error');
+    console.error('Error deleting user:', error);
+    showToast('Failed to delete user', 'error');
   }
 }
 
-// =====================================================
-// BULK ACTIONS
-// =====================================================
-
-function openBulkChangeRoleModal() {
-  const selectedUserIds = getSelectedUserIds();
-  
-  if (selectedUserIds.length === 0) {
-    showToast('No users selected', 'warning');
-    return;
-  }
-
-  const modal = document.getElementById('modalContainer');
-  
-  modal.innerHTML = `
-    <div class="modal-overlay" onclick="closeModal()">
-      <div class="modal-content" onclick="event.stopPropagation()">
-        <div class="modal-header">
-          <h3><i class="fas fa-user-tag"></i> Change Role for ${selectedUserIds.length} User(s)</h3>
-          <button class="modal-close" onclick="closeModal()">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-        
-        <form id="bulkChangeRoleForm" class="modal-body">
-          <div class="form-group">
-            <label for="bulkNewRole">Select New Role <span class="required">*</span></label>
-            <select id="bulkNewRole" required>
-              <option value="">-- Select Role --</option>
-              ${roles.map(role => `
-                <option value="${role.id}">${role.name}</option>
-              `).join('')}
-            </select>
-          </div>
-
-          <div class="info-box">
-            <i class="fas fa-info-circle"></i>
-            <p>This will change the role for all ${selectedUserIds.length} selected user(s).</p>
-          </div>
-
-          <div class="form-actions">
-            <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
-            <button type="submit" class="btn-primary">
-              <i class="fas fa-check"></i> Apply Role Change
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  `;
-  
-  modal.style.display = 'block';
-  
-  document.getElementById('bulkChangeRoleForm').addEventListener('submit', handleBulkChangeRole);
-}
-
-async function handleBulkChangeRole(e) {
-  e.preventDefault();
-
-  const newRoleId = document.getElementById('bulkNewRole').value;
-  const selectedUserIds = getSelectedUserIds();
-
-  try {
-    const response = await fetch(`${API_BASE}/users/bulk/change-role`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        user_ids: selectedUserIds,
-        role_id: parseInt(newRoleId),
-        updated_by: currentAdminId
-      })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to change roles');
-    }
-
-    const role = roles.find(r => r.id === parseInt(newRoleId));
-    showToast(`Role changed to "${role.name}" for ${selectedUserIds.length} user(s)`, 'success');
-    closeModal();
-    
-    await loadUsers();
-    updateStats();
-    filterAndDisplayUsers();
-
-    // Clear selections
-    document.getElementById('selectAll').checked = false;
-    updateBulkActionsBar();
-
-  } catch (error) {
-    console.error('❌ Error changing roles:', error);
-    showToast(error.message, 'error');
-  }
-}
-
-async function handleBulkAction(action) {
-  const selectedUserIds = getSelectedUserIds();
-  
-  if (selectedUserIds.length === 0) {
-    showToast('No users selected', 'warning');
-    return;
-  }
-
-  let confirmed = false;
-  let endpoint = '';
-  let body = { user_ids: selectedUserIds, updated_by: currentAdminId };
-  let successMessage = '';
-
-  switch(action) {
-    case 'activate':
-      confirmed = confirm(`Activate ${selectedUserIds.length} user(s)?`);
-      endpoint = `${API_BASE}/users/bulk/change-status`;
-      body.status = 'active';
-      successMessage = `${selectedUserIds.length} user(s) activated`;
-      break;
-    
-    case 'deactivate':
-      confirmed = confirm(`Deactivate ${selectedUserIds.length} user(s)?`);
-      endpoint = `${API_BASE}/users/bulk/change-status`;
-      body.status = 'inactive';
-      successMessage = `${selectedUserIds.length} user(s) deactivated`;
-      break;
-    
-    case 'delete':
-      confirmed = confirm(`⚠️ WARNING: Delete ${selectedUserIds.length} user(s)? This cannot be undone!`);
-      endpoint = `${API_BASE}/users/bulk/delete`;
-      body.deleted_by = currentAdminId;
-      successMessage = `${selectedUserIds.length} user(s) deleted`;
-      break;
-    
-    default:
-      return;
-  }
-
-  if (!confirmed) return;
-
-  try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Bulk action failed');
-    }
-
-    showToast(successMessage, 'success');
-    
-    await loadUsers();
-    updateStats();
-    filterAndDisplayUsers();
-
-    // Clear selections
-    document.getElementById('selectAll').checked = false;
-    updateBulkActionsBar();
-
-  } catch (error) {
-    console.error('❌ Error performing bulk action:', error);
-    showToast(error.message, 'error');
-  }
-}
-
-// =====================================================
+// ========================================================
 // HELPER MODALS
-// =====================================================
-
+// ========================================================
 function showTempPasswordModal(userId, tempPassword) {
   const modal = document.getElementById('modalContainer');
   
@@ -1577,10 +1566,9 @@ function copyTempPassword() {
   });
 }
 
-// =====================================================
+// ========================================================
 // PASSWORD UTILITIES
-// =====================================================
-
+// ========================================================
 function togglePasswordVisibility(inputId) {
   const input = document.getElementById(inputId);
   const button = input.nextElementSibling;
@@ -1609,10 +1597,9 @@ function generateRandomPassword() {
   showToast('Random password generated', 'success');
 }
 
-// =====================================================
-// UTILITY FUNCTIONS
-// =====================================================
-
+// ========================================================
+// HELPER FUNCTIONS
+// ========================================================
 function getActivityIcon(type) {
   const icons = {
     'login': 'fa-sign-in-alt',
@@ -1656,10 +1643,24 @@ function closeModal() {
   currentEditingUserId = null;
 }
 
-// =====================================================
-// TOAST NOTIFICATIONS
-// =====================================================
+// ========================================================
+// ACTIVITY LOGGING
+// ========================================================
+async function logActivity(activityData) {
+  try {
+    await fetch(`${API_BASE}/activity-logs`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(activityData)
+    });
+  } catch (error) {
+    console.error('Error logging activity:', error);
+  }
+}
 
+// ========================================================
+// TOAST NOTIFICATIONS
+// ========================================================
 function showToast(message, type = 'info') {
   console.log(`📢 Toast: ${type} - ${message}`);
   
@@ -1692,10 +1693,9 @@ function showToast(message, type = 'info') {
   }, 3000);
 }
 
-// =====================================================
+// ========================================================
 // MAKE FUNCTIONS GLOBALLY ACCESSIBLE
-// =====================================================
-
+// ========================================================
 window.openUserActions = openUserActions;
 window.openUserDetailsModal = openUserDetailsModal;
 window.openEditUserModal = openEditUserModal;
@@ -1709,4 +1709,6 @@ window.togglePasswordVisibility = togglePasswordVisibility;
 window.generateRandomPassword = generateRandomPassword;
 window.closeModal = closeModal;
 
-console.log('✅ User Management script loaded successfully');
+console.log('✅ User Management System Loaded Successfully');
+console.log('👤 Current Admin:', currentAdminId);
+console.log('📊 Roles Loaded:', roles.length);
