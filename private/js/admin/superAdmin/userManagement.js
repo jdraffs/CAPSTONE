@@ -1,8 +1,6 @@
 // userManagement.js - UPDATED WITH ROLE INTEGRATION - PART 1 OF 2
-// ========================================================
-// CONFIGURATION & GLOBAL VARIABLES
-// ========================================================
 
+// CONFIGURATION & GLOBAL VARIABLES
 const API_BASE = 'http://localhost:3000/api';
 let currentAdminId = localStorage.getItem('adminid');
 let allUsers = [];
@@ -13,9 +11,7 @@ let currentFilter = 'all';
 let currentSearchTerm = '';
 let currentEditingUserId = null;
 
-// ========================================================
 // INITIALIZE ON PAGE LOAD
-// ========================================================
 document.addEventListener('DOMContentLoaded', () => {
   if (!currentAdminId) {
     alert('You must be logged in to access this page.');
@@ -39,9 +35,7 @@ async function initializeUserManagement() {
   filterAndDisplayUsers();
 }
 
-// ========================================================
 // DATA LOADING - ROLES & PERMISSIONS
-// ========================================================
 async function loadRoles() {
   try {
     const response = await fetch(`${API_BASE}/roles`);
@@ -73,9 +67,7 @@ function getDefaultRoles() {
   ];
 }
 
-// ========================================================
 // HTML INJECTION
-// ========================================================
 function injectHTML() {
   const mainContent = document.getElementById('mainContent');
   
@@ -222,9 +214,7 @@ function injectHTML() {
   `;
 }
 
-// ========================================================
 // EVENT LISTENERS
-// ========================================================
 function attachEventListeners() {
   // Header buttons
   document.getElementById('btnRefresh').addEventListener('click', () => loadUsers());
@@ -262,9 +252,7 @@ function attachEventListeners() {
   document.getElementById('bulkDelete').addEventListener('click', () => handleBulkAction('delete'));
 }
 
-// ========================================================
 // DATA LOADING - USERS
-// ========================================================
 async function loadUsers() {
   try {
     const response = await fetch(`${API_BASE}/users`);
@@ -293,9 +281,7 @@ async function loadUsers() {
   }
 }
 
-// ========================================================
 // STATS UPDATE
-// ========================================================
 function updateStats() {
   const total = allUsers.length;
   const active = allUsers.filter(u => u.status === 'active').length;
@@ -308,9 +294,7 @@ function updateStats() {
   document.getElementById('statTotalRoles').textContent = roles.length;
 }
 
-// ========================================================
 // FILTER & DISPLAY
-// ========================================================
 function filterAndDisplayUsers() {
   const selectedRoleId = document.getElementById('roleFilter').value;
   
@@ -344,9 +328,7 @@ function filterAndDisplayUsers() {
   displayUsers();
 }
 
-// ========================================================
 // DISPLAY USERS TABLE
-// ========================================================
 function displayUsers() {
   const tbody = document.getElementById('usersTableBody');
   
@@ -424,9 +406,7 @@ function displayUsers() {
   attachCheckboxListeners();
 }
 
-// ========================================================
 // CHECKBOX HANDLING
-// ========================================================
 function attachCheckboxListeners() {
   document.querySelectorAll('.user-checkbox').forEach(cb => {
     cb.addEventListener('change', updateBulkActionsBar);
@@ -459,9 +439,7 @@ function getSelectedUserIds() {
     .map(cb => cb.dataset.userId);
 }
 
-// ========================================================
 // UTILITY FUNCTIONS
-// ========================================================
 function formatStatus(status) {
   const statusMap = {
     'active': 'Active',
@@ -517,14 +495,7 @@ function showError(message) {
   }
 }
 
-// userManagement.js - UPDATED WITH ROLE INTEGRATION - PART 2 OF 2
-// ========================================================
-// COPY THIS AND APPEND IT DIRECTLY AFTER PART 1
-// ========================================================
-
-// ========================================================
 // CREATE USER MODAL
-// ========================================================
 function openCreateUserModal() {
   const modal = document.getElementById('modalContainer');
   
@@ -613,9 +584,7 @@ function openCreateUserModal() {
   document.getElementById('createUserForm').addEventListener('submit', handleCreateUser);
 }
 
-// ========================================================
 // EDIT USER MODAL
-// ========================================================
 function openEditUserModal(userId) {
   const user = allUsers.find(u => u.adminid === userId);
   if (!user) return;
@@ -686,9 +655,7 @@ function openEditUserModal(userId) {
   document.getElementById('editUserForm').addEventListener('submit', handleEditUser);
 }
 
-// ========================================================
 // USER DETAILS MODAL
-// ========================================================
 function openUserDetailsModal(userId) {
   const user = allUsers.find(u => u.adminid === userId);
   if (!user) return;
@@ -786,9 +753,7 @@ function openUserDetailsModal(userId) {
   modal.style.display = 'block';
 }
 
-// ========================================================
 // USER ACTIONS MODAL (More Menu)
-// ========================================================
 function openUserActions(userId) {
   const user = allUsers.find(u => u.adminid === userId);
   if (!user) return;
@@ -888,9 +853,7 @@ function openUserActions(userId) {
   modal.style.display = 'block';
 }
 
-// ========================================================
 // BULK CHANGE ROLE MODAL
-// ========================================================
 function openBulkChangeRoleModal() {
   const selectedUserIds = getSelectedUserIds();
   if (selectedUserIds.length === 0) return;
@@ -939,9 +902,7 @@ function openBulkChangeRoleModal() {
   document.getElementById('bulkChangeRoleForm').addEventListener('submit', handleBulkChangeRole);
 }
 
-// ========================================================
 // FORM HANDLERS
-// ========================================================
 async function handleCreateUser(e) {
   e.preventDefault();
 
@@ -1078,13 +1039,8 @@ async function handleBulkChangeRole(e) {
     showToast('Failed to change roles', 'error');
   }
 }
-// ========================================================
-// APPEND THESE FUNCTIONS TO PART 2
-// ========================================================
 
-// ========================================================
 // BULK ACTIONS HANDLER
-// ========================================================
 async function handleBulkAction(action) {
   const selectedUserIds = getSelectedUserIds();
   if (selectedUserIds.length === 0) {
@@ -1153,9 +1109,7 @@ async function handleBulkAction(action) {
   }
 }
 
-// ========================================================
 // CHANGE USER STATUS
-// ========================================================
 async function changeUserStatus(userId, newStatus) {
   const user = allUsers.find(u => u.adminid === userId);
   const statusText = {
@@ -1200,9 +1154,7 @@ async function changeUserStatus(userId, newStatus) {
   }
 }
 
-// ========================================================
 // RESET PASSWORD
-// ========================================================
 async function resetUserPassword(userId) {
   const confirmed = confirm(
     `Are you sure you want to reset the password for ${userId}?\n\nA temporary password will be generated.`
@@ -1238,9 +1190,7 @@ async function resetUserPassword(userId) {
   }
 }
 
-// ========================================================
 // VIEW USER ACTIVITY
-// ========================================================
 async function viewUserActivity(userId) {
   try {
     const response = await fetch(`${API_BASE}/activity-logs/admin/${userId}`);
@@ -1291,9 +1241,7 @@ async function viewUserActivity(userId) {
   }
 }
 
-// ========================================================
 // DELETE USER
-// ========================================================
 function confirmDeleteUser(userId) {
   const modal = document.getElementById('modalContainer');
   
@@ -1353,9 +1301,7 @@ async function deleteUser(userId) {
   }
 }
 
-// ========================================================
 // HELPER MODALS
-// ========================================================
 function showTempPasswordModal(userId, tempPassword) {
   const modal = document.getElementById('modalContainer');
   
@@ -1402,9 +1348,7 @@ function copyTempPassword() {
   });
 }
 
-// ========================================================
 // PASSWORD UTILITIES
-// ========================================================
 function togglePasswordVisibility(inputId) {
   const input = document.getElementById(inputId);
   const button = input.nextElementSibling;
@@ -1433,9 +1377,7 @@ function generateRandomPassword() {
   showToast('Random password generated', 'success');
 }
 
-// ========================================================
 // HELPER FUNCTIONS
-// ========================================================
 function getActivityIcon(type) {
   const icons = {
     'login': 'fa-sign-in-alt',
@@ -1473,9 +1415,7 @@ function closeModal() {
   currentEditingUserId = null;
 }
 
-// ========================================================
 // ACTIVITY LOGGING
-// ========================================================
 async function logActivity(activityData) {
   try {
     await fetch(`${API_BASE}/activity-logs`, {
@@ -1488,9 +1428,7 @@ async function logActivity(activityData) {
   }
 }
 
-// ========================================================
 // TOAST NOTIFICATIONS
-// ========================================================
 function showToast(message, type = 'info') {
   const existingToasts = document.querySelectorAll('.toast');
   existingToasts.forEach(t => t.remove());
@@ -1520,9 +1458,7 @@ function showToast(message, type = 'info') {
   }, 3000);
 }
 
-// ========================================================
 // MAKE FUNCTIONS GLOBALLY ACCESSIBLE
-// ========================================================
 window.openUserActions = openUserActions;
 window.openUserDetailsModal = openUserDetailsModal;
 window.openEditUserModal = openEditUserModal;
@@ -1535,7 +1471,3 @@ window.copyTempPassword = copyTempPassword;
 window.togglePasswordVisibility = togglePasswordVisibility;
 window.generateRandomPassword = generateRandomPassword;
 window.closeModal = closeModal;
-
-console.log('✅ User Management System Loaded Successfully');
-console.log('👤 Current Admin:', currentAdminId);
-console.log('📊 Roles Loaded:', roles.length);
