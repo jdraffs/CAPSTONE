@@ -1,4 +1,4 @@
-// roleManagementRoute.js - Backend API Routes for Role Management
+// roleManagementRoute.js - Works WITHOUT users table
 import express from 'express';
 import pool from '../db.js';
 
@@ -15,11 +15,10 @@ router.get('/roles', async (req, res) => {
         r.is_system,
         r.created_at,
         r.updated_at,
-        COUNT(DISTINCT u.id) as user_count,
-        ARRAY_AGG(DISTINCT p.name) FILTER (WHERE p.name IS NOT NULL) as permissions,
-        ARRAY_AGG(DISTINCT p.id) FILTER (WHERE p.id IS NOT NULL) as permission_ids
+        0 as user_count,
+        COALESCE(ARRAY_AGG(DISTINCT p.name) FILTER (WHERE p.name IS NOT NULL), ARRAY[]::varchar[]) as permissions,
+        COALESCE(ARRAY_AGG(DISTINCT p.id) FILTER (WHERE p.id IS NOT NULL), ARRAY[]::integer[]) as permission_ids
       FROM roles r
-      LEFT JOIN users u ON u.role_id = r.id
       LEFT JOIN role_permissions rp ON rp.role_id = r.id
       LEFT JOIN permissions p ON p.id = rp.permission_id
       GROUP BY r.id, r.name, r.description, r.is_system, r.created_at, r.updated_at
@@ -29,8 +28,8 @@ router.get('/roles', async (req, res) => {
     const result = await pool.query(rolesQuery);
     res.json(result.rows);
   } catch (error) {
-    console.error('Error fetching roles:', error);
-    res.status(500).json({ error: 'Failed to fetch roles' });
+    console.error('❌ Error fetching roles:', error.message);
+    res.status(500).json({ error: 'Failed to fetch roles', details: error.message });
   }
 });
 
@@ -47,11 +46,10 @@ router.get('/roles/:id', async (req, res) => {
         r.is_system,
         r.created_at,
         r.updated_at,
-        COUNT(DISTINCT u.id) as user_count,
-        ARRAY_AGG(DISTINCT p.name) FILTER (WHERE p.name IS NOT NULL) as permissions,
-        ARRAY_AGG(DISTINCT p.id) FILTER (WHERE p.id IS NOT NULL) as permission_ids
+        0 as user_count,
+        COALESCE(ARRAY_AGG(DISTINCT p.name) FILTER (WHERE p.name IS NOT NULL), ARRAY[]::varchar[]) as permissions,
+        COALESCE(ARRAY_AGG(DISTINCT p.id) FILTER (WHERE p.id IS NOT NULL), ARRAY[]::integer[]) as permission_ids
       FROM roles r
-      LEFT JOIN users u ON u.role_id = r.id
       LEFT JOIN role_permissions rp ON rp.role_id = r.id
       LEFT JOIN permissions p ON p.id = rp.permission_id
       WHERE r.id = $1
@@ -66,8 +64,8 @@ router.get('/roles/:id', async (req, res) => {
 
     res.json(result.rows[0]);
   } catch (error) {
-    console.error('Error fetching role:', error);
-    res.status(500).json({ error: 'Failed to fetch role' });
+    console.error('❌ Error fetching role:', error.message);
+    res.status(500).json({ error: 'Failed to fetch role', details: error.message });
   }
 });
 
@@ -77,6 +75,8 @@ router.post('/roles', async (req, res) => {
   
   try {
     const { name, description, permission_ids } = req.body;
+
+    console.log('📝 Creating role:', { name, description, permission_ids });
 
     // Validate input
     if (!name || !name.trim()) {
@@ -108,19 +108,20 @@ router.post('/roles', async (req, res) => {
     const roleResult = await client.query(insertRoleQuery, [name.trim(), description?.trim() || null]);
     const newRole = roleResult.rows[0];
 
+    console.log('✅ Role created:', newRole);
+
     // Insert role permissions
     if (permission_ids && permission_ids.length > 0) {
-      const permissionValues = permission_ids.map((permId, idx) => 
-        `($1, $${idx + 2})`
-      ).join(', ');
-      
-      const insertPermissionsQuery = `
-        INSERT INTO role_permissions (role_id, permission_id)
-        VALUES ${permissionValues}
-      `;
-      
-      await client.query(insertPermissionsQuery, [newRole.id, ...permission_ids]);
+      for (const permId of permission_ids) {
+        const insertPermQuery = `
+          INSERT INTO role_permissions (role_id, permission_id)
+          VALUES ($1, $2)
+        `;
+        await client.query(insertPermQuery, [newRole.id, permId]);
+      }
     }
+
+    console.log('✅ Permissions assigned:', permission_ids.length);
 
     // Log to history
     const historyQuery = `
@@ -133,7 +134,7 @@ router.post('/roles', async (req, res) => {
       newRole.name,
       'Role Created',
       `Role "${newRole.name}" was created with ${permission_ids.length} permissions`,
-      'SuperAdmin' // TODO: Replace with actual logged-in user
+      'SuperAdmin'
     ]);
 
     await client.query('COMMIT');
@@ -148,8 +149,8 @@ router.post('/roles', async (req, res) => {
         r.created_at,
         r.updated_at,
         0 as user_count,
-        ARRAY_AGG(p.name) as permissions,
-        ARRAY_AGG(p.id) as permission_ids
+        COALESCE(ARRAY_AGG(p.name), ARRAY[]::varchar[]) as permissions,
+        COALESCE(ARRAY_AGG(p.id), ARRAY[]::integer[]) as permission_ids
       FROM roles r
       LEFT JOIN role_permissions rp ON rp.role_id = r.id
       LEFT JOIN permissions p ON p.id = rp.permission_id
@@ -159,11 +160,13 @@ router.post('/roles', async (req, res) => {
     
     const completeResult = await client.query(completeRoleQuery, [newRole.id]);
     
+    console.log('✅ Role creation complete');
     res.status(201).json(completeResult.rows[0]);
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('Error creating role:', error);
-    res.status(500).json({ error: 'Failed to create role' });
+    console.error('❌ Error creating role:', error.message);
+    console.error('Full error:', error);
+    res.status(500).json({ error: 'Failed to create role', details: error.message });
   } finally {
     client.release();
   }
@@ -176,6 +179,8 @@ router.put('/roles/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { name, description, permission_ids } = req.body;
+
+    console.log('📝 Updating role:', id, { name, description, permission_ids });
 
     // Validate input
     if (!name || !name.trim()) {
@@ -216,23 +221,20 @@ router.put('/roles/:id', async (req, res) => {
       RETURNING id, name, description, is_system, created_at, updated_at
     `;
     
-    const roleResult = await client.query(updateRoleQuery, [name.trim(), description?.trim() || null, id]);
+    await client.query(updateRoleQuery, [name.trim(), description?.trim() || null, id]);
 
     // Delete existing permissions
     await client.query('DELETE FROM role_permissions WHERE role_id = $1', [id]);
 
     // Insert new permissions
     if (permission_ids && permission_ids.length > 0) {
-      const permissionValues = permission_ids.map((permId, idx) => 
-        `($1, $${idx + 2})`
-      ).join(', ');
-      
-      const insertPermissionsQuery = `
-        INSERT INTO role_permissions (role_id, permission_id)
-        VALUES ${permissionValues}
-      `;
-      
-      await client.query(insertPermissionsQuery, [id, ...permission_ids]);
+      for (const permId of permission_ids) {
+        const insertPermQuery = `
+          INSERT INTO role_permissions (role_id, permission_id)
+          VALUES ($1, $2)
+        `;
+        await client.query(insertPermQuery, [id, permId]);
+      }
     }
 
     // Log to history
@@ -250,7 +252,7 @@ router.put('/roles/:id', async (req, res) => {
       name.trim(),
       'Role Updated',
       changes.join(', '),
-      'SuperAdmin' // TODO: Replace with actual logged-in user
+      'SuperAdmin'
     ]);
 
     await client.query('COMMIT');
@@ -264,11 +266,10 @@ router.put('/roles/:id', async (req, res) => {
         r.is_system,
         r.created_at,
         r.updated_at,
-        COUNT(DISTINCT u.id) as user_count,
-        ARRAY_AGG(DISTINCT p.name) FILTER (WHERE p.name IS NOT NULL) as permissions,
-        ARRAY_AGG(DISTINCT p.id) FILTER (WHERE p.id IS NOT NULL) as permission_ids
+        0 as user_count,
+        COALESCE(ARRAY_AGG(DISTINCT p.name) FILTER (WHERE p.name IS NOT NULL), ARRAY[]::varchar[]) as permissions,
+        COALESCE(ARRAY_AGG(DISTINCT p.id) FILTER (WHERE p.id IS NOT NULL), ARRAY[]::integer[]) as permission_ids
       FROM roles r
-      LEFT JOIN users u ON u.role_id = r.id
       LEFT JOIN role_permissions rp ON rp.role_id = r.id
       LEFT JOIN permissions p ON p.id = rp.permission_id
       WHERE r.id = $1
@@ -277,11 +278,12 @@ router.put('/roles/:id', async (req, res) => {
     
     const completeResult = await client.query(completeRoleQuery, [id]);
     
+    console.log('✅ Role updated successfully');
     res.json(completeResult.rows[0]);
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('Error updating role:', error);
-    res.status(500).json({ error: 'Failed to update role' });
+    console.error('❌ Error updating role:', error.message);
+    res.status(500).json({ error: 'Failed to update role', details: error.message });
   } finally {
     client.release();
   }
@@ -293,6 +295,8 @@ router.delete('/roles/:id', async (req, res) => {
   
   try {
     const { id } = req.params;
+
+    console.log('🗑️ Deleting role:', id);
 
     await client.query('BEGIN');
 
@@ -314,20 +318,6 @@ router.delete('/roles/:id', async (req, res) => {
 
     const roleName = roleCheck.rows[0].name;
 
-    // Check if role has users
-    const userCheck = await client.query(
-      'SELECT COUNT(*) as count FROM users WHERE role_id = $1',
-      [id]
-    );
-    
-    const userCount = parseInt(userCheck.rows[0].count);
-
-    if (userCount > 0) {
-      // Optional: You can either prevent deletion or reassign users
-      // For now, we'll set users' role_id to NULL
-      await client.query('UPDATE users SET role_id = NULL WHERE role_id = $1', [id]);
-    }
-
     // Log to history before deletion
     const historyQuery = `
       INSERT INTO role_history (role_id, role_name, action, details, user_name, timestamp)
@@ -338,8 +328,8 @@ router.delete('/roles/:id', async (req, res) => {
       id,
       roleName,
       'Role Deleted',
-      `Role "${roleName}" was deleted. ${userCount} user(s) were unassigned.`,
-      'SuperAdmin' // TODO: Replace with actual logged-in user
+      `Role "${roleName}" was deleted.`,
+      'SuperAdmin'
     ]);
 
     // Delete role permissions (will cascade if foreign key is set up)
@@ -350,15 +340,16 @@ router.delete('/roles/:id', async (req, res) => {
 
     await client.query('COMMIT');
 
+    console.log('✅ Role deleted successfully');
     res.json({ 
       success: true, 
       message: `Role "${roleName}" deleted successfully`,
-      users_affected: userCount
+      users_affected: 0
     });
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('Error deleting role:', error);
-    res.status(500).json({ error: 'Failed to delete role' });
+    console.error('❌ Error deleting role:', error.message);
+    res.status(500).json({ error: 'Failed to delete role', details: error.message });
   } finally {
     client.release();
   }
@@ -370,6 +361,8 @@ router.post('/roles/:id/duplicate', async (req, res) => {
   
   try {
     const { id } = req.params;
+
+    console.log('📋 Duplicating role:', id);
 
     await client.query('BEGIN');
 
@@ -437,7 +430,7 @@ router.post('/roles/:id/duplicate', async (req, res) => {
       newRole.name,
       'Role Duplicated',
       `Role "${newRole.name}" was created as a duplicate of "${original.name}" with ${permCount.rows[0].count} permissions`,
-      'SuperAdmin' // TODO: Replace with actual logged-in user
+      'SuperAdmin'
     ]);
 
     await client.query('COMMIT');
@@ -452,8 +445,8 @@ router.post('/roles/:id/duplicate', async (req, res) => {
         r.created_at,
         r.updated_at,
         0 as user_count,
-        ARRAY_AGG(p.name) as permissions,
-        ARRAY_AGG(p.id) as permission_ids
+        COALESCE(ARRAY_AGG(p.name), ARRAY[]::varchar[]) as permissions,
+        COALESCE(ARRAY_AGG(p.id), ARRAY[]::integer[]) as permission_ids
       FROM roles r
       LEFT JOIN role_permissions rp ON rp.role_id = r.id
       LEFT JOIN permissions p ON p.id = rp.permission_id
@@ -463,11 +456,12 @@ router.post('/roles/:id/duplicate', async (req, res) => {
     
     const completeResult = await client.query(completeRoleQuery, [newRole.id]);
     
+    console.log('✅ Role duplicated successfully');
     res.status(201).json(completeResult.rows[0]);
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('Error duplicating role:', error);
-    res.status(500).json({ error: 'Failed to duplicate role' });
+    console.error('❌ Error duplicating role:', error.message);
+    res.status(500).json({ error: 'Failed to duplicate role', details: error.message });
   } finally {
     client.release();
   }
@@ -503,31 +497,19 @@ router.get('/permissions', async (req, res) => {
     const result = await pool.query(permissionsQuery);
     res.json(result.rows);
   } catch (error) {
-    console.error('Error fetching permissions:', error);
-    res.status(500).json({ error: 'Failed to fetch permissions' });
+    console.error('❌ Error fetching permissions:', error.message);
+    res.status(500).json({ error: 'Failed to fetch permissions', details: error.message });
   }
 });
 
-// ============ GET USERS (for Role Management) ============
+// ============ GET USERS (Returns empty array for now) ============
 router.get('/users', async (req, res) => {
   try {
-    const usersQuery = `
-      SELECT 
-        u.id,
-        u.name,
-        u.email,
-        u.role_id,
-        r.name as role_name
-      FROM users u
-      LEFT JOIN roles r ON r.id = u.role_id
-      ORDER BY u.name
-    `;
-
-    const result = await pool.query(usersQuery);
-    res.json(result.rows);
+    // Return empty array since users table doesn't exist yet
+    res.json([]);
   } catch (error) {
-    console.error('Error fetching users:', error);
-    res.status(500).json({ error: 'Failed to fetch users' });
+    console.error('❌ Error fetching users:', error.message);
+    res.json([]);
   }
 });
 
@@ -561,60 +543,8 @@ router.get('/role-history', async (req, res) => {
     const result = await pool.query(historyQuery, params);
     res.json(result.rows);
   } catch (error) {
-    console.error('Error fetching role history:', error);
-    res.status(500).json({ error: 'Failed to fetch role history' });
-  }
-});
-
-// ============ SEED INITIAL PERMISSIONS (One-time setup) ============
-router.post('/seed-permissions', async (req, res) => {
-  const client = await pool.connect();
-  
-  try {
-    await client.query('BEGIN');
-
-    const permissions = [
-      // Dashboard
-      { module: 'Dashboard', icon: 'fas fa-tachometer-alt', name: 'View Dashboard', description: 'Access to main dashboard' },
-      { module: 'Dashboard', icon: 'fas fa-tachometer-alt', name: 'Manage Widgets', description: 'Customize dashboard widgets' },
-      
-      // Documents
-      { module: 'Documents', icon: 'fas fa-file-alt', name: 'View Documents', description: 'View all documents' },
-      { module: 'Documents', icon: 'fas fa-file-alt', name: 'Create Documents', description: 'Create new documents' },
-      { module: 'Documents', icon: 'fas fa-file-alt', name: 'Edit Documents', description: 'Edit existing documents' },
-      { module: 'Documents', icon: 'fas fa-file-alt', name: 'Delete Documents', description: 'Delete documents' },
-      
-      // Analytics
-      { module: 'Analytics', icon: 'fas fa-chart-line', name: 'View Analytics', description: 'Access analytics dashboard' },
-      { module: 'Analytics', icon: 'fas fa-chart-line', name: 'Export Reports', description: 'Export analytics reports' },
-      { module: 'Analytics', icon: 'fas fa-chart-line', name: 'View Statistics', description: 'View system statistics' },
-      
-      // Users
-      { module: 'Users', icon: 'fas fa-users', name: 'View Users', description: 'View user list' },
-      { module: 'Users', icon: 'fas fa-users', name: 'Manage Users', description: 'Create, edit, delete users' },
-      { module: 'Users', icon: 'fas fa-users', name: 'Assign Roles', description: 'Assign roles to users' },
-      
-      // Settings
-      { module: 'Settings', icon: 'fas fa-cog', name: 'View Settings', description: 'View system settings' },
-      { module: 'Settings', icon: 'fas fa-cog', name: 'Modify Settings', description: 'Modify system settings' },
-      { module: 'Settings', icon: 'fas fa-cog', name: 'System Configuration', description: 'Advanced system configuration' }
-    ];
-
-    for (const perm of permissions) {
-      await client.query(
-        'INSERT INTO permissions (module, icon, name, description) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING',
-        [perm.module, perm.icon, perm.name, perm.description]
-      );
-    }
-
-    await client.query('COMMIT');
-    res.json({ success: true, message: 'Permissions seeded successfully' });
-  } catch (error) {
-    await client.query('ROLLBACK');
-    console.error('Error seeding permissions:', error);
-    res.status(500).json({ error: 'Failed to seed permissions' });
-  } finally {
-    client.release();
+    console.error('❌ Error fetching role history:', error.message);
+    res.status(500).json({ error: 'Failed to fetch role history', details: error.message });
   }
 });
 
