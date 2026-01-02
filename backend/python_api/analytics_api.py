@@ -18,8 +18,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Gemini AI Configuration
 GEMINI_API_KEY = "AIzaSyBhYn-arUzoAkQoib4s3BLtu72R9iCdBR0"
-# Use stable model with better free tier limits
-GEMINI_MODEL = "gemini-2.5-flash"  # Changed from experimental model
+GEMINI_MODEL = "gemini-2.5-flash"
 GEMINI_API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
 
 print(f"📁 Looking for files in: {os.path.abspath(UPLOAD_FOLDER)}")
@@ -27,10 +26,10 @@ print(f"📁 Looking for files in: {os.path.abspath(UPLOAD_FOLDER)}")
 
 def generate_gemini_interpretation(statistics, metrics_comparisons, column_name, file_context):
     """
-    Use Gemini AI to generate comprehensive enrollment interpretation with retry logic
+    Use Gemini AI to generate a concise, single-paragraph interpretation (150-200 words)
     """
-    # Prepare context for Gemini
-    context = f"""You are an expert education data analyst. Analyze the following enrollment statistics and provide a comprehensive, natural interpretation.
+    # Prepare context for Gemini with STRICT formatting requirements
+    context = f"""You are an expert education data analyst writing for school administrators who need clear, actionable insights.
 
 **Dataset Information:**
 - Analyzing: {column_name}
@@ -40,64 +39,52 @@ def generate_gemini_interpretation(statistics, metrics_comparisons, column_name,
 **Statistics Summary:**
 - Mean: {statistics.get('mean', 0):.2f}
 - Median: {statistics.get('median', 0):.2f}
-- Mode: {statistics.get('mode', 0):.2f}
 - Standard Deviation: {statistics.get('std', 0):.2f}
 - Min: {statistics.get('min', 0):.2f}
 - Max: {statistics.get('max', 0):.2f}
 - Range: {statistics.get('range', 0):.2f}
-- Q1: {statistics.get('q1', 0):.2f}
-- Q3: {statistics.get('q3', 0):.2f}
 
 """
 
     # Add semester comparisons if available
     if metrics_comparisons:
-        context += "\n**Semester-to-Semester Comparisons:**\n"
+        context += "**Semester-to-Semester Comparisons:**\n"
         for metric_name, comparison in metrics_comparisons.items():
-            context += f"""
-- **{metric_name}:**
-  - 1st Semester Average: {comparison['1st_sem_mean']:.0f} students
-  - 2nd Semester Average: {comparison['2nd_sem_mean']:.0f} students
-  - Change: {comparison['difference']:+.0f} students ({comparison['percent_change']:+.1f}%)
-"""
+            context += f"- {metric_name}: 1st Sem {comparison['1st_sem_mean']:.0f} → 2nd Sem {comparison['2nd_sem_mean']:.0f} ({comparison['percent_change']:+.1f}% change)\n"
 
     context += """
 
-**Required Analysis Format:**
+**CRITICAL OUTPUT REQUIREMENTS:**
 
-1. **Overview**: Start with a clear summary of what the data shows about enrollment patterns.
-
-2. **Overall Enrollment Trends**: Describe the total enrollment patterns, growth or decline over time, and semester variations.
-
-3. **First Year Enrollment**: Analyze new student enrollment patterns and retention between semesters.
-
-4. **Continuing Students (Old Students)**: Discuss returning student trends and stability.
-
-5. **Not Enrolled**: Explain gaps in enrollment and what they indicate.
-
-6. **Dropout Analysis**: Examine dropout patterns, when they occur most, and their severity.
-
-7. **Key Insights**: Provide 3-5 actionable insights based on the data.
-
-8. **Recommendations**: Suggest 2-3 specific interventions or areas of focus based on the patterns observed.
+1. Write EXACTLY ONE paragraph (no bullet points, no headings, no line breaks)
+2. Target length: 150-200 words
+3. Maximum: 1,500 characters (this is a hard limit)
+4. Do NOT list statistics mechanically - explain what the numbers mean
+5. Focus on what is changing, why it matters, and what actions may be needed
+6. Use simple, professional language suitable for school administrators
+7. Reference numbers only when they strengthen understanding
+8. Avoid technical jargon like "standard deviation," "outliers," or "statistical significance"
+9. End naturally after completing your analysis
 
 **Style Guidelines:**
-- Write in clear, professional language suitable for educational administrators
-- Use specific numbers from the data to support each observation
-- Highlight patterns and trends, not just individual data points
-- Compare semester-to-semester changes meaningfully
-- Provide context for what the numbers mean in practical terms
-- Be concise but comprehensive (aim for 300-500 words)
-- Use bullet points for key findings where appropriate
+- Write in clear, flowing sentences that explain patterns and trends
+- Explain what the data reveals about student enrollment, retention, or behavior
+- Highlight semester-to-semester changes and what they indicate
+- Suggest practical implications or areas that may need attention
+- Keep tone professional but accessible to non-technical readers
+- Do NOT use phrases like "the data shows" or "according to the statistics"
+- Instead, directly state what is happening: "Enrollment increased..." or "Most students..."
 
-Generate a comprehensive analysis now:"""
+**Example of Good Style:**
+"The enrollment data reveals a stable pattern with an average of 350 students per period, though individual periods range from 280 to 420 students. First semester consistently shows higher enrollment at 365 students compared to second semester's 335 students, indicating a typical 8% drop that likely reflects student attrition and transfer patterns. This decline appears across most categories, with continuing students showing better retention than new enrollees. The variation between periods suggests some instability that administrators may want to investigate, particularly in identifying why certain periods attract significantly fewer students and whether scheduling or program factors contribute to these gaps."
+
+Generate your single-paragraph analysis now (150-200 words):"""
 
     max_retries = 3
-    retry_delay = 2  # seconds
+    retry_delay = 2
     
     for attempt in range(max_retries):
         try:
-            # Call Gemini API
             payload = {
                 "contents": [{
                     "parts": [{
@@ -108,7 +95,7 @@ Generate a comprehensive analysis now:"""
                     "temperature": 0.7,
                     "topK": 40,
                     "topP": 0.95,
-                    "maxOutputTokens": 4096,
+                    "maxOutputTokens": 500,  # Reduced to force conciseness
                 }
             }
 
@@ -122,20 +109,25 @@ Generate a comprehensive analysis now:"""
             if response.status_code == 200:
                 result = response.json()
                 
-                # Extract the generated text
                 if 'candidates' in result and len(result['candidates']) > 0:
                     candidate = result['candidates'][0]
                     if 'content' in candidate and 'parts' in candidate['content']:
                         generated_text = candidate['content']['parts'][0]['text']
                         
-                        # Clean up the text
+                        # Clean up the text - remove any markdown, extra spaces, line breaks
                         generated_text = generated_text.strip()
+                        generated_text = generated_text.replace('**', '')
+                        generated_text = generated_text.replace('*', '')
+                        generated_text = generated_text.replace('\n\n', ' ')
+                        generated_text = generated_text.replace('\n', ' ')
+                        generated_text = ' '.join(generated_text.split())  # Normalize spaces
                         
-                        # Format with HTML for better display
-                        formatted_text = generated_text.replace('\n', '<br>')
+                        # Enforce character limit
+                        if len(generated_text) > 1500:
+                            generated_text = generated_text[:1497] + "..."
                         
-                        print(f"✅ Gemini AI generated interpretation successfully (attempt {attempt + 1})")
-                        return formatted_text
+                        print(f"✅ Gemini AI generated interpretation: {len(generated_text)} characters (attempt {attempt + 1})")
+                        return generated_text
                 
                 print("⚠️ Unexpected Gemini response format, using fallback")
                 return generate_fallback_interpretation(statistics, metrics_comparisons, column_name)
@@ -143,7 +135,6 @@ Generate a comprehensive analysis now:"""
             elif response.status_code == 429:
                 print(f"⚠️ Rate limit hit (attempt {attempt + 1}/{max_retries})")
                 if attempt < max_retries - 1:
-                    import time
                     wait_time = retry_delay * (attempt + 1)
                     print(f"⏳ Waiting {wait_time} seconds before retry...")
                     time.sleep(wait_time)
@@ -159,7 +150,6 @@ Generate a comprehensive analysis now:"""
         except requests.exceptions.Timeout:
             print(f"⚠️ Request timeout (attempt {attempt + 1}/{max_retries})")
             if attempt < max_retries - 1:
-                import time
                 time.sleep(retry_delay)
                 continue
             else:
@@ -168,51 +158,56 @@ Generate a comprehensive analysis now:"""
         except Exception as e:
             print(f"❌ Error calling Gemini API (attempt {attempt + 1}): {str(e)}")
             if attempt < max_retries - 1:
-                import time
                 time.sleep(retry_delay)
                 continue
             else:
                 traceback.print_exc()
                 return generate_fallback_interpretation(statistics, metrics_comparisons, column_name)
     
-    # Should never reach here, but just in case
     return generate_fallback_interpretation(statistics, metrics_comparisons, column_name)
 
 
 def generate_fallback_interpretation(statistics, metrics_comparisons, column_name):
     """
-    Fallback interpretation if Gemini AI fails
+    Fallback interpretation if Gemini AI fails - MUST follow same format (single paragraph, 150-200 words)
     """
     mean = statistics['mean']
     median = statistics['median']
     minimum = statistics['min']
     maximum = statistics['max']
+    std = statistics['std']
     count = statistics['count']
     
-    interpretation = f"""<strong>📊 Enrollment Data Analysis</strong><br><br>
-
-<strong>Overview:</strong><br>
-This dataset contains information about <strong>{count:,} records</strong> for {column_name}. The average value is <strong>{mean:.1f}</strong>, with values ranging from <strong>{minimum:.1f}</strong> to <strong>{maximum:.1f}</strong>.<br><br>
-
-<strong>Key Statistics:</strong><br>
-• Average (Mean): {mean:.1f}<br>
-• Middle Value (Median): {median:.1f}<br>
-• Lowest Value: {minimum:.1f}<br>
-• Highest Value: {maximum:.1f}<br>
-• Variation: The data shows {"high" if statistics['std'] > mean * 0.3 else "moderate" if statistics['std'] > mean * 0.15 else "low"} variation with a standard deviation of {statistics['std']:.1f}<br><br>
-"""
-
-    # Add semester comparisons if available
+    # Build single paragraph interpretation
+    interpretation = f"The analysis of {column_name} across {count:,} records shows an average of {mean:.1f} with values ranging from {minimum:.1f} to {maximum:.1f}. "
+    
+    # Add variation insight
+    variation_pct = (std / mean * 100) if mean > 0 else 0
+    if variation_pct > 30:
+        interpretation += f"The data exhibits high variation, suggesting significant differences across periods that may warrant closer examination. "
+    elif variation_pct > 15:
+        interpretation += f"Moderate variation appears across periods, indicating some inconsistency in the patterns. "
+    else:
+        interpretation += f"The data shows relatively stable patterns with minimal variation between periods. "
+    
+    # Add semester comparison if available
     if metrics_comparisons:
-        interpretation += "<strong>📈 Semester Comparisons:</strong><br>"
-        for metric_name, comparison in metrics_comparisons.items():
-            trend = "increased" if comparison['difference'] > 0 else "decreased" if comparison['difference'] < 0 else "remained stable"
-            interpretation += f"• <strong>{metric_name}</strong> {trend} from {comparison['1st_sem_mean']:.0f} (1st sem) to {comparison['2nd_sem_mean']:.0f} (2nd sem), a change of {comparison['percent_change']:+.1f}%<br>"
-        interpretation += "<br>"
-
-    interpretation += """<strong>💡 Recommendation:</strong><br>
-Review the semester-to-semester patterns to identify retention opportunities and address enrollment gaps."""
-
+        for metric_name, comparison in list(metrics_comparisons.items())[:2]:  # Limit to 2 comparisons
+            change = comparison['difference']
+            pct = comparison['percent_change']
+            trend = "increased" if change > 0 else "decreased" if change < 0 else "remained stable"
+            interpretation += f"{metric_name} {trend} from {comparison['1st_sem_mean']:.0f} in first semester to {comparison['2nd_sem_mean']:.0f} in second semester, representing a {abs(pct):.1f}% change. "
+    
+    # Add actionable insight
+    if metrics_comparisons and any(abs(c['percent_change']) > 10 for c in metrics_comparisons.values()):
+        interpretation += "These semester-to-semester shifts suggest administrators should examine retention strategies and identify factors contributing to enrollment changes between terms."
+    else:
+        interpretation += "The consistency suggests stable enrollment management, though continued monitoring will help maintain these patterns."
+    
+    # Ensure we stay under character limit
+    if len(interpretation) > 1500:
+        interpretation = interpretation[:1497] + "..."
+    
     return interpretation
 
 
@@ -249,7 +244,7 @@ def find_file_with_timestamp(filename):
 
 def detect_enrollment_metrics(df, main_headers, sub_headers, column_names):
     """
-    Detect all four enrollment metrics and their semester columns
+    Detect all enrollment metrics and their semester columns
     Returns a dictionary mapping metric names to their 1st and 2nd semester columns
     """
     metrics = {
@@ -270,18 +265,15 @@ def detect_enrollment_metrics(df, main_headers, sub_headers, column_names):
         return ('2ND' in text_upper or 'SECOND' in text_upper or 
                 'SEM 2' in text_upper or 'SEM II' in text_upper)
     
-    # Iterate through all columns to categorize them
-    for col in column_names[1:]:  # Skip 'School Year'
+    for col in column_names[1:]:
         col_upper = col.upper()
         
-        # Check for Total Enrollees
         if 'TOTAL' in col_upper and 'ENROL' in col_upper:
             if is_first_sem(col_upper):
                 metrics['Total Enrollees']['1st_sem'] = col
             elif is_second_sem(col_upper):
                 metrics['Total Enrollees']['2nd_sem'] = col
         
-        # Check for First Year Enrolled
         elif ('1ST' in col_upper and 'YEAR' in col_upper and 'ENROL' in col_upper) or \
              ('FIRST' in col_upper and 'YEAR' in col_upper and 'ENROL' in col_upper):
             if is_first_sem(col_upper):
@@ -289,28 +281,24 @@ def detect_enrollment_metrics(df, main_headers, sub_headers, column_names):
             elif is_second_sem(col_upper):
                 metrics['First Year Enrolled']['2nd_sem'] = col
         
-        # Check for Old Students
         elif 'OLD' in col_upper and 'STUDENT' in col_upper:
             if is_first_sem(col_upper):
                 metrics['Old Students']['1st_sem'] = col
             elif is_second_sem(col_upper):
                 metrics['Old Students']['2nd_sem'] = col
         
-        # Check for Not Enrolled
         elif 'NOT' in col_upper and 'ENROL' in col_upper:
             if is_first_sem(col_upper):
                 metrics['Not Enrolled']['1st_sem'] = col
             elif is_second_sem(col_upper):
                 metrics['Not Enrolled']['2nd_sem'] = col
         
-        # Check for Dropout
         elif 'DROP' in col_upper and 'OUT' in col_upper:
             if is_first_sem(col_upper):
                 metrics['Dropout']['1st_sem'] = col
             elif is_second_sem(col_upper):
                 metrics['Dropout']['2nd_sem'] = col
     
-    # Filter out metrics that don't have both semesters
     detected_metrics = {}
     for metric_name, semesters in metrics.items():
         if semesters['1st_sem'] and semesters['2nd_sem']:
@@ -326,7 +314,6 @@ def calculate_metric_comparison(df, col_1st, col_2nd):
     """
     Calculate mean, difference, and percent change between two semester columns
     """
-    # Convert to numeric and drop NaN
     vals_1st = pd.to_numeric(df[col_1st], errors='coerce').dropna()
     vals_2nd = pd.to_numeric(df[col_2nd], errors='coerce').dropna()
     
@@ -345,8 +332,7 @@ def calculate_metric_comparison(df, col_1st, col_2nd):
         'percent_change': round(percent_change, 2)
     }
 
-# analytics_api.py - PART 2: File Loading and Processing Routes
-# Place this after Part 1
+    # analytics_api.py - PART 2: File Loading and Processing Routes
 
 def load_file_data(filename):
     """Load and parse uploaded file with comprehensive enrollment metrics detection"""
@@ -367,12 +353,10 @@ def load_file_data(filename):
     file_ext = os.path.splitext(actual_filename)[1].lower()
     
     try:
-        # Read the Excel file without header first to detect structure
         df_raw = pd.read_excel(filepath, header=None, engine='openpyxl' if file_ext == '.xlsx' else 'xlrd')
         
         print(f"📋 Raw file preview:\n{df_raw.head(5)}")
         
-        # Find the title row
         title_row = None
         for idx in range(min(3, len(df_raw))):
             row_text = ' '.join([str(val) for val in df_raw.iloc[idx] if pd.notna(val)])
@@ -381,7 +365,6 @@ def load_file_data(filename):
                 print(f"📋 Found title at row {idx}")
                 break
         
-        # Find main headers row
         main_header_row = None
         sub_header_row = None
         
@@ -396,11 +379,9 @@ def load_file_data(filename):
         if main_header_row is None:
             raise ValueError("Could not find enrollment data structure headers")
         
-        # Extract headers
         main_headers = df_raw.iloc[main_header_row].tolist()
         sub_headers = df_raw.iloc[sub_header_row].tolist()
         
-        # Build column names
         column_names = ['School Year']
         column_descriptions = {}
         current_main = None
@@ -421,12 +402,10 @@ def load_file_data(filename):
             else:
                 column_names.append(f"Column_{i}")
         
-        # Read actual data
         data_start_row = sub_header_row + 1
         df = pd.read_excel(filepath, header=None, skiprows=data_start_row, 
                           engine='openpyxl' if file_ext == '.xlsx' else 'xlrd')
         
-        # Ensure column count matches
         if len(df.columns) < len(column_names):
             column_names = column_names[:len(df.columns)]
         elif len(df.columns) > len(column_names):
@@ -435,7 +414,6 @@ def load_file_data(filename):
         
         df.columns = column_names
         
-        # Find numeric columns
         numeric_cols = []
         for col in df.columns[1:]:
             numeric_series = pd.to_numeric(df[col], errors='coerce')
@@ -447,21 +425,17 @@ def load_file_data(filename):
         if not numeric_cols:
             raise ValueError("No numeric columns found")
         
-        # Detect all enrollment metrics
         detected_metrics = detect_enrollment_metrics(df, main_headers, sub_headers, column_names)
         
-        # Calculate comparisons
         metrics_comparisons = {}
         for metric_name, semesters in detected_metrics.items():
             comparison = calculate_metric_comparison(df, semesters['1st_sem'], semesters['2nd_sem'])
             if comparison:
                 metrics_comparisons[metric_name] = comparison
         
-        # Use first numeric column for visualization
         column_name_raw = numeric_cols[0]
         column_name = column_descriptions.get(column_name_raw, column_name_raw)
         
-        # Extract data
         data_series = pd.to_numeric(df[column_name_raw], errors='coerce')
         valid_data = data_series.dropna()
         data = valid_data.tolist()
@@ -514,10 +488,8 @@ def process_analytics():
         
         print(f"🔄 Processing: {filename} with chart type: {chart_type}")
         
-        # Load file data
         file_data = load_file_data(filename)
         
-        # If specific column requested
         if selected_column and selected_column in file_data.get('numeric_columns', []):
             df = file_data['full_dataframe']
             column_name_raw = selected_column
@@ -533,15 +505,11 @@ def process_analytics():
             file_data['column_name'] = column_name
             file_data['column_name_raw'] = column_name_raw
         
-        # Process analytics
         analytics_result = process_file_analytics(file_data, chart_type)
         
         if 'error' in analytics_result:
             return jsonify(analytics_result), 500
         
-        # ====================================================================
-        # GEMINI AI ENHANCEMENT: Generate comprehensive interpretation
-        # ====================================================================
         metrics_comparisons = file_data.get('metrics_comparisons', {})
         
         print("🤖 Generating Gemini AI interpretation...")
@@ -552,11 +520,9 @@ def process_analytics():
             file_context={'filename': filename}
         )
         
-        # Replace the basic interpretation with Gemini's enhanced version
         analytics_result['interpretation'] = gemini_interpretation
         analytics_result['metrics_comparisons'] = metrics_comparisons
         
-        # Add file metadata
         analytics_result['file_info'] = {
             'filename': filename,
             'total_columns': file_data['total_columns'],
@@ -587,8 +553,6 @@ def process_analytics():
             'traceback': traceback.format_exc()
         }), 500
 
-# analytics_api.py - PART 3: Additional Routes and Server Start
-# Place this after Part 2
 
 @app.route('/api/analytics/batch-process', methods=['POST'])
 def batch_process_analytics():
@@ -614,7 +578,6 @@ def batch_process_analytics():
                 file_data = load_file_data(filename)
                 analytics_result = process_file_analytics(file_data, chart_type)
                 
-                # Generate Gemini interpretation
                 metrics_comparisons = file_data.get('metrics_comparisons', {})
                 gemini_interpretation = generate_gemini_interpretation(
                     statistics=analytics_result['statistics'],
@@ -756,7 +719,7 @@ def index():
         'features': [
             'Automatic detection of enrollment metrics',
             'Semester-to-semester comparison',
-            'Gemini AI-powered comprehensive interpretations',
+            'Gemini AI-powered concise interpretations (150-200 words)',
             'Multiple visualization types',
             'Natural language insights'
         ],
