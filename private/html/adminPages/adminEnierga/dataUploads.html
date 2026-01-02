@@ -4,7 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/private/css/pages/admin2.css">
     <link rel="stylesheet" href="/private/css/layout/post.css">
     <link rel="stylesheet" href="/private/css/layout/dashboardsidebar.css">
     <link rel="stylesheet" href="/private/css/pages/dataUploads.css">
@@ -90,17 +89,16 @@
                 <h1 class="page-title" id="pageTitle">Data Uploads</h1>
             </div>
             <div class="header-right">
-                <div>
+                <div class="notification-button">
                     <a class="notif-link" href="#notifications" data-page="overview">
-                        <i class="fa fa-bell" aria-hidden="true"></i>
+                    <i class="fa fa-bell" aria-hidden="true"></i>
                     </a>
                 </div>
-                <div>
-                    <a class="profile-link" href="#profile" data-page="profile">
-                        <i class="fa fa-user" aria-hidden="true"></i>
+                <div class="profile-button">
+                    <a class="profile-link" data-page="profile">
+                    <i class="fa fa-user" aria-hidden="true"></i>
                     </a>
                 </div>
-            </div>
         </header>
 
         <!-- DASHBOARD CONTENT -->
@@ -183,6 +181,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="/private/js/admin/admin2/admin2.js"></script>
+    <script src="/private/js/admin/systemFunctions.js"></script>
     <script src="/private/js/admin/admin2/dataUploads.js"></script>
 </body>
 </html>
