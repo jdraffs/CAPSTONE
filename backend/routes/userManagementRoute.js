@@ -1,12 +1,10 @@
-// routes/userManagementRoute.js - UPDATED WITH ROLE INTEGRATION
+// routes/userManagementRoute.js - FIXED VERSION
 import express from 'express';
 import pool from '../db.js';
 
 const router = express.Router();
 
-
-// HELPER FUNCTION: Generate Random Password
-
+// Helper: Generate Random Password
 function generateTempPassword(length = 12) {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*';
   let password = '';
@@ -16,61 +14,29 @@ function generateTempPassword(length = 12) {
   return password;
 }
 
-
-// GET ALL USERS (WITH ROLE INFO)
-
+// ============ GET ALL USERS (WITH ROLE INFO) ============
 router.get('/users', async (req, res) => {
   try {
     const query = `
       SELECT 
-        a.id,
-        a.adminid,
-        a.password, 
-        a.created_at,
-        a.adminid as email,
-        COALESCE(r.id, 
-          CASE 
-            WHEN a.adminid = 'adminSalao' THEN 1
-            WHEN a.adminid = 'adminEnierga' THEN 2
-            WHEN a.adminid = 'adminave' THEN 3
-            ELSE NULL
-          END
-        ) as role_id,
-        COALESCE(r.name,
-          CASE 
-            WHEN a.adminid = 'adminSalao' THEN 'Super Admin'
-            WHEN a.adminid = 'adminEnierga' THEN 'Data Manager'
-            WHEN a.adminid = 'adminave' THEN 'Content Manager'
-            ELSE 'Admin'
-          END
-        ) as role,
-        'active' as status,
-        (SELECT MAX(timestamp) 
-         FROM activity_logs 
-         WHERE adminid = a.adminid 
-         AND type = 'login'
-        ) as last_login,
-        INITCAP(
-          CASE 
-            WHEN a.adminid = 'adminSalao' THEN 'Admin Salao'
-            WHEN a.adminid = 'adminEnierga' THEN 'Admin Enierga'
-            WHEN a.adminid = 'adminave' THEN 'Admin Ave'
-            ELSE a.adminid
-          END
-        ) as full_name
-      FROM admin_accounts a
-      LEFT JOIN roles r ON r.id = (
-        CASE 
-          WHEN a.adminid = 'adminSalao' THEN 1
-          WHEN a.adminid = 'adminEnierga' THEN 2
-          WHEN a.adminid = 'adminave' THEN 3
-          ELSE NULL
-        END
-      )
-      ORDER BY a.created_at DESC
+        u.id,
+        u.adminid,
+        u.full_name,
+        u.email,
+        u.role_id,
+        COALESCE(r.name, 'No Role') as role,
+        COALESCE(u.status, 'active') as status,
+        u.last_login,
+        u.created_at,
+        u.updated_at
+      FROM users u
+      LEFT JOIN roles r ON r.id = u.role_id
+      ORDER BY u.created_at DESC
     `;
 
     const result = await pool.query(query);
+    
+    console.log('✅ Fetched users:', result.rows.length);
 
     res.json({
       success: true,
@@ -78,22 +44,24 @@ router.get('/users', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error fetching users:', error);
+    console.error('❌ Error fetching users:', error.message);
+    console.error('Full error:', error);
     res.status(500).json({ 
       success: false, 
-      error: 'Failed to fetch users' 
+      error: 'Failed to fetch users',
+      details: error.message
     });
   }
 });
 
-
-// CREATE NEW USER
-
+// ============ CREATE NEW USER ============
 router.post('/users', async (req, res) => {
   const client = await pool.connect();
   
   try {
     const { adminid, password, full_name, email, role_id } = req.body;
+
+    console.log('Creating user:', { adminid, full_name, email, role_id });
 
     // Validate input
     if (!adminid || !password) {
@@ -113,7 +81,7 @@ router.post('/users', async (req, res) => {
     await client.query('BEGIN');
 
     // Check if user already exists
-    const checkQuery = 'SELECT * FROM admin_accounts WHERE adminid = $1';
+    const checkQuery = 'SELECT adminid FROM users WHERE adminid = $1';
     const checkResult = await client.query(checkQuery, [adminid]);
 
     if (checkResult.rows.length > 0) {
@@ -126,16 +94,22 @@ router.post('/users', async (req, res) => {
 
     // Insert new user
     const insertQuery = `
-      INSERT INTO admin_accounts (adminid, password, created_at)
-      VALUES ($1, $2, NOW())
-      RETURNING id, adminid, created_at
+      INSERT INTO users (adminid, password, full_name, email, role_id, status, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, 'active', NOW(), NOW())
+      RETURNING id, adminid, full_name, email, role_id, status, created_at
     `;
 
-    const result = await client.query(insertQuery, [adminid, password]);
+    const result = await client.query(insertQuery, [
+      adminid, 
+      password,  // In production, hash this!
+      full_name || null, 
+      email || null, 
+      parseInt(role_id)
+    ]);
+
     const newUser = result.rows[0];
 
-    // Store additional user info (you might want to add these columns to admin_accounts)
-    // For now, we'll log it in activity_logs as details
+    // Log activity
     await client.query(
       `INSERT INTO activity_logs (type, message, adminid, details, timestamp)
        VALUES ($1, $2, $3, $4, NOW())`,
@@ -149,6 +123,8 @@ router.post('/users', async (req, res) => {
 
     await client.query('COMMIT');
 
+    console.log('User created successfully:', newUser);
+
     res.status(201).json({
       success: true,
       message: 'User created successfully',
@@ -160,16 +136,15 @@ router.post('/users', async (req, res) => {
     console.error('Error creating user:', error);
     res.status(500).json({ 
       success: false, 
-      error: 'Failed to create user' 
+      error: 'Failed to create user',
+      details: error.message
     });
   } finally {
     client.release();
   }
 });
 
-
-// UPDATE USER
-
+// ============ UPDATE USER ============
 router.put('/users/:adminId', async (req, res) => {
   const client = await pool.connect();
   
@@ -177,10 +152,12 @@ router.put('/users/:adminId', async (req, res) => {
     const { adminId } = req.params;
     const { full_name, email, role_id, status } = req.body;
 
+    console.log('Updating user:', adminId, { full_name, email, role_id, status });
+
     await client.query('BEGIN');
 
     // Check if user exists
-    const checkQuery = 'SELECT * FROM admin_accounts WHERE adminid = $1';
+    const checkQuery = 'SELECT * FROM users WHERE adminid = $1';
     const checkResult = await client.query(checkQuery, [adminId]);
 
     if (checkResult.rows.length === 0) {
@@ -191,7 +168,28 @@ router.put('/users/:adminId', async (req, res) => {
       });
     }
 
-    // Log the update
+    // Update user
+    const updateQuery = `
+      UPDATE users 
+      SET 
+        full_name = $1,
+        email = $2,
+        role_id = $3,
+        status = $4,
+        updated_at = NOW()
+      WHERE adminid = $5
+      RETURNING id, adminid, full_name, email, role_id, status, updated_at
+    `;
+
+    const result = await client.query(updateQuery, [
+      full_name || null,
+      email || null,
+      role_id ? parseInt(role_id) : null,
+      status || 'active',
+      adminId
+    ]);
+
+    // Log activity
     await client.query(
       `INSERT INTO activity_logs (type, message, adminid, details, timestamp)
        VALUES ($1, $2, $3, $4, NOW())`,
@@ -205,9 +203,12 @@ router.put('/users/:adminId', async (req, res) => {
 
     await client.query('COMMIT');
 
+    console.log('User updated successfully');
+
     res.json({
       success: true,
-      message: `User ${adminId} updated successfully`
+      message: `User ${adminId} updated successfully`,
+      user: result.rows[0]
     });
 
   } catch (error) {
@@ -215,16 +216,15 @@ router.put('/users/:adminId', async (req, res) => {
     console.error('Error updating user:', error);
     res.status(500).json({ 
       success: false, 
-      error: 'Failed to update user' 
+      error: 'Failed to update user',
+      details: error.message
     });
   } finally {
     client.release();
   }
 });
 
-
-// BULK CHANGE ROLE
-
+// ============ BULK CHANGE ROLE ============
 router.post('/users/bulk/change-role', async (req, res) => {
   const client = await pool.connect();
   
@@ -246,6 +246,14 @@ router.post('/users/bulk/change-role', async (req, res) => {
     }
 
     await client.query('BEGIN');
+
+    // Update roles
+    const updateQuery = `
+      UPDATE users 
+      SET role_id = $1, updated_at = NOW()
+      WHERE adminid = ANY($2)
+    `;
+    await client.query(updateQuery, [parseInt(role_id), user_ids]);
 
     // Log bulk role change
     for (const userId of user_ids) {
@@ -274,16 +282,15 @@ router.post('/users/bulk/change-role', async (req, res) => {
     console.error('Error changing roles:', error);
     res.status(500).json({ 
       success: false, 
-      error: 'Failed to change roles' 
+      error: 'Failed to change roles',
+      details: error.message
     });
   } finally {
     client.release();
   }
 });
 
-
-// BULK STATUS CHANGE
-
+// ============ BULK STATUS CHANGE ============
 router.post('/users/bulk/change-status', async (req, res) => {
   const client = await pool.connect();
   
@@ -306,6 +313,14 @@ router.post('/users/bulk/change-status', async (req, res) => {
     }
 
     await client.query('BEGIN');
+
+    // Update status
+    const updateQuery = `
+      UPDATE users 
+      SET status = $1, updated_at = NOW()
+      WHERE adminid = ANY($2)
+    `;
+    await client.query(updateQuery, [status, user_ids]);
 
     // Log bulk status change
     for (const userId of user_ids) {
@@ -334,16 +349,15 @@ router.post('/users/bulk/change-status', async (req, res) => {
     console.error('Error changing status:', error);
     res.status(500).json({ 
       success: false, 
-      error: 'Failed to change status' 
+      error: 'Failed to change status',
+      details: error.message
     });
   } finally {
     client.release();
   }
 });
 
-
-// BULK DELETE USERS
-
+// ============ BULK DELETE USERS ============
 router.post('/users/bulk/delete', async (req, res) => {
   const client = await pool.connect();
   
@@ -357,18 +371,10 @@ router.post('/users/bulk/delete', async (req, res) => {
       });
     }
 
-    // Prevent deleting Super Admin
-    if (user_ids.includes('adminSalao')) {
-      return res.status(403).json({ 
-        success: false, 
-        error: 'Cannot delete Super Admin account' 
-      });
-    }
-
     await client.query('BEGIN');
 
     // Delete users
-    const deleteQuery = 'DELETE FROM admin_accounts WHERE adminid = ANY($1)';
+    const deleteQuery = 'DELETE FROM users WHERE adminid = ANY($1)';
     await client.query(deleteQuery, [user_ids]);
 
     // Log deletions
@@ -383,9 +389,6 @@ router.post('/users/bulk/delete', async (req, res) => {
       ]
     );
 
-    // Delete activity logs for deleted users
-    await client.query('DELETE FROM activity_logs WHERE adminid = ANY($1)', [user_ids]);
-
     await client.query('COMMIT');
 
     res.json({
@@ -399,61 +402,34 @@ router.post('/users/bulk/delete', async (req, res) => {
     console.error('Error deleting users:', error);
     res.status(500).json({ 
       success: false, 
-      error: 'Failed to delete users' 
+      error: 'Failed to delete users',
+      details: error.message
     });
   } finally {
     client.release();
   }
 });
 
-
-// GET USER BY ID
-
+// ============ GET USER BY ID ============
 router.get('/users/:adminId', async (req, res) => {
   try {
     const { adminId } = req.params;
 
     const query = `
       SELECT 
-        a.id,
-        a.adminid,
-        a.created_at,
-        a.adminid as email,
-        COALESCE(r.id,
-          CASE 
-            WHEN a.adminid = 'adminSalao' THEN 1
-            WHEN a.adminid = 'adminEnierga' THEN 2
-            WHEN a.adminid = 'adminave' THEN 3
-            ELSE NULL
-          END
-        ) as role_id,
-        COALESCE(r.name,
-          CASE 
-            WHEN a.adminid = 'adminSalao' THEN 'Super Admin'
-            WHEN a.adminid = 'adminEnierga' THEN 'Data Manager'
-            WHEN a.adminid = 'adminave' THEN 'Content Manager'
-            ELSE 'Admin'
-          END
-        ) as role,
-        'active' as status,
-        INITCAP(
-          CASE 
-            WHEN a.adminid = 'adminSalao' THEN 'Admin Salao'
-            WHEN a.adminid = 'adminEnierga' THEN 'Admin Enierga'
-            WHEN a.adminid = 'adminave' THEN 'Admin Ave'
-            ELSE a.adminid
-          END
-        ) as full_name
-      FROM admin_accounts a
-      LEFT JOIN roles r ON r.id = (
-        CASE 
-          WHEN a.adminid = 'adminSalao' THEN 1
-          WHEN a.adminid = 'adminEnierga' THEN 2
-          WHEN a.adminid = 'adminave' THEN 3
-          ELSE NULL
-        END
-      )
-      WHERE a.adminid = $1
+        u.id,
+        u.adminid,
+        u.full_name,
+        u.email,
+        u.role_id,
+        r.name as role,
+        u.status,
+        u.last_login,
+        u.created_at,
+        u.updated_at
+      FROM users u
+      LEFT JOIN roles r ON r.id = u.role_id
+      WHERE u.adminid = $1
     `;
 
     const result = await pool.query(query, [adminId]);
@@ -474,20 +450,18 @@ router.get('/users/:adminId', async (req, res) => {
     console.error('Error fetching user:', error);
     res.status(500).json({ 
       success: false, 
-      error: 'Failed to fetch user' 
+      error: 'Failed to fetch user',
+      details: error.message
     });
   }
 });
 
-
-// UPDATE USER STATUS
-
+// ============ UPDATE USER STATUS ============
 router.put('/users/:adminId/status', async (req, res) => {
   try {
     const { adminId } = req.params;
     const { status } = req.body;
 
-    // Validate status
     const validStatuses = ['active', 'inactive', 'suspended'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ 
@@ -496,11 +470,16 @@ router.put('/users/:adminId/status', async (req, res) => {
       });
     }
 
-    // Check if user exists
-    const checkQuery = 'SELECT * FROM admin_accounts WHERE adminid = $1';
-    const checkResult = await pool.query(checkQuery, [adminId]);
+    const updateQuery = `
+      UPDATE users 
+      SET status = $1, updated_at = NOW()
+      WHERE adminid = $2
+      RETURNING adminid, status
+    `;
 
-    if (checkResult.rows.length === 0) {
+    const result = await pool.query(updateQuery, [status, adminId]);
+
+    if (result.rows.length === 0) {
       return res.status(404).json({ 
         success: false, 
         error: 'User not found' 
@@ -518,41 +497,36 @@ router.put('/users/:adminId/status', async (req, res) => {
     console.error('Error updating user status:', error);
     res.status(500).json({ 
       success: false, 
-      error: 'Failed to update user status' 
+      error: 'Failed to update user status',
+      details: error.message
     });
   }
 });
 
-
-// RESET USER PASSWORD
-
+// ============ RESET USER PASSWORD ============
 router.post('/users/:adminId/reset-password', async (req, res) => {
   try {
     const { adminId } = req.params;
-
-    // Check if user exists
-    const checkQuery = 'SELECT * FROM admin_accounts WHERE adminid = $1';
-    const checkResult = await pool.query(checkQuery, [adminId]);
-
-    if (checkResult.rows.length === 0) {
-      return res.status(404).json({ 
-        success: false, 
-        error: 'User not found' 
-      });
-    }
 
     // Generate temporary password
     const tempPassword = generateTempPassword();
 
     // Update password in database
     const updateQuery = `
-      UPDATE admin_accounts 
-      SET password = $1 
+      UPDATE users 
+      SET password = $1, updated_at = NOW()
       WHERE adminid = $2
       RETURNING adminid
     `;
 
-    await pool.query(updateQuery, [tempPassword, adminId]);
+    const result = await pool.query(updateQuery, [tempPassword, adminId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'User not found' 
+      });
+    }
 
     res.json({
       success: true,
@@ -565,43 +539,27 @@ router.post('/users/:adminId/reset-password', async (req, res) => {
     console.error('Error resetting password:', error);
     res.status(500).json({ 
       success: false, 
-      error: 'Failed to reset password' 
+      error: 'Failed to reset password',
+      details: error.message
     });
   }
 });
 
-
-// DELETE USER
-
+// ============ DELETE USER ============
 router.delete('/users/:adminId', async (req, res) => {
   try {
     const { adminId } = req.params;
 
-    // Prevent deleting Super Admin
-    if (adminId === 'adminSalao') {
-      return res.status(403).json({ 
-        success: false, 
-        error: 'Cannot delete Super Admin account' 
-      });
-    }
+    // Delete user
+    const deleteQuery = 'DELETE FROM users WHERE adminid = $1 RETURNING adminid';
+    const result = await pool.query(deleteQuery, [adminId]);
 
-    // Check if user exists
-    const checkQuery = 'SELECT * FROM admin_accounts WHERE adminid = $1';
-    const checkResult = await pool.query(checkQuery, [adminId]);
-
-    if (checkResult.rows.length === 0) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ 
         success: false, 
         error: 'User not found' 
       });
     }
-
-    // Delete user
-    const deleteQuery = 'DELETE FROM admin_accounts WHERE adminid = $1';
-    await pool.query(deleteQuery, [adminId]);
-
-    // Delete user's activity logs
-    await pool.query('DELETE FROM activity_logs WHERE adminid = $1', [adminId]);
 
     res.json({
       success: true,
@@ -613,7 +571,8 @@ router.delete('/users/:adminId', async (req, res) => {
     console.error('Error deleting user:', error);
     res.status(500).json({ 
       success: false, 
-      error: 'Failed to delete user' 
+      error: 'Failed to delete user',
+      details: error.message
     });
   }
 });
