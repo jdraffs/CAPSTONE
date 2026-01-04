@@ -16,8 +16,8 @@ router.get('/roles', async (req, res) => {
         r.created_at,
         r.updated_at,
         0 as user_count,
-        COALESCE(ARRAY_AGG(DISTINCT p.name) FILTER (WHERE p.name IS NOT NULL), ARRAY[]::varchar[]) as permissions,
-        COALESCE(ARRAY_AGG(DISTINCT p.id) FILTER (WHERE p.id IS NOT NULL), ARRAY[]::integer[]) as permission_ids
+        ARRAY_REMOVE(ARRAY_AGG(DISTINCT p.name), NULL) as permissions,
+        ARRAY_REMOVE(ARRAY_AGG(DISTINCT p.id), NULL) as permission_ids
       FROM roles r
       LEFT JOIN role_permissions rp ON rp.role_id = r.id
       LEFT JOIN permissions p ON p.id = rp.permission_id
@@ -26,7 +26,16 @@ router.get('/roles', async (req, res) => {
     `;
 
     const result = await pool.query(rolesQuery);
-    res.json(result.rows);
+    
+    // Transform empty arrays properly
+    const roles = result.rows.map(role => ({
+      ...role,
+      permissions: role.permissions.filter(p => p !== null),
+      permission_ids: role.permission_ids.filter(id => id !== null)
+    }));
+    
+    console.log('✅ Fetched roles:', roles.length);
+    res.json(roles);
   } catch (error) {
     console.error('❌ Error fetching roles:', error.message);
     res.status(500).json({ error: 'Failed to fetch roles', details: error.message });

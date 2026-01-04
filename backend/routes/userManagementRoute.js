@@ -24,8 +24,8 @@ router.get('/users', async (req, res) => {
         u.full_name,
         u.email,
         u.role_id,
-        r.name as role,
-        u.status,
+        COALESCE(r.name, 'No Role') as role,
+        COALESCE(u.status, 'active') as status,
         u.last_login,
         u.created_at,
         u.updated_at
@@ -35,6 +35,8 @@ router.get('/users', async (req, res) => {
     `;
 
     const result = await pool.query(query);
+    
+    console.log('✅ Fetched users:', result.rows.length);
 
     res.json({
       success: true,
@@ -42,7 +44,8 @@ router.get('/users', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error fetching users:', error);
+    console.error('❌ Error fetching users:', error.message);
+    console.error('Full error:', error);
     res.status(500).json({ 
       success: false, 
       error: 'Failed to fetch users',
