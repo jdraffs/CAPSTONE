@@ -13,7 +13,6 @@ const __dirname = path.dirname(__filename);
 
 // mga routes 
 import loginRoute from './routes/loginRoute.js';
-import chatbotRoute from './routes/chatbotRoute.js';
 import ojtRoute from './routes/ojtRoute.js';
 import researchextensionRoute from './routes/research&extensionRoute.js';
 import nstpRoute from './routes/nstpRoute.js';
@@ -26,6 +25,7 @@ import dashboardStatsRoute from "./routes/dashboardStatsRoute.js";
 import activityLogsRoute from "./routes/activityLogsRoute.js"; // NEW ROUTE
 import roleManagementRoute from './routes/roleManagementRoute.js';
 import userManagementRoute from './routes/userManagementRoute.js'
+import chatbotRoute from './routes/chatbotRoute.js'
 
 // initialize 
 dotenv.config();
@@ -42,7 +42,7 @@ app.use('/public', express.static(path.join(__dirname, '../public')));
 
 // routes
 app.use('/api/login', loginRoute);
-app.use('/api', chatbotRoute);
+app.use('/api/chatbot', chatbotRoute);
 app.use('/api/ojt', ojtRoute);
 app.use('/api/researchextension', researchextensionRoute);
 app.use('/api/nstp', nstpRoute);
