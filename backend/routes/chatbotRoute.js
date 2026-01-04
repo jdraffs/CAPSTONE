@@ -1,44 +1,44 @@
+// chatbotRoute.js - ES6 module format
 import express from 'express';
-import fetch from 'node-fetch';
-import dotenv from 'dotenv';
-
-dotenv.config();
+import axios from 'axios';
 
 const router = express.Router();
 
-router.post('/chatbot', async (req, res) => {
-  const userMessage = req.body.message;
+// Python API URL (where your Gemini chatbot runs)
+const PYTHON_API_URL = 'http://localhost:5001/api/chatbot';
 
+router.post('/', async (req, res) => {
   try {
-    const response = await fetch('https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.HUGGINGFACE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        inputs: `User: ${userMessage}\nAssistant:`,
-        parameters: {
-          max_new_tokens: 100,
-          temperature: 0.7
-        }
-      })
+    const { message } = req.body;
+
+    if (!message || message.trim() === '') {
+      return res.status(400).json({ 
+        reply: 'Please provide a message.' 
+      });
+    }
+
+    // Forward request to Python API
+    const response = await axios.post(PYTHON_API_URL, {
+      message: message
+    }, {
+      timeout: 30000 // 30 second timeout
     });
 
-    const rawResponse = await response.text();
-    console.log('Raw Response:', rawResponse);
-
-    const data = JSON.parse(rawResponse);
-    const fullResponse = data[0]?.generated_text || '';
-
-    const assistantMatch = fullResponse.match(/Assistant:(.*)/gs);
-    const assistantReply = assistantMatch ? assistantMatch.pop().replace(/User:.*/s, '').trim() : "Sorry, I couldn't process that.";
-
-    res.json({ reply: assistantReply });
+    // Return the chatbot's reply
+    res.json({ reply: response.data.reply });
 
   } catch (error) {
-    console.error('Error contacting Hugging Face:', error);
-    res.status(500).json({ reply: 'Sorry, an error occurred while contacting the AI.' });
+    console.error('Chatbot route error:', error.message);
+    
+    if (error.code === 'ECONNREFUSED') {
+      return res.status(503).json({ 
+        reply: 'The chatbot service is currently unavailable. Please try again later or contact us directly at (02) 8839-0432.' 
+      });
+    }
+
+    res.status(500).json({ 
+      reply: 'I apologize, but I encountered an error. Please contact our office at (02) 8839-0432 for assistance.' 
+    });
   }
 });
 
