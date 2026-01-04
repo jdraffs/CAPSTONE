@@ -9,6 +9,8 @@ import traceback
 import requests
 import time
 from analytics_processor import process_file_analytics, AnalyticsProcessor
+from dotenv import load_dotenv
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
@@ -17,9 +19,16 @@ UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'public', 'uploads
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Gemini AI Configuration
-GEMINI_API_KEY = "AIzaSyBhYn-arUzoAkQoib4s3BLtu72R9iCdBR0"
 GEMINI_MODEL = "gemini-2.5-flash"
-GEMINI_API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+if not GEMINI_API_KEY:
+    raise RuntimeError("❌ GEMINI_API_KEY not found in environment")
+
+GEMINI_API_URL = (
+    f"https://generativelanguage.googleapis.com/v1beta/models/"
+    f"{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
+)
 
 print(f"📁 Looking for files in: {os.path.abspath(UPLOAD_FOLDER)}")
 
@@ -95,7 +104,7 @@ Generate your single-paragraph analysis now (150-200 words):"""
                     "temperature": 0.7,
                     "topK": 40,
                     "topP": 0.95,
-                    "maxOutputTokens": 500,  # Reduced to force conciseness
+                    "maxOutputTokens": 4500,  
                 }
             }
 
