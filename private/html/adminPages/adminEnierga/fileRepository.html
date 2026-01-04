@@ -4,7 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/private/css/pages/admin2.css">
     <link rel="stylesheet" href="/private/css/layout/post.css">
     <link rel="stylesheet" href="/private/css/pages/fileRepository.css">
     <link rel="stylesheet" href="/private/css/layout/dashboardsidebar.css">
@@ -95,17 +94,16 @@
                 <h1 class="page-title" id="pageTitle">File Repository</h1>
             </div>
             <div class="header-right">
-                <div>
+                <div class="notification-button">
                     <a class="notif-link" href="#notifications" data-page="overview">
                     <i class="fa fa-bell" aria-hidden="true"></i>
                     </a>
                 </div>
-                <div>
-                    <a class="profile-link" href="#profile" data-page="profile">
+                <div class="profile-button">
+                    <a class="profile-link" data-page="profile">
                     <i class="fa fa-user" aria-hidden="true"></i>
                     </a>
                 </div>
-            </div>
 
         </header>
             <!--DASHBOARD CONTENT-->
@@ -117,6 +115,7 @@
     <!-- SCRIPTS -->
 <script src="/private/js/toast.js"></script>
 <script src="/private/js/admin/admin2/admin2.js"></script>
+<script src="/private/js/admin/systemFunctions.js"></script>
 <script src="/private/js/admin/admin2/fileRepository.js"></script>
 </body>
 </html>
