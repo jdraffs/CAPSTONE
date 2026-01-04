@@ -300,13 +300,19 @@ function updateStats() {
   const total = allUsers.length;
   const active = allUsers.filter(u => u.status === 'active').length;
   const inactive = allUsers.filter(u => u.status === 'inactive').length;
-  const suspended = allUsers.filter(u => u.status === 'suspended').length;
 
-  document.getElementById('statTotalUsers').textContent = total;
-  document.getElementById('statActiveUsers').textContent = active;
-  document.getElementById('statInactiveUsers').textContent = inactive;
-  document.getElementById('statTotalRoles').textContent = roles.length;
+  // Add null checks
+  const totalEl = document.getElementById('statTotalUsers');
+  const activeEl = document.getElementById('statActiveUsers');
+  const inactiveEl = document.getElementById('statInactiveUsers');
+  const rolesEl = document.getElementById('statTotalRoles');
+
+  if (totalEl) totalEl.textContent = total;
+  if (activeEl) activeEl.textContent = active;
+  if (inactiveEl) inactiveEl.textContent = inactive;
+  if (rolesEl) rolesEl.textContent = roles.length;
 }
+
 
 
 // FILTER & DISPLAY
