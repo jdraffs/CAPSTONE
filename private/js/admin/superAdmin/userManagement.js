@@ -28,19 +28,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function initializeUserManagement() {
   showLoadingState();
+  
+  // STEP 1: Load all data first
   await Promise.all([
     loadRoles(),
     loadPermissions(),
     loadUsers()
   ]);
+  
+  // STEP 2: Inject HTML (this creates the DOM elements)
   injectHTML();
+  
+  // STEP 3: Attach event listeners
   attachEventListeners();
+  
+  // STEP 4: Update UI with loaded data
   updateStats();
   filterAndDisplayUsers();
 }
 
 
 // DATA LOADING - ROLES & PERMISSIONS
+async function loadRoles() {
+  try {
+    console.log('🔍 Fetching roles from:', `${API_BASE}/roles`);
+    const response = await fetch(`${API_BASE}/roles`);
+    console.log('📡 Response status:', response.status);
+    
+    if (!response.ok) throw new Error('Failed to fetch roles');
+    
+    roles = await response.json();
+    console.log('✅ Roles loaded:', roles.length, roles);
+  } catch (error) {
+    console.error('❌ Error loading roles:', error);
+    roles = getDefaultRoles();
+  }
+}
+
 
 async function loadRoles() {
   try {
@@ -284,8 +308,9 @@ async function loadUsers() {
       };
     });
     
-    updateStats();
-    filterAndDisplayUsers();
+    // DON'T call these here - they'll be called after HTML is injected
+    // updateStats();
+    // filterAndDisplayUsers();
     
   } catch (error) {
     console.error('Error loading users:', error);
