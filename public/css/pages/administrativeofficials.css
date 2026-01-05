@@ -1,175 +1,261 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-.main {
-    background-color: white;
-    flex-direction: column;
-    align-items: center;
-    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Verdana, sans-serif;
-}
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-.hero-section {
-    width: 100%;
-    height: 380px;
-    display: flex;
-    background-size: cover;   
-}
+    body {
+      font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Verdana, sans-serif;
+      background-color: white;
+    }
 
-.hero-content {
-    width: 100%;
-    color: white;
-    text-align: left;
-    background-color: rgb(27, 27, 27, 0.98);
-    display: flex;
-    flex-direction: column;
-}
-.hero-title-design {
-    display: flex;
-    gap: 15px;
-    position: relative;
-    top: 120px;
-    margin-left: 100px;
-}
+    .main {
+      background-color: white;
+      flex-direction: column;
+      align-items: center;
+    }
 
-.hero-title {
-    font-size: 3.5rem;
-    font-weight: bold;
-}
+    .hero-section {
+      width: 100%;
+      height: 380px;
+      display: flex;
+      background-size: cover;
+      background-position: center;
+      background-image: url('https://images.unsplash.com/photo-1562774053-701939374585?w=1200');
+    }
 
-.hero-text {
-    font-size: 1.2rem;
-    margin-top: 30px;
-    max-width: 70%;
-    text-align:  justify;
-}
+    .hero-content {
+      width: 100%;
+      color: white;
+      text-align: left;
+      background-color: rgb(27, 27, 27, 0.98);
+      display: flex;
+      flex-direction: column;
+    }
 
-.vl1 {
-    height: 50px;
-    width: 2px;
-    background-color:  rgb(237, 237, 237);
-    border: none;
-    margin-top: 5px;
-}
+    .hero-title-design {
+      display: flex;
+      gap: 15px;
+      position: relative;
+      top: 120px;
+      margin-left: 100px;
+    }
 
-/* Welcome part */
-.welcome-container {
-    height: 120px;
-    max-width: 750px;
-    display: block;
-    text-align: center;
-    margin: auto;
-    margin-top: 30px;
-    color: maroon;
-}
+    .hero-title {
+      font-size: 3.5rem;
+      font-weight: bold;
+    }
 
-.welcome-title {
-    font-family: Arial, Helvetica, sans-serif;
-    margin-bottom: 20px;
-    font-weight: 700;
-}
-.welcome-desc {
-    font-family: Arial, Helvetica, sans-serif;
-    margin: 10px;
-    color: #444;
-}
-.official-title {
-    display: block;
-    text-align: center;
-    margin: auto;
-    margin-top: 20px;
-    margin-bottom: 20px;
-    color: maroon;
-    font-size: 25px;
-    font-weight: 600;
-}
+    .hero-text {
+      font-size: 1.2rem;
+      margin-top: 30px;
+      max-width: 70%;
+      text-align: justify;
+    }
 
-.hr2 {
-    margin: auto;
-    max-width: 35%;
-    margin-top: 10px;
-    margin-bottom: 20px;
-}
+    .vl1 {
+      height: 50px;
+      width: 2px;
+      background-color: rgb(237, 237, 237);
+      border: none;
+      margin-top: 5px;
+    }
 
-/* Staff Containers */
-.faculty-grid {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 20px;
-    padding: 20px;
-}
+    /* Carousel Section */
+    .carousel-section {
+      background: white;
+      padding: 80px 20px;
+      min-height: 600px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
 
-.staff-container {
-    border: 1px solid #ccc;
-    max-width: 500px;
-    width: 50%; /* adjust width for 2 per row */
-    min-width: 290px;
-    height: 200px;
-    padding: 15px;
-    box-sizing: border-box;
-    background-color: #f9f9f9;
-    border-radius: 10px;
-    cursor: pointer;
-}
+    .carousel-title {
+      color: maroon;
+      font-size: 3rem;
+      margin-bottom: 60px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+    }
 
-.staff-container:hover {
-    box-shadow: 0 4px 8px rgba(156, 109, 109, 0.37);
-    transform: translateY(-5px);
-    transition: transform 0.4s ease, box-shadow 0.4s ease;
-}
+    .carousel-title i {
+      font-size: 2.5rem;
+    }
 
-.staff-wrap {
-    display: flex;
-    align-items: flex-start;
-    gap: 15px;
-}
+    .carousel-container {
+      position: relative;
+      width: 100%;
+      max-width: 1400px;
+      height: 650px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 80px;
+    }
 
-.faculty-img {
-    width: 150px;
-    height: 170px;
-    object-fit: cover;
-    border-radius: 10px;
-}
+    .carousel-track {
+      display: flex;
+      gap: 30px;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      height: 100%;
+      align-items: center;
+    }
 
-.text-info {
-    display: flex;
-    flex-direction: column;
-}
+    .official-card {
+      min-width: 380px;
+      background: white;
+      border-radius: 20px;
+      overflow: hidden;
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      opacity: 0.4;
+      transform: scale(0.85);
+      border: 2px solid #ddd;
+      position: absolute;
+      left: 50%;
+    }
 
-.name {
-    font-size: 18px;
-    font-weight: 600;
-    font-family: Arial, Helvetica, sans-serif;
-    margin-bottom: 5px;
-    color: #222;
-    text-decoration: none;
-}
+    .official-card.active {
+      opacity: 1;
+      transform: translateX(-50%) scale(1);
+      box-shadow: 0 20px 60px rgba(128, 0, 0, 0.3);
+    }
 
-.details {
-    font-size: 14px;
-    color: #444;
-    margin: 2px 0;
-}
+    .official-card.side {
+      opacity: 0.6;
+      transform: scale(0.9);
+    }
 
-.research-link {
-    font-size: 14px;
-    color: #0066cc;
-    text-decoration: underline;
-}
+    .card-image {
+      width: 100%;
+      height: 420px;
+      object-fit: cover;
+      background: #f0f0f0;
+    }
 
+    .card-content {
+      padding: 30px;
+      text-align: center;
+      color: #222;
+      background: white;
+    }
 
-@media (max-width: 1059px) {
-    .staff-container {
-    border: 1px solid #ccc;
-    max-width: 550px;
-    width: 60%; /* adjust width for 2 per row */
-    min-width: 400px;
-    height: 200px;
-    padding: 15px;
-    box-sizing: border-box;
-    background-color: #f9f9f9;
-    border-radius: 10px;
-}
-}
+    .official-name {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 15px;
+      color: maroon;
+    }
+
+    .official-role {
+      font-size: 1.1rem;
+      color: #444;
+      line-height: 1.6;
+    }
+
+    /* Navigation Buttons */
+    .nav-button {
+      position: absolute;
+      background: white;
+      border: 2px solid maroon;
+      color: maroon;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      z-index: 10;
+    }
+
+    .nav-button:hover {
+      background: maroon;
+      color: white;
+      transform: scale(1.1);
+    }
+
+    .nav-button.prev {
+      left: 10px;
+    }
+
+    .nav-button.next {
+      right: 10px;
+    }
+
+    /* Dots Navigation */
+    .dots-container {
+      display: flex;
+      gap: 12px;
+      margin-top: 40px;
+      justify-content: center;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #ddd;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .dot.active {
+      background: maroon;
+      width: 40px;
+      border-radius: 6px;
+    }
+
+    @media (max-width: 1200px) {
+      .carousel-container {
+        padding: 0 60px;
+      }
+      
+      .official-card {
+        min-width: 340px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .hero-title-design {
+        margin-left: 40px;
+        top: 80px;
+      }
+
+      .hero-title {
+        font-size: 2.5rem;
+      }
+
+      .hero-text {
+        font-size: 1rem;
+        max-width: 85%;
+      }
+
+      .carousel-title {
+        font-size: 2rem;
+      }
+
+      .carousel-container {
+        padding: 0 40px;
+      }
+
+      .official-card {
+        min-width: 300px;
+      }
+
+      .card-image {
+        height: 350px;
+      }
+
+      .nav-button {
+        width: 50px;
+        height: 50px;
+      }
+    }
