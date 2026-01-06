@@ -36,13 +36,20 @@ async function initializeUserManagement() {
     loadUsers()
   ]);
   
-  // STEP 2: Inject HTML (this creates the DOM elements)
+  // ADD THIS DEBUG LOG HERE - AFTER LOADING
+  console.log('✅ User Management System Loaded Successfully');
+  console.log('👤 Current Admin:', currentAdminId);
+  console.log('📊 Roles Loaded:', roles.length);
+  console.log('👥 Users Loaded:', allUsers.length);
+  console.log('📋 Full Roles Array:', roles);
+  
+  // STEP 2: Inject HTML
   injectHTML();
   
   // STEP 3: Attach event listeners
   attachEventListeners();
   
-  // STEP 4: Update UI with loaded data
+  // STEP 4: Update UI
   updateStats();
   filterAndDisplayUsers();
 }
@@ -75,6 +82,28 @@ async function loadRoles() {
     console.error('Error loading roles:', error);
     // Fallback to default roles
     roles = getDefaultRoles();
+  }
+}
+
+async function loadRoles() {
+  try {
+    console.log('🔍 Starting to load roles...');
+    const response = await fetch(`${API_BASE}/roles`);
+    console.log('📡 Response received:', response.status);
+    
+    if (!response.ok) throw new Error('Failed to fetch roles');
+    
+    const data = await response.json();
+    roles = data; // Make sure this is correct
+    
+    console.log('✅ Roles data received:', data);
+    console.log('✅ Roles array now has:', roles.length, 'items');
+    console.log('📋 Roles content:', roles);
+    
+  } catch (error) {
+    console.error('❌ Error loading roles:', error);
+    roles = getDefaultRoles();
+    console.log('📋 Using fallback roles:', roles.length);
   }
 }
 
