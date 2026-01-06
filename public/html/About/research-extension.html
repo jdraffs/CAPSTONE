@@ -1,27 +1,24 @@
+<!-- research&extension.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PUP Paranaque</title>
+  <title>NSTP Announcements - PUP Paranaque</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
   <link rel="stylesheet" href="/public/css/layout/navbar.css">
+  <link rel="stylesheet" href="/public/css/pages/nstp-public.css">
   <link rel="stylesheet" href="/public/css/layout/footer.css">
-  <link rel="stylesheet" href="/public/css/pages/quickhelp&chatbot.css">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-
 </head>
 <body>
-   <header>
+  <header>
     <nav id="navbar" class="navbar">
-
       <div class="logo">
         <img class="logoimage" src="/public/assets/images/PUPLogo.webp" alt="PUP logo" />
         <div class="logotitlewrap">
           <h1 class="logotitle">Polytechnic University of the Philippines</h1>
-          <h2 class="logotitle2">PARAÑAQUE CAMPUS</h2>
+          <h2 class="logotitle2">PARANAQUE CAMPUS</h2>
         </div>
-
       </div>
 
       <hr class="hr1">
@@ -30,7 +27,6 @@
         <li class="nav-item">
           <a href="/public/index.html">Home</a>
         </li>
-
         <li class="nav-item dropdown-btn">
           <a href="#about">About <span class="arrow">&#11206;</span></a>
           <div class="dropdown-content">
@@ -40,12 +36,9 @@
             <a href="/public/html/About/vicinitymap.html">Vicinity Map</a>
           </div>
         </li>
-
         <li class="nav-item">
           <a href="/public/html/Admission/admission.html">Admission</a>
         </li>
-
-
         <li class="nav-item dropdown-btn">
           <a href="/public/html/Students/students.html">Students <span class="arrow">&#11206;</span></a>
           <div class="dropdown-content">
@@ -61,18 +54,12 @@
         <li class="nav-item">
           <a href="/public/html/CampusLife/campus-life.html">Campus Life</a>
         </li>
-
         <li class="nav-item">
           <a href="/public/html/Alumni&Services/alumni.html">Alumni & Services</a>
         </li>
-
-
         <li class="nav-item">
           <a href="/public/html/Contact&Support/QuickHelp&Chatbot.html">Contact/Support</a>
         </li>
-          </div>
-        </div>
-
       </ul>
 
       <div class="search-hamburger">
@@ -81,7 +68,6 @@
           <span class="bar"></span>
           <span class="bar"></span>
         </div>
-
         <div class="search-bar">
           <form class="search" action="/index.html">
             <input type="text" placeholder="Search" name="search" class="searchbox">
@@ -89,120 +75,42 @@
           </form>
         </div>
       </div>
-
     </nav>
   </header>
 
-  <main>
-    <div class="contact-support-wrapper">
-      <h2>Contact & Support</h2>
-      <div class="contact-grid">
-        <!-- LEFT SIDE -->
-        <div class="contact-left">
-          <h3>Get in Touch</h3>
-          <div>
-            <h4>Campus Address</h4>
-            <p>PUP Parañaque Campus
-              Col. E. De Leon<br> St. Wawa, Brgy. Sto. Niño
-              Parañaque City, <br>Philippines 1700,</a><br/>
-            Metro Manila</p>
-          </div>
-          <div>
-            <h4>Contact Numbers</h4>
-            <p>
-              <strong>Main Office:</strong> (02) 8839-0432<br />
-              <strong>Admissions:</strong> (02) 8839-0433<br />
-              <strong>Student Affairs:</strong> (02) 8839-0434
-            </p>
-          </div>
-          <div>
-            <h4>Email Addresses</h4>
-            <p>
-              <strong>General Inquiries:</strong> info.paranaque@pup.edu.ph<br />
-              <strong>Admissions:</strong> admissions.paranaque@pup.edu.ph<br />
-              <strong>Student Affairs:</strong> osa.paranaque@pup.edu.ph
-            </p>
-          </div>
-          <div>
-            <h4>Office Hours</h4>
-            <p>
-              Monday to Friday: 8:00 AM - 5:00 PM<br />
-              Saturday: 8:00 AM - 12:00 NN<br />
-              Closed on Sundays and Holidays
+  <main class="main">
+    <section class="hero-section" style="background-image: url('/public/assets/images/PUPBg4.jpg');">
+      <div class="hero-content">
+        <div class="hero-title-design">
+          <div class="vl1"></div>
+          <div class="hero-title&desc">
+            <h1 class="hero-title">Research and Extensions</h1>
+            <p class="hero-text">
+            Discover the research initiatives and extension programs of PUP Parañaque Campus, showcasing
+            faculty-led studies, institutional projects, and community engagement activities that support
+            knowledge creation, innovation, and public service.
             </p>
           </div>
         </div>
+      </div>
+    </section>
 
-        <!-- RIGHT SIDE -->
-        <div class="contact-right">
-          <h3>Send Us a Message</h3>
-          <form>
-            <div>
-              <label for="fullname">Full Name</label><br />
-              <input id="fullname" type="text" placeholder="Juan dela Cruz" class="form-input" />
-            </div>
-            <div>
-              <label for="email">Email Address</label><br />
-              <input id="email" type="email" placeholder="juandelacruz@example.com" class="form-input" />
-            </div>
-            <div>
-              <label for="subject">Subject</label><br />
-              <input id="subject" type="text" placeholder="Inquiry about Admissions" class="form-input" />
-            </div>
-            <div>
-              <label for="message">Message</label><br />
-              <textarea id="message" rows="6" placeholder="Your message here..." class="form-input"></textarea>
-            </div>
-            <button type="submit" class="submit-btn">Send Message</button>
-          </form>
-        </div>
+    <!-- NSTP Posts Container - Posts will be loaded dynamically -->
+    <section class="posts-section">
+      <div class="posts-container" id="nstpPostsContainer">
+        <!-- Posts will be loaded here by nstp-public.js -->
       </div>
-    </div>
-
-    <!-- Chatbot Button -->
-    <button id="chatToggleBtn">
-      <span class="material-icons" id="chatIcon">chat_bubble_outline</span>
-    </button>
-    
-    <!-- Chatbox -->
-    <div id="chatbox">
-      <div id="chatHeader">PUP Parañaque Assistant</div>
-      <div id="chatMessages">
-        <div class="message assistant">
-          <strong>Assistant</strong> <span class="timestamp" id="timeStamp"></span><br>
-          Welcome to PUP Parañaque chatbot! How can I help you today?
-        </div>
-      </div>
-    
-      <div id="commonQuestions">
-        <p>Common questions:</p>
-        <div>
-          <button class="question-button">What programs are offered at PUP Parañaque?</button>
-          <button class="question-button">How do I apply for admission?</button>
-          <button class="question-button">What are the tuition fees?</button>
-          <button class="question-button">Where is the campus located?</button>
-          <button class="question-button">What are the requirements for enrollment?</button>
-        </div>
-      </div>
-    
-      <div id="chatInput">
-        <input type="text" id="chatText" placeholder="Enter your questions here..."/>
-        <button onclick="sendMessage()">
-          <span class="material-icons-outlined">send</span>
-        </button>
-      </div>
-    </div>
-
+    </section>
+  </main>
 
   <div class="footer-box">
     <footer class="footer">
       <div class="footer-container">
-        <!-- Logo and Description -->
         <div class="footer-section">
           <div class="logo-wrapper">
             <img src="/public/assets/images/PUPLogo.webp" alt="PUP logo" class="logo-img">
             <div class="logo-text">
-              <p>Polytechnic University of the Philippines</p>
+              <p class="logo-name">Polytechnic University of the Philippines</p>
               <p class="logo-branch">PARAÑAQUE CAMPUS</p>
             </div>
           </div>
@@ -217,8 +125,7 @@
             <a href="#" aria-label="Globe"><i class="fas fa-globe"></i></a>
           </div>
         </div>
-  
-        <!-- Quick Links -->
+
         <div class="footer-section">
           <h3>Quick Links</h3>
           <ul class="footer-links">
@@ -227,10 +134,10 @@
             <li><a href="#">Programs</a></li>
             <li><a href="#">Admission</a></li>
             <li><a href="#">Extension Services</a></li>
+            <li><a href="login.html">Log in</a></li>
           </ul>
         </div>
-  
-        <!-- Resources -->
+
         <div class="footer-section">
           <h3>Resources</h3>
           <ul class="footer-links">
@@ -241,8 +148,7 @@
             <li><a href="#">University Policies</a></li>
           </ul>
         </div>
-  
-        <!-- Contact -->
+
         <div class="footer-section">
           <h3>Contact</h3>
           <p class="contact-text">
@@ -255,14 +161,12 @@
           <p class="contact-info"><i class="fas fa-envelope"></i> <a href="mailto:inquire@pup.edu.ph">paranaque@pup.edu.ph</a></p>
         </div>
       </div>
-  
+
       <hr class="footer-divider" />
       <p class="footer-copy">© 2025 Polytechnic University of the Philippines Parañaque Campus. All rights reserved.</p>
     </footer>
-    </div>
-  
-    <script src="/script/navbar.js"></script>
-    <script src="/script/news.js"></script>
-  <script src="/public/js/quickhelp&chatbot.js"></script>
+  </div>
+
+  <script src="/public/js/navbar.js"></script>
 </body>
 </html>
