@@ -1,244 +1,341 @@
-<!-- KULANG SEARCH BAR, DEPARTMENT FILTER, RESEARCH CONTRIBUTED -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PUP Paranaque</title>
-  <link rel="icon" type="image" href="/public/assets/images/PUPLogo.webp">
+  <title>PUP Paranaque - Administrative Officials</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
-  <link rel="stylesheet" href="/public/css//layout/navbar.css">
-  <link rel="stylesheet" href="/public/css/layout/floatingfunction.css">
   <link rel="stylesheet" href="/public/css/pages/administrativeofficials.css">
+  <link rel="stylesheet" href="/public/css/layout/navbar.css">
   <link rel="stylesheet" href="/public/css/layout/footer.css">
 </head>
 <body>
-<!--NAVBAR-->
-  <header>
+    <header>
     <nav id="navbar" class="navbar">
-      <!--Logo and Title-->
-        <div class="logo">
-            <img class="logoimage" src="/public/assets/images/PUPLogo.webp" alt="PUP logo" />
-          <div class="logotitlewrap">
-            <h1 class="logotitle">Polytechnic University of the Philippines</h1>
-            <h2 class="logotitle2">PARAÑAQUE CAMPUS</h2>
+
+      <div class="logo">
+        <img class="logoimage" src="/public/assets/images/PUPLogo.webp" alt="PUP logo" />
+        <div class="logotitlewrap">
+          <h1 class="logotitle">Polytechnic University of the Philippines</h1>
+          <h2 class="logotitle2">PARANAQUE CAMPUS</h2>
+        </div>
+
+      </div>
+
+      <hr class="hr1">
+
+      <ul class="nav-menu">
+        <li class="nav-item">
+          <a href="/public/index.html">Home</a>
+        </li>
+        <li class="nav-item dropdown-btn">
+          <a href="#about">About <span class="arrow">&#11206;</span></a>
+          <div class="dropdown-content">
+            <a href="/public/html/About/history.html">History</a>
+            <a href="/public/html/About/administrativeofficials.html">Administrative Officials</a>
+            <a href="/public/html/About/vicinitymap.html">Maps</a>
+          </div>
+        </li>
+        <li class="nav-item">
+          <a href="/public/html/Admission/admission.html">Admission</a>
+        </li>
+
+
+        <li class="nav-item dropdown-btn">
+          <a href="/public/html/Students/students.html">Students <span class="arrow">&#11206;</span></a>
+          <div class="dropdown-content">
+            <a href="/public/html/Students/students.html">Scholarship</a>
+            <a href="https://pupsinta.freshservice.com/support/home">PUP Sinta</a>
+            <a href="https://sis8.pup.edu.ph/student/">PUP Student Portal</a>
+            <a href="#">Student Organizations</a>
+          </div>
+        </li>
+
+        <li class="nav-item">
+          <a href="/public/html/CampusLife/campus-life.html">Campus Life</a>
+        </li>
+
+        <li class="nav-item">
+          <a href="/public/html/Alumni&Services/alumni.html">Alumni & Services</a>
+        </li>
+
+
+        <li class="nav-item">
+          <a href="/public/html/Contact&Support/QuickHelp&Chatbot.html">Contact/Support</a>
+        </li>
           </div>
         </div>
 
-        <hr class="hr1">
-        <!--Nav Items-->
-        <ul class="nav-menu">
-          <li class="nav-item">
-            <a href="/public/index.html">Home</a>
-          </li>
+      </ul>
 
-          <li class="nav-item dropdown-btn">
-              <a href="#about">About <span class="arrow">&#11206;</span></a>
-            <div class="dropdown-content">
-              <a href="./history.html">History</a>
-              <a href="./administrativeofficials.html">Administrative Officials</a>
-              <a href="./vicinitymap.html">Vicinity Map</a>
-            </div>
-          </li>
-
-          <li class="nav-item">
-            <a href="/public/html/Admission/admission.html">Admission</a>
-          </li>
-
-          <li class="nav-item dropdown-btn">
-              <a href="/public/html/Students/students.html">Students <span class="arrow">&#11206;</span></a>
-            <div class="dropdown-content">
-              <a href="/public/html/Students/students.html">Scholarship & Forms</a>
-              <a href="https://pupsinta.freshservice.com/support/home">PUP Sinta</a>
-              <a href="https://sis8.pup.edu.ph/student/">PUP Student Portal</a>
-              <a href="#">Student Organizations</a>
-            </div>
-          </li>
-
-          <li class="nav-item">
-            <a href="/public/html/CampusLife/campus-life.html">Campus Life</a>
-          </li>
-
-          <li class="nav-item">
-            <a href="/public/html/Alumni&Services/alumni.html">Alumni & Services</a>
-          </li>
-
-          <li class="nav-item">
-            <a href="/public/html/Contact&Support/QuickHelp&Chatbot.html">Contact/Support</a>
-          </li>
-        </ul>
-        <!--HAMBURGER AND SEARCH-->
-        <div class="search-hamburger">
-          <div class="hamburger">
-            <span class="bar"></span>
-            <span class="bar"></span>
-            <span class="bar"></span>
-          </div>
-
-          <div class="search-bar">
-            <form class="search" action="/public/index.html">
-              <input type="text" placeholder="Search" name="search" class="searchbox">
-              <button type="submit" class="searchbutton"><i class="fa fa-search"></i></button>
-            </form>
-          </div>
+      <div class="search-hamburger">
+        <div class="hamburger">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
         </div>
+
+        <div class="search-bar">
+          <form class="search" action="/index.html">
+            <input type="text" placeholder="Search" name="search" class="searchbox">
+            <button type="submit" class="searchbutton"><i class="fa fa-search"></i></button>
+          </form>
+        </div>
+      </div>
+
     </nav>
   </header>
-<!--MAIN CONTENT-->
   <main class="main">
-    <!--Hero Section-->
-    <section class="hero-section" style="background-image: url('/public/assets/images//PUPBg4.jpg');">
+    <!-- Hero Section -->
+    <section class="hero-section">
       <div class="hero-content">
         <div class="hero-title-design">
           <div class="vl1"></div>
           <div class="hero-title&desc">
-            <h1 class="hero-title" data-aos="fade-left">Administrative Officials</h1>
+            <h1 class="hero-title">Administrative Officials</h1>
             <p class="hero-text">Get to know the dedicated officials behind the academic excellence of PUP Parañaque. Explore our directory to learn about their professional backgrounds, academic achievements, research contributions, and roles within the university. These are the individuals who guide, support, and inspire the next generation of PUP scholars.</p>
           </div>
         </div>
       </div>
     </section>
-    <!--FACULTY GRID-->
-    <div class="faculty-grid">
-      <div class="staff-container" onclick="location.href='/public/html/About/facultyprofile-about.html'">
-        <div class="staff-wrap">
-          <img src="/public/assets/images/facultyimage/moralessr.jpg" alt="Faculty Image" class="faculty-img">
-          <div class="text-info">
-            <a class="name">Sheryl "Sharima" R. Morales, MEM</a>
-            <p class="details">Associate Professor &#8548;</p>
-            <p class="details">Campus Director</p>
-          </div>
-        </div>
-      </div>
-    
-      <div class="staff-container">
-        <div class="staff-wrap">
-          <img src="/public/assets/images/facultyimage/serranojf.jpg" alt="Faculty Image" class="faculty-img">
-          <div class="text-info">
-            <a class="name">Jefferson F. Serrano, MPES</a>
-            <p class="details">Assistant Professor &#8544;</p>
-            <p class="details">Head, Academic Programs</p>
-          </div>
-        </div>
-      </div>
 
-      <div class="staff-container">
-        <div class="staff-wrap">
-          <img src="/public/assets/images/facultyimage/martinezmjj.jpg" alt="Faculty Image" class="faculty-img">
-          <div class="text-info">
-            <a class="name">Mila Joy J. Martinez, MS HRM</a>
-            <p class="details">Instructor &#8546;</p>
-            <p class="details">Head, Student Affairs and Services</p>
-          </div>
-        </div>
-      </div>
+    <!-- Carousel Section -->
+    <section class="carousel-section">
+      <h2 class="carousel-title">
+        Our Dedicated Officials
+      </h2>
 
-      <div class="staff-container">
-        <div class="staff-wrap">
-          <img src="/public/assets/images/facultyimage/eniergarr.jpg" alt="Faculty Image" class="faculty-img">
-          <div class="text-info">
-            <a class="name">Ribert R. Enierga, MIT</a>
-            <p class="details">Assistant Professor &#8547;</p>
-            <p class="details">Registrar and Head of Admission</p>
-          </div>
+      <div class="carousel-container">
+        <div class="nav-button prev" onclick="prevSlide()">
+          <i class="fas fa-chevron-left fa-2x"></i>
         </div>
-      </div>
 
-      <div class="staff-container">
-        <div class="staff-wrap">
-          <img src="/public/assets/images/facultyimage/aviladoajm.jpg" alt="Faculty Image" class="faculty-img">
-          <div class="text-info">
-            <a class="name">Avegail Jean M. Avilado</a>
-            <p class="details">Instructor &#8544;</p>
-            <p class="details">Research and Extension Coordinator</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="staff-container">
-        <div class="staff-wrap">
-          <img src="/public/assets/images/facultyimage/pambuenael.jpg" alt="Faculty Image" class="faculty-img">
-          <div class="text-info">
-            <a class="name">Elizabeth L. Pambuena, PhD</a>
-            <p class="details">Associate Professor &#8547;</p>
-            <p class="details">Collecting and Disbursing Officer</p>
-          </div>
-        </div>
-      </div>
-    </div>
-    <hr class="hr2">
-  </main>
-  <!--FOOTER-->
-  <section class="footer-box">
-    <footer class="footer">
-      <div class="footer-container">
-
-        <!-- Logo and Description -->
-        <div class="footer-section">
-          <div class="logo-wrapper">
-            <img src="/public/assets/images/PUPLogo.webp" alt="PUP logo" class="logo-img">
-            <div class="logo-text">
-              <p class="logo-name">Polytechnic University of the Philippines</p>
-              <p class="logo-branch">PARAÑAQUE CAMPUS</p>
+        <div class="carousel-track" id="carouselTrack">
+          <!-- Official 1 -->
+          <div class="official-card">
+            <img src="/public/assets/images/facultyimage/DirekSalao.png" alt="Atty. Ernesto C. Salao" class="card-image">
+            <div class="card-content">
+              <h3 class="official-name">Atty. Ernesto C. Salao, LL.M.</h3>
+              <p class="official-role">Campus Director</p>
             </div>
           </div>
-          <p class="footer-desc">
-            PUP Parañaque recognizes the vital contributions of its faculty and staff in delivering quality education and services to its students and the community.
-          </p>
-          <div class="social-links">
-            <a href="#" aria-label="Facebook"><i class="fas fa-lightbulb"></i></a>
-            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-            <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-            <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-            <a href="#" aria-label="Globe"><i class="fas fa-globe"></i></a>
+
+          <!-- Official 2 -->
+          <div class="official-card">
+            <img src="/public/assets/images/facultyimage/serranojf.jpg" alt="Jefferson F. Serrano" class="card-image">
+            <div class="card-content">
+              <h3 class="official-name">Jefferson F. Serrano, MPES</h3>
+              <p class="official-role">Assistant Professor I<br>Head, Academic Programs</p>
+            </div>
+          </div>
+
+          <!-- Official 3 -->
+          <div class="official-card">
+            <img src="/public/assets/images/facultyimage/martinezmjj.jpg" alt="Mila Joy J. Martinez" class="card-image">
+            <div class="card-content">
+              <h3 class="official-name">Mila Joy J. Martinez, MS HRM</h3>
+              <p class="official-role">Instructor III<br>Head, Student Affairs and Services</p>
+            </div>
+          </div>
+
+          <!-- Official 4 -->
+          <div class="official-card">
+            <img src="/public/assets/images/facultyimage/eniergarr.jpg" alt="Ribert R. Enierga" class="card-image">
+            <div class="card-content">
+              <h3 class="official-name">Ribert R. Enierga, MIT</h3>
+              <p class="official-role">Assistant Professor IV<br>Registrar and Head of Admission</p>
+            </div>
+          </div>
+
+          <!-- Official 5 -->
+          <div class="official-card">
+            <img src="/public/assets/images/facultyimage/aviladoajm.jpg" alt="Avegail Jean M. Avilado" class="card-image">
+            <div class="card-content">
+              <h3 class="official-name">Avegail Jean M. Avilado</h3>
+              <p class="official-role">Instructor I<br>Research and Extension Coordinator</p>
+            </div>
+          </div>
+
+          <!-- Official 6 -->
+          <div class="official-card">
+            <img src="/public/assets/images/facultyimage/pambuenael.jpg" alt="Elizabeth L. Pambuena" class="card-image">
+            <div class="card-content">
+              <h3 class="official-name">Elizabeth L. Pambuena, PhD</h3>
+              <p class="official-role">Associate Professor IV<br>Collecting and Disbursing Officer</p>
+            </div>
           </div>
         </div>
 
-        <!-- Quick Links -->
-        <div class="footer-section">
-          <h3>Quick Links</h3>
-          <ul class="footer-links">
-            <li><a href="#">Home</a></li>
-            <li><a href="#">About</a></li>
-            <li><a href="#">Programs</a></li>
-            <li><a href="#">Admission</a></li>
-            <li><a href="#">Extension Services</a></li>
-            <li><a href="/private/html/AdminLogin/login.html">Log In</a></li>
-          </ul>
-        </div>
-
-        <!-- Resources -->
-        <div class="footer-section">
-          <h3>Resources</h3>
-          <ul class="footer-links">
-            <li><a href="#">Forms</a></li>
-            <li><a href="#">Academic Calendar</a></li>
-            <li><a href="#">Faculty Resources</a></li>
-            <li><a href="#">Staff Resources</a></li>
-            <li><a href="#">University Policies</a></li>
-          </ul>
-        </div>
-
-        <!-- Contact -->
-        <div class="footer-section">
-          <h3>Contact</h3>
-          <p class="contact-text">
-            <a href="#" class="contact-link">
-              PUP Parañaque Campus<br/>
-              Col. E. De Leon St. Wawa, Brgy. Sto. Niño<br/>
-              Parañaque City, Philippines 1700,<br/>
-              Metro Manila
-            </a>
-          </p>
-            <p class="contact-info"><i class="fas fa-phone-alt"></i> (63 2) 553-8623</p>
-            <p class="contact-info"><i class="fas fa-envelope"></i> <a href="mailto:inquire@pup.edu.ph">paranaque@pup.edu.ph</a></p>
+        <div class="nav-button next" onclick="nextSlide()">
+          <i class="fas fa-chevron-right fa-2x"></i>
         </div>
       </div>
-        <hr class="footer-divider" />
-        <p class="footer-copy">© 2025 Polytechnic University of the Philippines Parañaque Campus. All rights reserved.</p>
-    </footer>
-  </section>
 
+      <div class="dots-container" id="dotsContainer"></div>
+    </section>
+  </main>
+  <div class="footer-box">
+  <footer class="footer">
+    <div class="footer-container">
+      <!-- Logo and Description -->
+      <div class="footer-section">
+        <div class="logo-wrapper">
+          <img src="/public/assets/images/PUPLogo.webp" alt="PUP logo" class="logo-img">
+          <div class="logo-text">
+             <p class="logo-name">Polytechnic University of the Philippines</p>
+            <p class="logo-branch">PARAÑAQUE CAMPUS</p>
+          </div>
+        </div>
+        <p class="footer-desc">
+          PUP Parañaque recognizes the vital contributions of its faculty and staff in delivering quality education and services to its students and the community.
+        </p>
+        <div class="social-links">
+          <a href="#" aria-label="Facebook"><i class="fas fa-lightbulb"></i></a>
+          <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+          <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+          <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+          <a href="#" aria-label="Globe"><i class="fas fa-globe"></i></a>
+        </div>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="footer-section">
+        <h3>Quick Links</h3>
+        <ul class="footer-links">
+          <li><a href="#">Home</a></li>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Programs</a></li>
+          <li><a href="#">Admission</a></li>
+          <li><a href="#">Extension Services</a></li>
+          <li><a href="/private/html/AdminLogin/login.html">Login</a></li>
+        </ul>
+      </div>
+
+      <!-- Resources -->
+      <div class="footer-section">
+        <h3>Resources</h3>
+        <ul class="footer-links">
+          <li><a href="#">Forms</a></li>
+          <li><a href="#">Academic Calendar</a></li>
+          <li><a href="#">Faculty Resources</a></li>
+          <li><a href="#">Staff Resources</a></li>
+          <li><a href="#">University Policies</a></li>
+        </ul>
+      </div>
+
+      <!-- Contact -->
+      <div class="footer-section">
+        <h3>Contact</h3>
+        <p class="contact-text">
+          <a href="#" class="contact-link">PUP Parañaque Campus
+            Col. E. De Leon St. Wawa, Brgy. Sto. Niño
+            Parañaque City, Philippines 1700,</a><br/>
+          Metro Manila
+        </p>
+        <p class="contact-info"><i class="fas fa-phone-alt"></i> (63 2) 553-8623</p>
+        <p class="contact-info"><i class="fas fa-envelope"></i> <a href="mailto:inquire@pup.edu.ph">paranaque@pup.edu.ph</a></p>
+      </div>
+    </div>
+
+    <hr class="footer-divider" />
+    <p class="footer-copy">© 2025 Polytechnic University of the Philippines Parañaque Campus. All rights reserved.</p>
+  </footer>
+  </div>
+
+  <script src="/script/navbar.js"></script>
+  <script>
+    let currentIndex = 0;
+    const cards = document.querySelectorAll('.official-card');
+    const totalSlides = cards.length;
+    const dotsContainer = document.getElementById('dotsContainer');
+
+    // Create dots
+    for (let i = 0; i < totalSlides; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'dot';
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    }
+
+    const dots = document.querySelectorAll('.dot');
+
+    function updateCarousel() {
+      cards.forEach((card, index) => {
+        card.classList.remove('active', 'side');
+        
+        // Calculate position with wrapping
+        let position = index - currentIndex;
+        
+        // Wrap around logic for infinite effect
+        if (position > totalSlides / 2) {
+          position -= totalSlides;
+        } else if (position < -totalSlides / 2) {
+          position += totalSlides;
+        }
+        
+        if (position === 0) {
+          card.classList.add('active');
+        } else if (Math.abs(position) === 1) {
+          card.classList.add('side');
+        }
+
+        // Position cards - center the active card with wrapping
+        const offset = position * 430;
+        if (position === 0) {
+          card.style.transform = `translateX(-50%) scale(1)`;
+          card.style.left = '50%';
+        } else {
+          card.style.transform = `translateX(calc(-50% + ${offset}px)) scale(0.85)`;
+          card.style.left = '50%';
+        }
+        
+        card.style.opacity = position === 0 ? '1' : (Math.abs(position) === 1 ? '0.6' : '0.3');
+        card.style.zIndex = position === 0 ? '5' : '1';
+        card.style.pointerEvents = position === 0 ? 'auto' : 'none';
+        card.style.display = Math.abs(position) <= 2 ? 'block' : 'none';
+      });
+
+      // Update dots
+      dots.forEach((dot, index) => {
+        dot.classList.toggle('active', index === currentIndex);
+      });
+    }
+
+    function nextSlide() {
+      currentIndex = (currentIndex + 1) % totalSlides;
+      updateCarousel();
+    }
+
+    function prevSlide() {
+      currentIndex = (currentIndex - 1 + totalSlides) % totalSlides;
+      updateCarousel();
+    }
+
+    function goToSlide(index) {
+      currentIndex = index;
+      updateCarousel();
+    }
+
+    // Auto-play (optional)
+    let autoPlayInterval = setInterval(nextSlide, 5000);
+
+    // Pause auto-play on hover
+    document.querySelector('.carousel-container').addEventListener('mouseenter', () => {
+      clearInterval(autoPlayInterval);
+    });
+
+    document.querySelector('.carousel-container').addEventListener('mouseleave', () => {
+      autoPlayInterval = setInterval(nextSlide, 5000);
+    });
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') prevSlide();
+      if (e.key === 'ArrowRight') nextSlide();
+    });
+
+    // Initialize
+    updateCarousel();
+  </script>
 </body>
 </html>
