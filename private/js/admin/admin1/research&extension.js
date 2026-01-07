@@ -1,4 +1,4 @@
-// research&extension.js - Fixed version with proper file handling and image ordering
+// research&extension.js - Medium-style Article Editor for Admin
 const openBtn = document.getElementById('openPostModal');
 const modal = document.getElementById('postModal');
 const cancelBtn = document.getElementById('cancelPost');
@@ -15,21 +15,24 @@ let editingPostId = null;
 let selectedFiles = [];
 let existingFiles = [];
 
+// Open modal for new post
 openBtn.addEventListener('click', () => {
   modal.style.display = 'flex';
   postTitle.focus();
-  submitBtn.textContent = 'Post';
+  submitBtn.textContent = 'Publish';
   editingPostId = null;
   selectedFiles = [];
   existingFiles = [];
   updateFileList();
 });
 
+// Close modal
 cancelBtn.addEventListener('click', () => {
   modal.style.display = 'none';
   clearForm();
 });
 
+// Clear form
 function clearForm() {
   postTitle.value = '';
   postText.innerHTML = '';
@@ -40,12 +43,13 @@ function clearForm() {
   editingPostId = null;
 }
 
+// Handle file uploads
 fileUpload.addEventListener('change', (e) => {
   const newFiles = Array.from(e.target.files);
   const totalFiles = selectedFiles.length + existingFiles.length + newFiles.length;
   
   if (totalFiles > 3) {
-    alert('You can only upload up to 3 files per post.');
+    alert('You can only upload up to 3 files per article.');
     fileUpload.value = '';
     return;
   }
@@ -55,6 +59,7 @@ fileUpload.addEventListener('change', (e) => {
   updateFileList();
 });
 
+// Sort files: images first, then documents
 function sortFilesByType(files) {
   return files.sort((a, b) => {
     const aIsImage = isImageFile(a.file_type || a.type);
@@ -66,6 +71,7 @@ function sortFilesByType(files) {
   });
 }
 
+// Update file list display
 function updateFileList() {
   fileListContainer.innerHTML = '';
   
@@ -95,6 +101,7 @@ function updateFileList() {
     fileListContainer.appendChild(fileItem);
   });
   
+  // Add remove handlers
   document.querySelectorAll('.remove-file-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -112,6 +119,7 @@ function updateFileList() {
   });
 }
 
+// Get file icon based on MIME type
 function getFileIcon(mimeType) {
   if (mimeType.includes('pdf')) return 'fa-file-pdf';
   if (mimeType.includes('word')) return 'fa-file-word';
@@ -122,10 +130,12 @@ function getFileIcon(mimeType) {
   return 'fa-file';
 }
 
+// Check if file is an image
 function isImageFile(mimeType) {
   return mimeType && mimeType.includes('image/');
 }
 
+// Format file size
 function formatFileSize(bytes) {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;
@@ -134,6 +144,7 @@ function formatFileSize(bytes) {
   return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
 }
 
+// Rich text editing toolbar
 toolbarButtons.forEach(button => {
   button.addEventListener('click', () => {
     const command = button.getAttribute('data-command');
@@ -145,18 +156,20 @@ toolbarButtons.forEach(button => {
   });
 });
 
+// Font size selector
 fontSizeSelect.addEventListener('change', () => {
   document.execCommand('fontSize', false, fontSizeSelect.value);
 });
 
+// Submit post (create or update)
 submitBtn.addEventListener('click', async (e) => {
   e.preventDefault();
   
   const title = postTitle.value.trim();
   const content = postText.innerHTML.trim();
   
-  if (!title && !content && selectedFiles.length === 0 && existingFiles.length === 0) {
-    alert('Please add a title, content, or files before posting.');
+  if (!title || !content) {
+    alert('Please add both a title and content for your article.');
     return;
   }
 
@@ -198,20 +211,30 @@ submitBtn.addEventListener('click', async (e) => {
       modal.style.display = 'none';
       loadPosts();
     } else {
-      alert('Something went wrong while saving your Research & Extension post.');
+      alert('Something went wrong while saving your article.');
     }
   } catch (err) {
-    console.error('Error submitting Research & Extension post:', err);
-    alert('Error submitting post. Please try again.');
+    console.error('Error submitting article:', err);
+    alert('Error submitting article. Please try again.');
   }
 });
 
+// Close modal on outside click
 window.addEventListener('click', e => {
   if (e.target === modal) {
     modal.style.display = 'none';
   }
 });
 
+// Extract text preview from HTML content
+function extractTextPreview(htmlContent, maxLength = 200) {
+  const temp = document.createElement('div');
+  temp.innerHTML = htmlContent;
+  const text = temp.textContent || temp.innerText || '';
+  return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+}
+
+// Load and display posts
 async function loadPosts() {
   feed.innerHTML = '';
   
@@ -225,32 +248,31 @@ async function loadPosts() {
         postElem.classList.add('researchextension-post');
         postElem.dataset.id = post.id;
 
-        let filesHtml = '';
+        // Get featured image (first image file) if available
+        let featuredImageHtml = '';
+        let documentFilesHtml = '';
+        
         if (post.files && post.files.length > 0) {
           const sortedFiles = sortFilesByType([...post.files]);
+          const images = sortedFiles.filter(f => isImageFile(f.file_type));
+          const documents = sortedFiles.filter(f => !isImageFile(f.file_type));
           
-          filesHtml = '<div class="post-files">';
+          // Featured image
+          if (images.length > 0) {
+            const firstImage = images[0];
+            featuredImageHtml = `
+              <div class="post-featured-image">
+                <img src="http://localhost:3000${firstImage.file_path}" alt="${post.title}">
+              </div>
+            `;
+          }
           
-          sortedFiles.forEach(file => {
-            const icon = getFileIcon(file.file_type);
-            
-            if (isImageFile(file.file_type)) {
-              filesHtml += `
-                <div class="post-file-item image">
-                  <img src="http://localhost:3000${file.file_path}" alt="${file.file_name}">
-                  <div class="download-icon">
-                    <i class="fa fa-download"></i>
-                  </div>
-                  <div class="image-overlay">
-                    <a href="http://localhost:3000${file.file_path}" target="_blank" download="${file.file_name}">
-                      ${file.file_name}
-                    </a>
-                    <span class="file-size">${formatFileSize(file.file_size)}</span>
-                  </div>
-                </div>
-              `;
-            } else {
-              filesHtml += `
+          // Document files
+          if (documents.length > 0) {
+            documentFilesHtml = '<div class="post-files">';
+            documents.forEach(file => {
+              const icon = getFileIcon(file.file_type);
+              documentFilesHtml += `
                 <div class="post-file-item document">
                   <i class="fa ${icon} file-icon"></i>
                   <div class="file-details">
@@ -261,11 +283,13 @@ async function loadPosts() {
                   </div>
                 </div>
               `;
-            }
-          });
-          
-          filesHtml += '</div>';
+            });
+            documentFilesHtml += '</div>';
+          }
         }
+
+        // Extract preview text
+        const preview = extractTextPreview(post.content);
 
         postElem.innerHTML = `
           <div class="researchextension-actions">
@@ -277,12 +301,16 @@ async function loadPosts() {
               <button class="post-delete"><i class="fa-solid fa-trash"></i> Delete</button>
             </div>
           </div>
+          ${featuredImageHtml}
           <h1>${post.title}</h1>
-          <div class="post-content">${post.content}</div>
-          ${filesHtml}
-          <div class="post-divider"><span>${new Date(post.created_at).toLocaleString()}</span></div>
+          <div class="post-content">${preview}</div>
+          ${documentFilesHtml}
+          <div class="post-divider">
+            <span><i class="fa fa-clock"></i> ${new Date(post.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+          </div>
         `;
 
+        // Menu dropdown handlers
         const menuBtn = postElem.querySelector('.post-menu-btn');
         const dropdown = postElem.querySelector('.post-menu-dropdown');
         
@@ -298,6 +326,7 @@ async function loadPosts() {
           dropdown.style.display = 'none';
         });
 
+        // Edit handler
         postElem.querySelector('.post-edit').addEventListener('click', (e) => {
           e.stopPropagation();
           dropdown.style.display = 'none';
@@ -308,15 +337,16 @@ async function loadPosts() {
           existingFiles = post.files || [];
           selectedFiles = [];
           updateFileList();
-          submitBtn.textContent = 'Update';
+          submitBtn.textContent = 'Update Article';
           modal.style.display = 'flex';
         });
 
+        // Delete handler
         postElem.querySelector('.post-delete').addEventListener('click', async (e) => {
           e.stopPropagation();
           dropdown.style.display = 'none';
           
-          if (confirm('Are you sure you want to delete this Research & Extension post and all its files?')) {
+          if (confirm('Are you sure you want to delete this article and all its attachments?')) {
             try {
               const response = await fetch(`http://localhost:3000/api/researchextension/delete/${post.id}`, { 
                 method: 'DELETE' 
@@ -326,11 +356,11 @@ async function loadPosts() {
               if (result.success) {
                 loadPosts();
               } else {
-                alert('Failed to delete post');
+                alert('Failed to delete article');
               }
             } catch (err) {
-              console.error('Error deleting post:', err);
-              alert('Error deleting post');
+              console.error('Error deleting article:', err);
+              alert('Error deleting article');
             }
           }
         });
@@ -340,22 +370,23 @@ async function loadPosts() {
     } else {
       feed.innerHTML = `
         <div class="post-placeholder">
-          <i class="fa-solid fa-scroll"></i>
-          <h2>No Research & Extension posts yet</h2>
-          <p>Share Research & Extension updates and files here to keep everyone informed.</p>
+          <i class="fa-solid fa-newspaper"></i>
+          <h2>No articles yet</h2>
+          <p>Start writing your first Research & Extension article to share knowledge with the community.</p>
         </div>
       `;
     }
   } catch (err) {
-    console.error('Error loading Research & Extension posts:', err);
+    console.error('Error loading articles:', err);
     feed.innerHTML = `
       <div class="post-placeholder">
         <i class="fa-solid fa-exclamation-triangle"></i>
-        <h2>Error loading posts</h2>
+        <h2>Error loading articles</h2>
         <p>Please refresh the page and try again.</p>
       </div>
     `;
   }
 }
 
+// Load posts on page load
 window.addEventListener('DOMContentLoaded', loadPosts);
