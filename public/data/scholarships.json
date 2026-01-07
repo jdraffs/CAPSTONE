@@ -1,0 +1,229 @@
+{
+  "scholarships": [
+    {
+      "id": 1,
+      "title": "CHED UniFAST Scholarship Program",
+      "provider": "Commission on Higher Education (CHED)",
+      "provider_type": "Government",
+      "description": "The Unified Financial Assistance System for Tertiary Education (UniFAST) provides financial assistance to deserving students pursuing undergraduate degrees in state universities and colleges.",
+      "eligibility": "All undergraduate students with GPA of 2.5 or higher",
+      "type": "Financial Assistance",
+      "status": "Open",
+      "deadline": "March 30, 2026",
+      "campus": "PUP Parañaque",
+      "posted_date": "2026-01-05",
+      "requirements": [
+        "Must be a Filipino citizen",
+        "Currently enrolled in PUP Parañaque Campus",
+        "General Weighted Average (GWA) of at least 2.5",
+        "Family income not exceeding ₱400,000 per year",
+        "No pending scholarship from other government agencies"
+      ],
+      "documents": [
+        "Fully accomplished application form",
+        "Certificate of Registration (current semester)",
+        "Certificate of Good Moral Character",
+        "Income Tax Return (ITR) or Certificate of Income",
+        "Birth Certificate (NSO-authenticated)",
+        "Two (2) recent 1x1 ID pictures"
+      ],
+      "process": [
+        "Download and complete the application form from the CHED website",
+        "Submit all required documents to the Student Affairs Office",
+        "Wait for initial screening and verification",
+        "Attend interview if shortlisted",
+        "Await final approval notification"
+      ],
+      "contact": "studentaffairs@pup.edu.ph"
+    },
+    {
+      "id": 2,
+      "title": "Parañaque City Government Academic Scholarship",
+      "provider": "Local Government of Parañaque",
+      "provider_type": "Government",
+      "description": "A merit-based scholarship program provided by the Parañaque City Government to support academically excellent students who are residents of Parañaque City.",
+      "eligibility": "Dean's Lister from Parañaque City",
+      "type": "Academic",
+      "status": "Open",
+      "deadline": "April 15, 2026",
+      "campus": "PUP Parañaque",
+      "posted_date": "2026-01-04",
+      "requirements": [
+        "Must be a bonafide resident of Parañaque City for at least 2 years",
+        "Included in the Dean's List or Honor Roll",
+        "General Weighted Average (GWA) of 1.75 or higher",
+        "Enrolled in at least 15 units for the semester",
+        "No failing grades in any subject"
+      ],
+      "documents": [
+        "Fully accomplished scholarship application form",
+        "Certificate of Residency from Barangay",
+        "Original copy of grades (Certified True Copy)",
+        "Certificate of Dean's List from the University Registrar",
+        "Valid ID with photo and signature",
+        "Barangay Clearance",
+        "Two (2) passport-sized photos"
+      ],
+      "process": [
+        "Secure application form from Parañaque City Hall Education Office",
+        "Complete all requirements and compile documents",
+        "Submit application to the City Education Office",
+        "Attend orientation seminar (if required)",
+        "Receive scholarship grant notification"
+      ],
+      "contact": "education@paranaque.gov.ph"
+    },
+    {
+      "id": 3,
+      "title": "SM Foundation College Scholarship",
+      "provider": "SM Foundation, Inc.",
+      "provider_type": "Private",
+      "description": "SM Foundation offers educational assistance to financially challenged but deserving students through its college scholarship program, covering tuition fees and providing monthly allowances.",
+      "eligibility": "Financially disadvantaged students with GPA of 85% or higher",
+      "type": "Grant",
+      "status": "Upcoming",
+      "deadline": "May 20, 2026",
+      "campus": "PUP Parañaque",
+      "posted_date": "2026-01-03",
+      "requirements": [
+        "Filipino citizen from a low-income family",
+        "General average of at least 85% or GWA of 2.0",
+        "Family gross income not exceeding ₱300,000 annually",
+        "Must not be a recipient of other scholarship programs with similar benefits",
+        "Good moral character and no record of disciplinary actions"
+      ],
+      "documents": [
+        "Completed SM Foundation scholarship application form",
+        "Copy of grades from previous semester",
+        "Certificate of Enrollment for current semester",
+        "Income Tax Return (ITR) or Certificate of No Income",
+        "Barangay Certificate of Indigency",
+        "Birth Certificate (PSA copy)",
+        "Essay on why you deserve the scholarship (300 words)",
+        "Two letters of recommendation"
+      ],
+      "process": [
+        "Visit SM Foundation website and create an account",
+        "Fill out online application form",
+        "Upload all required documents in PDF format",
+        "Submit application before deadline",
+        "Wait for screening results and interview schedule",
+        "Attend final interview if shortlisted"
+      ],
+      "contact": "scholarship@sm-foundation.org"
+    },
+    {
+      "id": 4,
+      "title": "PUP Parañaque Merit-Based Scholarship",
+      "provider": "PUP Parañaque Campus",
+      "provider_type": "School-based",
+      "description": "An internal scholarship program recognizing outstanding academic performance of students enrolled at PUP Parañaque Campus. This scholarship covers full or partial tuition fees.",
+      "eligibility": "Top 10% of class with no failing grades",
+      "type": "Academic",
+      "status": "Open",
+      "deadline": "February 28, 2026",
+      "campus": "PUP Parañaque",
+      "posted_date": "2026-01-02",
+      "requirements": [
+        "Must be enrolled in at least 15 units",
+        "Ranked within the top 10% of the class",
+        "No failing or incomplete grades",
+        "General Weighted Average of 1.5 or better",
+        "Active participation in campus activities"
+      ],
+      "documents": [
+        "Scholarship application letter",
+        "Certified true copy of grades",
+        "Certificate of Good Moral Character",
+        "Certificate of Registration",
+        "List of organizational involvement or achievements",
+        "One recommendation letter from a faculty member"
+      ],
+      "process": [
+        "Obtain application form from the Office of Student Affairs",
+        "Submit completed form with all supporting documents",
+        "Undergo initial evaluation by the Scholarship Committee",
+        "Attend interview (if required)",
+        "Receive notification of scholarship award"
+      ],
+      "contact": "osa.paranaque@pup.edu.ph"
+    },
+    {
+      "id": 5,
+      "title": "DOST-SEI Scholarship for STEM Students",
+      "provider": "Department of Science and Technology - Science Education Institute",
+      "provider_type": "Government",
+      "description": "DOST-SEI provides full scholarships to students pursuing degrees in Science, Technology, Engineering, and Mathematics (STEM) fields to develop future scientists and innovators.",
+      "eligibility": "STEM students with strong academic records",
+      "type": "Academic",
+      "status": "Closed",
+      "deadline": "December 15, 2025",
+      "campus": "PUP Parañaque",
+      "posted_date": "2025-11-01",
+      "requirements": [
+        "Must be enrolled in a STEM-related program (BSIT, BS Computer Science)",
+        "General Weighted Average of 2.0 or better",
+        "Filipino citizen",
+        "Family gross income not exceeding ₱500,000 per year",
+        "Willing to serve the country after graduation"
+      ],
+      "documents": [
+        "DOST-SEI scholarship application form",
+        "Transcript of Records",
+        "Certificate of Enrollment",
+        "Income Tax Return or Certificate of Income",
+        "Birth Certificate",
+        "Two letters of recommendation from teachers",
+        "Essay on career goals (500 words)"
+      ],
+      "process": [
+        "Register on the DOST-SEI online portal",
+        "Complete the online application form",
+        "Upload all required documents",
+        "Take the DOST-SEI scholarship exam",
+        "Attend panel interview if qualified",
+        "Sign scholarship contract upon approval"
+      ],
+      "contact": "sei.dost@gmail.com"
+    },
+    {
+      "id": 6,
+      "title": "Megaworld Foundation Scholarship",
+      "provider": "Megaworld Foundation",
+      "provider_type": "Private",
+      "description": "Megaworld Foundation extends educational support to underprivileged but deserving students through a comprehensive scholarship program with monthly stipends.",
+      "eligibility": "Undergraduate students with financial need and good academic standing",
+      "type": "Allowance-based",
+      "status": "Upcoming",
+      "deadline": "June 10, 2026",
+      "campus": "PUP Parañaque",
+      "posted_date": "2026-01-06",
+      "requirements": [
+        "Must be enrolled in any undergraduate program at PUP Parañaque",
+        "From a family with an annual income of ₱250,000 or less",
+        "General Weighted Average of 2.25 or higher",
+        "Active involvement in community service or extracurricular activities",
+        "No record of disciplinary violations"
+      ],
+      "documents": [
+        "Completed application form (available from foundation website)",
+        "Latest report card or transcript of records",
+        "Certificate of Enrollment",
+        "Proof of family income (ITR, pay slips, or affidavit)",
+        "Certificate of Indigency from Barangay",
+        "Autobiography (not exceeding 500 words)",
+        "Two passport-size photos",
+        "One recommendation letter from a teacher or community leader"
+      ],
+      "process": [
+        "Download application form from Megaworld Foundation website",
+        "Complete form and gather all required documents",
+        "Submit complete application to the foundation office or via email",
+        "Wait for initial screening results (2-3 weeks)",
+        "Attend interview and home visit if shortlisted",
+        "Receive scholarship award decision"
+      ],
+      "contact": "foundation@megaworldcorp.com"
+    }
+  ]
+}

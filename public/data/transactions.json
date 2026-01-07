@@ -1,0 +1,104 @@
+{
+  "transactions": [
+    {
+      "transaction_id": "TXN-2026-001234",
+      "student_number": "2021-12345-MN-0",
+      "department": "Registrar",
+      "department_id": 1,
+      "transaction_type": "Certificate Request",
+      "transaction_date": "2026-01-06T10:30:00",
+      "status": "Completed",
+      "feedback_submitted": false
+    },
+    {
+      "transaction_id": "TXN-2026-001235",
+      "student_number": "2020-67890-MN-0",
+      "department": "Cashier",
+      "department_id": 2,
+      "transaction_type": "Tuition Payment",
+      "transaction_date": "2026-01-06T11:15:00",
+      "status": "Completed",
+      "feedback_submitted": false
+    },
+    {
+      "transaction_id": "TXN-2026-001236",
+      "student_number": "2022-11111-MN-0",
+      "department": "Library",
+      "department_id": 3,
+      "transaction_type": "Book Borrowing",
+      "transaction_date": "2026-01-06T14:00:00",
+      "status": "Completed",
+      "feedback_submitted": false
+    },
+    {
+      "transaction_id": "TXN-2026-001237",
+      "student_number": "2021-22222-MN-0",
+      "department": "Student Affairs",
+      "department_id": 4,
+      "transaction_type": "Good Moral Certificate",
+      "transaction_date": "2026-01-05T09:45:00",
+      "status": "Completed",
+      "feedback_submitted": false
+    },
+    {
+      "transaction_id": "TXN-2026-001238",
+      "student_number": "2020-33333-MN-0",
+      "department": "Clinic",
+      "department_id": 5,
+      "transaction_type": "Medical Certificate",
+      "transaction_date": "2026-01-05T13:20:00",
+      "status": "Completed",
+      "feedback_submitted": false
+    },
+    {
+      "transaction_id": "TXN-2026-001239",
+      "student_number": "2023-44444-MN-0",
+      "department": "Admission Office",
+      "department_id": 6,
+      "transaction_type": "Enrollment Inquiry",
+      "transaction_date": "2026-01-05T15:30:00",
+      "status": "Completed",
+      "feedback_submitted": false
+    },
+    {
+      "transaction_id": "TXN-2026-001240",
+      "student_number": "2021-55555-MN-0",
+      "department": "Registrar",
+      "department_id": 1,
+      "transaction_type": "Transcript of Records",
+      "transaction_date": "2026-01-04T10:00:00",
+      "status": "Completed",
+      "feedback_submitted": true
+    },
+    {
+      "transaction_id": "TXN-2026-001241",
+      "student_number": "2022-66666-MN-0",
+      "department": "Cashier",
+      "department_id": 2,
+      "transaction_type": "Refund Request",
+      "transaction_date": "2026-01-04T11:30:00",
+      "status": "Completed",
+      "feedback_submitted": false
+    },
+    {
+      "transaction_id": "TXN-2026-001242",
+      "student_number": "2020-77777-MN-0",
+      "department": "Library",
+      "department_id": 3,
+      "transaction_type": "Library Card Renewal",
+      "transaction_date": "2026-01-03T14:15:00",
+      "status": "Completed",
+      "feedback_submitted": false
+    },
+    {
+      "transaction_id": "TXN-2026-001243",
+      "student_number": "2021-88888-MN-0",
+      "department": "Student Affairs",
+      "department_id": 4,
+      "transaction_type": "Organization Registration",
+      "transaction_date": "2026-01-03T16:00:00",
+      "status": "Completed",
+      "feedback_submitted": false
+    }
+  ]
+}
