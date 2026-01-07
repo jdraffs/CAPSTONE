@@ -16,7 +16,7 @@ document.getElementById('admin-login-form').addEventListener('submit', async (e)
 
     if (data.success) {
       // ✅ Store admin info globally for later access
-      localStorage.setItem("adminid", adminid);
+      localStorage.setItem("adminid", data.adminid);
 
       // Redirect based on admin ID
       if (data.adminid === 'adminave') {
