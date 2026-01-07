@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Scholarship Opportunities - PUP Parañaque</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="/public/css/layout/navbar.css">
+  <link rel="stylesheet" href="/public/css/pages/scholarships.css">
+  <link rel="stylesheet" href="/public/css/layout/footer.css">
+  <link rel="icon" type="image" href="/public/assets/images/PUPLogo.webp">
+</head>
+<body>
+  <!-- NAVBAR -->
+  <header>
+    <nav id="navbar" class="navbar">
+      <div class="logo">
+        <img class="logoimage" src="/public/assets/images/PUPLogo.webp" alt="PUP logo" />
+        <div class="logotitlewrap">
+          <h1 class="logotitle">Polytechnic University of the Philippines</h1>
+          <h2 class="logotitle2">PARAÑAQUE CAMPUS</h2>
+        </div>
+      </div>
+
+      <hr class="hr1">
+
+      <ul class="nav-menu">
+        <li class="nav-item">
+          <a href="/public/index.html">Home</a>
+        </li>
+
+        <li class="nav-item dropdown-btn">
+          <a href="#about">About <span class="arrow">&#11206;</span></a>
+          <div class="dropdown-content">
+            <a href="/public/html/About/history.html">History</a>
+            <a href="/public/html/About/administrativeofficials.html">Administrative Officials</a>
+            <a href="/public/html/About/vicinitymap.html">Vicinity Map</a>
+          </div>
+        </li>
+
+        <li class="nav-item">
+          <a href="/public/html/Admission/admission.html">Admission</a>
+        </li>
+
+        <li class="nav-item dropdown-btn">
+          <a href="/public/html/Students/students.html">Students <span class="arrow">&#11206;</span></a>
+          <div class="dropdown-content">
+            <a href="/public/html/Students/scholarships.html">Scholarship Opportunities</a>
+            <a href="/public/html/Students/students.html">Scholarship & Forms</a>
+            <a href="https://pupsinta.freshservice.com/support/home">PUP Sinta</a>
+            <a href="https://sis8.pup.edu.ph/student/">PUP Student Portal</a>
+            <a href="#">Student Organizations</a>
+          </div>
+        </li>
+
+        <li class="nav-item">
+          <a href="/public/html/CampusLife/campus-life.html">Campus Life</a>
+        </li>
+
+        <li class="nav-item">
+          <a href="/public/html/Alumni&Services/alumni.html">Alumni & Services</a>
+        </li>
+
+        <li class="nav-item">
+          <a href="/public/html/Contact&Support/QuickHelp&Chatbot.html">Contact/Support</a>
+        </li>
+      </ul>
+
+      <div class="search-hamburger">
+        <div class="hamburger">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </div>
+
+        <div class="search-bar">
+          <form class="search" action="/public/index.html">
+            <input type="text" placeholder="Search" name="search" class="searchbox">
+            <button type="submit" class="searchbutton"><i class="fa fa-search"></i></button>
+          </form>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+    <!-- Hero Banner -->
+    <div class="hero-banner">
+      <div class="hero-overlay">
+        <h1 class="hero-title">Scholarship Opportunities</h1>
+        <p class="hero-subtitle">PUP Parañaque Campus</p>
+      </div>
+    </div>
+
+    <!-- Page Header -->
+    <section class="page-header">
+      <div class="container">
+        <h2 class="section-title">Financial Aid & Scholarship Programs</h2>
+        <p class="section-description">
+          Official scholarship announcements and financial aid opportunities applicable to <strong>PUP Parañaque students only</strong>.
+        </p>
+      </div>
+    </section>
+
+    <!-- Notice Banner -->
+    <section class="notice-banner">
+      <div class="container">
+        <div class="notice-content">
+          <i class="fas fa-info-circle notice-icon"></i>
+          <p class="notice-text">
+            <strong>Important Notice:</strong> Only scholarships applicable to PUP Parañaque Campus are posted here. 
+            Opportunities from other PUP branches are intentionally excluded to avoid confusion.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filter Section -->
+    <section class="filter-section">
+      <div class="container">
+        <div class="filter-container">
+          <!-- Search Bar -->
+          <div class="search-container">
+            <i class="fas fa-search search-icon"></i>
+            <input 
+              type="text" 
+              id="scholarshipSearch" 
+              class="search-input" 
+              placeholder="Search by scholarship name or provider..."
+            >
+          </div>
+
+          <!-- Filter Dropdowns -->
+          <div class="filters">
+            <select id="statusFilter" class="filter-select">
+              <option value="">All Status</option>
+              <option value="Open">Open</option>
+              <option value="Upcoming">Upcoming</option>
+              <option value="Closed">Closed</option>
+            </select>
+
+            <select id="providerFilter" class="filter-select">
+              <option value="">All Providers</option>
+              <option value="Government">Government</option>
+              <option value="Private">Private</option>
+              <option value="School-based">School-based</option>
+            </select>
+
+            <select id="typeFilter" class="filter-select">
+              <option value="">All Types</option>
+              <option value="Academic">Academic</option>
+              <option value="Financial Assistance">Financial Assistance</option>
+              <option value="Grant">Grant</option>
+              <option value="Allowance-based">Allowance-based</option>
+            </select>
+
+            <button id="clearFilters" class="clear-btn">
+              <i class="fas fa-times"></i> Clear Filters
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Scholarship Listing -->
+    <section class="scholarship-section">
+      <div class="container">
+        <div id="scholarshipGrid" class="scholarship-grid">
+          <!-- Scholarships will be loaded here by JavaScript -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+          <i class="fas fa-search empty-icon"></i>
+          <h3 class="empty-title">No Scholarships Found</h3>
+          <p class="empty-text">
+            There are currently no active scholarship opportunities matching your filters for PUP Parañaque Campus. 
+            Please check back regularly or adjust your filters.
+          </p>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading scholarships...</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Scholarship Detail Modal -->
+  <div id="scholarshipModal" class="modal">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <button class="modal-close" id="closeModal">
+        <i class="fas fa-times"></i>
+      </button>
+      <div id="modalBody" class="modal-body">
+        <!-- Modal content will be inserted here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer-box">
+    <footer class="footer">
+      <div class="footer-container">
+        <div class="footer-section">
+          <div class="logo-wrapper">
+            <img src="/public/assets/images/PUPLogo.webp" alt="PUP logo" class="logo-img">
+            <div class="logo-text">
+              <p class="logo-name">Polytechnic University of the Philippines</p>
+              <p class="logo-branch">PARAÑAQUE CAMPUS</p>
+            </div>
+          </div>
+          <p class="footer-desc">
+            PUP Parañaque recognizes the vital contributions of its faculty and staff in delivering quality education and services to its students and the community.
+          </p>
+          <div class="social-links">
+            <a href="#" aria-label="Facebook"><i class="fas fa-lightbulb"></i></a>
+            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+            <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#" aria-label="Globe"><i class="fas fa-globe"></i></a>
+          </div>
+        </div>
+
+        <div class="footer-section">
+          <h3>Quick Links</h3>
+          <ul class="footer-links">
+            <li><a href="/public/index.html">Home</a></li>
+            <li><a href="/public/html/About/history.html">About</a></li>
+            <li><a href="#">Programs</a></li>
+            <li><a href="/public/html/Admission/admission.html">Admission</a></li>
+            <li><a href="#">Extension Services</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h3>Resources</h3>
+          <ul class="footer-links">
+            <li><a href="#">Forms</a></li>
+            <li><a href="#">Academic Calendar</a></li>
+            <li><a href="#">Faculty Resources</a></li>
+            <li><a href="#">Staff Resources</a></li>
+            <li><a href="#">University Policies</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h3>Contact</h3>
+          <p class="contact-text">
+            <a href="#" class="contact-link">
+              PUP Parañaque Campus<br/>
+              Col. E. De Leon St. Wawa, Brgy. Sto. Niño<br/>
+              Parañaque City, Philippines 1700,
+            </a><br/>
+            Metro Manila
+          </p>
+          <p class="contact-info"><i class="fas fa-phone-alt"></i> (63 2) 553-8623</p>
+          <p class="contact-info"><i class="fas fa-envelope"></i> <a href="mailto:paranaque@pup.edu.ph">paranaque@pup.edu.ph</a></p>
+        </div>
+      </div>
+
+      <hr class="footer-divider" />
+      <p class="footer-copy">© 2025 Polytechnic University of the Philippines Parañaque Campus. All rights reserved.</p>
+    </footer>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="/public/js/navbar.js"></script>
+  <script src="/public/js/scholarships.js"></script>
+</body>
+</html>
