@@ -1,437 +1,760 @@
-/* research&extension.css - Enhanced with MS Teams style file display */
+/* research&extension.css - Medium-style Article Editor for Admin */
 
 .fa-bell, .fa-user {
   color: #822020;
 }
 
-/* POST ITEM */
-.researchextension-post {
-  background: #ffffff;
-  padding: 30px 25px;
-  border-radius: 10px;
-  margin-bottom: 15px;
-  box-shadow: 0 3px 10px rgba(63, 63, 63, 0.3);
-  width: 80%;
-  margin: auto;
-  color: #3e3e3e;
+/* ========================================
+   MEDIUM-STYLE POST MODAL
+   ======================================== */
+
+.post-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  justify-content: center;
+  align-items: flex-start;
+  overflow-y: auto;
 }
 
-.announce-post-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  padding: 8px;
+.post-modal-content {
+  background: white;
+  width: 100%;
+  max-width: 740px;
+  border-radius: 4px;
+  box-shadow: 0 2px 24px rgba(0, 0, 0, 0.15);
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Modal Header */
+.post-modal-content h2 {
+  padding: 10px 32px;
+  border-bottom: 1px solid #e8e8e8;
+  font-size: 25px;
+  font-weight: 500;
+  color: #292929;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Article Title Input */
+.post-title {
+  width: 100%;
+  padding: 32px 32px 16px;
   border: none;
-  border-bottom: 1px solid #ccc;
   outline: none;
-  background: #f7f7f7;
-  color: #000;
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1.2;
+  font-family: 'Playfair Display', 'Georgia', serif;
+  color: #242424;
+  resize: none;
+  min-height: auto;
+  background: transparent;
 }
 
-.announce-toolbar {
+.post-title::placeholder {
+  color: #b3b3b3;
+}
+
+/* Subtitle/Description */
+.post-subtitle {
+  width: 100%;
+  padding: 0 32px 24px;
+  border: none;
+  outline: none;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.4;
+  font-family: 'Inter', sans-serif;
+  color: #6b6b6b;
+  resize: none;
+  min-height: auto;
+  background: transparent;
+}
+
+.post-subtitle::placeholder {
+  color: #b3b3b3;
+}
+
+/* Toolbar */
+.post-toolbar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: #efefef;
-  padding: 6px 10px;
-  border-radius: 8px;
+  gap: 4px;
+  padding: 12px 32px;
+  border-top: 1px solid #f2f2f2;
+  border-bottom: 1px solid #f2f2f2;
+  background: #fafafa;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-.announce-toolbar button, 
-.announce-toolbar select {
+.post-toolbar button {
   background: none;
   border: none;
+  padding: 8px 10px;
   cursor: pointer;
-  color: #333;
-  font-size: 16px;
-}
-
-.announce-toolbar button:hover {
-  color: #3a6ea5;
-}
-
-/* BUTTON ACTIONS */
-.researchextension-actions {
+  color: #6b6b6b;
+  font-size: 18px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-bottom: 8px;
+  align-items: center;
+  justify-content: center;
 }
 
-.researchextension-actions button {
-  background: none;
-  border: none;
-  color: #aaa;
+.post-toolbar button:hover {
+  background: #e8e8e8;
+  color: #242424;
+}
+
+.post-toolbar button:active {
+  background: #d8d8d8;
+}
+
+.post-toolbar select {
+  padding: 6px 12px;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  background: white;
+  color: #292929;
+  font-size: 14px;
   cursor: pointer;
-  font-size: 1.3rem;
-  transition: color 0.2s ease;
+  outline: none;
+  transition: all 0.2s ease;
 }
 
-.researchextension-actions button:hover {
-  color: #1b4b75;
+.post-toolbar select:hover {
+  border-color: #b3b3b3;
 }
 
-/* --- File Upload Section Styles --- */
+.post-toolbar select:focus {
+  border-color: #292929;
+}
 
+/* Rich Text Editor */
+.post-editor {
+  min-height: 400px;
+  padding: 32px;
+  font-size: 21px;
+  line-height: 1.58;
+  font-family: 'Inter', 'Georgia', serif;
+  color: #242424;
+  outline: none;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.post-editor:empty:before {
+  content: attr(placeholder);
+  color: #b3b3b3;
+  cursor: text;
+}
+
+.post-editor p {
+  margin-bottom: 1.5em;
+}
+
+.post-editor h1,
+.post-editor h2,
+.post-editor h3 {
+  font-family: 'Playfair Display', 'Georgia', serif;
+  font-weight: 700;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.post-editor h1 {
+  font-size: 34px;
+  line-height: 1.15;
+}
+
+.post-editor h2 {
+  font-size: 28px;
+  line-height: 1.22;
+}
+
+.post-editor h3 {
+  font-size: 24px;
+  line-height: 1.25;
+}
+
+.post-editor strong {
+  font-weight: 700;
+}
+
+.post-editor em {
+  font-style: italic;
+}
+
+.post-editor a {
+  color: #242424;
+  text-decoration: underline;
+}
+
+/* File Upload Section */
 .file-upload-section {
-    margin-top: 15px;
-    margin-bottom: 15px;
-    border-top: 1px solid #eee;
-    padding-top: 15px;
+  margin: 15px 32px;
+  padding: 15px;
+  border: 2px dashed #9b0606;
+  border-radius: 8px;
+  background: #fafafa;
+  transition: all 0.2s ease;
+}
+
+.file-upload-section:hover {
+  border-color: #b3b3b3;
+  background: #f5f5f5;
 }
 
 #fileUpload {
-    display: none;
+  display: none;
 }
 
 .file-upload-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background-color: #f0f2f5;
-    color: #444;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    cursor: pointer;
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 24px;
+  background: white;
+  color: #292929;
+  border: 1px solid #e8e8e8;
+  border-radius: 24px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  width: fit-content;
+  margin: 0 auto;
 }
 
 .file-upload-label:hover {
-    background-color: #e4e6eb;
-    border-color: #bbb;
-    color: #222;
+  background: #f5f5f5;
+  border-color: #b3b3b3;
 }
 
 .file-upload-label i {
-    color: #666;
-    font-size: 14px;
+  color: #6b6b6b;
+  font-size: 16px;
 }
 
 .file-list {
-    margin-top: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .file-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #ffffff;
-    border: 1px solid #e0e0e0;
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-size: 13px;
-    color: #333;
-    animation: fadeIn 0.3s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  border: 1px solid #e8e8e8;
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #292929;
+  animation: fadeIn 0.3s ease;
+}
+
+.file-item i {
+  color: #6b6b6b;
+  margin-right: 12px;
 }
 
 .file-name {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 80%;
-    font-family: 'Inter', sans-serif;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: 'Inter', sans-serif;
 }
 
-.remove-file {
-    background: none;
-    border: none;
-    color: #ff4d4d;
-    cursor: pointer;
-    font-size: 16px;
-    padding: 0 5px;
-    transition: color 0.2s;
-    display: flex;
-    align-items: center;
+.file-size {
+  color: #6b6b6b;
+  font-size: 13px;
+  margin-left: 12px;
 }
 
 .remove-file-btn {
   border: none;
-  background-color: white;
-  cursor: pointer;
-}
-
-.remove-file:hover {
-    color: #cc0000;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-5px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* ========================================
-   MS TEAMS STYLE FILE DISPLAY IN POSTS
-   ======================================== */
-
-.post-files {
-    margin-top: 20px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-}
-
-/* Document File Item */
-.post-file-item.document {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    background: #f8f9fa;
-    border: 1px solid #e1e4e8;
-    border-radius: 8px;
-    width: 100%;
-    transition: all 0.2s ease;
-    cursor: pointer;
-}
-
-.post-file-item.document:hover {
-    background: #f0f2f5;
-    border-color: #d1d5db;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.post-file-item.document .file-icon {
-    font-size: 28px;
-    min-width: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.post-file-item.document .file-icon.fa-file-pdf {
-    color: #dc3545;
-}
-
-.post-file-item.document .file-icon.fa-file-word {
-    color: #2b579a;
-}
-
-.post-file-item.document .file-icon.fa-file-powerpoint {
-    color: #d24726;
-}
-
-.post-file-item.document .file-icon.fa-file-excel {
-    color: #217346;
-}
-
-.post-file-item.document .file-icon.fa-file-alt {
-    color: #6c757d;
-}
-
-.post-file-item.document .file-icon.fa-file {
-    color: #495057;
-}
-
-.post-file-item.document .file-details {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 0;
-}
-
-.post-file-item.document .file-details a {
-    color: #050505;
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 14px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    transition: color 0.2s;
-}
-
-.post-file-item.document .file-details a:hover {
-    color: #1b4b75;
-    text-decoration: underline;
-}
-
-.post-file-item.document .file-size {
-    color: #6c757d;
-    font-size: 12px;
-}
-
-/* Image File Item */
-.post-file-item.image {
-    position: relative;
-    width: 180px;
-    height: 180px;
-    border-radius: 8px;
-    overflow: hidden;
-    border: 1px solid #e1e4e8;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.post-file-item.image:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.post-file-item.image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.post-file-item.image .image-overlay {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
-    padding: 12px 10px 10px;
-    opacity: 0;
-    transition: opacity 0.2s ease;
-}
-
-.post-file-item.image:hover .image-overlay {
-    opacity: 1;
-}
-
-.post-file-item.image .image-overlay a {
-    color: white;
-    text-decoration: none;
-    font-size: 12px;
-    font-weight: 500;
-    display: block;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.post-file-item.image .image-overlay .file-size {
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 11px;
-    margin-top: 2px;
-}
-
-.post-file-item.image .download-icon {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: rgba(0, 0, 0, 0.6);
-    color: white;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.2s ease;
-}
-
-.post-file-item.image:hover .download-icon {
-    opacity: 1;
-}
-
-.post-file-item.image .download-icon:hover {
-    background: rgba(0, 0, 0, 0.8);
-}
-
-
-/* Actions container with dropdown */
-.ojt-actions,
-.nstp-actions,
-.researchextension-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-bottom: 8px;
-  position: relative;
-}
-
-/* Three-dot menu button */
-.post-menu-btn {
   background: none;
-  border: none;
-  color: #aaa;
+  color: #6b6b6b;
   cursor: pointer;
-  font-size: 1.3rem;
-  padding: 5px 10px;
+  padding: 4px 8px;
   border-radius: 4px;
   transition: all 0.2s ease;
 }
 
-.post-menu-btn:hover {
-  color: #1b4b75;
-  background: #f0f0f0;
+.remove-file-btn:hover {
+  background: #ffe0e0;
+  color: #d32f2f;
 }
 
-/* Dropdown menu container */
+/* Modal Actions */
+.post-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 15px 32px;
+  border-top: 1px solid #e8e8e8;
+}
+
+.post-modal-actions button {
+  padding: 10px 24px;
+  border-radius: 24px;
+  font-size: 15px;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+#cancelPost {
+  background: white;
+  color: #292929;
+  border: 1px solid #e8e8e8;
+}
+
+#cancelPost:hover {
+  background: #f5f5f5;
+}
+
+#submitPost {
+  background: #1a8917;
+  color: white;
+}
+
+#submitPost:hover {
+  background: #156d13;
+}
+
+/* Floating Post Button */
+.post-btn {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #1a8917;
+  color: white;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(26, 137, 23, 0.4);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.post-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(26, 137, 23, 0.5);
+}
+
+.post-btn i {
+  margin: 0;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+/* research&extension.css (Part 2) - Post Display */
+
+/* ========================================
+   POST FEED & CONTAINER
+   ======================================== */
+
+.post-container {
+  width: 100%;
+  min-height: calc(100vh - 100px);
+  background: #fafafa;
+  padding: 40px 20px;
+}
+
+.post-feed {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ========================================
+   ARTICLE POST ITEM
+   ======================================== */
+
+.researchextension-post {
+  background: white;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.researchextension-post:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* Post Actions Menu */
+.researchextension-actions {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+}
+
+.post-menu-btn {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #e8e8e8;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  color: #6b6b6b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+
+.post-menu-btn:hover {
+  background: white;
+  color: #292929;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
 .post-menu-dropdown {
   position: absolute;
   top: 100%;
   right: 0;
   background: white;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #e8e8e8;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  min-width: 150px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  min-width: 160px;
   z-index: 1000;
   overflow: hidden;
-  margin-top: 5px;
+  margin-top: 8px;
 }
 
-/* Dropdown menu buttons */
 .post-menu-dropdown button {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
   padding: 12px 16px;
   background: none;
   border: none;
-  color: #333;
+  color: #292929;
   cursor: pointer;
   font-size: 14px;
+  font-family: 'Inter', sans-serif;
   text-align: left;
   transition: background 0.2s ease;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.post-menu-dropdown button:last-child {
-  border-bottom: none;
 }
 
 .post-menu-dropdown button:hover {
-  background: #f8f9fa;
+  background: #f5f5f5;
 }
 
-.post-menu-dropdown .post-edit:hover {
-  background: #e3f2fd;
+.post-menu-dropdown .post-edit i {
   color: #1976d2;
 }
 
-.post-menu-dropdown .post-delete:hover {
-  background: #ffebee;
+.post-menu-dropdown .post-delete i {
   color: #d32f2f;
 }
 
-.post-menu-dropdown button i {
-  width: 16px;
+/* Post Content */
+.researchextension-post h1 {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.25;
+  font-family: 'Playfair Display', 'Georgia', serif;
+  color: #242424;
+  padding: 32px 32px 16px;
+  margin: 0;
+}
+
+.post-content {
+  font-size: 18px;
+  line-height: 1.6;
+  font-family: 'Inter', 'Georgia', serif;
+  color: #3e3e3e;
+  padding: 0 32px 24px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Post Files Display */
+.post-files {
+  padding: 0 32px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* Featured Image (first image in files) */
+.post-featured-image {
+  width: 100%;
+  height: 280px;
+  overflow: hidden;
+  position: relative;
+}
+
+.post-featured-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.researchextension-post:hover .post-featured-image img {
+  transform: scale(1.05);
+}
+
+/* Document Files */
+.post-file-item.document {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  flex: 1;
+  min-width: 200px;
+}
+
+.post-file-item.document:hover {
+  background: #f0f2f5;
+  border-color: #b3b3b3;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.post-file-item.document .file-icon {
+  font-size: 24px;
+  min-width: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.post-file-item.document .file-icon.fa-file-pdf {
+  color: #dc3545;
+}
+
+.post-file-item.document .file-icon.fa-file-word {
+  color: #2b579a;
+}
+
+.post-file-item.document .file-icon.fa-file-powerpoint {
+  color: #d24726;
+}
+
+.post-file-item.document .file-icon.fa-file-excel {
+  color: #217346;
+}
+
+.post-file-item.document .file-icon.fa-file-alt {
+  color: #6c757d;
+}
+
+.post-file-item.document .file-icon.fa-file {
+  color: #495057;
+}
+
+.post-file-item.document .file-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.post-file-item.document .file-details a {
+  color: #292929;
+  text-decoration: none;
+  font-weight: 500;
   font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.2s;
 }
 
-/* Research & Extension specific color */
-.researchextension-actions .post-menu-btn:hover {
-  color: #1b4b75;
+.post-file-item.document .file-details a:hover {
+  color: #1a8917;
 }
 
+.post-file-item.document .file-size {
+  color: #6b6b6b;
+  font-size: 12px;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Post Divider with Date */
+.post-divider {
+  padding: 16px 32px;
+  border-top: 1px solid #f2f2f2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #6b6b6b;
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+}
+
+.post-divider span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Placeholder State */
+.post-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+  color: #6b6b6b;
+}
+
+.post-placeholder i {
+  font-size: 64px;
+  color: #e8e8e8;
+  margin-bottom: 24px;
+}
+
+.post-placeholder h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #292929;
+  margin-bottom: 12px;
+  font-family: 'Playfair Display', 'Georgia', serif;
+}
+
+.post-placeholder p {
+  font-size: 16px;
+  color: #6b6b6b;
+  max-width: 400px;
+  line-height: 1.5;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
-    .post-file-item.image {
-        width: 150px;
-        height: 150px;
-    }
-    
-    .post-file-item.document {
-        padding: 10px 12px;
-    }
+  .post-modal-content {
+    width: 100%;
+    min-height: 100vh;
+    border-radius: 0;
+    margin: 0;
+  }
+
+  .post-title {
+    font-size: 32px;
+    padding: 24px 20px 12px;
+  }
+
+  .post-subtitle {
+    font-size: 18px;
+    padding: 0 20px 20px;
+  }
+
+  .post-toolbar {
+    padding: 12px 20px;
+    gap: 2px;
+  }
+
+  .post-toolbar button {
+    padding: 6px 8px;
+    font-size: 16px;
+  }
+
+  .post-editor {
+    padding: 20px;
+    font-size: 18px;
+  }
+
+  .file-upload-section {
+    margin: 20px;
+    padding: 20px;
+  }
+
+  .post-modal-actions {
+    padding: 20px;
+  }
+
+  .researchextension-post h1 {
+    font-size: 24px;
+    padding: 24px 20px 12px;
+  }
+
+  .post-content {
+    font-size: 16px;
+    padding: 0 20px 20px;
+  }
+
+  .post-files {
+    padding: 0 20px 20px;
+  }
+
+  .post-divider {
+    padding: 12px 20px;
+    font-size: 13px;
+  }
+
+  .post-featured-image {
+    height: 200px;
+  }
+
+  .post-btn {
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
 }

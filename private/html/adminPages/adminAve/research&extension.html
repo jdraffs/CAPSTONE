@@ -1,18 +1,17 @@
-<!-- research&extension.html  -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Research & Extension - PUP Parañaque Admin</title>
     <link rel="stylesheet" href="/private/css/pages/research&extension.css">
     <link rel="stylesheet" href="/private/css/layout/post.css">
     <link rel="stylesheet" href="/private/css/layout/dashboardsidebar.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-        <!--SIDEBAR-->
+    <!--SIDEBAR-->
     <section class="sidebar">
         <div class="logo">
             <img class="logoimage" src="/public/assets/images/PUPLogo.webp" alt="PUP Logo">
@@ -76,8 +75,7 @@
                     </li>
                 </ul>
             </div>
-            </div> <!-- End of sidebar-scroll -->
-
+            </div>
 
             <div class="sidebar-footer">
                 <div class="user-info">
@@ -92,7 +90,7 @@
         </nav>
     </section>
 
-        <!--MAIN CONTENT-->
+    <!--MAIN CONTENT-->
     <main class="main">
         <!--TOP-->
         <header class="dashboard-header">
@@ -112,70 +110,94 @@
                 </div>
             </div>
         </header>
-            <!--DASHBOARD CONTENT-->
-            <div class="main-content" id="mainContent">
-                
-                <div class="post-container">
-                    <div class="post-feed" id="postFeed">
-                        <div class="post-placeholder">
 
-                        </div>
+        <!--DASHBOARD CONTENT-->
+        <div class="main-content" id="mainContent">
+            <div class="post-container">
+                <div class="post-feed" id="postFeed">
+                    <div class="post-placeholder">
+                        <i class="fa-solid fa-newspaper"></i>
+                        <h2>No articles yet</h2>
+                        <p>Start writing your first Research & Extension article.</p>
                     </div>
+                </div>
 
-                    <!-- Post Button -->
-                    <button class="post-btn" id="openPostModal">
-                        <i class="fa-solid fa-plus"></i> Post
-                    </button>
+                <!-- Floating Post Button -->
+                <button class="post-btn" id="openPostModal">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
 
-                    <!-- Post Modal -->
-                    <div class="post-modal" id="postModal">
+                <!-- Post Modal - Medium Style -->
+                <div class="post-modal" id="postModal">
                     <div class="post-modal-content">
-                        <h2>Create a Post</h2>
+                        <h2>Write an Article</h2>
 
                         <!-- Title Input -->
-                        <input type="text" id="postTitle" placeholder="Enter title..." class="post-title" />
+                        <input 
+                            type="text" 
+                            id="postTitle" 
+                            placeholder="Article Title" 
+                            class="post-title" 
+                        />
 
                         <!-- Toolbar -->
                         <div class="post-toolbar">
-                        <button data-command="bold"><i class="fa-solid fa-bold"></i></button>
-                        <button data-command="italic"><i class="fa-solid fa-italic"></i></button>
-                        <button data-command="underline"><i class="fa-solid fa-underline"></i></button>
-                        <button data-command="highlight"><i class="fa-solid fa-highlighter"></i></button>
-                        <select id="fontSize">
-                            <option value="3">Normal</option>
-                            <option value="4">Large</option>
-                            <option value="5">Larger</option>
-                            <option value="6">Huge</option>
-                        </select>
+                            <button data-command="bold" title="Bold">
+                                <i class="fa-solid fa-bold"></i>
+                            </button>
+                            <button data-command="italic" title="Italic">
+                                <i class="fa-solid fa-italic"></i>
+                            </button>
+                            <button data-command="underline" title="Underline">
+                                <i class="fa-solid fa-underline"></i>
+                            </button>
+                            <button data-command="highlight" title="Highlight">
+                                <i class="fa-solid fa-highlighter"></i>
+                            </button>
+                            <select id="fontSize" title="Font Size">
+                                <option value="3">Normal</option>
+                                <option value="4">Large</option>
+                                <option value="5">Larger</option>
+                                <option value="6">Huge</option>
+                            </select>
                         </div>
 
                         <!-- Rich Text Area -->
-                        <div id="postText" class="post-editor" contenteditable="true" placeholder="Write your post..."></div>
+                        <div 
+                            id="postText" 
+                            class="post-editor" 
+                            contenteditable="true" 
+                            placeholder="Tell your story..."
+                        ></div>
 
                         <!-- File Upload -->
                         <div class="file-upload-section">
-                          <label for="fileUpload" class="file-upload-label">
-                            <i class="fa fa-paperclip"></i> Attach Files (Max 3)
-                          </label>
-                          <input type="file" id="fileUpload" multiple accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.webp,.txt">
-                          <div id="fileList" class="file-list"></div>
+                            <label for="fileUpload" class="file-upload-label">
+                                <i class="fa fa-paperclip"></i> Attach Files (Max 3)
+                            </label>
+                            <input 
+                                type="file" 
+                                id="fileUpload" 
+                                multiple 
+                                accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.webp,.txt"
+                            >
+                            <div id="fileList" class="file-list"></div>
                         </div>
 
                         <!-- Buttons -->
                         <div class="post-modal-actions">
-                        <button id="cancelPost">Cancel</button>
-                        <button id="submitPost">Post</button>
+                            <button id="cancelPost">Cancel</button>
+                            <button id="submitPost">Publish</button>
                         </div>
                     </div>
-                    </div>
-
                 </div>
-
             </div>
+        </div>
     </main>
+
     <!-- SCRIPTS -->
-<script src="/private/js/admin/admin1/admin1.js"></script>
-<script src="/private/js/admin/profileFunction.js"></script>
-<script src="/private/js/admin/admin1/research&extension.js"></script>
+    <script src="/private/js/admin/admin1/admin1.js"></script>
+    <script src="/private/js/admin/profileFunction.js"></script>
+    <script src="/private/js/admin/admin1/research&extension.js"></script>
 </body>
 </html>
