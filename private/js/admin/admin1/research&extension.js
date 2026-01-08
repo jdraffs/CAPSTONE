@@ -1,167 +1,176 @@
-// research&extension.js - Medium-style Article Editor for Admin
+// research&extension.js - Updated with single thumbnail support
 const openBtn = document.getElementById('openPostModal');
 const modal = document.getElementById('postModal');
+const closeModalBtn = document.getElementById('closeModalBtn');
 const cancelBtn = document.getElementById('cancelPost');
 const submitBtn = document.getElementById('submitPost');
 const feed = document.getElementById('postFeed');
 const postTitle = document.getElementById('postTitle');
 const postText = document.getElementById('postText');
-const fileUpload = document.getElementById('fileUpload');
-const fileListContainer = document.getElementById('fileList');
-const toolbarButtons = document.querySelectorAll('.post-toolbar button');
+const thumbnailInput = document.getElementById('thumbnailInput');
+const thumbnailUploadArea = document.getElementById('thumbnailUploadArea');
+const thumbnailPlaceholder = document.getElementById('thumbnailPlaceholder');
+const thumbnailPreview = document.getElementById('thumbnailPreview');
+const thumbnailImage = document.getElementById('thumbnailImage');
+const changeThumbnailBtn = document.getElementById('changeThumbnailBtn');
+const removeThumbnailBtn = document.getElementById('removeThumbnailBtn');
+const toolbarButtons = document.querySelectorAll('.post-toolbar button[data-command]');
 const fontSizeSelect = document.getElementById('fontSize');
 
 let editingPostId = null;
-let selectedFiles = [];
-let existingFiles = [];
+let thumbnailFile = null;
+let existingThumbnailId = null;
 
 // Open modal for new post
 openBtn.addEventListener('click', () => {
   modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
   postTitle.focus();
-  submitBtn.textContent = 'Publish';
+  submitBtn.textContent = 'Publish Article';
   editingPostId = null;
-  selectedFiles = [];
-  existingFiles = [];
-  updateFileList();
+  resetThumbnail();
+  updateSubmitButton();
 });
 
-// Close modal
-cancelBtn.addEventListener('click', () => {
+// Close modal handlers
+closeModalBtn.addEventListener('click', closeModal);
+cancelBtn.addEventListener('click', closeModal);
+
+function closeModal() {
   modal.style.display = 'none';
+  document.body.style.overflow = 'auto';
   clearForm();
+}
+
+// Close modal on outside click
+window.addEventListener('click', e => {
+  if (e.target === modal) {
+    closeModal();
+  }
 });
 
 // Clear form
 function clearForm() {
   postTitle.value = '';
   postText.innerHTML = '';
-  fileUpload.value = '';
-  selectedFiles = [];
-  existingFiles = [];
-  updateFileList();
+  resetThumbnail();
   editingPostId = null;
+  existingThumbnailId = null;
 }
 
-// Handle file uploads
-fileUpload.addEventListener('change', (e) => {
-  const newFiles = Array.from(e.target.files);
-  const totalFiles = selectedFiles.length + existingFiles.length + newFiles.length;
+// ========================================
+// THUMBNAIL HANDLING
+// ========================================
+
+// Click on upload area to trigger file input
+thumbnailUploadArea.addEventListener('click', (e) => {
+  if (e.target.closest('.thumbnail-change-btn') || e.target.closest('.thumbnail-remove-btn')) {
+    return; // Don't trigger if clicking action buttons
+  }
+  thumbnailInput.click();
+});
+
+// Handle thumbnail selection
+thumbnailInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
   
-  if (totalFiles > 3) {
-    alert('You can only upload up to 3 files per article.');
-    fileUpload.value = '';
+  if (!file) return;
+  
+  // Validate file type
+  const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+  if (!validTypes.includes(file.type)) {
+    alert('Please select a valid image file (JPG, PNG, WEBP, or GIF)');
+    thumbnailInput.value = '';
     return;
   }
   
-  selectedFiles = [...selectedFiles, ...newFiles];
-  fileUpload.value = '';
-  updateFileList();
+  // Validate file size (5MB max)
+  if (file.size > 5 * 1024 * 1024) {
+    alert('Image size must be less than 5MB');
+    thumbnailInput.value = '';
+    return;
+  }
+  
+  thumbnailFile = file;
+  previewThumbnail(file);
+  updateSubmitButton();
 });
 
-// Sort files: images first, then documents
-function sortFilesByType(files) {
-  return files.sort((a, b) => {
-    const aIsImage = isImageFile(a.file_type || a.type);
-    const bIsImage = isImageFile(b.file_type || b.type);
-    
-    if (aIsImage && !bIsImage) return -1;
-    if (!aIsImage && bIsImage) return 1;
-    return 0;
-  });
-}
-
-// Update file list display
-function updateFileList() {
-  fileListContainer.innerHTML = '';
+// Preview thumbnail image
+function previewThumbnail(file) {
+  const reader = new FileReader();
   
-  const allFiles = [
-    ...existingFiles.map((file, index) => ({ ...file, isExisting: true, originalIndex: index })),
-    ...selectedFiles.map((file, index) => ({ ...file, isExisting: false, originalIndex: index }))
-  ];
+  reader.onload = (e) => {
+    thumbnailImage.src = e.target.result;
+    thumbnailPlaceholder.style.display = 'none';
+    thumbnailPreview.style.display = 'block';
+  };
   
-  const sortedFiles = sortFilesByType(allFiles);
+  reader.readAsDataURL(file);
+}
+
+// Change thumbnail button
+changeThumbnailBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  thumbnailInput.click();
+});
+
+// Remove thumbnail button
+removeThumbnailBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  resetThumbnail();
+  updateSubmitButton();
+});
+
+// Reset thumbnail to initial state
+function resetThumbnail() {
+  thumbnailFile = null;
+  existingThumbnailId = null;
+  thumbnailInput.value = '';
+  thumbnailImage.src = '';
+  thumbnailPlaceholder.style.display = 'flex';
+  thumbnailPreview.style.display = 'none';
+}
+
+// Update submit button state
+function updateSubmitButton() {
+  const hasTitle = postTitle.value.trim().length > 0;
+  const hasContent = postText.innerHTML.trim().length > 0;
+  const hasThumbnail = thumbnailFile !== null || existingThumbnailId !== null;
   
-  sortedFiles.forEach((file) => {
-    const fileItem = document.createElement('div');
-    fileItem.className = 'file-item';
-    
-    const fileName = file.file_name || file.name;
-    const fileSize = file.file_size || file.size;
-    const fileType = file.file_type || file.type;
-    
-    fileItem.innerHTML = `
-      <i class="fa ${getFileIcon(fileType)}"></i>
-      <span class="file-name">${fileName}</span>
-      <span class="file-size">${formatFileSize(fileSize)}</span>
-      <button type="button" class="remove-file-btn" ${file.isExisting ? `data-existing-index="${file.originalIndex}"` : `data-new-index="${file.originalIndex}"`}>
-        <i class="fa fa-times"></i>
-      </button>
-    `;
-    fileListContainer.appendChild(fileItem);
-  });
-  
-  // Add remove handlers
-  document.querySelectorAll('.remove-file-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      const existingIndex = btn.dataset.existingIndex;
-      const newIndex = btn.dataset.newIndex;
-      
-      if (existingIndex !== undefined) {
-        existingFiles.splice(parseInt(existingIndex), 1);
-      } else if (newIndex !== undefined) {
-        selectedFiles.splice(parseInt(newIndex), 1);
-      }
-      
-      updateFileList();
-    });
-  });
+  submitBtn.disabled = !(hasTitle && hasContent && hasThumbnail);
 }
 
-// Get file icon based on MIME type
-function getFileIcon(mimeType) {
-  if (mimeType.includes('pdf')) return 'fa-file-pdf';
-  if (mimeType.includes('word')) return 'fa-file-word';
-  if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) return 'fa-file-powerpoint';
-  if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'fa-file-excel';
-  if (mimeType.includes('image')) return 'fa-file-image';
-  if (mimeType.includes('text')) return 'fa-file-alt';
-  return 'fa-file';
-}
+// Monitor form changes
+postTitle.addEventListener('input', updateSubmitButton);
+postText.addEventListener('input', updateSubmitButton);
 
-// Check if file is an image
-function isImageFile(mimeType) {
-  return mimeType && mimeType.includes('image/');
-}
+// ========================================
+// RICH TEXT EDITING TOOLBAR
+// ========================================
 
-// Format file size
-function formatFileSize(bytes) {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-}
-
-// Rich text editing toolbar
 toolbarButtons.forEach(button => {
-  button.addEventListener('click', () => {
+  button.addEventListener('click', (e) => {
+    e.preventDefault();
     const command = button.getAttribute('data-command');
     if (command === 'highlight') {
       document.execCommand('backColor', false, 'yellow');
     } else {
       document.execCommand(command, false, null);
     }
+    postText.focus();
   });
 });
 
-// Font size selector
 fontSizeSelect.addEventListener('change', () => {
   document.execCommand('fontSize', false, fontSizeSelect.value);
+  postText.focus();
 });
 
-// Submit post (create or update)
+// ========================================
+// SUBMIT POST (CREATE OR UPDATE)
+// ========================================
+
 submitBtn.addEventListener('click', async (e) => {
   e.preventDefault();
   
@@ -172,19 +181,25 @@ submitBtn.addEventListener('click', async (e) => {
     alert('Please add both a title and content for your article.');
     return;
   }
+  
+  if (!thumbnailFile && !existingThumbnailId) {
+    alert('Please add a thumbnail image for your article.');
+    return;
+  }
 
   const formData = new FormData();
   formData.append('title', title);
   formData.append('content', content);
   formData.append('adminid', 'adminave');
 
-  selectedFiles.forEach(file => {
-    formData.append('files', file);
-  });
+  // Only append thumbnail if a new one was selected
+  if (thumbnailFile) {
+    formData.append('thumbnail', thumbnailFile);
+  }
   
-  if (editingPostId) {
-    const keepFileIds = existingFiles.map(f => f.id);
-    formData.append('keepFiles', JSON.stringify(keepFileIds));
+  // If editing and keeping existing thumbnail
+  if (editingPostId && existingThumbnailId && !thumbnailFile) {
+    formData.append('keepThumbnail', existingThumbnailId);
   }
 
   let url = '';
@@ -198,6 +213,10 @@ submitBtn.addEventListener('click', async (e) => {
     method = 'POST';
   }
 
+  // Show loading state
+  submitBtn.disabled = true;
+  submitBtn.textContent = editingPostId ? 'Updating...' : 'Publishing...';
+
   try {
     const res = await fetch(url, {
       method,
@@ -207,40 +226,32 @@ submitBtn.addEventListener('click', async (e) => {
     const data = await res.json();
 
     if (data.success) {
-      clearForm();
-      modal.style.display = 'none';
+      closeModal();
       loadPosts();
     } else {
-      alert('Something went wrong while saving your article.');
+      alert(data.message || 'Something went wrong while saving your article.');
     }
   } catch (err) {
     console.error('Error submitting article:', err);
     alert('Error submitting article. Please try again.');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = editingPostId ? 'Update Article' : 'Publish Article';
   }
 });
 
-// Close modal on outside click
-window.addEventListener('click', e => {
-  if (e.target === modal) {
-    modal.style.display = 'none';
-  }
-});
+// ========================================
+// LOAD AND DISPLAY POSTS
+// ========================================
 
-// Extract text preview from HTML content
-function extractTextPreview(htmlContent, maxLength = 200) {
-  const temp = document.createElement('div');
-  temp.innerHTML = htmlContent;
-  const text = temp.textContent || temp.innerText || '';
-  return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
-}
-
-// Load and display posts
 async function loadPosts() {
-  feed.innerHTML = '';
+  feed.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
   
   try {
     const res = await fetch('http://localhost:3000/api/researchextension/posts');
     const data = await res.json();
+
+    feed.innerHTML = '';
 
     if (data.success && data.posts.length > 0) {
       data.posts.forEach(post => {
@@ -248,48 +259,15 @@ async function loadPosts() {
         postElem.classList.add('researchextension-post');
         postElem.dataset.id = post.id;
 
-        // Get featured image (first image file) if available
-        let featuredImageHtml = '';
-        let documentFilesHtml = '';
-        
-        if (post.files && post.files.length > 0) {
-          const sortedFiles = sortFilesByType([...post.files]);
-          const images = sortedFiles.filter(f => isImageFile(f.file_type));
-          const documents = sortedFiles.filter(f => !isImageFile(f.file_type));
-          
-          // Featured image
-          if (images.length > 0) {
-            const firstImage = images[0];
-            featuredImageHtml = `
-              <div class="post-featured-image">
-                <img src="http://localhost:3000${firstImage.file_path}" alt="${post.title}">
-              </div>
-            `;
-          }
-          
-          // Document files
-          if (documents.length > 0) {
-            documentFilesHtml = '<div class="post-files">';
-            documents.forEach(file => {
-              const icon = getFileIcon(file.file_type);
-              documentFilesHtml += `
-                <div class="post-file-item document">
-                  <i class="fa ${icon} file-icon"></i>
-                  <div class="file-details">
-                    <a href="http://localhost:3000${file.file_path}" target="_blank" download="${file.file_name}">
-                      ${file.file_name}
-                    </a>
-                    <span class="file-size">${formatFileSize(file.file_size)}</span>
-                  </div>
-                </div>
-              `;
-            });
-            documentFilesHtml += '</div>';
-          }
-        }
+        // Extract text preview from HTML content
+        const preview = extractTextPreview(post.content, 150);
 
-        // Extract preview text
-        const preview = extractTextPreview(post.content);
+        // Format date
+        const postDate = new Date(post.created_at).toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        });
 
         postElem.innerHTML = `
           <div class="researchextension-actions">
@@ -297,16 +275,26 @@ async function loadPosts() {
               <i class="fa-solid fa-ellipsis-v"></i>
             </button>
             <div class="post-menu-dropdown" style="display: none;">
-              <button class="post-edit"><i class="fa-solid fa-pen"></i> Edit</button>
-              <button class="post-delete"><i class="fa-solid fa-trash"></i> Delete</button>
+              <button class="post-edit"><i class="fa-solid fa-pen"></i> Edit Article</button>
+              <button class="post-delete"><i class="fa-solid fa-trash"></i> Delete Article</button>
             </div>
           </div>
-          ${featuredImageHtml}
-          <h1>${post.title}</h1>
-          <div class="post-content">${preview}</div>
-          ${documentFilesHtml}
-          <div class="post-divider">
-            <span><i class="fa fa-clock"></i> ${new Date(post.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+          <div class="post-thumbnail">
+            <img src="http://localhost:3000${post.thumbnail_path}" alt="${post.title}">
+          </div>
+          <div class="post-content-area">
+            <h1>${post.title}</h1>
+            <div class="post-content">${preview}</div>
+            <div class="post-meta">
+              <div class="post-meta-item">
+                <i class="fa fa-calendar"></i>
+                <span>${postDate}</span>
+              </div>
+              <div class="post-meta-item">
+                <i class="fa fa-user"></i>
+                <span>Admin</span>
+              </div>
+            </div>
           </div>
         `;
 
@@ -334,11 +322,19 @@ async function loadPosts() {
           editingPostId = post.id;
           postTitle.value = post.title;
           postText.innerHTML = post.content;
-          existingFiles = post.files || [];
-          selectedFiles = [];
-          updateFileList();
+          
+          // Load existing thumbnail
+          if (post.thumbnail_id && post.thumbnail_path) {
+            existingThumbnailId = post.thumbnail_id;
+            thumbnailImage.src = `http://localhost:3000${post.thumbnail_path}`;
+            thumbnailPlaceholder.style.display = 'none';
+            thumbnailPreview.style.display = 'block';
+          }
+          
           submitBtn.textContent = 'Update Article';
           modal.style.display = 'flex';
+          document.body.style.overflow = 'hidden';
+          updateSubmitButton();
         });
 
         // Delete handler
@@ -346,7 +342,7 @@ async function loadPosts() {
           e.stopPropagation();
           dropdown.style.display = 'none';
           
-          if (confirm('Are you sure you want to delete this article and all its attachments?')) {
+          if (confirm('Are you sure you want to delete this article and its thumbnail?')) {
             try {
               const response = await fetch(`http://localhost:3000/api/researchextension/delete/${post.id}`, { 
                 method: 'DELETE' 
@@ -379,13 +375,21 @@ async function loadPosts() {
   } catch (err) {
     console.error('Error loading articles:', err);
     feed.innerHTML = `
-      <div class="post-placeholder">
+      <div class="error-message">
         <i class="fa-solid fa-exclamation-triangle"></i>
-        <h2>Error loading articles</h2>
+        <h3>Error loading articles</h3>
         <p>Please refresh the page and try again.</p>
       </div>
     `;
   }
+}
+
+// Extract text preview from HTML content
+function extractTextPreview(htmlContent, maxLength = 200) {
+  const temp = document.createElement('div');
+  temp.innerHTML = htmlContent;
+  const text = temp.textContent || temp.innerText || '';
+  return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
 }
 
 // Load posts on page load

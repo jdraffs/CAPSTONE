@@ -289,7 +289,7 @@
 }
 
 .article-modal-content {
-    max-width: 740px;
+    max-width: 1100px;
     margin: 40px auto;
     background: white;
     border-radius: 4px;
@@ -373,12 +373,17 @@
     width: 100%;
     max-height: 500px;
     overflow: hidden;
+    display: flex; /* Added */
+    align-items: center; /* Added */
+    justify-content: center; /* Added */
+    background: #f0f0f0; /* Added fallback */
 }
 
 .article-full-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center center; /* CRITICAL FIX - Centers the image */
 }
 
 /* Full Article Body */
