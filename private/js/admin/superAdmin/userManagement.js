@@ -36,15 +36,13 @@ async function initializeUserManagement() {
     loadUsers()
   ]);
   
-  // ADD THIS DEBUG LOG HERE - AFTER LOADING
-  console.log('✅ User Management System Loaded Successfully');
-  console.log('👤 Current Admin:', currentAdminId);
-  console.log('📊 Roles Loaded:', roles.length);
-  console.log('👥 Users Loaded:', allUsers.length);
-  console.log('📋 Full Roles Array:', roles);
+  console.log('🔍 After loading - allUsers:', allUsers.length);
+  console.log('🔍 After loading - roles:', roles.length);
   
   // STEP 2: Inject HTML
   injectHTML();
+  
+  console.log('🔍 After HTML injection - usersTableBody exists:', !!document.getElementById('usersTableBody'));
   
   // STEP 3: Attach event listeners
   attachEventListeners();
@@ -52,6 +50,14 @@ async function initializeUserManagement() {
   // STEP 4: Update UI
   updateStats();
   filterAndDisplayUsers();
+  
+  console.log('🔍 After filterAndDisplayUsers - filteredUsers:', filteredUsers.length);
+  
+  console.log('✅ User Management System Loaded Successfully');
+  console.log('👤 Current Admin:', currentAdminId);
+  console.log('📊 Roles Loaded:', roles.length);
+  console.log('👥 Users Loaded:', allUsers.length);
+  console.log('📋 Full Roles Array:', roles);
 }
 
 
@@ -324,7 +330,13 @@ async function loadUsers() {
     if (!response.ok) throw new Error('Failed to fetch users');
 
     const data = await response.json();
-    allUsers = data.users || [];
+    
+    console.log('🔍 RAW API RESPONSE:', data);
+    
+    // ✅ FIX: Handle both response formats
+    allUsers = Array.isArray(data) ? data : (data.users || []);
+    
+    console.log('📊 Users fetched:', allUsers.length);
     
     // Enrich users with role information
     allUsers = allUsers.map(user => {
@@ -337,13 +349,17 @@ async function loadUsers() {
       };
     });
     
-    // DON'T call these here - they'll be called after HTML is injected
-    // updateStats();
-    // filterAndDisplayUsers();
+    // Only update display if HTML elements exist
+    if (document.getElementById('usersTableBody')) {
+      updateStats();
+      filterAndDisplayUsers();
+    }
     
   } catch (error) {
     console.error('Error loading users:', error);
-    showError('Failed to load users. Please try again.');
+    if (document.getElementById('usersTableBody')) {
+      showError('Failed to load users. Please try again.');
+    }
   }
 }
 
@@ -372,7 +388,8 @@ function updateStats() {
 // FILTER & DISPLAY
 
 function filterAndDisplayUsers() {
-  const selectedRoleId = document.getElementById('roleFilter').value;
+  const roleFilterEl = document.getElementById('roleFilter');
+  const selectedRoleId = roleFilterEl ? roleFilterEl.value : '';
   
   // Apply status filter
   filteredUsers = allUsers.filter(user => {
@@ -409,6 +426,11 @@ function filterAndDisplayUsers() {
 
 function displayUsers() {
   const tbody = document.getElementById('usersTableBody');
+
+  console.log('🔍 displayUsers called');
+  console.log('🔍 tbody exists:', !!tbody);
+  console.log('🔍 filteredUsers length:', filteredUsers.length);
+  console.log('🔍 filteredUsers:', filteredUsers);
   
   if (filteredUsers.length === 0) {
     tbody.innerHTML = `
@@ -1050,6 +1072,8 @@ async function handleCreateUser(e) {
 
     showToast(`User "${username}" created successfully`, 'success');
     closeModal();
+    
+
     await loadUsers();
 
   } catch (error) {

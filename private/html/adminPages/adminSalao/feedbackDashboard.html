@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Feedback Dashboard - SuperAdmin</title>
+    <link rel="stylesheet" href="/private/css/pages/feedbackDashboard.css">
+    <link rel="stylesheet" href="/private/css/layout/dashboardsidebar.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!--SIDEBAR-->
+    <section class="sidebar">
+        <div class="logo">
+            <img class="logoimage" src="/public/assets/images/PUPLogo.webp" alt="PUP Logo">
+            <div class="logotitlewrap">
+                <h2 class="logotitle logotitle1">PUP</h2>
+                <h2 class="logotitle">Parañaque</h2>
+            </div>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <nav class="sidebar-nav">
+            <div class="sidebar-scroll">
+                <div class="nav-section">
+                    <h3 class="nav-title">Main</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/adminSalao/superAdmin.html">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <h3 class="nav-title">Management</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/adminSalao/analyticsDashboard.html">
+                                <i class="fa-solid fa-chart-line"></i>
+                                <span>Analytics Dashboard</span>
+                            </a>
+                        </li>
+                    </ul>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/adminSalao/userManagement.html">
+                                <i class="fa-solid fa-copy"></i>
+                                <span>User Management</span>
+                            </a>
+                        </li>
+                    </ul>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/adminSalao/roleManagement.html">
+                                <i class="fa-solid fa-box-archive"></i>
+                                <span>Role Management</span>
+                            </a>
+                        </li>
+                    </ul>
+                    <ul class="nav-list">
+                        <li class="nav-item active">
+                            <a class="nav-link" href="/private/html/adminPages/adminSalao/feedbackDashboard.html">
+                                <i class="fa-solid fa-comments"></i>
+                                <span>Service Feedback</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-details">
+                        <span class="user-name">SuperAdmin</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </section>
+    
+    <!--MAIN CONTENT-->
+    <main class="main">
+        <header class="dashboard-header">
+            <div class="header-left">
+                <h1 class="page-title">Service Feedback Dashboard</h1>
+            </div>
+            <div class="header-right">
+                <button class="refresh-btn" id="refreshDashboard" title="Refresh Dashboard">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <div class="notification-button">
+                    <a class="notif-link" href="#notifications">
+                        <i class="fa fa-bell" aria-hidden="true"></i>
+                        <span class="notification-badge" id="notificationBadge">0</span>
+                    </a>
+                </div>
+                <div class="profile-button">
+                    <a class="profile-link">
+                        <i class="fa fa-user" aria-hidden="true"></i>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <div class="dashboard-content">
+            <!-- Summary Cards -->
+            <section class="summary-section">
+                <div class="summary-grid">
+                    <div class="summary-card gradient-blue">
+                        <div class="summary-icon"><i class="fas fa-comments"></i></div>
+                        <div class="summary-content">
+                            <h3 id="totalFeedback">0</h3>
+                            <p>Total Feedback</p>
+                            <small class="summary-subtext">All time</small>
+                        </div>
+                    </div>
+
+                    <div class="summary-card gradient-green">
+                        <div class="summary-icon"><i class="fas fa-star"></i></div>
+                        <div class="summary-content">
+                            <h3 id="averageRating">0.0</h3>
+                            <p>Average Rating</p>
+                            <small class="summary-subtext">Across all departments</small>
+                        </div>
+                    </div>
+
+                    <div class="summary-card gradient-orange">
+                        <div class="summary-icon"><i class="fas fa-clock"></i></div>
+                        <div class="summary-content">
+                            <h3 id="recentFeedback">0</h3>
+                            <p>Recent Feedback</p>
+                            <small class="summary-subtext">Last 7 days</small>
+                        </div>
+                    </div>
+
+                    <div class="summary-card gradient-red">
+                        <div class="summary-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                        <div class="summary-content">
+                            <h3 id="criticalAlerts">0</h3>
+                            <p>Critical Alerts</p>
+                            <small class="summary-subtext">Ratings ≤ 2 stars</small>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Filters & Controls -->
+            <section class="controls-section">
+                <div class="controls-container">
+                    <div class="filter-group">
+                        <select id="departmentFilter" class="filter-select">
+                            <option value="">All Departments</option>
+                        </select>
+
+                        <select id="ratingFilter" class="filter-select">
+                            <option value="">All Ratings</option>
+                            <option value="5">5 Stars</option>
+                            <option value="4">4 Stars</option>
+                            <option value="3">3 Stars</option>
+                            <option value="2">2 Stars</option>
+                            <option value="1">1 Star</option>
+                        </select>
+
+                        <select id="timeFilter" class="filter-select">
+                            <option value="">All Time</option>
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
+
+                        <button class="btn-clear" id="clearFilters">
+                            <i class="fas fa-times"></i> Clear Filters
+                        </button>
+                    </div>
+
+                    <div class="action-group">
+                        <button class="btn-export" id="exportCSV">
+                            <i class="fas fa-file-csv"></i> Export CSV
+                        </button>
+                        <button class="btn-export" id="exportPDF">
+                            <i class="fas fa-file-pdf"></i> Export PDF
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Custom Date Range (Hidden by default) -->
+                <div class="date-range-container" id="dateRangeContainer" style="display: none;">
+                    <input type="date" id="startDate" class="date-input">
+                    <span>to</span>
+                    <input type="date" id="endDate" class="date-input">
+                    <button class="btn-apply" id="applyDateRange">Apply</button>
+                </div>
+            </section>
+
+            <!-- Content Grid -->
+            <div class="content-grid">
+                <!-- Left Column -->
+                <div class="left-column">
+                    <!-- Department Performance -->
+                    <section class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-building"></i> Department Performance</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="departmentPerformance" class="department-list">
+                                <div class="loading-state">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <p>Loading department data...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Rating Distribution -->
+                    <section class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-chart-bar"></i> Rating Distribution</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="ratingDistribution" class="rating-bars">
+                                <!-- Rating bars will be inserted here -->
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Service Criteria Breakdown -->
+                    <section class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-sliders-h"></i> Service Criteria Scores</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="criteriaBreakdown" class="criteria-chart">
+                                <!-- Criteria scores will be inserted here -->
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Right Column -->
+                <div class="right-column">
+                    <!-- Satisfaction Trends -->
+                    <section class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-chart-line"></i> Monthly Satisfaction Trends</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="trendChart" class="trend-container">
+                                <!-- Chart will be inserted here -->
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Recent Feedback -->
+                    <section class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-comment-dots"></i> Recent Feedback</h3>
+                            <button class="btn-view-all" id="viewAllFeedback">View All</button>
+                        </div>
+                        <div class="card-body">
+                            <div id="recentFeedbackList" class="feedback-list">
+                                <div class="loading-state">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <p>Loading feedback...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Critical Alerts -->
+                    <section class="card alert-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-exclamation-circle"></i> Critical Alerts</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="criticalAlertsList" class="alerts-list">
+                                <!-- Alerts will be inserted here -->
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Feedback Details Modal -->
+    <div id="feedbackModal" class="modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3><i class="fas fa-comment-dots"></i> Feedback Details</h3>
+                <button class="modal-close" id="closeFeedbackModal">&times;</button>
+            </div>
+            <div class="modal-body" id="feedbackModalBody">
+                <!-- Content will be inserted dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- All Feedback Modal -->
+    <div id="allFeedbackModal" class="modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-container large">
+            <div class="modal-header">
+                <h3><i class="fas fa-list"></i> All Feedback</h3>
+                <button class="modal-close" id="closeAllFeedbackModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-filters">
+                    <input type="text" id="modalSearchInput" placeholder="Search feedback..." class="modal-search">
+                    <select id="modalDepartmentFilter" class="modal-filter-select">
+                        <option value="">All Departments</option>
+                    </select>
+                    <select id="modalRatingFilter" class="modal-filter-select">
+                        <option value="">All Ratings</option>
+                        <option value="5">5 Stars</option>
+                        <option value="4">4 Stars</option>
+                        <option value="3">3 Stars</option>
+                        <option value="2">2 Stars</option>
+                        <option value="1">1 Star</option>
+                    </select>
+                </div>
+                <div id="allFeedbackList" class="all-feedback-container">
+                    <!-- All feedback items will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="/private/js/admin/superAdmin/feedbackDashboard.js"></script>
+    <script src="/private/js/admin/profileFunction.js"></script>
+</body>
+</html>
