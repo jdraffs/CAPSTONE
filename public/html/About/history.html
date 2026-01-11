@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="/public/css/layout/navbar.css">
   <link rel="stylesheet" href="/public/css/pages/history.css">
   <link rel="stylesheet" href="/public/css/layout/footer.css">
+  <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
 </head>
 <body>
   <header>
@@ -98,8 +99,8 @@
       <div class="hero-content">
         <div class="hero-title-design">
           <div class="vl1"></div>
-          <div class="hero-title&desc">
-            <h1 class="hero-title" data-aos="fade-left">History</h1>
+          <div class="hero-title&desc" data-aos="fade">
+            <h1 class="hero-title">History</h1>
             <p class="hero-text">Explore the rich history of PUP Parañaque, from its humble beginnings to its growth as a center of learning and innovation. This page highlights the key milestones, achievements, and transformations that have shaped the campus into what it is today.</p>
           </div>
         </div>
@@ -205,5 +206,12 @@
 
   <script src="/script/navbar.js"></script>
   <script src="/script/floatingfunction.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+  <script>
+    AOS.init({
+    duration: 3000,
+    once: true,
+    });
+  </script>
 </body>
 </html>
