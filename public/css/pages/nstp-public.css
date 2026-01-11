@@ -1,0 +1,529 @@
+/* nstp-public.css - Microsoft Teams Inspired Post Design */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.main {
+    background-color: white;
+    flex-direction: column;
+    align-items: center;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Verdana, sans-serif;
+}
+
+.hero-section {
+    width: 100%;
+    height: 380px;
+    display: flex;
+    background-size: cover;   
+}
+
+.hero-content {
+    width: 100%;
+    color: white;
+    text-align: left;
+    background-color: rgb(27, 27, 27, 0.98);
+    display: flex;
+    flex-direction: column;
+}
+.hero-title-design {
+    display: flex;
+    gap: 15px;
+    position: relative;
+    top: 120px;
+    margin-left: 100px;
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: bold;
+}
+
+.hero-text {
+    font-size: 1.2rem;
+    margin-top: 30px;
+    max-width: 70%;
+    text-align:  justify;
+}
+
+.vl1 {
+    height: 50px;
+    width: 2px;
+    background-color:  rgb(237, 237, 237);
+    border: none;
+    margin-top: 5px;
+}
+
+/* ========================================
+   NSTP POSTS SECTION
+   ======================================== */
+
+.posts-section {
+    width: 100%;
+    background-color: #f5f5f5;
+    padding: 40px 20px;
+    min-height: 500px;
+}
+
+.posts-container {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ========================================
+   POST CARD - MS TEAMS STYLE
+   ======================================== */
+
+.nstp-public-post {
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    transition: box-shadow 0.2s ease;
+}
+
+.nstp-public-post:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* POST HEADER */
+.post-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #edebe9;
+}
+
+.post-author-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.author-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #822020, #a02828);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.author-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.author-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #252423;
+    margin: 0;
+}
+
+.post-timestamp {
+    font-size: 12px;
+    color: #605e5c;
+    margin: 0;
+}
+
+/* POST BODY */
+.post-body {
+    padding: 20px;
+}
+
+.post-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #252423;
+    margin: 0 0 12px 0;
+    line-height: 1.4;
+}
+
+.post-content {
+    font-size: 14px;
+    color: #323130;
+    line-height: 1.6;
+    margin-bottom: 16px;
+}
+
+.post-content p {
+    margin-bottom: 12px;
+}
+
+.post-content p:last-child {
+    margin-bottom: 0;
+}
+
+.post-content ul {
+    margin: 8px 0 12px 20px;
+}
+
+.post-content li {
+    margin-bottom: 6px;
+    color: #323130;
+}
+
+.post-content strong {
+    font-weight: 600;
+    color: #822020;
+}
+
+/* POST FILES */
+.post-files {
+    margin-top: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+/* Document File Item */
+.post-file-item.document {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: #faf9f8;
+    border: 1px solid #edebe9;
+    border-radius: 6px;
+    width: 100%;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.post-file-item.document:hover {
+    background: #f3f2f1;
+    border-color: #d2d0ce;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.post-file-item.document .file-icon {
+    font-size: 28px;
+    min-width: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #dc3545;
+}
+
+.post-file-item.document .file-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.post-file-item.document .file-details a {
+    color: #252423;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color 0.2s;
+}
+
+.post-file-item.document .file-details a:hover {
+    color: #822020;
+    text-decoration: underline;
+}
+
+.post-file-item.document .file-size {
+    color: #605e5c;
+    font-size: 12px;
+}
+
+/* Image File Item */
+.post-file-item.image {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #edebe9;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.post-file-item.image:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.post-file-item.image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.post-file-item.image .image-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.75), transparent);
+    padding: 12px 10px 10px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.post-file-item.image:hover .image-overlay {
+    opacity: 1;
+}
+
+.post-file-item.image .image-overlay a {
+    color: white;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.post-file-item.image .image-overlay .file-size {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 11px;
+    margin-top: 2px;
+}
+
+.post-file-item.image .download-icon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    font-size: 14px;
+}
+
+.post-file-item.image:hover .download-icon {
+    opacity: 1;
+}
+
+.post-file-item.image .download-icon:hover {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+/* POST FOOTER - INTERACTIONS */
+.post-footer {
+    padding: 0 20px 20px 20px;
+}
+
+.post-interactions {
+    display: flex;
+    gap: 8px;
+    padding: 12px 0;
+    border-top: 1px solid #edebe9;
+    margin-bottom: 12px;
+}
+
+.interaction-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    color: #605e5c;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: not-allowed;
+    transition: all 0.2s ease;
+    opacity: 0.6;
+}
+
+.interaction-btn i {
+    font-size: 16px;
+}
+
+/* COMMENT SECTION */
+.comment-section {
+    margin-top: 12px;
+}
+
+.comment-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.comment-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #e1dfdd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #605e5c;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.comment-input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid #e1dfdd;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #faf9f8;
+    color: #a19f9d;
+    cursor: not-allowed;
+    transition: all 0.2s ease;
+}
+
+.comment-input:focus {
+    outline: none;
+}
+
+.comment-notice {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #605e5c;
+    padding: 8px 12px;
+    background: #fff4ce;
+    border-radius: 4px;
+    border-left: 3px solid #ffb900;
+}
+
+.comment-notice i {
+    color: #ffb900;
+    font-size: 14px;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+@media (max-width: 1024px) {
+    .hero-title-design {
+        margin-left: 60px;
+    }
+
+    .hero-title {
+        font-size: 2.8rem;
+    }
+
+    .hero-text {
+        font-size: 1.1rem;
+        max-width: 80%;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-section {
+        height: auto;
+        min-height: 300px;
+    }
+
+    .hero-title-design {
+        top: 60px;
+        margin-left: 30px;
+        margin-right: 30px;
+    }
+
+    .hero-title {
+        font-size: 2.2rem;
+    }
+
+    .hero-text {
+        font-size: 1rem;
+        max-width: 100%;
+    }
+
+    .posts-section {
+        padding: 20px 10px;
+    }
+
+    .posts-container {
+        max-width: 100%;
+    }
+
+    .post-title {
+        font-size: 18px;
+    }
+
+    .post-content {
+        font-size: 13px;
+    }
+
+    .post-file-item.image {
+        width: 150px;
+        height: 150px;
+    }
+
+    .interaction-btn {
+        font-size: 13px;
+        padding: 6px 12px;
+    }
+
+    .interaction-btn span {
+        display: none;
+    }
+
+    .interaction-btn i {
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-title {
+        font-size: 1.8rem;
+    }
+
+    .hero-text {
+        font-size: 0.9rem;
+    }
+
+    .post-header {
+        padding: 12px 16px;
+    }
+
+    .post-body {
+        padding: 16px;
+    }
+
+    .post-footer {
+        padding: 0 16px 16px 16px;
+    }
+
+    .author-avatar {
+        width: 36px;
+        height: 36px;
+        font-size: 18px;
+    }
+
+    .post-title {
+        font-size: 16px;
+    }
+
+    .comment-input {
+        font-size: 13px;
+        padding: 8px 12px;
+    }
+} 

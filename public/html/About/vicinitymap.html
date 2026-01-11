@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="/public/css//layout/navbar.css">
   <link rel="stylesheet" href="/public/css/pages/vicinitymap.css">
   <link rel="stylesheet" href="/public/css/layout/footer.css">
+  <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
 </head>
 <body>
   <header>
@@ -35,6 +36,7 @@
           <a href="#about">About <span class="arrow">&#11206;</span></a>
           <div class="dropdown-content">
             <a href="/public/html/About/history.html">History</a>
+            <a href="/public/html/About/research&extension-public.html">Research & Extension</a>
             <a href="/public/html/About/administrativeofficials.html">Administrative Officials</a>
             <a href="/public/html/About/vicinitymap.html">Vicinity Map</a>
           </div>
@@ -44,11 +46,13 @@
           <a href="/public/html/Admission/admission.html">Admission</a>
         </li>
 
-
         <li class="nav-item dropdown-btn">
           <a href="/public/html/Students/students.html">Students <span class="arrow">&#11206;</span></a>
           <div class="dropdown-content">
-            <a href="/public/html/Students/students.html">Scholarship & Forms</a>
+            <a href="/public/html/Students/nstp-public.html">NSTP Announcements</a>
+            <a href="/public/html/Students/ojt-public.html">OJT Announcements</a>
+            <a href="/public/html/Students/feedback.html">Service Feedback</a>
+            <a href="/public/html/Students/scholarships.html">Scholarship Opportunities</a>
             <a href="https://pupsinta.freshservice.com/support/home">PUP Sinta</a>
             <a href="https://sis8.pup.edu.ph/student/">PUP Student Portal</a>
             <a href="#">Student Organizations</a>
@@ -95,15 +99,15 @@
       <div class="hero-content">
         <div class="hero-title-design">
           <div class="vl1"></div>
-          <div class="hero-title&desc">
-            <h1 class="hero-title" data-aos="fade-left">Vicinity Map</h1>
+          <div class="hero-title&desc" data-aos="fade">
+            <h1 class="hero-title">Vicinity Map</h1>
             <p class="hero-text">Locate PUP Parañaque with ease. This map provides a clear view of the campus and its surrounding area, helping visitors navigate nearby landmarks, main roads, and transportation routes.</p>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="maps-section">
+    <section class="maps-section" data-aos="fade">
         <div class="maps-container">
             <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1624.0785994185621!2d120.99496305457!3d14.500088376228124!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397ce995e3816ff%3A0x8dafbf0159892769!2sPolytechnic%20University%20of%20the%20Philippines%20-%20Para%C3%B1aque!5e0!3m2!1sen!2sph!4v1759058369260!5m2!1sen!2sph" width="1000" height="600"></iframe>
         </div>
@@ -186,5 +190,12 @@
 
   <script src="/script/navbar.js"></script>
   <script src="/script/floatingfunction.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+  <script>
+    AOS.init({
+    duration: 3000,
+    once: true,
+    });
+  </script>
 </body>
 </html>

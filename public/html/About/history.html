@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="/public/css/layout/navbar.css">
   <link rel="stylesheet" href="/public/css/pages/history.css">
   <link rel="stylesheet" href="/public/css/layout/footer.css">
+  <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
 </head>
 <body>
   <header>
@@ -35,6 +36,7 @@
           <a href="#about">About <span class="arrow">&#11206;</span></a>
           <div class="dropdown-content">
             <a href="/public/html/About/history.html">History</a>
+            <a href="/public/html/About/research&extension-public.html">Research & Extension</a>
             <a href="/public/html/About/administrativeofficials.html">Administrative Officials</a>
             <a href="/public/html/About/vicinitymap.html">Vicinity Map</a>
           </div>
@@ -44,11 +46,13 @@
           <a href="/public/html/Admission/admission.html">Admission</a>
         </li>
 
-
         <li class="nav-item dropdown-btn">
           <a href="/public/html/Students/students.html">Students <span class="arrow">&#11206;</span></a>
           <div class="dropdown-content">
-            <a href="/public/html/Students/students.html">Scholarship & Forms</a>
+            <a href="/public/html/Students/nstp-public.html">NSTP Announcements</a>
+            <a href="/public/html/Students/ojt-public.html">OJT Announcements</a>
+            <a href="/public/html/Students/feedback.html">Service Feedback</a>
+            <a href="/public/html/Students/scholarships.html">Scholarship Opportunities</a>
             <a href="https://pupsinta.freshservice.com/support/home">PUP Sinta</a>
             <a href="https://sis8.pup.edu.ph/student/">PUP Student Portal</a>
             <a href="#">Student Organizations</a>
@@ -95,8 +99,8 @@
       <div class="hero-content">
         <div class="hero-title-design">
           <div class="vl1"></div>
-          <div class="hero-title&desc">
-            <h1 class="hero-title" data-aos="fade-left">History</h1>
+          <div class="hero-title&desc" data-aos="fade">
+            <h1 class="hero-title">History</h1>
             <p class="hero-text">Explore the rich history of PUP Parañaque, from its humble beginnings to its growth as a center of learning and innovation. This page highlights the key milestones, achievements, and transformations that have shaped the campus into what it is today.</p>
           </div>
         </div>
@@ -202,5 +206,12 @@
 
   <script src="/script/navbar.js"></script>
   <script src="/script/floatingfunction.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+  <script>
+    AOS.init({
+    duration: 3000,
+    once: true,
+    });
+  </script>
 </body>
 </html>

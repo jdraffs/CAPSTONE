@@ -16,7 +16,7 @@ document.getElementById('admin-login-form').addEventListener('submit', async (e)
 
     if (data.success) {
       // ✅ Store admin info globally for later access
-      localStorage.setItem("adminid", adminid);
+      localStorage.setItem("adminid", data.adminid);
 
       // Redirect based on admin ID
       if (data.adminid === 'adminave') {
@@ -25,6 +25,10 @@ document.getElementById('admin-login-form').addEventListener('submit', async (e)
         window.location.href = '/private/html/adminPages/adminEnierga/admin2.html';
       } else if (data.adminid === 'adminSalao') {
         window.location.href = '/private/html/adminPages/adminSalao/superAdmin.html';
+      } else if (data.adminid === 'adminMila') {
+        window.location.href = '/private/html/adminPages/adminMila/adminMila.html';
+            } else if (data.adminid === 'adminLlave') {
+        window.location.href = '/private/html/adminPages/adminLlave/adminLlave.html';
       } else {
         alert('Unknown admin ID.');
       }
