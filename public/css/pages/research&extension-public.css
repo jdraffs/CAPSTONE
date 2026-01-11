@@ -60,47 +60,64 @@
     margin-top: 5px;
 }
 
-/* ========================================
-   TEXT SECTION
-   ======================================== */
-
-.text-section {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 50px;
-    margin-bottom: 50px;
-}
-
-.text-content {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    background-color: rgba(255, 255, 255, 0.98);
-    color: rgb(93, 93, 93);
-}
-
+/* TEXT SECTION GRID */
 .text-description {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    font-size: 1.5rem;
-    gap: 35px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    width: 100%;
 }
 
-.desc-text {
-    font-size: 1.3rem;
-    max-width: 70%;
-    text-align: justify;
-}
-
-.desc-text2 {
+/* TEXT BOX */
+.desc-box {
+    padding: 10px 60px;
     font-size: 1.15rem;
-    max-width: 70%;
     text-align: justify;
+    color: rgb(255, 255, 255);
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+    z-index: 2;
+    overflow: hidden;
+}
+.desc-text-content {
+    color: #ffffffbd;
+    line-height: 1.4;
+    padding: 20px 10px;
+    border-radius: 6px;
+    text-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* DARK OVERLAY */
+.desc-box::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-color: rgba(30, 30, 30, 0.941);
+    z-index: 1;
+}
+
+/* TEXT ABOVE OVERLAY */
+.desc-box > * {
+    position: relative;
+    z-index: 3;
+}
+
+/* BACKGROUND IMAGES */
+.text-description > p:nth-child(1) {
+    background-image: url('/public/assets/images/PUPBg4.jpg');
+}
+
+.text-description > p:nth-child(2) {
+    background-image: url('/public/assets/images/PUPBg2.jpg');
+}
+
+.text-description > p:nth-child(3) {
+    background-image: url('/public/assets/images/PUPBg3.jpg');
 }
 
 /* ========================================
@@ -289,7 +306,7 @@
 }
 
 .article-modal-content {
-    max-width: 740px;
+    max-width: 1100px;
     margin: 40px auto;
     background: white;
     border-radius: 4px;
@@ -373,34 +390,45 @@
     width: 100%;
     max-height: 500px;
     overflow: hidden;
+    display: flex; /* Added */
+    align-items: center; /* Added */
+    justify-content: center; /* Added */
+    background: #f0f0f0; /* Added fallback */
 }
 
 .article-full-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center center; /* CRITICAL FIX - Centers the image */
 }
 
-/* Full Article Body */
+/* Replace the .article-full-body section in research&extension-public.css with this */
+
+/* Full Article Body - UPDATED with formatting preservation */
 .article-full-body {
-    padding: 40px 60px 60px;
-    font-size: 21px;
-    line-height: 1.58;
-    font-family: 'Inter', 'Georgia', serif;
-    color: #242424;
+  padding: 40px 60px 60px;
+  font-size: 21px;
+  line-height: 1.58;
+  font-family: 'Inter', 'Georgia', serif;
+  color: #242424;
+  white-space: pre-wrap; /* Preserve whitespace and line breaks */
+  word-wrap: break-word; /* Prevent overflow */
 }
 
 .article-full-body p {
-    margin-bottom: 1.5em;
+  margin-bottom: 1.5em;
+  white-space: pre-wrap; /* Preserve formatting in paragraphs */
 }
 
 .article-full-body h1,
 .article-full-body h2,
 .article-full-body h3 {
-    font-family: 'Playfair Display', 'Georgia', serif;
-    font-weight: 700;
-    margin-top: 1.5em;
-    margin-bottom: 0.5em;
+  font-family: 'Playfair Display', 'Georgia', serif;
+  font-weight: 700;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  white-space: pre-wrap; /* Preserve formatting in headings */
 }
 
 .article-full-body h1 { font-size: 34px; }
@@ -409,6 +437,27 @@
 
 .article-full-body strong { font-weight: 700; }
 .article-full-body em { font-style: italic; }
+
+/* Preserve formatting for lists and other elements */
+.article-full-body ul,
+.article-full-body ol {
+  margin-bottom: 1.5em;
+  padding-left: 2em;
+}
+
+.article-full-body li {
+  margin-bottom: 0.5em;
+  white-space: pre-wrap;
+}
+
+.article-full-body blockquote {
+  border-left: 4px solid #e0e0e0;
+  padding-left: 1.5em;
+  margin: 1.5em 0;
+  font-style: italic;
+  color: #6b6b6b;
+  white-space: pre-wrap;
+}
 
 /* Full Article Attachments */
 .article-full-attachments {

@@ -1,30 +1,5 @@
-// research&extension-public.js - Medium-style Article Display for Public
+// research&extension-public.js - Complete public-facing article display
 const postsContainer = document.getElementById('nstpPostsContainer');
-
-// Get file icon based on MIME type
-function getFileIcon(mimeType) {
-  if (mimeType.includes('pdf')) return 'fa-file-pdf';
-  if (mimeType.includes('word')) return 'fa-file-word';
-  if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) return 'fa-file-powerpoint';
-  if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'fa-file-excel';
-  if (mimeType.includes('image')) return 'fa-file-image';
-  if (mimeType.includes('text')) return 'fa-file-alt';
-  return 'fa-file';
-}
-
-// Check if file is an image
-function isImageFile(mimeType) {
-  return mimeType && mimeType.includes('image/');
-}
-
-// Format file size
-function formatFileSize(bytes) {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-}
 
 // Extract text preview from HTML content
 function extractTextPreview(htmlContent, maxLength = 150) {
@@ -32,15 +7,6 @@ function extractTextPreview(htmlContent, maxLength = 150) {
   temp.innerHTML = htmlContent;
   const text = temp.textContent || temp.innerText || '';
   return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
-}
-
-// Get attachment badge class
-function getAttachmentBadgeClass(mimeType) {
-  if (mimeType.includes('pdf')) return 'pdf';
-  if (mimeType.includes('word')) return 'word';
-  if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'excel';
-  if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) return 'ppt';
-  return '';
 }
 
 // Show full article in modal
@@ -54,50 +20,14 @@ function showFullArticle(post) {
     document.body.appendChild(modal);
   }
 
-  // Get featured image
+  // Get thumbnail image
   let featuredImageHtml = '';
-  let attachmentsHtml = '';
-  
-  if (post.files && post.files.length > 0) {
-    const images = post.files.filter(f => isImageFile(f.file_type));
-    const documents = post.files.filter(f => !isImageFile(f.file_type));
-    
-    // Featured image
-    if (images.length > 0) {
-      featuredImageHtml = `
-        <div class="article-full-image">
-          <img src="http://localhost:3000${images[0].file_path}" alt="${post.title}">
-        </div>
-      `;
-    }
-    
-    // Document attachments
-    if (documents.length > 0) {
-      attachmentsHtml = `
-        <div class="article-full-attachments">
-          <h3>Attachments</h3>
-          <div class="attachment-list">
-      `;
-      
-      documents.forEach(file => {
-        const icon = getFileIcon(file.file_type);
-        attachmentsHtml += `
-          <a href="http://localhost:3000${file.file_path}" target="_blank" download="${file.file_name}" class="attachment-item">
-            <i class="fa ${icon} attachment-icon"></i>
-            <div class="attachment-info">
-              <div class="attachment-name">${file.file_name}</div>
-              <div class="attachment-size">${formatFileSize(file.file_size)}</div>
-            </div>
-            <i class="fa fa-download attachment-download"></i>
-          </a>
-        `;
-      });
-      
-      attachmentsHtml += `
-          </div>
-        </div>
-      `;
-    }
+  if (post.thumbnail_path) {
+    featuredImageHtml = `
+      <div class="article-full-image">
+        <img src="http://localhost:3000${post.thumbnail_path}" alt="${post.title}">
+      </div>
+    `;
   }
 
   // Format date
@@ -125,8 +55,6 @@ function showFullArticle(post) {
       <div class="article-full-body">
         ${post.content}
       </div>
-      
-      ${attachmentsHtml}
     </div>
   `;
 
@@ -136,23 +64,18 @@ function showFullArticle(post) {
   const closeBtn = modal.querySelector('.article-close');
   closeBtn.onclick = () => {
     modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
   };
 
   modal.onclick = (e) => {
     if (e.target === modal) {
       modal.style.display = 'none';
+      document.body.style.overflow = 'auto';
     }
   };
 
   // Prevent body scroll when modal is open
   document.body.style.overflow = 'hidden';
-  
-  // Restore body scroll when modal closes
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal || e.target.classList.contains('article-close')) {
-      document.body.style.overflow = 'auto';
-    }
-  });
 }
 
 // Load and display articles
@@ -171,44 +94,14 @@ async function loadArticles() {
         articleCard.className = 'article-card';
         articleCard.dataset.id = post.id;
 
-        // Get featured image and documents
+        // Get thumbnail image
         let featuredImageHtml = '';
-        let attachmentBadges = '';
-        
-        if (post.files && post.files.length > 0) {
-          const images = post.files.filter(f => isImageFile(f.file_type));
-          const documents = post.files.filter(f => !isImageFile(f.file_type));
-          
-          // Featured image
-          if (images.length > 0) {
-            featuredImageHtml = `
-              <div class="article-featured-image">
-                <img src="http://localhost:3000${images[0].file_path}" alt="${post.title}">
-              </div>
-            `;
-          } else {
-            featuredImageHtml = `
-              <div class="article-no-image">
-                <i class="fa fa-book"></i>
-              </div>
-            `;
-          }
-          
-          // Document badges
-          if (documents.length > 0) {
-            attachmentBadges = '<div class="article-attachments">';
-            documents.forEach(file => {
-              const icon = getFileIcon(file.file_type);
-              const badgeClass = getAttachmentBadgeClass(file.file_type);
-              attachmentBadges += `
-                <span class="attachment-badge ${badgeClass}">
-                  <i class="fa ${icon}"></i>
-                  ${file.file_name.length > 20 ? file.file_name.substring(0, 20) + '...' : file.file_name}
-                </span>
-              `;
-            });
-            attachmentBadges += '</div>';
-          }
+        if (post.thumbnail_path) {
+          featuredImageHtml = `
+            <div class="article-featured-image">
+              <img src="http://localhost:3000${post.thumbnail_path}" alt="${post.title}">
+            </div>
+          `;
         } else {
           featuredImageHtml = `
             <div class="article-no-image">
@@ -233,7 +126,6 @@ async function loadArticles() {
           <div class="article-content">
             <h2 class="article-title">${post.title}</h2>
             <p class="article-excerpt">${excerpt}</p>
-            ${attachmentBadges}
             <div class="article-meta">
               <span class="article-date">
                 <i class="fa fa-calendar"></i>
