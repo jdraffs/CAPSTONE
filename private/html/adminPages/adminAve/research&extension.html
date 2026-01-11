@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Research & Extension - PUP Parañaque Admin</title>
     <link rel="stylesheet" href="/private/css/pages/research&extension.css">
-    <link rel="stylesheet" href="/private/css/layout/post.css">
     <link rel="stylesheet" href="/private/css/layout/dashboardsidebar.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -127,67 +126,104 @@
                     <i class="fa-solid fa-plus"></i>
                 </button>
 
-                <!-- Post Modal - Medium Style -->
+                <!-- Post Modal - Improved Article Layout -->
                 <div class="post-modal" id="postModal">
                     <div class="post-modal-content">
-                        <h2>Write an Article</h2>
-
-                        <!-- Title Input -->
-                        <input 
-                            type="text" 
-                            id="postTitle" 
-                            placeholder="Article Title" 
-                            class="post-title" 
-                        />
-
-                        <!-- Toolbar -->
-                        <div class="post-toolbar">
-                            <button data-command="bold" title="Bold">
-                                <i class="fa-solid fa-bold"></i>
+                        <!-- Fixed Header -->
+                        <div class="post-modal-header">
+                            <h2>Write an Article</h2>
+                            <button class="close-modal-btn" id="closeModalBtn">
+                                <i class="fa-solid fa-times"></i>
                             </button>
-                            <button data-command="italic" title="Italic">
-                                <i class="fa-solid fa-italic"></i>
-                            </button>
-                            <button data-command="underline" title="Underline">
-                                <i class="fa-solid fa-underline"></i>
-                            </button>
-                            <button data-command="highlight" title="Highlight">
-                                <i class="fa-solid fa-highlighter"></i>
-                            </button>
-                            <select id="fontSize" title="Font Size">
-                                <option value="3">Normal</option>
-                                <option value="4">Large</option>
-                                <option value="5">Larger</option>
-                                <option value="6">Huge</option>
-                            </select>
                         </div>
 
-                        <!-- Rich Text Area -->
-                        <div 
-                            id="postText" 
-                            class="post-editor" 
-                            contenteditable="true" 
-                            placeholder="Tell your story..."
-                        ></div>
-
-                        <!-- File Upload -->
-                        <div class="file-upload-section">
-                            <label for="fileUpload" class="file-upload-label">
-                                <i class="fa fa-paperclip"></i> Attach Files (Max 3)
-                            </label>
+                        <!-- Scrollable Body -->
+                        <div class="post-modal-body">
+                            <!-- Title Input -->
                             <input 
-                                type="file" 
-                                id="fileUpload" 
-                                multiple 
-                                accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.webp,.txt"
-                            >
-                            <div id="fileList" class="file-list"></div>
+                                type="text" 
+                                id="postTitle" 
+                                placeholder="Article Title" 
+                                class="post-title" 
+                            />
+
+                            <!-- Thumbnail Upload Section -->
+                            <div class="thumbnail-section">
+                                <label class="thumbnail-label">
+                                    <i class="fa-solid fa-image"></i>
+                                    Thumbnail Image <span class="required">*</span>
+                                </label>
+                                
+                                <div class="thumbnail-upload-area" id="thumbnailUploadArea">
+                                    <input 
+                                        type="file" 
+                                        id="thumbnailInput" 
+                                        accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                                        style="display: none;"
+                                    />
+                                    <div class="thumbnail-placeholder" id="thumbnailPlaceholder">
+                                        <i class="fa-solid fa-cloud-upload-alt"></i>
+                                        <p>Click to upload thumbnail</p>
+                                        <span>JPG, PNG, WEBP or GIF (max 5MB)</span>
+                                    </div>
+                                    <div class="thumbnail-preview" id="thumbnailPreview" style="display: none;">
+                                        <img id="thumbnailImage" src="" alt="Thumbnail">
+                                        <div class="thumbnail-overlay">
+                                            <button type="button" class="thumbnail-change-btn" id="changeThumbnailBtn">
+                                                <i class="fa-solid fa-camera"></i> Change
+                                            </button>
+                                            <button type="button" class="thumbnail-remove-btn" id="removeThumbnailBtn">
+                                                <i class="fa-solid fa-trash"></i> Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="thumbnail-hint">This image will be displayed as the article preview</p>
+                            </div>
+
+                            <!-- Rich Text Editor -->
+                            <div class="editor-section">
+                                <label class="editor-label">
+                                    <i class="fa-solid fa-pen"></i>
+                                    Article Content
+                                </label>
+                                
+                                <!-- Toolbar -->
+                                <div class="post-toolbar">
+                                    <button type="button" data-command="bold" title="Bold">
+                                        <i class="fa-solid fa-bold"></i>
+                                    </button>
+                                    <button type="button" data-command="italic" title="Italic">
+                                        <i class="fa-solid fa-italic"></i>
+                                    </button>
+                                    <button type="button" data-command="underline" title="Underline">
+                                        <i class="fa-solid fa-underline"></i>
+                                    </button>
+                                    <button type="button" data-command="highlight" title="Highlight">
+                                        <i class="fa-solid fa-highlighter"></i>
+                                    </button>
+                                    <select id="fontSize" title="Font Size">
+                                        <option value="3">Normal</option>
+                                        <option value="4">Large</option>
+                                        <option value="5">Larger</option>
+                                        <option value="6">Huge</option>
+                                    </select>
+                                </div>
+
+                                <!-- Rich Text Area -->
+                                <div 
+                                    id="postText" 
+                                    class="post-editor" 
+                                    contenteditable="true" 
+                                    placeholder="Tell your story..."
+                                ></div>
+                            </div>
                         </div>
 
-                        <!-- Buttons -->
-                        <div class="post-modal-actions">
-                            <button id="cancelPost">Cancel</button>
-                            <button id="submitPost">Publish</button>
+                        <!-- Fixed Footer -->
+                        <div class="post-modal-footer">
+                            <button type="button" id="cancelPost" class="btn-cancel">Cancel</button>
+                            <button type="button" id="submitPost" class="btn-submit">Publish Article</button>
                         </div>
                     </div>
                 </div>

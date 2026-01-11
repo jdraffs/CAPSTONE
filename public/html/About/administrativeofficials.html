@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="/public/css/pages/administrativeofficials.css">
   <link rel="stylesheet" href="/public/css/layout/navbar.css">
   <link rel="stylesheet" href="/public/css/layout/footer.css">
+  <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
 </head>
 <body>
     <header>
@@ -107,7 +108,7 @@
       <div class="hero-content">
         <div class="hero-title-design">
           <div class="vl1"></div>
-          <div class="hero-title&desc">
+          <div class="hero-title&desc" data-aos="fade">
             <h1 class="hero-title">Administrative Officials</h1>
             <p class="hero-text">Get to know the dedicated officials behind the academic excellence of PUP Parañaque. Explore our directory to learn about their professional backgrounds, academic achievements, research contributions, and roles within the university. These are the individuals who guide, support, and inspire the next generation of PUP scholars.</p>
           </div>
@@ -116,12 +117,12 @@
     </section>
 
     <!-- Carousel Section -->
-    <section class="carousel-section">
-      <h2 class="carousel-title">
+    <section class="carousel-section" >
+      <h2 class="carousel-title" data-aos="fade-up">
         Our Dedicated Officials
       </h2>
 
-      <div class="carousel-container">
+      <div class="carousel-container" data-aos="fade">
         <div class="nav-button prev" onclick="prevSlide()">
           <i class="fas fa-chevron-left fa-2x"></i>
         </div>
@@ -259,6 +260,13 @@
   </div>
 
   <script src="/script/navbar.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+  <script>
+    AOS.init({
+    duration: 3000,
+    once: true,
+    });
+  </script>
   <script>
     let currentIndex = 0;
     const cards = document.querySelectorAll('.official-card');

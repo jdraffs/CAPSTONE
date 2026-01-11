@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="/public/css/layout/navbar.css">
   <link rel="stylesheet" href="/public/css/pages/ojt-public.css">
   <link rel="stylesheet" href="/public/css/layout/footer.css">
+  <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
 </head>
 <body>
   <header>
@@ -36,6 +37,7 @@
             <a href="/public/html/About/vicinitymap.html">Vicinity Map</a>
           </div>
         </li>
+        
         <li class="nav-item">
           <a href="/public/html/Admission/admission.html">Admission</a>
         </li>
@@ -85,7 +87,7 @@
       <div class="hero-content">
         <div class="hero-title-design">
           <div class="vl1"></div>
-          <div class="hero-title&desc">
+          <div class="hero-title&desc" data-aos="fade">
             <h1 class="hero-title">OJT Announcements</h1>
             <p class="hero-text">
               Stay informed with official On-the-Job Training (OJT) announcements, including partner company postings,
@@ -98,7 +100,7 @@
     </section>
 
     <!-- OJT Posts Container - Posts will be loaded dynamically -->
-    <section class="posts-section">
+    <section class="posts-section" data-aos="fade">
       <div class="posts-container" id="ojtPostsContainer">
         <!-- Posts will be loaded here by ojt-public.js -->
       </div>
@@ -171,5 +173,12 @@
 
   <script src="/public/js/navbar.js"></script>
   <script src="/public/js/ojt-public.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+  <script>
+    AOS.init({
+    duration: 3000,
+    once: true,
+    });
+  </script>
 </body>
 </html>

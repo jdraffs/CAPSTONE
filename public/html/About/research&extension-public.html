@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="/public/css/layout/navbar.css">
   <link rel="stylesheet" href="/public/css/pages/research&extension-public.css">
   <link rel="stylesheet" href="/public/css/layout/footer.css">
+  <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
 </head>
 <body>
   <header>
@@ -85,7 +86,7 @@
       <div class="hero-content">
         <div class="hero-title-design">
           <div class="vl1"></div>
-          <div class="hero-title&desc">
+          <div class="hero-title&desc" data-aos="fade">
             <h1 class="hero-title">Research and Extension</h1>
             <p class="hero-text">
               Through faculty-led research and community extension programs, PUP Parañaque Campus generates
@@ -97,37 +98,44 @@
         </div>
       </div>
     </section>
+
+    <!-- NSTP Posts Container - Posts will be loaded dynamically -->
+    <section class="posts-section">
+      <div class="posts-container" id="nstpPostsContainer" data-aos="fade-up">
+        <!-- Posts will be loaded here by nstp-public.js -->
+      </div>
+    </section>
+
     <section class="text-section">
       <div class="text-content">
-        <div class="text-description">
-          <p class="desc-text">
-            PUP Parañaque Campus researchers—comprising dedicated faculty members, scholars, students, and
-            extension partners—work collaboratively to produce research that deepens academic understanding
+        <div class="text-description" data-aos="fade">
+          <p class="desc-box">
+            <span class="desc-text-content">
+            PUP Parañaque Campus researchers comprising dedicated faculty members, scholars, students, and
+            extension partners work collaboratively to produce research that deepens academic understanding
             and responds to real societal needs. Drawing from diverse disciplines and local contexts, their
             work explores educational innovation, technology development, social issues, and community-based
             solutions that contribute to national and local development.
+            </span>
           </p>
 
-          <p class="desc-text2">
+          <p class="desc-box">
+            <span class="desc-text-content">
             Guided by a commitment to inclusivity, public service, and shared knowledge, PUP Parañaque’s
             research and extension initiatives transform ideas into meaningful action. By integrating
             research with community engagement, these efforts help address complex challenges, support
             evidence-based decision-making, and create positive, lasting impact for individuals, communities,
             and society.
+            </span>
           </p>
 
-          <p class="desc-text2">
+          <p class="desc-box">
+            <span class="desc-text-content">
             What defines our researchers? A shared purpose to ensure that knowledge serves the people and
             contributes to a better future.
+            </span>
           </p>
         </div>
-      </div>
-    </section>
-
-    <!-- NSTP Posts Container - Posts will be loaded dynamically -->
-    <section class="posts-section">
-      <div class="posts-container" id="nstpPostsContainer">
-        <!-- Posts will be loaded here by nstp-public.js -->
       </div>
     </section>
   </main>
@@ -198,5 +206,12 @@
 
   <script src="/public/js/navbar.js"></script>
   <script src="/public/js/research&extension-public.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+  <script>
+    AOS.init({
+    duration: 3000,
+    once: true,
+    });
+  </script>
 </body>
 </html>
