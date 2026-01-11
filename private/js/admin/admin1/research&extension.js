@@ -1,4 +1,4 @@
-// research&extension.js - Updated with single thumbnail support
+// research&extension.js - Updated with View Full Article feature
 const openBtn = document.getElementById('openPostModal');
 const modal = document.getElementById('postModal');
 const closeModalBtn = document.getElementById('closeModalBtn');
@@ -23,8 +23,12 @@ let existingThumbnailId = null;
 
 // Open modal for new post
 openBtn.addEventListener('click', () => {
-  modal.style.display = 'flex';
+  // Prevent scrollbar jump
+  const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+  document.body.style.paddingRight = scrollbarWidth + 'px';
   document.body.style.overflow = 'hidden';
+  
+  modal.style.display = 'flex';
   postTitle.focus();
   submitBtn.textContent = 'Publish Article';
   editingPostId = null;
@@ -38,7 +42,8 @@ cancelBtn.addEventListener('click', closeModal);
 
 function closeModal() {
   modal.style.display = 'none';
-  document.body.style.overflow = 'auto';
+  document.body.style.overflow = '';
+  document.body.style.paddingRight = '';
   clearForm();
 }
 
@@ -62,21 +67,18 @@ function clearForm() {
 // THUMBNAIL HANDLING
 // ========================================
 
-// Click on upload area to trigger file input
 thumbnailUploadArea.addEventListener('click', (e) => {
   if (e.target.closest('.thumbnail-change-btn') || e.target.closest('.thumbnail-remove-btn')) {
-    return; // Don't trigger if clicking action buttons
+    return;
   }
   thumbnailInput.click();
 });
 
-// Handle thumbnail selection
 thumbnailInput.addEventListener('change', (e) => {
   const file = e.target.files[0];
   
   if (!file) return;
   
-  // Validate file type
   const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
   if (!validTypes.includes(file.type)) {
     alert('Please select a valid image file (JPG, PNG, WEBP, or GIF)');
@@ -84,7 +86,6 @@ thumbnailInput.addEventListener('change', (e) => {
     return;
   }
   
-  // Validate file size (5MB max)
   if (file.size > 5 * 1024 * 1024) {
     alert('Image size must be less than 5MB');
     thumbnailInput.value = '';
@@ -96,7 +97,6 @@ thumbnailInput.addEventListener('change', (e) => {
   updateSubmitButton();
 });
 
-// Preview thumbnail image
 function previewThumbnail(file) {
   const reader = new FileReader();
   
@@ -109,20 +109,17 @@ function previewThumbnail(file) {
   reader.readAsDataURL(file);
 }
 
-// Change thumbnail button
 changeThumbnailBtn.addEventListener('click', (e) => {
   e.stopPropagation();
   thumbnailInput.click();
 });
 
-// Remove thumbnail button
 removeThumbnailBtn.addEventListener('click', (e) => {
   e.stopPropagation();
   resetThumbnail();
   updateSubmitButton();
 });
 
-// Reset thumbnail to initial state
 function resetThumbnail() {
   thumbnailFile = null;
   existingThumbnailId = null;
@@ -132,7 +129,6 @@ function resetThumbnail() {
   thumbnailPreview.style.display = 'none';
 }
 
-// Update submit button state
 function updateSubmitButton() {
   const hasTitle = postTitle.value.trim().length > 0;
   const hasContent = postText.innerHTML.trim().length > 0;
@@ -141,7 +137,6 @@ function updateSubmitButton() {
   submitBtn.disabled = !(hasTitle && hasContent && hasThumbnail);
 }
 
-// Monitor form changes
 postTitle.addEventListener('input', updateSubmitButton);
 postText.addEventListener('input', updateSubmitButton);
 
@@ -192,12 +187,10 @@ submitBtn.addEventListener('click', async (e) => {
   formData.append('content', content);
   formData.append('adminid', 'adminave');
 
-  // Only append thumbnail if a new one was selected
   if (thumbnailFile) {
     formData.append('thumbnail', thumbnailFile);
   }
   
-  // If editing and keeping existing thumbnail
   if (editingPostId && existingThumbnailId && !thumbnailFile) {
     formData.append('keepThumbnail', existingThumbnailId);
   }
@@ -213,7 +206,6 @@ submitBtn.addEventListener('click', async (e) => {
     method = 'POST';
   }
 
-  // Show loading state
   submitBtn.disabled = true;
   submitBtn.textContent = editingPostId ? 'Updating...' : 'Publishing...';
 
@@ -241,6 +233,93 @@ submitBtn.addEventListener('click', async (e) => {
 });
 
 // ========================================
+// VIEW FULL ARTICLE MODAL
+// ========================================
+
+function showFullArticle(post) {
+  let articleModal = document.getElementById('articleViewModal');
+  if (!articleModal) {
+    articleModal = document.createElement('div');
+    articleModal.id = 'articleViewModal';
+    articleModal.className = 'article-view-modal';
+    document.body.appendChild(articleModal);
+  }
+
+  let featuredImageHtml = '';
+  if (post.thumbnail_path) {
+    featuredImageHtml = `
+      <div class="article-full-image">
+        <img src="http://localhost:3000${post.thumbnail_path}" alt="${post.title}">
+      </div>
+    `;
+  }
+
+  const date = new Date(post.created_at);
+  const formattedDate = date.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+
+  articleModal.innerHTML = `
+    <div class="article-view-modal-content">
+      <span class="article-view-close">&times;</span>
+      
+      <div class="article-full-header">
+        <h1 class="article-full-title">${post.title}</h1>
+        <div class="article-full-meta">
+          <span><i class="fa fa-calendar"></i> ${formattedDate}</span>
+          <span><i class="fa fa-user"></i> Admin</span>
+        </div>
+      </div>
+      
+      ${featuredImageHtml}
+      
+      <div class="article-full-body">
+        ${post.content}
+      </div>
+    </div>
+  `;
+
+  // Prevent scrollbar jump by calculating scrollbar width
+  const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+  document.body.style.paddingRight = scrollbarWidth + 'px';
+  document.body.style.overflow = 'hidden';
+  
+  articleModal.style.display = 'block';
+
+  const closeBtn = articleModal.querySelector('.article-view-close');
+  closeBtn.onclick = () => {
+    closeArticleModal();
+  };
+
+  articleModal.onclick = (e) => {
+    if (e.target === articleModal) {
+      closeArticleModal();
+    }
+  };
+}
+
+function closeArticleModal() {
+  const articleModal = document.getElementById('articleViewModal');
+  if (articleModal) {
+    articleModal.style.display = 'none';
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+  }
+}
+
+// Close article view modal on Escape key
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const articleModal = document.getElementById('articleViewModal');
+    if (articleModal && articleModal.style.display === 'block') {
+      closeArticleModal();
+    }
+  }
+});
+
+// ========================================
 // LOAD AND DISPLAY POSTS
 // ========================================
 
@@ -259,10 +338,8 @@ async function loadPosts() {
         postElem.classList.add('researchextension-post');
         postElem.dataset.id = post.id;
 
-        // Extract text preview from HTML content
         const preview = extractTextPreview(post.content, 150);
 
-        // Format date
         const postDate = new Date(post.created_at).toLocaleDateString('en-US', { 
           year: 'numeric', 
           month: 'long', 
@@ -298,7 +375,15 @@ async function loadPosts() {
           </div>
         `;
 
-        // Menu dropdown handlers
+        // Click on post card to view full article
+        postElem.addEventListener('click', (e) => {
+          // Don't trigger if clicking on menu button or dropdown
+          if (e.target.closest('.researchextension-actions')) {
+            return;
+          }
+          showFullArticle(post);
+        });
+
         const menuBtn = postElem.querySelector('.post-menu-btn');
         const dropdown = postElem.querySelector('.post-menu-dropdown');
         
@@ -323,7 +408,6 @@ async function loadPosts() {
           postTitle.value = post.title;
           postText.innerHTML = post.content;
           
-          // Load existing thumbnail
           if (post.thumbnail_id && post.thumbnail_path) {
             existingThumbnailId = post.thumbnail_id;
             thumbnailImage.src = `http://localhost:3000${post.thumbnail_path}`;
@@ -332,8 +416,13 @@ async function loadPosts() {
           }
           
           submitBtn.textContent = 'Update Article';
-          modal.style.display = 'flex';
+          
+          // Prevent scrollbar jump
+          const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+          document.body.style.paddingRight = scrollbarWidth + 'px';
           document.body.style.overflow = 'hidden';
+          
+          modal.style.display = 'flex';
           updateSubmitButton();
         });
 
@@ -384,7 +473,6 @@ async function loadPosts() {
   }
 }
 
-// Extract text preview from HTML content
 function extractTextPreview(htmlContent, maxLength = 200) {
   const temp = document.createElement('div');
   temp.innerHTML = htmlContent;
@@ -392,5 +480,4 @@ function extractTextPreview(htmlContent, maxLength = 200) {
   return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
 }
 
-// Load posts on page load
 window.addEventListener('DOMContentLoaded', loadPosts);

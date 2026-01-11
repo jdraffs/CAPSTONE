@@ -386,26 +386,32 @@
     object-position: center center; /* CRITICAL FIX - Centers the image */
 }
 
-/* Full Article Body */
+/* Replace the .article-full-body section in research&extension-public.css with this */
+
+/* Full Article Body - UPDATED with formatting preservation */
 .article-full-body {
-    padding: 40px 60px 60px;
-    font-size: 21px;
-    line-height: 1.58;
-    font-family: 'Inter', 'Georgia', serif;
-    color: #242424;
+  padding: 40px 60px 60px;
+  font-size: 21px;
+  line-height: 1.58;
+  font-family: 'Inter', 'Georgia', serif;
+  color: #242424;
+  white-space: pre-wrap; /* Preserve whitespace and line breaks */
+  word-wrap: break-word; /* Prevent overflow */
 }
 
 .article-full-body p {
-    margin-bottom: 1.5em;
+  margin-bottom: 1.5em;
+  white-space: pre-wrap; /* Preserve formatting in paragraphs */
 }
 
 .article-full-body h1,
 .article-full-body h2,
 .article-full-body h3 {
-    font-family: 'Playfair Display', 'Georgia', serif;
-    font-weight: 700;
-    margin-top: 1.5em;
-    margin-bottom: 0.5em;
+  font-family: 'Playfair Display', 'Georgia', serif;
+  font-weight: 700;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  white-space: pre-wrap; /* Preserve formatting in headings */
 }
 
 .article-full-body h1 { font-size: 34px; }
@@ -414,6 +420,27 @@
 
 .article-full-body strong { font-weight: 700; }
 .article-full-body em { font-style: italic; }
+
+/* Preserve formatting for lists and other elements */
+.article-full-body ul,
+.article-full-body ol {
+  margin-bottom: 1.5em;
+  padding-left: 2em;
+}
+
+.article-full-body li {
+  margin-bottom: 0.5em;
+  white-space: pre-wrap;
+}
+
+.article-full-body blockquote {
+  border-left: 4px solid #e0e0e0;
+  padding-left: 1.5em;
+  margin: 1.5em 0;
+  font-style: italic;
+  color: #6b6b6b;
+  white-space: pre-wrap;
+}
 
 /* Full Article Attachments */
 .article-full-attachments {
