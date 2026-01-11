@@ -726,7 +726,7 @@ function openReportDetails(report) {
     </div>
 
     <div class="insight">
-      <strong>🔍 Analysis Summary</strong>
+      <strong>🔍 Analysis Summary via Gemini AI</strong>
       <div class="interpretation-text">
         ${report.interpretation}
       </div>
