@@ -60,47 +60,64 @@
     margin-top: 5px;
 }
 
-/* ========================================
-   TEXT SECTION
-   ======================================== */
-
-.text-section {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 50px;
-    margin-bottom: 50px;
-}
-
-.text-content {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    background-color: rgba(255, 255, 255, 0.98);
-    color: rgb(93, 93, 93);
-}
-
+/* TEXT SECTION GRID */
 .text-description {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    font-size: 1.5rem;
-    gap: 35px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    width: 100%;
 }
 
-.desc-text {
-    font-size: 1.3rem;
-    max-width: 70%;
-    text-align: justify;
-}
-
-.desc-text2 {
+/* TEXT BOX */
+.desc-box {
+    padding: 10px 60px;
     font-size: 1.15rem;
-    max-width: 70%;
     text-align: justify;
+    color: rgb(255, 255, 255);
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+    z-index: 2;
+    overflow: hidden;
+}
+.desc-text-content {
+    color: #ffffffbd;
+    line-height: 1.4;
+    padding: 20px 10px;
+    border-radius: 6px;
+    text-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* DARK OVERLAY */
+.desc-box::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-color: rgba(30, 30, 30, 0.941);
+    z-index: 1;
+}
+
+/* TEXT ABOVE OVERLAY */
+.desc-box > * {
+    position: relative;
+    z-index: 3;
+}
+
+/* BACKGROUND IMAGES */
+.text-description > p:nth-child(1) {
+    background-image: url('/public/assets/images/PUPBg4.jpg');
+}
+
+.text-description > p:nth-child(2) {
+    background-image: url('/public/assets/images/PUPBg2.jpg');
+}
+
+.text-description > p:nth-child(3) {
+    background-image: url('/public/assets/images/PUPBg3.jpg');
 }
 
 /* ========================================
