@@ -24,3 +24,7 @@ backend/package.json
 
 README.md
 
+venv/
+.env
+
+
