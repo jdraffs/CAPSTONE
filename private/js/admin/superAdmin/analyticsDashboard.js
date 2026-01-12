@@ -1,14 +1,16 @@
-// analyticsDashboard.js - SuperAdmin Analytics Dashboard - FIXED
+// analyticsDashboard.js - SuperAdmin Analytics Dashboard - PART 1
+// UPDATED: Fetches and displays saved AI interpretations
 document.addEventListener("DOMContentLoaded", async () => {
   const mainContent = document.getElementById("mainContent");
   const PYTHON_API_URL = "http://localhost:5000/api";
+  const NODE_API_URL = "http://localhost:3000/api";
   
   let uploadedFiles = [];
   let reports = [];
 
   const CURRENT_ADMIN_ID = 'superadmin';
 
-  // ✅ ADDED: Admin name mapping
+  // Admin name mapping
   const ADMIN_NAMES = {
     '1': 'adminEnierga',
     '2': 'adminAve',
@@ -18,7 +20,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     'adminAve': 'adminAve'
   };
 
-    // Add this near the top of your file, after the DOM content loaded event
   function createRefreshButton() {
     const headerRight = document.querySelector('.header-right');
     
@@ -29,10 +30,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       </button>
     `;
     
-    // Insert before notifications
     headerRight.insertBefore(refreshBtn.firstElementChild, headerRight.firstChild);
-    
-    // Add click event
     document.getElementById('refreshDashboard').addEventListener('click', handleRefresh);
   }
 
@@ -40,13 +38,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     const refreshBtn = document.getElementById('refreshDashboard');
     const icon = refreshBtn.querySelector('i');
     
-    // Add spinning animation
     icon.classList.add('fa-spin');
     refreshBtn.disabled = true;
     
     try {
-      // Re-fetch data and re-render
-      const response = await fetch("http://localhost:3000/api/files/data");
+      const response = await fetch(`${NODE_API_URL}/files/data`);
       uploadedFiles = await response.json();
       
       if (uploadedFiles.length === 0) {
@@ -56,20 +52,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         renderDashboard();
       }
       
-      // Show success feedback
       showRefreshNotification('Dashboard refreshed successfully!', 'success');
     } catch (error) {
       console.error('Refresh error:', error);
       showRefreshNotification('Failed to refresh dashboard', 'error');
     } finally {
-      // Remove spinning animation
       icon.classList.remove('fa-spin');
       refreshBtn.disabled = false;
     }
   }
 
   function showRefreshNotification(message, type) {
-    // Create notification element
     const notification = document.createElement('div');
     notification.className = `refresh-notification ${type}`;
     notification.innerHTML = `
@@ -78,11 +71,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     `;
     
     document.body.appendChild(notification);
-    
-    // Trigger animation
     setTimeout(() => notification.classList.add('show'), 10);
     
-    // Remove after 3 seconds
     setTimeout(() => {
       notification.classList.remove('show');
       setTimeout(() => notification.remove(), 300);
@@ -101,7 +91,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     mainContent.innerHTML = '<div class="loading-state"><i class="fas fa-spinner fa-spin"></i> Loading analytics dashboard...</div>';
 
     try {
-      const response = await fetch("http://localhost:3000/api/files/data");
+      const response = await fetch(`${NODE_API_URL}/files/data`);
       uploadedFiles = await response.json();
 
       console.log("📊 Fetched files:", uploadedFiles);
@@ -120,6 +110,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
+  // ✅ UPDATED: Fetch saved interpretation from database
   async function processAllAnalytics() {
     reports = [];
     
@@ -132,12 +123,32 @@ document.addEventListener("DOMContentLoaded", async () => {
       const chartType = localStorage.getItem(`chartType_${displayName}`) || file.chart_type || "bar";
 
       try {
+        // ✅ ADDED: Fetch saved interpretation from database
+        let savedInterpretation = null;
+        let interpretationGenerated = null;
+        let analyzedColumn = null;
+
+        try {
+          const interpretationResponse = await fetch(`${NODE_API_URL}/files/interpretation/${file.id}`);
+          if (interpretationResponse.ok) {
+            const interpretationData = await interpretationResponse.json();
+            savedInterpretation = interpretationData.interpretation;
+            interpretationGenerated = interpretationData.generated_at;
+            analyzedColumn = interpretationData.analyzed_column;
+            console.log(`✅ Found saved interpretation for ${displayName}`);
+          }
+        } catch (err) {
+          console.log(`ℹ️ No saved interpretation for ${displayName}`);
+        }
+
+        // Process analytics WITHOUT generating new interpretation
         const response = await fetch(`${PYTHON_API_URL}/analytics/process`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             filename: actualFilename,
-            chart_type: chartType
+            chart_type: chartType,
+            generate_interpretation: false  // Don't generate on load
           })
         });
 
@@ -157,7 +168,10 @@ document.addEventListener("DOMContentLoaded", async () => {
           chartType: chartType,
           chartImage: analyticsData.chart_image,
           statistics: analyticsData.statistics,
-          interpretation: analyticsData.interpretation,
+          interpretation: savedInterpretation || "No AI interpretation available yet. Admin needs to generate one.",
+          hasInterpretation: !!savedInterpretation,
+          interpretationGenerated: interpretationGenerated,
+          analyzedColumn: analyzedColumn,
           tableData: analyticsData.table_data,
           fileInfo: analyticsData.file_info,
           summary: analyticsData.summary,
@@ -175,7 +189,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   async function renderDashboard() {
-    // Render admin activity first to get the HTML
     const adminActivityHtml = await renderAdminActivity();
     
     mainContent.innerHTML = `
@@ -337,11 +350,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     return insights;
   }
 
-  // ✅ UPDATED: Fetch activity logs from database to get last activity
   async function renderAdminActivity() {
     const adminStats = {};
     
-    // Build stats from reports data (uploads)
     reports.forEach(report => {
       const adminId = report.adminId || 'Unknown';
       if (!adminStats[adminId]) {
@@ -358,12 +369,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     });
 
-    // ✅ ADDED: Fetch activity logs to get most recent activity (including deletions)
     try {
-      const response = await fetch('http://localhost:3000/api/activity-logs');
+      const response = await fetch(`${NODE_API_URL}/activity-logs`);
       const activityLogs = await response.json();
       
-      // Update last activity based on all logged activities
       activityLogs.forEach(log => {
         const adminId = log.adminid;
         const logTimestamp = new Date(log.timestamp);
@@ -403,17 +412,39 @@ document.addEventListener("DOMContentLoaded", async () => {
     `;
   }
 
+  // Continue to Part 2...
+  window.processAllAnalytics = processAllAnalytics;
+  window.renderDashboard = renderDashboard;
+  window.getAdminDisplayName = getAdminDisplayName;
+  window.formatTimeAgo = formatTimeAgo;
+  window.getUniqueAdmins = getUniqueAdmins;
+  window.renderEmptyState = renderEmptyState;
+  window.reports = reports;
+  window.PYTHON_API_URL = PYTHON_API_URL;
+  window.NODE_API_URL = NODE_API_URL;
+  // analyticsDashboard.js - PART 2 (Continuation)
+// This part contains renderReportsGrid, modal, and event handlers
+
+  // ✅ UPDATED: Show interpretation status badge in report cards
   function renderReportsGrid() {
-    if (reports.length === 0) {
+    if (window.reports.length === 0) {
       return '<p class="no-data">No reports available</p>';
     }
 
-    return reports.map(report => `
+    return window.reports.map(report => {
+      // Interpretation status badge
+      const interpretationBadge = report.hasInterpretation 
+        ? `<span class="ai-status-badge success"><i class="fas fa-check-circle"></i> AI Analysis Available</span>`
+        : `<span class="ai-status-badge pending"><i class="fas fa-robot"></i> No AI Analysis</span>`;
+
+      return `
       <div class="analytics-report-card" data-report-id="${report.id}">
         <div class="report-card-header">
           <h3>${report.title}</h3>
-          <span class="admin-badge">${getAdminDisplayName(report.adminId)}</span>
+          <span class="admin-badge">${window.getAdminDisplayName(report.adminId)}</span>
         </div>
+        
+        ${interpretationBadge}
         
         ${report.availableColumns && report.availableColumns.length > 1 ? `
           <div class="column-selector">
@@ -461,7 +492,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           </button>
         </div>
       </div>
-    `).join('');
+    `}).join('');
   }
 
   function generateExecutiveSummary(report) {
@@ -498,7 +529,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function attachEventListeners() {
-    // ✅ REMOVED: adminFilter listener
     const timeFilter = document.getElementById('timeFilter');
     
     if (timeFilter) {
@@ -518,7 +548,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const select = event.target;
     const reportId = select.dataset.reportId;
     const selectedColumn = select.value;
-    const report = reports.find(r => r.id == reportId);
+    const report = window.reports.find(r => r.id == reportId);
     
     if (!report) return;
 
@@ -529,27 +559,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     chartContainer.innerHTML = '<p class="loading-chart">Loading data for selected column...</p>';
 
     try {
-      const response = await fetch(`${PYTHON_API_URL}/analytics/process`, {
+      const response = await fetch(`${window.PYTHON_API_URL}/analytics/process`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           filename: report.actualFilename,
           chart_type: report.chartType,
-          column: selectedColumn
+          column: selectedColumn,
+          generate_interpretation: false
         })
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to load column data');
-      }
+      if (!response.ok) throw new Error('Failed to load column data');
 
       const analyticsData = await response.json();
       
       report.chartImage = analyticsData.chart_image;
       report.statistics = analyticsData.statistics;
-      report.interpretation = analyticsData.interpretation;
+      report.interpretation = "Column changed - admin needs to regenerate AI interpretation for new data.";
+      report.hasInterpretation = false;
       report.tableData = analyticsData.table_data;
       report.currentColumn = analyticsData.file_info.analyzed_column;
 
@@ -578,6 +606,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         summaryContainer.innerHTML = generateExecutiveSummary(report);
       }
 
+      // Update AI status badge
+      const badge = card.querySelector('.ai-status-badge');
+      if (badge) {
+        badge.className = 'ai-status-badge pending';
+        badge.innerHTML = '<i class="fas fa-robot"></i> No AI Analysis';
+      }
+
     } catch (error) {
       console.error('Error loading column data:', error);
       chartContainer.innerHTML = originalContent;
@@ -585,11 +620,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // ✅ UPDATED: Removed adminFilter from applyFilters
   function applyFilters() {
     const timeFilter = document.getElementById('timeFilter').value;
     
-    let filteredReports = [...reports];
+    let filteredReports = [...window.reports];
 
     if (timeFilter !== 'all') {
       const now = new Date();
@@ -617,12 +651,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function renderSingleReportCard(report) {
+    const interpretationBadge = report.hasInterpretation 
+      ? `<span class="ai-status-badge success"><i class="fas fa-check-circle"></i> AI Analysis Available</span>`
+      : `<span class="ai-status-badge pending"><i class="fas fa-robot"></i> No AI Analysis</span>`;
+
     return `
       <div class="analytics-report-card" data-report-id="${report.id}">
         <div class="report-card-header">
           <h3>${report.title}</h3>
-          <span class="admin-badge">${getAdminDisplayName(report.adminId)}</span>
+          <span class="admin-badge">${window.getAdminDisplayName(report.adminId)}</span>
         </div>
+        
+        ${interpretationBadge}
         
         ${report.availableColumns && report.availableColumns.length > 1 ? `
           <div class="column-selector">
@@ -670,18 +710,29 @@ document.addEventListener("DOMContentLoaded", async () => {
     `;
   }
 
+  // ✅ UPDATED: Display saved AI interpretation in modal
   window.viewReportDetails = function(reportId) {
-    const report = reports.find(r => r.id === reportId);
+    const report = window.reports.find(r => r.id === reportId);
     if (!report) return;
 
     const modal = document.getElementById('reportModal');
     const detailsContainer = modal.querySelector('.report-details');
     
+    // Format interpretation generated date if available
+    let interpretationMeta = '';
+    if (report.hasInterpretation && report.interpretationGenerated) {
+      const generatedDate = new Date(report.interpretationGenerated);
+      interpretationMeta = `<p class="interpretation-meta"><i class="fas fa-clock"></i> Generated: ${generatedDate.toLocaleString()}</p>`;
+    }
+    
     detailsContainer.innerHTML = `
       <h2>${report.title}</h2>
       <div class="modal-admin-info">
-        <span class="admin-badge-large">Uploaded by ${getAdminDisplayName(report.adminId)}</span>
+        <span class="admin-badge-large">Uploaded by ${window.getAdminDisplayName(report.adminId)}</span>
         <span class="upload-date-large">${report.date}</span>
+        ${report.hasInterpretation 
+          ? '<span class="ai-status-badge success"><i class="fas fa-check-circle"></i> AI Analysis Available</span>'
+          : '<span class="ai-status-badge pending"><i class="fas fa-robot"></i> No AI Analysis</span>'}
       </div>
       
       <div class="modal-chart">
@@ -704,9 +755,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="stat-box"><strong>Q3:</strong> ${report.statistics.q3.toFixed(2)}</div>
       </div>
       
-      <div class="modal-interpretation">
-        <h3><i class="fas fa-lightbulb"></i> Detailed Analysis</h3>
-        <div class="interpretation-content">${report.interpretation}</div>
+      <div class="modal-interpretation ${report.hasInterpretation ? 'has-ai' : 'no-ai'}">
+        <h3><i class="fas fa-lightbulb"></i> Detailed AI Analysis</h3>
+        ${interpretationMeta}
+        <div class="interpretation-content">
+          ${report.hasInterpretation 
+            ? report.interpretation 
+            : '<p class="no-interpretation"><i class="fas fa-info-circle"></i> No AI interpretation has been generated for this report yet. The admin who uploaded this file needs to click "Generate AI" on their Analytics Report page to create an interpretation.</p>'}
+        </div>
+        ${report.analyzedColumn ? `<p class="analyzed-column-info"><strong>Analyzed Column:</strong> ${report.analyzedColumn}</p>` : ''}
       </div>
     `;
     
@@ -718,7 +775,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function getUniqueAdmins() {
-    return [...new Set(reports.map(r => r.adminId))].filter(id => 
+    return [...new Set(window.reports.map(r => r.adminId))].filter(id => 
       id && id !== 'Unknown' && id !== 'SuperAdmin' && id !== 'superadmin'
     );
   }
@@ -752,4 +809,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       </div>
     `;
   }
+
+  // Export functions to window for access
+  window.renderReportsGrid = renderReportsGrid;
+  window.generateExecutiveSummary = generateExecutiveSummary;
+  window.attachEventListeners = attachEventListeners;
+  window.applyFilters = applyFilters;
+  window.closeModal = closeModal;
+
 });

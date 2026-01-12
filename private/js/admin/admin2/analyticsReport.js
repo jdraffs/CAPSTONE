@@ -69,13 +69,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     const chartType = localStorage.getItem(`chartType_${displayName}`) || file.chart_type || "bar";
     
     try {
-      // First, check if interpretation already exists in database
+      // Check if interpretation already exists in database
       let savedInterpretation = null;
+      let analyzedColumn = null; // ✅ ADD THIS
       try {
         const interpretationResponse = await fetch(`${NODE_API_URL}/files/interpretation/${file.id}`);
         if (interpretationResponse.ok) {
           const interpretationData = await interpretationResponse.json();
           savedInterpretation = interpretationData.interpretation;
+          analyzedColumn = interpretationData.analyzed_column; // ✅ ADD THIS
         }
       } catch (err) {
         console.log(`No saved interpretation for ${displayName}`);
@@ -108,8 +110,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         chartType: chartType,
         chartImage: analyticsData.chart_image,
         statistics: analyticsData.statistics,
-        interpretation: savedInterpretation, // Use saved interpretation or null
+        interpretation: savedInterpretation,
         hasInterpretation: !!savedInterpretation,
+        analyzedColumn: analyzedColumn || analyticsData.file_info?.analyzed_column, // ✅ ADD THIS
         tableData: analyticsData.table_data,
         fileInfo: analyticsData.file_info,
         summary: analyticsData.summary,
@@ -316,7 +319,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="report-actions">
           <div class="left-actions">
             <button class="view-btn" data-id="${report.id}">
-              <i class="bi bi-eye"></i> View Full Report
+              <i class="bi bi-eye"></i> View Report
             </button>
 
             <button
@@ -327,7 +330,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               ${report.hasInterpretation ? 'data-has-interpretation="true"' : ''}
             >
               <i class="bi bi-robot"></i>
-              ${report.hasInterpretation ? 'Regenerate AI' : 'Generate AI'}
+              ${report.hasInterpretation ? 'Regenerate AI Analysis' : 'Generate AI Analysis'}
             </button>
           </div>
 
@@ -393,7 +396,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           report.statistics = analyticsData.statistics;
           report.tableData = analyticsData.table_data;
           report.currentColumn = analyticsData.file_info.analyzed_column;
-          report.interpretation = "Please click generate to create an interpretation for this specific data.";
+          report.interpretation = "Please click generate to create an interpretation for this data.";
           report.hasInterpretation = false;
 
           if (columnDisplay) {
@@ -540,9 +543,11 @@ document.addEventListener("DOMContentLoaded", async () => {
           
           report.interpretation = result.interpretation;
           report.hasInterpretation = true;
+          // ✅ ADD THIS LINE - Save which column was analyzed
+          report.analyzedColumn = result.column_analyzed || report.currentColumn;
 
           // Update button
-          btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Regenerate AI';
+          btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Regenerate AI Analysis';
           btn.setAttribute('data-has-interpretation', 'true');
 
           // Update badge
@@ -557,7 +562,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           await logAdminActivity('generate', `Generated AI interpretation for ${report.title}`, {
             reportId: report.id,
             reportTitle: report.title,
-            fileId: fileId
+            fileId: fileId,
+            analyzedColumn: report.analyzedColumn
           });
 
         } catch (error) {
@@ -571,7 +577,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         } finally {
           btn.disabled = false;
           if (!report.hasInterpretation) {
-            btn.innerHTML = '<i class="bi bi-robot"></i> Generate AI';
+            btn.innerHTML = '<i class="bi bi-robot"></i> Generate AI Analysis';
           }
         }
       });
@@ -785,8 +791,14 @@ function openReportDetails(report) {
     <div class="insight">
       <strong>🔍 Analysis Summary via Gemini AI</strong>
       <div class="interpretation-text">
-        ${report.interpretation}
+        ${report.interpretation || 'No AI interpretation available yet. Click "Generate AI Analysis" to create one.'}
       </div>
+      ${report.hasInterpretation && report.analyzedColumn ? `
+        <hr style="border: none; border-top: 1px solid rgba(0,0,0,0.1); margin: 15px 0;" />
+        <p class="analyzed-column-info" style="margin: 10px 0 0 0; font-size: 0.9rem; color: #4a5568;">
+          <strong>AI Analyzed Column:</strong> ${report.analyzedColumn}
+        </p>
+      ` : ''}
     </div>
 
     ${report.fileInfo ? `
@@ -794,7 +806,7 @@ function openReportDetails(report) {
         <strong>📊 File Information</strong>
         <p><strong>Total Rows:</strong> ${report.fileInfo.total_rows.toLocaleString()}</p>
         <p><strong>Total Columns:</strong> ${report.fileInfo.total_columns}</p>
-        <p><strong>Analyzed Column:</strong> ${report.fileInfo.analyzed_column}</p>
+        <p><strong>Selected Column:</strong> ${report.fileInfo.analyzed_column}</p>
         ${report.fileInfo.available_columns && report.fileInfo.available_columns.length > 1 ? 
           `<p><strong>Available Data Columns:</strong> ${report.fileInfo.available_columns.map(c => c.display_name).join(', ')}</p>` 
           : ''}

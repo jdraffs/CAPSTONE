@@ -858,3 +858,185 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+/* analyticsDashboard.css - ADD THESE STYLES TO YOUR EXISTING CSS */
+
+/* AI Status Badges */
+.ai-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin: 10px 0;
+}
+
+.ai-status-badge.success {
+  background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+  color: #1a5928;
+}
+
+.ai-status-badge.pending {
+  background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+  color: #6c4c00;
+}
+
+.ai-status-badge i {
+  font-size: 0.85rem;
+}
+
+/* Modal Interpretation Styling */
+.modal-interpretation.has-ai {
+  background: linear-gradient(135deg, #f0fff4 0%, #e6fffa 100%);
+  border: 2px solid #48bb78;
+}
+
+.modal-interpretation.no-ai {
+  background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+  border: 2px solid #fc8181;
+}
+
+.interpretation-meta {
+  font-size: 0.85rem;
+  color: #718096;
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.interpretation-meta i {
+  color: #4299e1;
+}
+
+.no-interpretation {
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  color: #4a5568;
+  line-height: 1.8;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.no-interpretation i {
+  color: #fc8181;
+  font-size: 1.2rem;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.analyzed-column-info {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  font-size: 0.85rem;
+  color: #4a5568;
+}
+
+.analyzed-column-info strong {
+  color: #2d3748;
+}
+
+/* Refresh Button Styles */
+.refresh-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+}
+
+.refresh-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.refresh-btn i {
+  font-size: 1rem;
+}
+
+/* Refresh Notification */
+.refresh-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: white;
+  padding: 15px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 10001;
+  transform: translateX(400px);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.refresh-notification.show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.refresh-notification.success {
+  border-left: 4px solid #48bb78;
+}
+
+.refresh-notification.error {
+  border-left: 4px solid #f56565;
+}
+
+.refresh-notification i {
+  font-size: 1.3rem;
+}
+
+.refresh-notification.success i {
+  color: #48bb78;
+}
+
+.refresh-notification.error i {
+  color: #f56565;
+}
+
+.refresh-notification span {
+  font-size: 0.9rem;
+  color: #2d3748;
+  font-weight: 500;
+}
+
+/* Loading chart state */
+.loading-chart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #718096;
+  font-size: 0.9rem;
+}
+
+/* Enhanced modal admin info section */
+.modal-admin-info {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.modal-admin-info .ai-status-badge {
+  margin: 0;
+}
