@@ -393,7 +393,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           report.statistics = analyticsData.statistics;
           report.tableData = analyticsData.table_data;
           report.currentColumn = analyticsData.file_info.analyzed_column;
-          report.interpretation = null;
+          report.interpretation = "Please click generate to create an interpretation for this specific data.";
           report.hasInterpretation = false;
 
           if (columnDisplay) {
