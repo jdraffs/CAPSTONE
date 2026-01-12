@@ -1,4 +1,4 @@
-//analyticsReport.js - COMPLETE FIXED VERSION
+//analyticsReport.js - UPDATED TO USE UNIFIED TRASH API
 document.addEventListener("DOMContentLoaded", async () => {
   const reportsGrid = document.querySelector(".reports-grid");
   const searchInput = document.querySelector(".search-input");
@@ -85,8 +85,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       reportsGrid.innerHTML = "<p>Loading analytics...</p>";
 
+      // UPDATED: Use unified trash endpoint
       const endpoint = currentView === "trash" 
-        ? `${NODE_API_URL}/files/trash`
+        ? `${NODE_API_URL}/trash`  // Changed from /files/trash
         : `${NODE_API_URL}/files/data`;
       
       const response = await fetch(endpoint);
@@ -322,7 +323,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       `;
       reportsGrid.appendChild(emptyTrashContainer);
       
-      // ADD EVENT LISTENER IMMEDIATELY AFTER APPENDING
       const emptyTrashBtn = document.getElementById("emptyTrashBtn");
       if (emptyTrashBtn) {
         emptyTrashBtn.addEventListener("click", async () => {
@@ -465,13 +465,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     attachCardEventListeners();
   }
 
-  // TRASH ACTION FUNCTIONS
+  // UPDATED: TRASH ACTION FUNCTIONS NOW USE UNIFIED API
   async function moveToTrash(fileId, fileName) {
     try {
-      const response = await fetch(`${NODE_API_URL}/files/move-to-trash/${fileId}`, {
+      // CHANGED: Use unified trash endpoint
+      const response = await fetch(`${NODE_API_URL}/trash/move/${fileId}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({})
+        headers: { "Content-Type": "application/json" }
       });
 
       if (!response.ok) throw new Error('Failed to move to trash');
@@ -498,10 +498,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   async function restoreFromTrash(fileId, fileName) {
     try {
-      const response = await fetch(`${NODE_API_URL}/files/restore/${fileId}`, {
+      // CHANGED: Use unified trash endpoint
+      const response = await fetch(`${NODE_API_URL}/trash/restore/${fileId}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({})
+        headers: { "Content-Type": "application/json" }
       });
 
       if (!response.ok) throw new Error('Failed to restore');
@@ -532,10 +532,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     
     try {
-      const response = await fetch(`${NODE_API_URL}/files/permanent/${fileId}`, {
+      // CHANGED: Use unified trash endpoint
+      const response = await fetch(`${NODE_API_URL}/trash/permanent/${fileId}`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({})
+        headers: { "Content-Type": "application/json" }
       });
 
       if (!response.ok) throw new Error('Failed to delete permanently');
@@ -573,7 +573,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     
     try {
-      const response = await fetch(`${NODE_API_URL}/files/empty-trash`, {
+      // CHANGED: Use unified trash endpoint
+      const response = await fetch(`${NODE_API_URL}/trash/empty`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" }
       });
@@ -603,7 +604,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // Continued in next comment...
+  //Part 2
+  // analyticsReport.js - PART 2 (Continuation)
+// This continues from the previous part - append to the end of Part 3
+
   function attachCardEventListeners() {
     // Trash button (move to trash)
     document.querySelectorAll(".trash-btn").forEach(btn => {
