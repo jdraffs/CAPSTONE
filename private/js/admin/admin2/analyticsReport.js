@@ -1,31 +1,25 @@
-//analyticsReport.js - PART 1 - Main Logic with Activity Logging
+//analyticsReport.js - UPDATED with Generate Interpretation Button
 document.addEventListener("DOMContentLoaded", async () => {
   const reportsGrid = document.querySelector(".reports-grid");
   const searchInput = document.querySelector(".search-input");
   const filterSelect = document.querySelector(".filter-select");
   const exportAllBtn = document.querySelector(".export-btn");
   const PYTHON_API_URL = "http://localhost:5000/api";
+  const NODE_API_URL = "http://localhost:3000/api";
 
-  // Fetch uploaded files (data repository)
   let uploadedFiles = [];
   let reports = [];
   let filteredReports = [];
 
-  // ==================== ACTIVITY LOGGING FUNCTIONS ====================
-  
-  // Get current admin ID from session/localStorage
   function getCurrentAdminId() {
-    // You should get this from your login session
-    // For now, assuming it's stored in localStorage or session
-    return localStorage.getItem('currentAdminId') || sessionStorage.getItem('adminId') || '2'; // Default to admin2
+    return localStorage.getItem('currentAdminId') || sessionStorage.getItem('adminId') || '2';
   }
 
-  // Log activity to centralized storage (for SuperAdmin to see)
   async function logAdminActivity(actionType, message, details = {}) {
     const adminId = getCurrentAdminId();
     
     const activityLog = {
-      type: actionType, // 'upload', 'delete', 'update', 'error'
+      type: actionType,
       message: message,
       adminId: adminId,
       timestamp: new Date().toISOString(),
@@ -33,39 +27,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
 
     try {
-      // Try to send to backend API first
-      const response = await fetch('http://localhost:3000/api/activity-logs', {
+      const response = await fetch(`${NODE_API_URL}/activity-logs`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(activityLog)
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to log to server');
-      }
+      if (!response.ok) throw new Error('Failed to log to server');
       console.log(`✅ Activity logged: ${actionType} - ${message}`);
     } catch (error) {
       console.warn('Could not log to server, using localStorage fallback');
-      
-      // Fallback to localStorage
       let logs = JSON.parse(localStorage.getItem('analytics_activity_logs') || '[]');
       logs.push(activityLog);
-      
-      // Keep only last 500 logs
-      if (logs.length > 500) {
-        logs = logs.slice(-500);
-      }
-      
+      if (logs.length > 500) logs = logs.slice(-500);
       localStorage.setItem('analytics_activity_logs', JSON.stringify(logs));
     }
   }
 
-  // ==================== END ACTIVITY LOGGING FUNCTIONS ====================
-
   try {
-    const response = await fetch("http://localhost:3000/api/files/data");
+    const response = await fetch(`${NODE_API_URL}/files/data`);
     uploadedFiles = await response.json();
   } catch (err) {
     console.error("Error fetching file data:", err);
@@ -78,33 +58,41 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // Show loading state
-  reportsGrid.innerHTML = "<p>Loading analytics with Python processing...</p>";
+  reportsGrid.innerHTML = "<p>Loading analytics...</p>";
 
-  // Batch process all files with Python backend
+  // Process files WITHOUT generating AI interpretation
   for (let index = 0; index < uploadedFiles.length; index++) {
     const file = uploadedFiles[index];
     
     const actualFilename = file.filename || file.originalName || file.displayName;
     const displayName = file.displayName || file.originalName || file.filename;
-    
     const chartType = localStorage.getItem(`chartType_${displayName}`) || file.chart_type || "bar";
     
     try {
+      // First, check if interpretation already exists in database
+      let savedInterpretation = null;
+      try {
+        const interpretationResponse = await fetch(`${NODE_API_URL}/files/interpretation/${file.id}`);
+        if (interpretationResponse.ok) {
+          const interpretationData = await interpretationResponse.json();
+          savedInterpretation = interpretationData.interpretation;
+        }
+      } catch (err) {
+        console.log(`No saved interpretation for ${displayName}`);
+      }
+
+      // Process analytics WITHOUT generating interpretation
       const response = await fetch(`${PYTHON_API_URL}/analytics/process`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           filename: actualFilename,
-          chart_type: chartType
+          chart_type: chartType,
+          generate_interpretation: false  // Don't generate on load
         })
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
       const analyticsData = await response.json();
 
@@ -120,7 +108,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         chartType: chartType,
         chartImage: analyticsData.chart_image,
         statistics: analyticsData.statistics,
-        interpretation: analyticsData.interpretation,
+        interpretation: savedInterpretation, // Use saved interpretation or null
+        hasInterpretation: !!savedInterpretation,
         tableData: analyticsData.table_data,
         fileInfo: analyticsData.file_info,
         summary: analyticsData.summary,
@@ -149,28 +138,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // Update summary cards with actual data
   updateSummaryCards(reports, uploadedFiles);
-
-  // Initialize filtered reports
   filteredReports = [...reports];
-
-  // Clear loading state and render reports
   renderReports(filteredReports);
 
-  // Search functionality
   searchInput.addEventListener("input", (e) => {
     const searchTerm = e.target.value.toLowerCase();
     applyFilters(searchTerm, filterSelect.value);
   });
 
-  // Filter functionality
   filterSelect.addEventListener("change", (e) => {
     const searchTerm = searchInput.value.toLowerCase();
     applyFilters(searchTerm, e.target.value);
   });
 
-  // Export All functionality
   exportAllBtn.addEventListener("click", () => {
     exportAllReports(reports);
   });
@@ -182,9 +163,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         report.currentColumn.toLowerCase().includes(searchTerm) ||
         report.metric.toLowerCase().includes(searchTerm);
 
-      const matchesType = fileType === "All Types" || 
-        report.fileExtension === fileType;
-
+      const matchesType = fileType === "All Types" || report.fileExtension === fileType;
       return matchesSearch && matchesType;
     });
 
@@ -193,25 +172,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   function updateSummaryCards(reportsList, filesList) {
     const totalReportsCard = document.querySelector(".summary-card:nth-child(1) .summary-value");
-    if (totalReportsCard) {
-      totalReportsCard.textContent = reportsList.length;
-    }
+    if (totalReportsCard) totalReportsCard.textContent = reportsList.length;
 
-    const totalRecords = reportsList.reduce((sum, report) => {
-      return sum + (report.recordsProcessed || 0);
-    }, 0);
+    const totalRecords = reportsList.reduce((sum, report) => sum + (report.recordsProcessed || 0), 0);
     const totalRecordsCard = document.querySelector(".summary-card:nth-child(2) .summary-value");
     const totalRecordsLabel = document.querySelector(".summary-card:nth-child(2) .summary-label");
-    if (totalRecordsCard) {
-      totalRecordsCard.textContent = totalRecords.toLocaleString();
-    }
-    if (totalRecordsLabel) {
-      totalRecordsLabel.textContent = "Total Records Tracked";
-    }
+    if (totalRecordsCard) totalRecordsCard.textContent = totalRecords.toLocaleString();
+    if (totalRecordsLabel) totalRecordsLabel.textContent = "Total Records Tracked";
 
-    const mostRecentReport = reportsList.sort((a, b) => 
-      b.uploadedAt - a.uploadedAt
-    )[0];
+    const mostRecentReport = reportsList.sort((a, b) => b.uploadedAt - a.uploadedAt)[0];
     const recentReportCard = document.querySelector(".summary-card:nth-child(3) .summary-value");
     if (recentReportCard && mostRecentReport) {
       recentReportCard.textContent = mostRecentReport.title.length > 20 
@@ -219,17 +188,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         : mostRecentReport.title;
     }
 
-    const avgRecords = reportsList.length > 0 
-      ? Math.round(totalRecords / reportsList.length) 
-      : 0;
+    const avgRecords = reportsList.length > 0 ? Math.round(totalRecords / reportsList.length) : 0;
     const avgCard = document.querySelector(".summary-card:nth-child(4) .summary-value");
     const avgLabel = document.querySelector(".summary-card:nth-child(4) .summary-label");
-    if (avgCard) {
-      avgCard.textContent = avgRecords.toLocaleString();
-    }
-    if (avgLabel) {
-      avgLabel.textContent = "Avg Records per Report";
-    }
+    if (avgCard) avgCard.textContent = avgRecords.toLocaleString();
+    if (avgLabel) avgLabel.textContent = "Avg Records per Report";
   }
 
   function exportAllReports(reportsList) {
@@ -303,12 +266,18 @@ document.addEventListener("DOMContentLoaded", async () => {
         `;
       }
 
+      // Interpretation status indicator
+      const interpretationStatus = report.hasInterpretation 
+        ? '<span class="interpretation-badge"><i class="bi bi-check-circle-fill"></i> AI Analysis Ready</span>'
+        : '<span class="interpretation-badge empty"><i class="bi bi-robot"></i> No AI Analysis Yet</span>';
+
       card.innerHTML = `
         <div class="report-header">
           <div>
             <h3>${report.title}</h3>
             <p>${report.metric}</p>
             <p class="current-column-display"><strong>Analyzing:</strong> ${report.currentColumn}</p>
+            ${interpretationStatus}
           </div>
         </div>
         ${columnSelector}
@@ -345,16 +314,38 @@ document.addEventListener("DOMContentLoaded", async () => {
           </div>
         </div>
         <div class="report-actions">
-          <button class="view-btn" data-id="${report.id}">
-            <i class="bi bi-eye"></i> View Full Report
-          </button>
-          <button class="refresh-btn" data-id="${report.id}" data-filename="${report.actualFilename || report.title}">
-            <i class="fas fa-sync-alt"></i>
-          </button>
-          <button class="delete-btn" data-file-id="${report.file_id}">
-            <i class="bi bi-trash"></i>
-          </button>
+          <div class="left-actions">
+            <button class="view-btn" data-id="${report.id}">
+              <i class="bi bi-eye"></i> View Full Report
+            </button>
+
+            <button
+              class="generate-interpretation-btn"
+              data-id="${report.id}"
+              data-file-id="${report.file_id}"
+              data-filename="${report.actualFilename}"
+              ${report.hasInterpretation ? 'data-has-interpretation="true"' : ''}
+            >
+              <i class="bi bi-robot"></i>
+              ${report.hasInterpretation ? 'Regenerate AI' : 'Generate AI'}
+            </button>
+          </div>
+
+          <div class="right-actions">
+            <button
+              class="refresh-btn"
+              data-id="${report.id}"
+              data-filename="${report.actualFilename || report.title}"
+            >
+              <i class="fas fa-sync-alt"></i>
+            </button>
+
+            <button class="delete-btn" data-file-id="${report.file_id}">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
         </div>
+
       `;
 
       reportsGrid.appendChild(card);
@@ -363,10 +354,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     attachCardEventListeners();
   }
 
-  // ==================== EVENT LISTENERS WITH LOGGING ====================
-  
   function attachCardEventListeners() {
-    // Column selection changes WITH LOGGING
+    // Column selection changes
     document.querySelectorAll(".column-select-dropdown").forEach(select => {
       select.addEventListener("change", async (e) => {
         const reportId = e.target.id.split("-")[1];
@@ -385,19 +374,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         try {
           const response = await fetch(`${PYTHON_API_URL}/analytics/process`, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               filename: report.actualFilename || report.title,
               chart_type: report.chartType,
-              column: selectedColumn
+              column: selectedColumn,
+              generate_interpretation: false
             })
           });
 
-          if (!response.ok) {
-            throw new Error('Failed to load column data');
-          }
+          if (!response.ok) throw new Error('Failed to load column data');
 
           const analyticsData = await response.json();
           
@@ -405,9 +391,10 @@ document.addEventListener("DOMContentLoaded", async () => {
           
           report.chartImage = analyticsData.chart_image;
           report.statistics = analyticsData.statistics;
-          report.interpretation = analyticsData.interpretation;
           report.tableData = analyticsData.table_data;
           report.currentColumn = analyticsData.file_info.analyzed_column;
+          report.interpretation = null;
+          report.hasInterpretation = false;
 
           if (columnDisplay) {
             columnDisplay.innerHTML = `<strong>Analyzing:</strong> ${report.currentColumn}`;
@@ -429,6 +416,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             </div>
           `;
 
+          // Update generate button text
+          const generateBtn = card.querySelector(".generate-interpretation-btn");
+          if (generateBtn) {
+            generateBtn.innerHTML = '<i class="bi bi-robot"></i> Generate AI';
+            generateBtn.removeAttribute('data-has-interpretation');
+          }
+
           await logAdminActivity('update', `Changed analysis column for ${report.title} to ${report.currentColumn}`, {
             reportId: report.id,
             reportTitle: report.title,
@@ -449,7 +443,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
     });
 
-    // Chart type changes WITH LOGGING
+    // Chart type changes
     document.querySelectorAll(".chart-type-select").forEach(select => {
       select.addEventListener("change", async (e) => {
         const reportId = e.target.id.split("-")[1];
@@ -469,19 +463,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         try {
           const response = await fetch(`${PYTHON_API_URL}/analytics/process`, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               filename: report.actualFilename || report.title,
               chart_type: selectedType,
-              column: selectedColumn
+              column: selectedColumn,
+              generate_interpretation: false
             })
           });
 
-          if (!response.ok) {
-            throw new Error('Failed to regenerate chart');
-          }
+          if (!response.ok) throw new Error('Failed to regenerate chart');
 
           const analyticsData = await response.json();
           
@@ -490,7 +481,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           report.chartImage = analyticsData.chart_image;
           report.chartType = selectedType;
           report.statistics = analyticsData.statistics;
-          report.interpretation = analyticsData.interpretation;
 
           localStorage.setItem(`chartType_${report.title}`, selectedType);
 
@@ -513,9 +503,82 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       });
     });
+
+    // NEW: Generate Interpretation Button
+    document.querySelectorAll(".generate-interpretation-btn").forEach(btn => {
+      btn.addEventListener("click", async (e) => {
+        const reportId = e.currentTarget.dataset.id;
+        const fileId = e.currentTarget.dataset.fileId;
+        const filename = e.currentTarget.dataset.filename;
+        const report = reports.find(r => r.id == reportId);
+        
+        if (!report) return;
+
+        const card = e.currentTarget.closest(".report-card");
+        const columnSelector = card.querySelector(".column-select-dropdown");
+        const selectedColumn = columnSelector ? columnSelector.value : null;
+
+        // Disable button and show loading
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+
+        try {
+          const response = await fetch(`${PYTHON_API_URL}/analytics/generate-interpretation`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              filename: filename,
+              file_id: fileId,
+              column: selectedColumn,
+              chart_type: report.chartType
+            })
+          });
+
+          if (!response.ok) throw new Error('Failed to generate interpretation');
+
+          const result = await response.json();
+          
+          report.interpretation = result.interpretation;
+          report.hasInterpretation = true;
+
+          // Update button
+          btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Regenerate AI';
+          btn.setAttribute('data-has-interpretation', 'true');
+
+          // Update badge
+          const badge = card.querySelector(".interpretation-badge");
+          if (badge) {
+            badge.className = "interpretation-badge";
+            badge.innerHTML = '<i class="bi bi-check-circle-fill"></i> AI Analysis Ready';
+          }
+
+          toast.success('AI interpretation generated successfully!');
+
+          await logAdminActivity('generate', `Generated AI interpretation for ${report.title}`, {
+            reportId: report.id,
+            reportTitle: report.title,
+            fileId: fileId
+          });
+
+        } catch (error) {
+          console.error('Error generating interpretation:', error);
+          toast.error('Failed to generate AI interpretation. Please try again.');
+          
+          await logAdminActivity('error', `Failed to generate interpretation for ${report.title}`, {
+            reportId: report.id,
+            error: error.message
+          });
+        } finally {
+          btn.disabled = false;
+          if (!report.hasInterpretation) {
+            btn.innerHTML = '<i class="bi bi-robot"></i> Generate AI';
+          }
+        }
+      });
+    });
   }
 
-  // DELETE button WITH LOGGING
+  // DELETE button
   document.body.addEventListener("click", async (e) => {
     const btn = e.target.closest(".delete-btn");
     if (!btn) return;
@@ -537,7 +600,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     btn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
 
     try {
-      const response = await fetch(`http://localhost:3000/api/files/files/${fileId}`, {
+      const response = await fetch(`${NODE_API_URL}/files/files/${fileId}`, {
         method: "DELETE"
       });
 
@@ -598,26 +661,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       const response = await fetch(`${PYTHON_API_URL}/analytics/process`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           filename: filename,
           chart_type: report.chartType,
-          column: selectedColumn
+          column: selectedColumn,
+          generate_interpretation: false
         })
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to refresh analytics');
-      }
+      if (!response.ok) throw new Error('Failed to refresh analytics');
 
       const analyticsData = await response.json();
       
       Object.assign(report, {
         chartImage: analyticsData.chart_image,
         statistics: analyticsData.statistics,
-        interpretation: analyticsData.interpretation,
         tableData: analyticsData.table_data
       });
 
@@ -660,13 +719,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (report) openReportDetails(report);
   });
 
-  // Continue in Part 2...
   window.openReportDetails = openReportDetails;
   window.addExportListeners = addExportListeners;
   window.exportReportAsCSV = exportReportAsCSV;
   window.exportReportAsPDF = exportReportAsPDF;
 });
-
 //analyticsReport.js - PART 2 - Modal Details & Export Functions
 // This continues from Part 1 - Place these functions BEFORE the closing DOMContentLoaded
 

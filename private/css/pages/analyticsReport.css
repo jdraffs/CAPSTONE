@@ -273,8 +273,8 @@
 }
 
 .view-btn {
-  background: #3596ff;
-  color: #fff;
+  background: rgb(19, 153, 255);
+  color: white;
   border: none;
   border-radius: 8px;
   padding: 8px 14px;
@@ -284,10 +284,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  transition: 0.3s;
+  transition: all 0.3s;
   height: 40px;
-  max-width: 30%;
-  margin-right: auto;
   flex: 1;
 }
 
@@ -554,3 +552,134 @@
 .stat-card.teal { background: #4facfe; color: #002749; }
 .stat-card.yellow { background: #ffd396; color: #7f3b24; }
 .stat-card.pink { background: #ff9a9e; color: #762d5f; }
+
+/* Add these styles to your existing analyticsReport.css */
+
+/* Interpretation Badge */
+.interpretation-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-top: 8px;
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.interpretation-badge.empty {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.interpretation-badge i {
+  margin-right: 4px;
+}
+
+/* Generate Interpretation Button */
+.generate-interpretation-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s;
+  height: 40px;
+  flex: 1;
+  max-width: 50%;
+  left: 10px;
+}
+
+.generate-interpretation-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.generate-interpretation-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.generate-interpretation-btn[data-has-interpretation="true"] {
+  background: linear-gradient(135deg, #16a34a 0%, #059669 100%);
+}
+
+.generate-interpretation-btn i {
+  font-size: 1rem;
+}
+
+.report-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 15px;
+}
+
+.left-actions {
+  display: flex;
+  gap: 10px; /* adjust closeness here */
+  flex: 1;
+  min-width: 30%;
+  max-width: 70%;
+}
+.right-actions {
+  display: flex;
+  gap: 10px; /* adjust closeness here */
+}
+
+.view-btn,
+.generate-interpretation-btn {
+  display: flex;
+  align-items: center;      /* vertical center */
+  justify-content: center;  /* horizontal center */
+  text-align: center;
+}
+
+/* Refresh button styling */
+.refresh-btn {
+  background: #f3f4f6;
+  border: 2px solid #e5e7eb;
+  color: #6b7280;
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.refresh-btn:hover {
+  background: #e5e7eb;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+/* Loading state for spinning icon */
+.fa-spinner.fa-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .report-actions {
+    grid-template-columns: 1fr;
+  }
+  
+  .generate-interpretation-btn,
+  .view-btn {
+  flex: 1; /* equal width */
+  min-width: 0;
+  }
+}

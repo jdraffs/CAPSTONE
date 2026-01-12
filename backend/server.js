@@ -120,6 +120,69 @@ app.get("/api/files/data", async (req, res) => {
   }
 });
 
+// Add this route in server.js after the existing routes
+
+// Save AI interpretation to database
+app.post("/api/files/save-interpretation", async (req, res) => {
+  try {
+    const { file_id, interpretation, column_analyzed } = req.body;
+
+    if (!file_id || !interpretation) {
+      return res.status(400).json({ error: "file_id and interpretation are required" });
+    }
+
+    const result = await pool.query(
+      `UPDATE file_repository_files 
+       SET ai_interpretation = $1, 
+           interpretation_generated_at = NOW(),
+           analyzed_column = $2
+       WHERE id = $3
+       RETURNING id, ai_interpretation, interpretation_generated_at`,
+      [interpretation, column_analyzed, file_id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "File not found" });
+    }
+
+    res.json({
+      success: true,
+      message: "Interpretation saved successfully",
+      data: result.rows[0]
+    });
+  } catch (err) {
+    console.error("Error saving interpretation:", err);
+    res.status(500).json({ error: "Failed to save interpretation" });
+  }
+});
+
+// Get saved interpretation for a file
+app.get("/api/files/interpretation/:fileId", async (req, res) => {
+  try {
+    const { fileId } = req.params;
+
+    const result = await pool.query(
+      `SELECT ai_interpretation, interpretation_generated_at, analyzed_column 
+       FROM file_repository_files 
+       WHERE id = $1`,
+      [fileId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "File not found" });
+    }
+
+    res.json({
+      interpretation: result.rows[0].ai_interpretation,
+      generated_at: result.rows[0].interpretation_generated_at,
+      analyzed_column: result.rows[0].analyzed_column
+    });
+  } catch (err) {
+    console.error("Error fetching interpretation:", err);
+    res.status(500).json({ error: "Failed to fetch interpretation" });
+  }
+});
+
 // pagstart ng server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
