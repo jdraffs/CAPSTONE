@@ -573,7 +573,145 @@
   border-color: #cbd5e0;
 }
 
-.delete-btn {
+/* Add these styles to analyticsReport.css */
+
+/* ============================================
+   VIEW TOGGLE (Active/Trash)
+   ============================================ */
+
+.view-toggle {
+  display: flex;
+  gap: 8px;
+  background: #f7fafc;
+  padding: 4px;
+  border-radius: 8px;
+  margin-right: 15px;
+}
+
+.view-toggle-btn {
+  background: transparent;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #718096;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.view-toggle-btn:hover {
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+}
+
+.view-toggle-btn.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.view-toggle-btn i {
+  font-size: 1rem;
+}
+
+/* ============================================
+   TRASHED REPORT CARDS
+   ============================================ */
+
+.report-card.trashed {
+  border-color: #fc8181;
+  background: linear-gradient(to bottom, rgba(252, 129, 129, 0.05), white);
+  opacity: 0.95;
+}
+
+.report-card.trashed::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
+}
+
+.trashed-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #fed7d7 0%, #fc8181 100%);
+  color: #c53030;
+  margin: 10px 0;
+}
+
+.trashed-badge i {
+  font-size: 0.85rem;
+}
+
+/* ============================================
+   TRASH ACTION BUTTONS
+   ============================================ */
+
+.trash-actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.restore-btn {
+  flex: 1;
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+  height: 40px;
+}
+
+.restore-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+}
+
+.delete-permanent-btn {
+  flex: 1;
+  background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+  height: 40px;
+}
+
+.delete-permanent-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 101, 101, 0.4);
+}
+
+.trash-btn {
   background: white;
   border: 2px solid #fc8181;
   color: #fc8181;
@@ -588,10 +726,98 @@
   height: 40px;
 }
 
-.delete-btn:hover {
+.trash-btn:hover {
   background: #fc8181;
   color: white;
   transform: translateY(-2px);
+}
+
+/* ============================================
+   EMPTY TRASH BUTTON
+   ============================================ */
+
+.empty-trash-container {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: linear-gradient(135deg, #fed7d7 0%, #fbb6ce 100%);
+  border-radius: 12px;
+  border-left: 4px solid #fc8181;
+}
+
+.empty-trash-btn {
+  background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.empty-trash-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 101, 101, 0.4);
+}
+
+.empty-trash-btn i {
+  font-size: 1.1rem;
+}
+
+/* ============================================
+   RESPONSIVE UPDATES
+   ============================================ */
+
+@media (max-width: 768px) {
+  .view-toggle {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+
+  .view-toggle-btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .trash-actions {
+    flex-direction: column;
+  }
+
+  .restore-btn,
+  .delete-permanent-btn {
+    width: 100%;
+  }
+
+  .empty-trash-container {
+    justify-content: center;
+  }
+}
+
+/* ============================================
+   ANIMATION FOR TRASHED ITEMS
+   ============================================ */
+
+@keyframes fadeInTrashed {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 0.95;
+    transform: translateY(0);
+  }
+}
+
+.report-card.trashed {
+  animation: fadeInTrashed 0.3s ease;
 }
 
 /* ============================================
