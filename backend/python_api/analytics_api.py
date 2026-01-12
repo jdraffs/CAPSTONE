@@ -482,9 +482,94 @@ def load_file_data(filename):
         raise Exception(f"Error parsing file: {str(e)}")
 
 
+# analytics_api.py - Add this new endpoint after the existing routes
+
+@app.route('/api/analytics/generate-interpretation', methods=['POST'])
+def generate_interpretation_only():
+    """Generate AI interpretation for a specific report and save it"""
+    try:
+        data = request.get_json()
+        
+        if not data or 'filename' not in data:
+            return jsonify({'error': 'Filename is required'}), 400
+        
+        filename = data['filename']
+        file_id = data.get('file_id')
+        selected_column = data.get('column', None)
+        
+        print(f"🤖 Generating interpretation for: {filename}")
+        
+        # Load file data
+        file_data = load_file_data(filename)
+        
+        # If a specific column is selected, use it
+        if selected_column and selected_column in file_data.get('numeric_columns', []):
+            df = file_data['full_dataframe']
+            column_name_raw = selected_column
+            column_name = file_data['column_descriptions'].get(selected_column, selected_column)
+            
+            data_series = pd.to_numeric(df[selected_column], errors='coerce')
+            valid_data = data_series.dropna()
+            
+            file_data['data'] = valid_data.tolist()
+            file_data['labels'] = df.loc[valid_data.index, 'School Year'].astype(str).tolist()
+            file_data['column_name'] = column_name
+            file_data['column_name_raw'] = column_name_raw
+        
+        # Process analytics to get statistics
+        analytics_result = process_file_analytics(file_data, data.get('chart_type', 'bar'))
+        
+        if 'error' in analytics_result:
+            return jsonify(analytics_result), 500
+        
+        # Generate interpretation
+        metrics_comparisons = file_data.get('metrics_comparisons', {})
+        gemini_interpretation = generate_gemini_interpretation(
+            statistics=analytics_result['statistics'],
+            metrics_comparisons=metrics_comparisons,
+            column_name=file_data['column_name'],
+            file_context={'filename': filename}
+        )
+        
+        # Save interpretation to database if file_id is provided
+        if file_id:
+            try:
+                import requests as http_requests
+                save_response = http_requests.post(
+                    'http://localhost:3000/api/files/save-interpretation',
+                    json={
+                        'file_id': file_id,
+                        'interpretation': gemini_interpretation,
+                        'column_analyzed': file_data['column_name']
+                    },
+                    timeout=5
+                )
+                
+                if save_response.status_code == 200:
+                    print(f"✅ Interpretation saved to database for file_id: {file_id}")
+                else:
+                    print(f"⚠️ Failed to save interpretation to database: {save_response.status_code}")
+            except Exception as save_error:
+                print(f"⚠️ Could not save to database: {str(save_error)}")
+        
+        return jsonify({
+            'interpretation': gemini_interpretation,
+            'statistics': analytics_result['statistics'],
+            'metrics_comparisons': metrics_comparisons,
+            'column_analyzed': file_data['column_name']
+        }), 200
+        
+    except Exception as e:
+        error_msg = f'Failed to generate interpretation: {str(e)}'
+        print(f"❌ Error: {error_msg}")
+        print(traceback.format_exc())
+        return jsonify({'error': error_msg}), 500
+
+
+# Update the existing /api/analytics/process endpoint to NOT generate interpretation by default
 @app.route('/api/analytics/process', methods=['POST'])
 def process_analytics():
-    """Process analytics with Gemini AI interpretation"""
+    """Process analytics WITHOUT generating AI interpretation by default"""
     try:
         data = request.get_json()
         
@@ -494,6 +579,7 @@ def process_analytics():
         filename = data['filename']
         chart_type = data.get('chart_type', 'bar')
         selected_column = data.get('column', None)
+        generate_ai = data.get('generate_interpretation', False)  # NEW FLAG
         
         print(f"🔄 Processing: {filename} with chart type: {chart_type}")
         
@@ -521,15 +607,20 @@ def process_analytics():
         
         metrics_comparisons = file_data.get('metrics_comparisons', {})
         
-        print("🤖 Generating Gemini AI interpretation...")
-        gemini_interpretation = generate_gemini_interpretation(
-            statistics=analytics_result['statistics'],
-            metrics_comparisons=metrics_comparisons,
-            column_name=file_data['column_name'],
-            file_context={'filename': filename}
-        )
+        # Only generate interpretation if explicitly requested
+        if generate_ai:
+            print("🤖 Generating Gemini AI interpretation...")
+            gemini_interpretation = generate_gemini_interpretation(
+                statistics=analytics_result['statistics'],
+                metrics_comparisons=metrics_comparisons,
+                column_name=file_data['column_name'],
+                file_context={'filename': filename}
+            )
+            analytics_result['interpretation'] = gemini_interpretation
+        else:
+            # Return placeholder or saved interpretation
+            analytics_result['interpretation'] = None
         
-        analytics_result['interpretation'] = gemini_interpretation
         analytics_result['metrics_comparisons'] = metrics_comparisons
         
         analytics_result['file_info'] = {
@@ -543,7 +634,7 @@ def process_analytics():
             'analyzed_column': file_data['column_name']
         }
         
-        print(f"✅ Successfully processed {filename} with Gemini AI")
+        print(f"✅ Successfully processed {filename}")
         
         return jsonify(analytics_result), 200
         
@@ -561,64 +652,6 @@ def process_analytics():
             'error': error_msg,
             'traceback': traceback.format_exc()
         }), 500
-
-
-@app.route('/api/analytics/batch-process', methods=['POST'])
-def batch_process_analytics():
-    """Process analytics for multiple files with Gemini AI"""
-    try:
-        data = request.get_json()
-        
-        if not data or 'files' not in data:
-            return jsonify({'error': 'Files array is required'}), 400
-        
-        results = []
-        errors = []
-        
-        for file_config in data['files']:
-            filename = file_config.get('filename')
-            chart_type = file_config.get('chart_type', 'bar')
-            
-            if not filename:
-                errors.append({'filename': 'unknown', 'error': 'Filename missing'})
-                continue
-            
-            try:
-                file_data = load_file_data(filename)
-                analytics_result = process_file_analytics(file_data, chart_type)
-                
-                metrics_comparisons = file_data.get('metrics_comparisons', {})
-                gemini_interpretation = generate_gemini_interpretation(
-                    statistics=analytics_result['statistics'],
-                    metrics_comparisons=metrics_comparisons,
-                    column_name=file_data['column_name'],
-                    file_context={'filename': filename}
-                )
-                
-                analytics_result['interpretation'] = gemini_interpretation
-                analytics_result['metrics_comparisons'] = metrics_comparisons
-                
-                analytics_result['file_info'] = {
-                    'filename': filename,
-                    'analyzed_column': file_data['column_name'],
-                    'detected_metrics': file_data.get('detected_metrics', {})
-                }
-                
-                results.append(analytics_result)
-                
-            except Exception as e:
-                errors.append({'filename': filename, 'error': str(e)})
-        
-        return jsonify({
-            'results': results,
-            'errors': errors,
-            'total_processed': len(results),
-            'total_errors': len(errors)
-        }), 200
-        
-    except Exception as e:
-        return jsonify({'error': f'Batch processing failed: {str(e)}'}), 500
-
 
 @app.route('/api/analytics/files', methods=['GET'])
 def list_available_files():
