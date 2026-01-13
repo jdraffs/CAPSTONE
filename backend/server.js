@@ -27,6 +27,7 @@ import roleManagementRoute from './routes/roleManagementRoute.js';
 import userManagementRoute from './routes/userManagementRoute.js';
 import chatbotRoute from './routes/chatbotRoute.js';
 import trashRoute from './routes/trashRoute.js'; // NEW: Unified trash route
+import accreditationRoute from './routes/accreditationRoute.js';
 
 // initialize 
 dotenv.config();
@@ -59,6 +60,7 @@ app.use('/private', express.static(path.join(__dirname, '../private')));
 app.use("/api", roleManagementRoute);
 app.use("/api", userManagementRoute);
 app.use("/api", trashRoute); // NEW: Unified trash management
+app.use('/api', accreditationRoute);
 
 // SINGLE /api/files/data endpoint with trash support
 app.get("/api/files/data", async (req, res) => {
