@@ -528,5 +528,323 @@ router.get('/accreditation/activity/:cycleId', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch activity log' });
     }
 });
+// Add these routes to backend/routes/accreditationRoute.js
+
+// ============================================
+// SECTION MANAGEMENT ROUTES (for Tab 2)
+// ============================================
+
+// GET: All Sections for Active Cycle
+router.get('/accreditation/sections/all/:cycleId', async (req, res) => {
+    const { cycleId } = req.params;
+
+    try {
+        const result = await pool.query(`
+            SELECT 
+                s.id as section_id,
+                s.section_name,
+                s.area_id,
+                a.area_number,
+                a.area_name,
+                aa.area_head_id,
+                ah.adminid as area_head_name,
+                sub.google_drive_link,
+                sub.submitted_at,
+                sub.submitted_by,
+                r.review_status
+            FROM accreditation_sections s
+            JOIN accreditation_areas a ON s.area_id = a.id
+            LEFT JOIN area_assignments aa ON a.id = aa.area_id AND aa.cycle_id = $1
+            LEFT JOIN admin_accounts ah ON aa.area_head_id = ah.id
+            LEFT JOIN section_submissions sub ON s.id = sub.section_id
+            LEFT JOIN section_reviews r ON s.id = r.section_id
+            WHERE s.cycle_id = $1
+            ORDER BY a.area_number, s.section_name
+        `, [cycleId]);
+
+        res.json({ sections: result.rows });
+    } catch (error) {
+        console.error('Error fetching all sections:', error);
+        res.status(500).json({ error: 'Failed to fetch sections' });
+    }
+});
+
+// POST: Add New Section
+router.post('/accreditation/section', async (req, res) => {
+    const { cycle_id, area_id, section_name, created_by } = req.body;
+
+    if (!cycle_id || !area_id || !section_name || !created_by) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    try {
+        // Check if section name already exists in this cycle
+        const existingSection = await pool.query(`
+            SELECT id FROM accreditation_sections 
+            WHERE cycle_id = $1 AND section_name = $2
+        `, [cycle_id, section_name]);
+
+        if (existingSection.rows.length > 0) {
+            return res.status(400).json({ error: 'Section name already exists in this cycle' });
+        }
+
+        const result = await pool.query(`
+            INSERT INTO accreditation_sections (cycle_id, area_id, section_name, created_by)
+            VALUES ($1, $2, $3, $4)
+            RETURNING id, section_name
+        `, [cycle_id, area_id, section_name, created_by]);
+
+        // Get area name for logging
+        const areaInfo = await pool.query(`
+            SELECT area_name FROM accreditation_areas WHERE id = $1
+        `, [area_id]);
+
+        // Log activity
+        await pool.query(`
+            INSERT INTO accreditation_activity_log (
+                cycle_id, user_id, user_role, action_type, 
+                target_type, target_id, target_name, details
+            )
+            VALUES ($1, $2, 'AdminLlave', 'Created', 'Section', $3, $4, $5)
+        `, [
+            cycle_id,
+            created_by,
+            result.rows[0].id,
+            section_name,
+            `Added section to ${areaInfo.rows[0]?.area_name}`
+        ]);
+
+        res.json({ success: true, section: result.rows[0] });
+    } catch (error) {
+        console.error('Error adding section:', error);
+        res.status(500).json({ error: 'Failed to add section' });
+    }
+});
+
+// PUT: Update Section
+router.put('/accreditation/section/:sectionId', async (req, res) => {
+    const { sectionId } = req.params;
+    const { section_name, area_id, updated_by } = req.body;
+
+    if (!section_name || !area_id) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    try {
+        const result = await pool.query(`
+            UPDATE accreditation_sections
+            SET section_name = $1, area_id = $2
+            WHERE id = $3
+            RETURNING id, section_name, cycle_id
+        `, [section_name, area_id, sectionId]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Section not found' });
+        }
+
+        // Log activity
+        await pool.query(`
+            INSERT INTO accreditation_activity_log (
+                cycle_id, user_id, user_role, action_type, 
+                target_type, target_id, target_name, details
+            )
+            VALUES ($1, $2, 'AdminLlave', 'Updated', 'Section', $3, $4, 'Updated section information')
+        `, [result.rows[0].cycle_id, updated_by, sectionId, section_name]);
+
+        res.json({ success: true, section: result.rows[0] });
+    } catch (error) {
+        console.error('Error updating section:', error);
+        res.status(500).json({ error: 'Failed to update section' });
+    }
+});
+
+// DELETE: Delete Section
+router.delete('/accreditation/section/:sectionId', async (req, res) => {
+    const { sectionId } = req.params;
+    const { deleted_by } = req.body;
+
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // Get section info before deletion
+        const sectionInfo = await client.query(`
+            SELECT s.section_name, s.cycle_id, sub.id as has_submission
+            FROM accreditation_sections s
+            LEFT JOIN section_submissions sub ON s.id = sub.section_id
+            WHERE s.id = $1
+        `, [sectionId]);
+
+        if (sectionInfo.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'Section not found' });
+        }
+
+        if (sectionInfo.rows[0].has_submission) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ 
+                error: 'Cannot delete section with submitted link. Please remove the submission first.' 
+            });
+        }
+
+        // Delete section
+        await client.query(`DELETE FROM accreditation_sections WHERE id = $1`, [sectionId]);
+
+        // Log activity
+        await client.query(`
+            INSERT INTO accreditation_activity_log (
+                cycle_id, user_id, user_role, action_type, 
+                target_type, target_name, details
+            )
+            VALUES ($1, $2, 'AdminLlave', 'Deleted', 'Section', $3, 'Deleted section')
+        `, [sectionInfo.rows[0].cycle_id, deleted_by, sectionInfo.rows[0].section_name]);
+
+        await client.query('COMMIT');
+        res.json({ success: true });
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Error deleting section:', error);
+        res.status(500).json({ error: 'Failed to delete section' });
+    } finally {
+        client.release();
+    }
+});
+
+// POST: Bulk Import Sections
+router.post('/accreditation/sections/bulk', async (req, res) => {
+    const { cycle_id, sections, created_by } = req.body;
+
+    if (!cycle_id || !sections || !Array.isArray(sections) || sections.length === 0) {
+        return res.status(400).json({ error: 'Missing required fields or empty sections array' });
+    }
+
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        let successCount = 0;
+        let failedCount = 0;
+        const errors = [];
+
+        for (const section of sections) {
+            const { section_name, area_id } = section;
+
+            if (!section_name || !area_id) {
+                failedCount++;
+                errors.push(`Missing data for section: ${section_name || 'unnamed'}`);
+                continue;
+            }
+
+            // Check if section already exists
+            const exists = await client.query(`
+                SELECT id FROM accreditation_sections 
+                WHERE cycle_id = $1 AND section_name = $2
+            `, [cycle_id, section_name]);
+
+            if (exists.rows.length > 0) {
+                failedCount++;
+                errors.push(`Section already exists: ${section_name}`);
+                continue;
+            }
+
+            // Insert section
+            await client.query(`
+                INSERT INTO accreditation_sections (cycle_id, area_id, section_name, created_by)
+                VALUES ($1, $2, $3, $4)
+            `, [cycle_id, area_id, section_name, created_by]);
+
+            successCount++;
+        }
+
+        // Log bulk import activity
+        await client.query(`
+            INSERT INTO accreditation_activity_log (
+                cycle_id, user_id, user_role, action_type, 
+                target_type, target_name, details
+            )
+            VALUES ($1, $2, 'AdminLlave', 'Created', 'Sections', 'Bulk Import', $3)
+        `, [cycle_id, created_by, `Bulk imported ${successCount} sections`]);
+
+        await client.query('COMMIT');
+
+        res.json({ 
+            success: true, 
+            count: successCount,
+            failed: failedCount,
+            errors: errors.length > 0 ? errors : undefined
+        });
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Error bulk importing sections:', error);
+        res.status(500).json({ error: 'Failed to bulk import sections' });
+    } finally {
+        client.release();
+    }
+});
+
+// ============================================
+// ACCOUNT MANAGEMENT ROUTES (for Tab 2)
+// ============================================
+
+// GET: All Area Heads
+router.get('/accreditation/area-heads', async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT 
+                a.id,
+                a.adminid as name,
+                a.email,
+                a.is_active,
+                a.last_login,
+                COUNT(DISTINCT aa.area_id) as area_count,
+                STRING_AGG(DISTINCT ar.area_name, ', ') as assigned_areas,
+                COUNT(DISTINCT s.id) as section_count
+            FROM admin_accounts a
+            LEFT JOIN area_assignments aa ON a.id = aa.area_head_id
+            LEFT JOIN accreditation_areas ar ON aa.area_id = ar.id
+            LEFT JOIN accreditation_sections s ON aa.area_id = s.area_id AND aa.cycle_id = s.cycle_id
+            WHERE a.role = 'Area Head'
+            GROUP BY a.id, a.adminid, a.email, a.is_active, a.last_login
+            ORDER BY a.adminid
+        `);
+
+        res.json({ areaHeads: result.rows });
+    } catch (error) {
+        console.error('Error fetching area heads:', error);
+        res.status(500).json({ error: 'Failed to fetch area heads' });
+    }
+});
+
+// GET: All Accreditors
+router.get('/accreditation/accreditors', async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT 
+                a.id,
+                a.adminid as name,
+                a.email,
+                a.is_active,
+                a.last_login,
+                COUNT(DISTINCT ac.area_id) as area_count,
+                STRING_AGG(DISTINCT ar.area_name, ', ') as assigned_areas,
+                COUNT(DISTINCT r.id) as review_count
+            FROM admin_accounts a
+            LEFT JOIN accreditor_assignments ac ON a.id = ac.accreditor_id
+            LEFT JOIN accreditation_areas ar ON ac.area_id = ar.id
+            LEFT JOIN section_reviews r ON a.id = r.accreditor_id
+            WHERE a.role = 'Accreditor'
+            GROUP BY a.id, a.adminid, a.email, a.is_active, a.last_login
+            ORDER BY a.adminid
+        `);
+
+        res.json({ accreditors: result.rows });
+    } catch (error) {
+        console.error('Error fetching accreditors:', error);
+        res.status(500).json({ error: 'Failed to fetch accreditors' });
+    }
+});
+
+// Note: Account creation/editing/deletion should be integrated with 
+// your existing user management system (userManagementRoute.js)
 
 export default router;

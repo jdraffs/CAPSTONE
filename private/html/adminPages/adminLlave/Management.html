@@ -1,11 +1,11 @@
-<!--userManagement.html-->
+<!--Management.html-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/private/css/layout/post.css">
-    <link rel="stylesheet" href="/private/css/pages/userManagement.css">
+    <link rel="stylesheet" href="/private/css/pages/Management.css">
     <link rel="stylesheet" href="/private/css/layout/dashboardsidebar.css">
     <link href="https://fonts.googleapis.com/css2.?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -30,13 +30,13 @@
                 <div class="nav-section">
                     <h3 class="nav-title">Accreditation</h3>
                     <ul class="nav-list">
-                        <li class="nav-item active">
+                        <li class="nav-item">
                             <a class="nav-link" href="/private/html/adminPages/adminLlave/adminLlave.html">
                                 <i class="fas fa-tachometer-alt"></i>
                                 <span>Dashboard</span>
                             </a>
                         </li>
-                        <li class="nav-item">
+                        <li class="nav-item active">
                             <a class="nav-link" href="#">
                                 <i class="fa-solid fa-cog"></i>
                                 <span>Management</span>
@@ -77,17 +77,17 @@
 
         <header class="dashboard-header">
             <div class="header-left">
-                <h1 class="page-title" id="pageTitle">User Management</h1>
+                <h1 class="page-title" id="pageTitle">Management</h1>
             </div>
             <div class="header-right">
-                <div>
-                    <a class="notif-link" href="#notifications" data-page="overview">
-                    <i class="fa fa-bell" aria-hidden="true"></i>
+                <div class="notification-button">
+                    <a class="notif-link" href="#notifications">
+                        <i class="fa fa-bell" aria-hidden="true"></i>
                     </a>
                 </div>
-                <div>
-                    <a class="profile-link" href="#profile" data-page="profile">
-                    <i class="fa fa-user" aria-hidden="true"></i>
+                <div class="profile-button">
+                    <a class="profile-link">
+                        <i class="fa fa-user" aria-hidden="true"></i>
                     </a>
                 </div>
             </div>
@@ -99,6 +99,7 @@
         </div>
     </main>
 <!-- SCRIPTS -->  
+<script src="/private/js/admin/admiLlave/Management.js"></script>
 <script src="/private/js/admin/profileFunction.js"></script>
 </body>
 </html>
