@@ -1,4 +1,4 @@
-// private/js/admin/admiLlave/Management.js - PART 1
+// private/js/admin/admiLlave/management.js - PART 1
 
 const adminid = 6; // AdminLlave's ID
 let activeCycleId = null;

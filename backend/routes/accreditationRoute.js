@@ -846,5 +846,222 @@ router.get('/accreditation/accreditors', async (req, res) => {
 
 // Note: Account creation/editing/deletion should be integrated with 
 // your existing user management system (userManagementRoute.js)
+// Add these routes to backend/routes/accreditationRoute.js
+
+// ============================================
+// REVIEW MONITORING ROUTES
+// ============================================
+
+// GET: Review Statistics for Progress Overview
+router.get('/accreditation/review-stats/:cycleId', async (req, res) => {
+    const { cycleId } = req.params;
+
+    try {
+        const result = await pool.query(`
+            WITH section_counts AS (
+                SELECT 
+                    COUNT(DISTINCT s.id) as total_sections,
+                    COUNT(DISTINCT CASE WHEN r.review_status IS NOT NULL AND r.review_status != 'Not Reviewed' THEN s.id END) as reviewed_count,
+                    COUNT(DISTINCT CASE WHEN r.review_status = 'Complete' THEN s.id END) as complete_count,
+                    COUNT(DISTINCT CASE WHEN r.review_status = 'Needs Revision' THEN s.id END) as needs_revision_count,
+                    COUNT(DISTINCT CASE WHEN r.review_status = 'Incomplete' THEN s.id END) as incomplete_count,
+                    COUNT(DISTINCT CASE WHEN r.review_status IS NULL OR r.review_status = 'Not Reviewed' THEN s.id END) as not_reviewed_count
+                FROM accreditation_sections s
+                LEFT JOIN section_reviews r ON s.id = r.section_id
+                WHERE s.cycle_id = $1
+            ),
+            accreditor_stats AS (
+                SELECT 
+                    COUNT(DISTINCT ac.accreditor_id) as total_accreditors,
+                    a.adminid as top_reviewer_name,
+                    COUNT(r.id) as review_count
+                FROM accreditor_assignments ac
+                LEFT JOIN section_reviews r ON ac.accreditor_id = r.accreditor_id
+                LEFT JOIN admin_accounts a ON ac.accreditor_id = a.id
+                WHERE ac.cycle_id = $1
+                GROUP BY a.adminid
+                ORDER BY review_count DESC
+                LIMIT 1
+            ),
+            pending_reviewers AS (
+                SELECT 
+                    COUNT(DISTINCT ac.accreditor_id) as pending_count
+                FROM accreditor_assignments ac
+                LEFT JOIN section_reviews r ON ac.accreditor_id = r.accreditor_id 
+                    AND r.section_id IN (
+                        SELECT id FROM accreditation_sections 
+                        WHERE cycle_id = $1 AND area_id = ac.area_id
+                    )
+                WHERE ac.cycle_id = $1
+                GROUP BY ac.accreditor_id
+                HAVING COUNT(r.id) = 0 OR COUNT(CASE WHEN r.review_status IS NULL OR r.review_status = 'Not Reviewed' THEN 1 END) > 0
+            )
+            SELECT 
+                sc.*,
+                COALESCE(acs.total_accreditors, 0) as total_accreditors,
+                acs.top_reviewer_name,
+                COALESCE((SELECT COUNT(*) FROM pending_reviewers), 0) as pending_reviewers
+            FROM section_counts sc
+            LEFT JOIN accreditor_stats acs ON true
+        `, [cycleId]);
+
+        res.json({ stats: result.rows[0] });
+    } catch (error) {
+        console.error('Error fetching review stats:', error);
+        res.status(500).json({ error: 'Failed to fetch review statistics' });
+    }
+});
+
+// GET: Areas with Review Breakdown
+router.get('/accreditation/areas-review/:cycleId', async (req, res) => {
+    const { cycleId } = req.params;
+
+    try {
+        const result = await pool.query(`
+            SELECT 
+                a.id as area_id,
+                a.area_number,
+                a.area_name,
+                COUNT(DISTINCT s.id) as total_sections,
+                COUNT(DISTINCT CASE WHEN r.review_status IS NOT NULL AND r.review_status != 'Not Reviewed' THEN s.id END) as reviewed_sections,
+                COUNT(DISTINCT CASE WHEN r.review_status = 'Complete' THEN s.id END) as complete_sections,
+                COUNT(DISTINCT CASE WHEN r.review_status = 'Needs Revision' THEN s.id END) as needs_revision_count,
+                COUNT(DISTINCT CASE WHEN r.review_status = 'Incomplete' THEN s.id END) as incomplete_count,
+                COUNT(DISTINCT CASE WHEN r.review_status IS NULL OR r.review_status = 'Not Reviewed' THEN s.id END) as not_reviewed_count
+            FROM accreditation_areas a
+            LEFT JOIN accreditation_sections s ON a.id = s.area_id AND s.cycle_id = $1
+            LEFT JOIN section_reviews r ON s.id = r.section_id
+            GROUP BY a.id, a.area_number, a.area_name
+            ORDER BY a.area_number
+        `, [cycleId]);
+
+        res.json({ areas: result.rows });
+    } catch (error) {
+        console.error('Error fetching areas review breakdown:', error);
+        res.status(500).json({ error: 'Failed to fetch areas review data' });
+    }
+});
+
+// GET: All Reviews with Details
+router.get('/accreditation/reviews/all/:cycleId', async (req, res) => {
+    const { cycleId } = req.params;
+
+    try {
+        const result = await pool.query(`
+            SELECT 
+                s.id as section_id,
+                s.section_name,
+                s.area_id,
+                a.area_number,
+                a.area_name,
+                sub.google_drive_link,
+                sub.submitted_at,
+                r.review_status,
+                r.comments,
+                r.reviewed_at,
+                r.accreditor_id,
+                acc.adminid as reviewed_by_name
+            FROM accreditation_sections s
+            JOIN accreditation_areas a ON s.area_id = a.id
+            LEFT JOIN section_submissions sub ON s.id = sub.section_id
+            LEFT JOIN section_reviews r ON s.id = r.section_id
+            LEFT JOIN admin_accounts acc ON r.accreditor_id = acc.id
+            WHERE s.cycle_id = $1
+            ORDER BY a.area_number, s.section_name
+        `, [cycleId]);
+
+        res.json({ reviews: result.rows });
+    } catch (error) {
+        console.error('Error fetching all reviews:', error);
+        res.status(500).json({ error: 'Failed to fetch reviews' });
+    }
+});
+
+// GET: Accreditor Performance Summary
+router.get('/accreditation/accreditor-performance/:cycleId', async (req, res) => {
+    const { cycleId } = req.params;
+
+    try {
+        const result = await pool.query(`
+            SELECT 
+                a.id as accreditor_id,
+                a.adminid as accreditor_name,
+                STRING_AGG(DISTINCT ar.area_name, ', ') as assigned_areas,
+                COUNT(DISTINCT s.id) as total_assigned,
+                COUNT(DISTINCT r.id) as reviewed_count,
+                MAX(r.reviewed_at) as last_activity
+            FROM admin_accounts a
+            JOIN accreditor_assignments ac ON a.id = ac.accreditor_id
+            JOIN accreditation_areas ar ON ac.area_id = ar.id
+            LEFT JOIN accreditation_sections s ON ac.area_id = s.area_id AND s.cycle_id = $1
+            LEFT JOIN section_reviews r ON s.id = r.section_id AND r.accreditor_id = a.id
+            WHERE ac.cycle_id = $1
+            GROUP BY a.id, a.adminid
+            ORDER BY reviewed_count DESC, a.adminid
+        `, [cycleId]);
+
+        res.json({ performance: result.rows });
+    } catch (error) {
+        console.error('Error fetching accreditor performance:', error);
+        res.status(500).json({ error: 'Failed to fetch accreditor performance' });
+    }
+});
+
+// POST: Send Reminder to Accreditor
+router.post('/accreditation/send-reminder', async (req, res) => {
+    const { accreditor_id, section_name, sent_by } = req.body;
+
+    if (!accreditor_id || !sent_by) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    try {
+        // Get accreditor email
+        const accreditorResult = await pool.query(`
+            SELECT email, adminid FROM admin_accounts WHERE id = $1
+        `, [accreditor_id]);
+
+        if (accreditorResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Accreditor not found' });
+        }
+
+        const accreditor = accreditorResult.rows[0];
+
+        // TODO: Implement actual email sending logic here
+        // For now, just log the reminder
+        console.log(`Reminder sent to ${accreditor.email} (${accreditor.adminid})`);
+        if (section_name) {
+            console.log(`Section: ${section_name}`);
+        }
+
+        // Log activity
+        const cycleResult = await pool.query(`
+            SELECT cycle_id FROM accreditor_assignments WHERE accreditor_id = $1 LIMIT 1
+        `, [accreditor_id]);
+
+        if (cycleResult.rows.length > 0) {
+            await pool.query(`
+                INSERT INTO accreditation_activity_log (
+                    cycle_id, user_id, user_role, action_type, 
+                    target_type, target_name, details
+                )
+                VALUES ($1, $2, 'AdminLlave', 'Sent Reminder', 'Accreditor', $3, $4)
+            `, [
+                cycleResult.rows[0].cycle_id,
+                sent_by,
+                accreditor.adminid,
+                section_name ? `Reminder sent for section: ${section_name}` : 'General reminder sent'
+            ]);
+        }
+
+        res.json({ 
+            success: true, 
+            message: `Reminder sent to ${accreditor.adminid}` 
+        });
+    } catch (error) {
+        console.error('Error sending reminder:', error);
+        res.status(500).json({ error: 'Failed to send reminder' });
+    }
+});
 
 export default router;
