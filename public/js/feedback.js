@@ -1,8 +1,9 @@
-// feedback.js - Transaction-Based Feedback System
+// feedback.js - Transaction-Based Feedback System - FIXED VERSION
+
+const API_URL = 'http://localhost:3000/api';
 
 // state management
 let validatedTransaction = null;
-let allTransactions = [];
 
 // DOM Elements
 const validationStep = document.getElementById('validationStep');
@@ -27,37 +28,16 @@ const ratingText = document.getElementById('ratingText');
 
 // initialize
 document.addEventListener('DOMContentLoaded', () => {
-    loadTransactions();
     setupEventListeners();
 });
 
-// Load transaction data (mock for now, will be API call later)
-async function loadTransactions() {
-    try {
-        const response = await fetch('/public/data/transactions.json');
-        const data = await response.json();
-        allTransactions = data.transactions || [];
-    } catch (error) {
-        console.error('Error loading transactions:', error);
-        allTransactions = [];
-    }
-}
-
 // Setup Event Listeners
 function setupEventListeners() {
-    // Validation form submission
     validationForm.addEventListener('submit', handleValidation);
-    
-    // Feedback form submission
     feedbackForm.addEventListener('submit', handleFeedbackSubmission);
-    
-    // Back button
     backBtn.addEventListener('click', goBackToValidation);
-    
-    // Character counter for comments
     commentsTextarea.addEventListener('input', updateCharCount);
     
-    // Star rating feedback
     overallRatingInputs.forEach(input => {
         input.addEventListener('change', updateRatingText);
     });
@@ -71,48 +51,43 @@ async function handleValidation(e) {
     const studentNumber = document.getElementById('studentNumber').value.trim();
     const department = document.getElementById('department').value;
     
-    // Hide previous errors
     validationError.style.display = 'none';
     
-    // Show loading state
     const submitBtn = validationForm.querySelector('button[type="submit"]');
     const originalText = submitBtn.innerHTML;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
     submitBtn.disabled = true;
     
     try {
-        // Validate transaction (mock validation for now)
-        const transaction = await validateTransaction(transactionId, studentNumber, department);
+        console.log('🔍 Validating transaction:', { transactionId, studentNumber, department });
         
-        if (transaction) {
-            validatedTransaction = transaction;
+        // Call actual API
+        const response = await fetch(`${API_URL}/feedback/validate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                transaction_id: transactionId,
+                student_number: studentNumber,
+                department: department
+            })
+        });
+        
+        const result = await response.json();
+        console.log('📊 Validation result:', result);
+        
+        if (response.ok && result.success) {
+            validatedTransaction = result.transaction;
             showFeedbackForm();
         } else {
-            showValidationError('Transaction not found or already has feedback submitted.');
+            showValidationError(result.message || 'Transaction not found or not eligible for feedback.');
         }
     } catch (error) {
+        console.error('❌ Validation error:', error);
         showValidationError('An error occurred during validation. Please try again.');
-        console.error('Validation error:', error);
     } finally {
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
     }
-}
-
-// Validate transaction (mock function - will be replaced with API call)
-async function validateTransaction(transactionId, studentNumber, department) {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Find transaction in mock data
-    const transaction = allTransactions.find(t => 
-        t.transaction_id.toLowerCase() === transactionId.toLowerCase() &&
-        t.student_number === studentNumber &&
-        t.department === department &&
-        !t.feedback_submitted
-    );
-    
-    return transaction || null;
 }
 
 // Show validation error
@@ -126,9 +101,8 @@ function showFeedbackForm() {
     validationStep.style.display = 'none';
     feedbackStep.style.display = 'block';
     
-    // Populate transaction details
     document.getElementById('displayTransactionId').textContent = validatedTransaction.transaction_id;
-    document.getElementById('displayDepartment').textContent = validatedTransaction.department;
+    document.getElementById('displayDepartment').textContent = validatedTransaction.department_name;
     document.getElementById('displayDate').textContent = new Date(validatedTransaction.transaction_date).toLocaleString('en-US', {
         year: 'numeric',
         month: 'long',
@@ -137,7 +111,6 @@ function showFeedbackForm() {
         minute: '2-digit'
     });
     
-    // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -182,82 +155,74 @@ function updateRatingText() {
 async function handleFeedbackSubmission(e) {
     e.preventDefault();
     
-    // Hide previous errors
     feedbackError.style.display = 'none';
     
-    // Get form data
-    const formData = {
-        transaction_id: validatedTransaction.transaction_id,
-        student_number: validatedTransaction.student_number,
-        department: validatedTransaction.department,
-        department_id: validatedTransaction.department_id,
-        overall_rating: parseInt(document.querySelector('input[name="overall_rating"]:checked').value),
-        processing_time: parseInt(document.querySelector('input[name="processing_time"]:checked').value),
-        staff_assistance: parseInt(document.querySelector('input[name="staff_assistance"]:checked').value),
-        clarity: parseInt(document.querySelector('input[name="clarity"]:checked').value),
-        facility: parseInt(document.querySelector('input[name="facility"]:checked').value),
-        comments: document.getElementById('comments').value.trim(),
-        is_anonymous: document.getElementById('anonymousToggle').checked,
-        submitted_at: new Date().toISOString()
-    };
+    // Get all ratings
+    const overallRating = document.querySelector('input[name="overall_rating"]:checked');
+    const processingTime = document.querySelector('input[name="processing_time"]:checked');
+    const staffAssistance = document.querySelector('input[name="staff_assistance"]:checked');
+    const clarity = document.querySelector('input[name="clarity"]:checked');
+    const facility = document.querySelector('input[name="facility"]:checked');
     
     // Validate all ratings are selected
-    if (!formData.overall_rating || !formData.processing_time || !formData.staff_assistance || 
-        !formData.clarity || !formData.facility) {
+    if (!overallRating || !processingTime || !staffAssistance || !clarity || !facility) {
         showFeedbackError('Please rate all service aspects before submitting.');
         return;
     }
     
+    const comments = document.getElementById('comments').value.trim();
+    
     // Filter comments (basic profanity check)
-    const filteredComments = filterProfanity(formData.comments);
-    if (filteredComments !== formData.comments) {
+    if (comments && !isCommentAppropriate(comments)) {
         showFeedbackError('Your comment contains inappropriate language. Please revise and try again.');
         return;
     }
     
-    // Show loading state
+    // Prepare form data
+    const formData = {
+        transaction_id: validatedTransaction.transaction_id,
+        student_number: validatedTransaction.student_number,
+        department_id: validatedTransaction.department_id,
+        overall_rating: parseInt(overallRating.value),
+        processing_time: parseInt(processingTime.value),
+        staff_assistance: parseInt(staffAssistance.value),
+        clarity: parseInt(clarity.value),
+        facility: parseInt(facility.value),
+        comments: comments || null,
+        is_anonymous: document.getElementById('anonymousToggle').checked
+    };
+    
+    console.log('📤 Submitting feedback:', formData);
+    
     const submitBtn = feedbackForm.querySelector('button[type="submit"]');
     const originalText = submitBtn.innerHTML;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
     submitBtn.disabled = true;
     
     try {
-        // Submit feedback (will be API call)
-        const result = await submitFeedback(formData);
+        // ACTUAL API CALL
+        const response = await fetch(`${API_URL}/feedback`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
         
-        if (result.success) {
+        const result = await response.json();
+        console.log('📊 Submission result:', result);
+        
+        if (response.ok && result.success) {
+            console.log('✅ Feedback submitted successfully!');
             showSuccessMessage(result.feedback_id);
         } else {
             showFeedbackError(result.message || 'Failed to submit feedback. Please try again.');
         }
     } catch (error) {
+        console.error('❌ Submission error:', error);
         showFeedbackError('An error occurred while submitting feedback. Please try again.');
-        console.error('Submission error:', error);
     } finally {
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
     }
-}
-
-// Submit feedback (mock function - will be replaced with API call)
-async function submitFeedback(formData) {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Mock successful submission
-    return {
-        success: true,
-        feedback_id: 'FB-' + Date.now(),
-        message: 'Feedback submitted successfully'
-    };
-    
-    // Actual API call (to be implemented):
-    // const response = await fetch('/api/feedback', {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify(formData)
-    // });
-    // return await response.json();
 }
 
 // Show feedback error
@@ -285,30 +250,11 @@ function showSuccessMessage(feedbackId) {
 }
 
 // Basic profanity filter
-function filterProfanity(text) {
-    // Basic profanity list (extend as needed)
+function isCommentAppropriate(text) {
     const profanityList = [
-        'badword1', 'badword2', 'badword3', // replace nlng next tym
-        // pede pa mag add ng iba
+        'badword1', 'badword2', 'badword3'
     ];
     
-    let filteredText = text;
-    profanityList.forEach(word => {
-        const regex = new RegExp(word, 'gi');
-        if (regex.test(filteredText)) {
-            return null; // Return null if profanity detected
-        }
-    });
-    
-    return filteredText;
-}
-
-// Helper: Format date
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
+    const lowerText = text.toLowerCase();
+    return !profanityList.some(word => lowerText.includes(word));
 }

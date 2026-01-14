@@ -17,6 +17,8 @@ function generateTempPassword(length = 12) {
 // ============ GET ALL USERS (WITH ROLE INFO) ============
 router.get('/users', async (req, res) => {
   try {
+    console.log('📊 Fetching users...');
+    
     const query = `
       SELECT 
         u.id,
@@ -36,7 +38,8 @@ router.get('/users', async (req, res) => {
 
     const result = await pool.query(query);
     
-    console.log('✅ Fetched users:', result.rows.length);
+    console.log('✅ Users found:', result.rows.length);
+    console.log('📋 Users:', result.rows);
 
     res.json({
       success: true,
@@ -53,6 +56,7 @@ router.get('/users', async (req, res) => {
     });
   }
 });
+
 
 // ============ CREATE NEW USER ============
 router.post('/users', async (req, res) => {

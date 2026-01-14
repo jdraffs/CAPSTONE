@@ -5,12 +5,15 @@ import express from "express";
 import pool from "../db.js";
 const router = express.Router();
 
+console.log('✅ Feedback routes file loaded');
+
 // ============================================
 // PUBLIC ENDPOINTS (Student Side)
 // ============================================
 
 // POST - Validate transaction before feedback
 router.post("/feedback/validate", async (req, res) => {
+  console.log('🔍 POST /feedback/validate hit');
   const { transaction_id, student_number, department } = req.body;
   
   if (!transaction_id || !student_number || !department) {
@@ -21,7 +24,6 @@ router.post("/feedback/validate", async (req, res) => {
   }
   
   try {
-    // Check if transaction exists and is eligible for feedback
     const query = `
       SELECT t.*, d.department_name, d.department_id
       FROM transactions t
@@ -59,6 +61,9 @@ router.post("/feedback/validate", async (req, res) => {
 
 // POST - Submit feedback
 router.post("/feedback", async (req, res) => {
+  console.log('🔍 POST /feedback hit');
+  console.log('📦 Request body:', req.body);
+  
   const {
     transaction_id,
     student_number,
@@ -76,6 +81,7 @@ router.post("/feedback", async (req, res) => {
   if (!transaction_id || !student_number || !department_id || 
       !overall_rating || !processing_time || !staff_assistance || 
       !clarity || !facility) {
+    console.log('❌ Missing required fields');
     return res.status(400).json({
       success: false,
       message: "Missing required fields"
@@ -85,6 +91,7 @@ router.post("/feedback", async (req, res) => {
   // Validate ratings are between 1-5
   const ratings = [overall_rating, processing_time, staff_assistance, clarity, facility];
   if (ratings.some(r => r < 1 || r > 5)) {
+    console.log('❌ Invalid rating values');
     return res.status(400).json({
       success: false,
       message: "Invalid rating values. Must be between 1 and 5"
@@ -97,6 +104,7 @@ router.post("/feedback", async (req, res) => {
     const checkResult = await pool.query(checkQuery, [transaction_id]);
     
     if (checkResult.rows.length > 0) {
+      console.log('❌ Feedback already exists for this transaction');
       return res.status(409).json({
         success: false,
         message: "Feedback already submitted for this transaction"
@@ -137,6 +145,8 @@ router.post("/feedback", async (req, res) => {
     const result = await pool.query(insertQuery, values);
     const feedback = result.rows[0];
     
+    console.log('✅ Feedback saved successfully:', feedback);
+    
     // Send notification if rating is 2 or below
     if (overall_rating <= 2) {
       await sendLowRatingNotification(department_id, feedback.feedback_id);
@@ -149,7 +159,7 @@ router.post("/feedback", async (req, res) => {
       submitted_at: feedback.created_at
     });
   } catch (err) {
-    console.error("Feedback submission error:", err);
+    console.error("❌ Feedback submission error:", err);
     res.status(500).json({
       success: false,
       message: "Failed to submit feedback"
@@ -163,6 +173,7 @@ router.post("/feedback", async (req, res) => {
 
 // GET - Fetch feedback for specific department (with filters)
 router.get("/feedback/department/:department_id", async (req, res) => {
+  console.log('🔍 GET /feedback/department/:id hit');
   const { department_id } = req.params;
   const { start_date, end_date, min_rating, max_rating } = req.query;
   
@@ -192,7 +203,6 @@ router.get("/feedback/department/:department_id", async (req, res) => {
     const params = [department_id];
     let paramIndex = 2;
     
-    // Add filters
     if (start_date) {
       query += ` AND f.created_at >= $${paramIndex}`;
       params.push(start_date);
@@ -221,6 +231,8 @@ router.get("/feedback/department/:department_id", async (req, res) => {
     
     const result = await pool.query(query, params);
     
+    console.log(`✅ Found ${result.rows.length} feedback items for department ${department_id}`);
+    
     res.json({
       success: true,
       feedback: result.rows,
@@ -237,6 +249,7 @@ router.get("/feedback/department/:department_id", async (req, res) => {
 
 // GET - Department statistics
 router.get("/feedback/department/:department_id/stats", async (req, res) => {
+  console.log('🔍 GET /feedback/department/:id/stats hit');
   const { department_id } = req.params;
   
   try {
@@ -278,6 +291,7 @@ router.get("/feedback/department/:department_id/stats", async (req, res) => {
 
 // GET - Aggregated analytics across all departments
 router.get("/feedback/director/analytics", async (req, res) => {
+  console.log('🔍 GET /feedback/director/analytics hit');
   const { start_date, end_date } = req.query;
   
   try {
@@ -317,6 +331,8 @@ router.get("/feedback/director/analytics", async (req, res) => {
     
     const result = await pool.query(query, params);
     
+    console.log(`✅ Analytics returned ${result.rows.length} departments`);
+    
     res.json({
       success: true,
       analytics: result.rows
@@ -332,6 +348,7 @@ router.get("/feedback/director/analytics", async (req, res) => {
 
 // GET - Monthly satisfaction trends
 router.get("/feedback/director/trends", async (req, res) => {
+  console.log('🔍 GET /feedback/director/trends hit');
   const { months = 6 } = req.query;
   
   try {
@@ -348,6 +365,8 @@ router.get("/feedback/director/trends", async (req, res) => {
     
     const result = await pool.query(query);
     
+    console.log(`✅ Trends data: ${result.rows.length} months`);
+    
     res.json({
       success: true,
       trends: result.rows
@@ -363,6 +382,8 @@ router.get("/feedback/director/trends", async (req, res) => {
 
 // GET - Common complaints (keyword-based)
 router.get("/feedback/director/complaints", async (req, res) => {
+  console.log('🔍 GET /feedback/director/complaints hit');
+  
   try {
     const query = `
       SELECT 
@@ -398,18 +419,11 @@ router.get("/feedback/director/complaints", async (req, res) => {
 // HELPER FUNCTIONS
 // ============================================
 
-// Send notification for low ratings (to be implemented)
 async function sendLowRatingNotification(department_id, feedback_id) {
-  // Implementation for email/notification system
-  console.log(`Low rating notification: Department ${department_id}, Feedback ${feedback_id}`);
+  console.log(`🔔 Low rating notification: Department ${department_id}, Feedback ${feedback_id}`);
   // TODO: Integrate with notification system
 }
 
+console.log('✅ All feedback routes registered');
+
 export default router;
-
-/* 
-USAGE IN server.js:
-
-import feedbackRoute from "./routes/feedbackRoute.js";
-app.use("/api", feedbackRoute);
-*/
