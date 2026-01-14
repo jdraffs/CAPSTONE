@@ -133,6 +133,78 @@
                 </div>
             </section>
 
+                        <!-- Quick Actions Grid -->
+            <section class="quick-actions-enhanced">
+            <h3 class="section-heading">
+                <i class="fas fa-bolt"></i> Quick Navigation
+            </h3>
+            
+            <div class="quick-nav-grid">
+                <a href="./analyticsDashboard.html" class="quick-nav-card analytics">
+                <div class="nav-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h4>Analytics</h4>
+                <p>View reports & insights</p>
+                <span class="nav-count" id="navAnalyticsCount">0</span>
+                </a>
+
+                <a href="./userManagement.html" class="quick-nav-card users">
+                <div class="nav-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h4>Users</h4>
+                <p>Manage user accounts</p>
+                <span class="nav-count" id="navUsersCount">0</span>
+                </a>
+
+                <a href="./roleManagement.html" class="quick-nav-card roles">
+                <div class="nav-icon">
+                    <i class="fas fa-user-tag"></i>
+                </div>
+                <h4>Roles</h4>
+                <p>Configure permissions</p>
+                <span class="nav-count" id="navRolesCount">0</span>
+                </a>
+
+                <a href="./feedbackDashboard.html" class="quick-nav-card feedback">
+                <div class="nav-icon">
+                    <i class="fas fa-comment-dots"></i>
+                </div>
+                <h4>Feedback</h4>
+                <p>Review submissions</p>
+                <span class="nav-count" id="navFeedbackCount">0</span>
+                </a>
+            </div>
+            </section>
+
+                <!-- Quick Actions -->
+                    <section class="quick-actions-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="actions-grid">
+                                <button class="action-button blue" onclick="window.location.href='./dataUploads.html'">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span>Upload Dataset</span>
+                                </button>
+                                <button class="action-button purple" onclick="window.location.href='./analyticsDashboard.html'">
+                                    <i class="fas fa-chart-bar"></i>
+                                    <span>View Analytics</span>
+                                </button>
+                                <button class="action-button orange" onclick="window.location.href='./fileRepository.html'">
+                                    <i class="fas fa-folder"></i>
+                                    <span>File Repository</span>
+                                </button>
+                                <button class="action-button green" id="generateVisualizationBtn">
+                                    <i class="fas fa-chart-area"></i>
+                                    <span>New Visualization</span>
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
             <!-- Key Metrics Cards -->
             <section class="metrics-section">
                 <div class="metrics-grid">
@@ -227,6 +299,356 @@
                 </div>
             </section>
 
+
+            <!-- ENHANCED METRICS SECTION - Add this after the existing metrics-grid -->
+
+<!-- Cross-Tab Metrics Section -->
+<section class="cross-tab-metrics">
+  <h3 class="section-heading">
+    <i class="fas fa-th-large"></i> System Overview
+  </h3>
+  
+  <div class="metrics-grid enhanced">
+    <!-- User Management Metrics -->
+    <div class="metric-card gradient-teal">
+      <div class="metric-icon">
+        <i class="fas fa-users"></i>
+      </div>
+      <div class="metric-content">
+        <div class="metric-value" id="metricTotalUsers">
+          <div class="skeleton-loader"></div>
+        </div>
+        <div class="metric-label">Total Users</div>
+        <div class="metric-subtext">User Management</div>
+      </div>
+      <a href="./userManagement.html" class="metric-link">
+        <i class="fas fa-arrow-right"></i>
+      </a>
+    </div>
+
+    <div class="metric-card gradient-green">
+      <div class="metric-icon">
+        <i class="fas fa-user-check"></i>
+      </div>
+      <div class="metric-content">
+        <div class="metric-value" id="metricActiveUsers">
+          <div class="skeleton-loader"></div>
+        </div>
+        <div class="metric-label">Active Users</div>
+        <div class="metric-subtext">Currently active</div>
+      </div>
+    </div>
+
+    <div class="metric-card gradient-orange">
+      <div class="metric-icon">
+        <i class="fas fa-user-slash"></i>
+      </div>
+      <div class="metric-content">
+        <div class="metric-value" id="metricInactiveUsers">
+          <div class="skeleton-loader"></div>
+        </div>
+        <div class="metric-label">Inactive Users</div>
+        <div class="metric-subtext">Needs review</div>
+      </div>
+    </div>
+
+    <div class="metric-card gradient-red">
+      <div class="metric-icon">
+        <i class="fas fa-ban"></i>
+      </div>
+      <div class="metric-content">
+        <div class="metric-value" id="metricSuspendedUsers">
+          <div class="skeleton-loader"></div>
+        </div>
+        <div class="metric-label">Suspended</div>
+        <div class="metric-subtext">Blocked access</div>
+      </div>
+    </div>
+
+    <!-- Role Management Metrics -->
+    <div class="metric-card gradient-indigo">
+      <div class="metric-icon">
+        <i class="fas fa-user-tag"></i>
+      </div>
+      <div class="metric-content">
+        <div class="metric-value" id="metricTotalRoles">
+          <div class="skeleton-loader"></div>
+        </div>
+        <div class="metric-label">Total Roles</div>
+        <div class="metric-subtext">Role Management</div>
+      </div>
+      <a href="./roleManagement.html" class="metric-link">
+        <i class="fas fa-arrow-right"></i>
+      </a>
+    </div>
+
+    <div class="metric-card gradient-purple">
+      <div class="metric-icon">
+        <i class="fas fa-shield-alt"></i>
+      </div>
+      <div class="metric-content">
+        <div class="metric-value" id="metricSystemRoles">
+          <div class="skeleton-loader"></div>
+        </div>
+        <div class="metric-label">System Roles</div>
+        <div class="metric-subtext">Protected roles</div>
+      </div>
+    </div>
+
+    <div class="metric-card gradient-cyan">
+      <div class="metric-icon">
+        <i class="fas fa-user-cog"></i>
+      </div>
+      <div class="metric-content">
+        <div class="metric-value" id="metricCustomRoles">
+          <div class="skeleton-loader"></div>
+        </div>
+        <div class="metric-label">Custom Roles</div>
+        <div class="metric-subtext">User-defined</div>
+      </div>
+    </div>
+
+    <div class="metric-card gradient-gray">
+      <div class="metric-icon">
+        <i class="fas fa-user-times"></i>
+      </div>
+      <div class="metric-content">
+        <div class="metric-value" id="metricEmptyRoles">
+          <div class="skeleton-loader"></div>
+        </div>
+        <div class="metric-label">Empty Roles</div>
+        <div class="metric-subtext">No users assigned</div>
+      </div>
+    </div>
+
+    <!-- Feedback Metrics -->
+    <div class="metric-card gradient-yellow">
+      <div class="metric-icon">
+        <i class="fas fa-comments"></i>
+      </div>
+      <div class="metric-content">
+        <div class="metric-value" id="metricTotalFeedback">
+          <div class="skeleton-loader"></div>
+        </div>
+        <div class="metric-label">Total Feedback</div>
+        <div class="metric-subtext">All submissions</div>
+      </div>
+      <a href="./feedbackDashboard.html" class="metric-link">
+        <i class="fas fa-arrow-right"></i>
+      </a>
+    </div>
+
+    <div class="metric-card gradient-orange">
+      <div class="metric-icon">
+        <i class="fas fa-clock"></i>
+      </div>
+      <div class="metric-content">
+        <div class="metric-value" id="metricPendingFeedback">
+          <div class="skeleton-loader"></div>
+        </div>
+        <div class="metric-label">Pending</div>
+        <div class="metric-subtext">Awaiting response</div>
+      </div>
+    </div>
+
+    <div class="metric-card gradient-green">
+      <div class="metric-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div class="metric-content">
+        <div class="metric-value" id="metricResolvedFeedback">
+          <div class="skeleton-loader"></div>
+        </div>
+        <div class="metric-label">Resolved</div>
+        <div class="metric-subtext">Completed</div>
+      </div>
+    </div>
+
+    <div class="metric-card gradient-blue">
+      <div class="metric-icon">
+        <i class="fas fa-spinner"></i>
+      </div>
+      <div class="metric-content">
+        <div class="metric-value" id="metricInProgressFeedback">
+          <div class="skeleton-loader"></div>
+        </div>
+        <div class="metric-label">In Progress</div>
+        <div class="metric-subtext">Being addressed</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<style>
+/* Enhanced Metrics Styling */
+.cross-tab-metrics {
+  margin-top: 40px;
+  margin-bottom: 30px;
+}
+
+.section-heading {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-heading i {
+  color: #667eea;
+}
+
+.metrics-grid.enhanced {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.metric-link {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  color: white;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.metric-link:hover {
+  opacity: 1;
+}
+
+.gradient-red::before { background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%); }
+.gradient-cyan::before { background: linear-gradient(135deg, #38b2ac 0%, #319795 100%); }
+.gradient-indigo::before { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.gradient-yellow::before { background: linear-gradient(135deg, #ecc94b 0%, #d69e2e 100%); }
+.gradient-gray::before { background: linear-gradient(135deg, #a0aec0 0%, #718096 100%); }
+
+/* Quick Navigation */
+.quick-actions-enhanced {
+  margin-top: 40px;
+}
+
+.quick-nav-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.quick-nav-card {
+  background: white;
+  border-radius: 16px;
+  padding: 30px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+}
+
+.quick-nav-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+}
+
+.quick-nav-card.analytics::before { background: linear-gradient(90deg, #667eea, #764ba2); }
+.quick-nav-card.users::before { background: linear-gradient(90deg, #48bb78, #38a169); }
+.quick-nav-card.roles::before { background: linear-gradient(90deg, #9f7aea, #805ad5); }
+.quick-nav-card.feedback::before { background: linear-gradient(90deg, #ed8936, #dd6b20); }
+
+.quick-nav-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.nav-icon {
+  width: 70px;
+  height: 70px;
+  margin: 0 auto 15px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: white;
+}
+
+.quick-nav-card.analytics .nav-icon { background: linear-gradient(135deg, #667eea, #764ba2); }
+.quick-nav-card.users .nav-icon { background: linear-gradient(135deg, #48bb78, #38a169); }
+.quick-nav-card.roles .nav-icon { background: linear-gradient(135deg, #9f7aea, #805ad5); }
+.quick-nav-card.feedback .nav-icon { background: linear-gradient(135deg, #ed8936, #dd6b20); }
+
+.quick-nav-card h4 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  color: #2d3748;
+}
+
+.quick-nav-card p {
+  font-size: 0.9rem;
+  color: #718096;
+  margin: 0;
+}
+
+.nav-count {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: #667eea;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.quick-nav-card.analytics .nav-count { background: #667eea; }
+.quick-nav-card.users .nav-count { background: #48bb78; }
+.quick-nav-card.roles .nav-count { background: #9f7aea; }
+.quick-nav-card.feedback .nav-count { background: #ed8936; }
+
+@media (max-width: 768px) {
+  .metrics-grid.enhanced {
+    grid-template-columns: 1fr;
+  }
+  
+  .quick-nav-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<script>
+// Update quick navigation counts
+function updateQuickNavCounts() {
+  const navAnalytics = document.getElementById('navAnalyticsCount');
+  const navUsers = document.getElementById('navUsersCount');
+  const navRoles = document.getElementById('navRolesCount');
+  const navFeedback = document.getElementById('navFeedbackCount');
+  
+  if (navAnalytics) navAnalytics.textContent = dashboardData.datasets.length;
+  if (navUsers) navUsers.textContent = dashboardData.users.length;
+  if (navRoles) navRoles.textContent = dashboardData.roles.length;
+  if (navFeedback) navFeedback.textContent = dashboardData.feedback.filter(f => f.status === 'pending').length;
+}
+
+// Call this in your updateAllMetrics function
+// updateQuickNavCounts();
+</script>
+
             <!-- Two Column Layout -->
             <div class="content-columns">
                 <!-- Left Column -->
@@ -291,33 +713,6 @@
                             <div class="insight-message" id="analyticsInsight">
                                 <i class="fas fa-lightbulb"></i>
                                 <p>Analyzing your data...</p>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Quick Actions -->
-                    <section class="quick-actions-card">
-                        <div class="card-header">
-                            <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="actions-grid">
-                                <button class="action-button blue" onclick="window.location.href='./dataUploads.html'">
-                                    <i class="fas fa-cloud-upload-alt"></i>
-                                    <span>Upload Dataset</span>
-                                </button>
-                                <button class="action-button purple" onclick="window.location.href='./analyticsDashboard.html'">
-                                    <i class="fas fa-chart-bar"></i>
-                                    <span>View Analytics</span>
-                                </button>
-                                <button class="action-button orange" onclick="window.location.href='./fileRepository.html'">
-                                    <i class="fas fa-folder"></i>
-                                    <span>File Repository</span>
-                                </button>
-                                <button class="action-button green" id="generateVisualizationBtn">
-                                    <i class="fas fa-chart-area"></i>
-                                    <span>New Visualization</span>
-                                </button>
                             </div>
                         </div>
                     </section>
@@ -398,6 +793,7 @@
     <div id="toastContainer" class="toast-container"></div>
 
 <!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="/private/js/admin/superAdmin/superAdmin.js"></script>
 <script src="/private/js/admin/profileFunction.js"></script>
 </body>
