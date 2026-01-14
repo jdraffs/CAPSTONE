@@ -2,6 +2,7 @@
 
 document.addEventListener('DOMContentLoaded', async () => {
   const API_URL = 'http://localhost:3000/api';
+  initializeProfileDropdown();
   
   let dashboardData = {
     datasets: [],
