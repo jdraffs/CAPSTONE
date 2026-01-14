@@ -24,8 +24,9 @@ import eventsRoute from "./routes/eventsRoute.js";
 import dashboardStatsRoute from "./routes/dashboardStatsRoute.js";
 import activityLogsRoute from "./routes/activityLogsRoute.js";
 import roleManagementRoute from './routes/roleManagementRoute.js';
-import userManagementRoute from './routes/userManagementRoute.js';
-import chatbotRoute from './routes/chatbotRoute.js';
+import userManagementRoute from './routes/userManagementRoute.js'
+import chatbotRoute from './routes/chatbotRoute.js'
+import feedbackRoute from "./routes/feedbackRoute.js";
 import trashRoute from './routes/trashRoute.js'; // NEW: Unified trash route
 
 // initialize 
@@ -58,6 +59,7 @@ app.use("/api", activityLogsRoute);
 app.use('/private', express.static(path.join(__dirname, '../private')));
 app.use("/api", roleManagementRoute);
 app.use("/api", userManagementRoute);
+app.use("/api", feedbackRoute);
 app.use("/api", trashRoute); // NEW: Unified trash management
 
 // SINGLE /api/files/data endpoint with trash support
