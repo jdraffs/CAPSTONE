@@ -1,11 +1,10 @@
-<!-- adminLlave.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - SuperAdmin</title>
-    <link rel="stylesheet" href="/private/css/pages/superAdmin.css">
+    <title>Accreditation Dashboard - AdminLlave</title>
+    <link rel="stylesheet" href="/private/css/pages/adminLlave.css">
     <link rel="stylesheet" href="/private/css/layout/dashboardsidebar.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -26,7 +25,7 @@
         <nav class="sidebar-nav">
             <div class="sidebar-scroll">
                 <div class="nav-section">
-                    <h3 class="nav-title">Main</h3>
+                    <h3 class="nav-title">Accreditation</h3>
                     <ul class="nav-list">
                         <li class="nav-item active">
                             <a class="nav-link" href="/private/html/adminPages/adminLlave/adminLlave.html">
@@ -34,24 +33,22 @@
                                 <span>Dashboard</span>
                             </a>
                         </li>
-                    </ul>
-                </div>
-
-                <div class="nav-section">
-                    <h3 class="nav-title">Management</h3>
-                    <ul class="nav-list">
                         <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="fa-solid fa-chart-line"></i>
-                                <span>Placeholder</span>
+                            <a class="nav-link" href="/private/html/adminPages/adminLlave/management.html">
+                                <i class="fa-solid fa-cog"></i>
+                                <span>Management</span>
                             </a>
                         </li>
-                    </ul>
-                    <ul class="nav-list">
                         <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="fa-solid fa-copy"></i>
-                                <span>Placeholder</span>
+                            <a class="nav-link" href="/private/html/adminPages/adminLlave/reviewMonitoring.html">
+                                <i class="fa-solid fa-clipboard-check"></i>
+                                <span>Review Monitoring</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/adminLlave/report&Logs.html">
+                                <i class="fa-solid fa-file-alt"></i>
+                                <span>Reports & Logs</span>
                             </a>
                         </li>
                     </ul>
@@ -75,7 +72,7 @@
     <main class="main">
         <header class="dashboard-header">
             <div class="header-left">
-                <h1 class="page-title">Dashboard</h1>
+                <h1 class="page-title">Accreditation Dashboard</h1>
             </div>
             <div class="header-right">
                 <div class="notification-button">
@@ -92,9 +89,179 @@
         </header>
 
         <div class="dashboard-content">
-        <!-- Welcome Section -->
+            <!-- SECTION A: Current Cycle Info -->
+            <div class="cycle-info-card">
+                <div class="cycle-header">
+                    <div class="cycle-details">
+                        <h2 class="cycle-title" id="cycleTitle">No Active Cycle</h2>
+                        <p class="cycle-status" id="cycleStatus">Create a new cycle to begin</p>
+                    </div>
+                    <div class="cycle-actions">
+                        <button class="btn-primary" id="createCycleBtn">
+                            <i class="fas fa-plus"></i> Create New Cycle
+                        </button>
+                        <button class="btn-secondary" id="archiveCycleBtn" style="display: none;">
+                            <i class="fas fa-archive"></i> Archive Cycle
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION B: Quick Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-list"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-value" id="totalSections">0</h3>
+                        <p class="stat-label">Total Sections</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fas fa-link"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-value" id="submittedSections">0</h3>
+                        <p class="stat-label">Submitted Links</p>
+                        <p class="stat-percentage" id="submittedPercentage">0%</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-value" id="reviewedSections">0</h3>
+                        <p class="stat-label">Reviewed</p>
+                        <p class="stat-percentage" id="reviewedPercentage">0%</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon purple">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-value" id="completeSections">0</h3>
+                        <p class="stat-label">Complete</p>
+                        <p class="stat-percentage" id="completePercentage">0%</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION C: Submission Control Panel -->
+            <div class="submission-control-card">
+                <div class="control-header">
+                    <h3>Submission Control</h3>
+                </div>
+                <div class="control-body">
+                    <div class="status-indicator" id="submissionStatus">
+                        <span class="status-badge closed">
+                            <i class="fas fa-lock"></i> CLOSED
+                        </span>
+                        <p class="status-text" id="statusText">Submissions are currently closed</p>
+                    </div>
+                    <div class="control-actions">
+                        <button class="btn-control btn-open" id="openSubmissionsBtn" style="display: none;">
+                            <i class="fas fa-lock-open"></i> Open Submissions
+                        </button>
+                        <button class="btn-control btn-close" id="closeSubmissionsBtn" style="display: none;">
+                            <i class="fas fa-lock"></i> Close Submissions
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION D: Area Overview -->
+            <div class="areas-section">
+                <div class="section-header">
+                    <h3>Accreditation Areas</h3>
+                </div>
+                <div class="areas-grid" id="areasGrid">
+                    <!-- Area cards will be dynamically inserted here -->
+                </div>
+            </div>
+
+            <!-- SECTION E: Recent Activity Feed -->
+            <div class="activity-section">
+                <div class="section-header">
+                    <h3>Recent Activity</h3>
+                    <button class="btn-link" id="viewFullLogBtn">View Full Log</button>
+                </div>
+                <div class="activity-feed" id="activityFeed">
+                    <!-- Activity items will be dynamically inserted here -->
+                </div>
+            </div>
         </div>
     </main>
+
+    <!-- CREATE CYCLE MODAL -->
+    <div class="modal" id="createCycleModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Accreditation Cycle</h3>
+                <button class="modal-close" id="closeCycleModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="academicYear">Academic Year</label>
+                    <input type="text" id="academicYear" placeholder="e.g., 2025-2026" required>
+                    <small class="form-hint">Format: YYYY-YYYY (e.g., 2025-2026)</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelCycleBtn">Cancel</button>
+                <button class="btn-primary" id="confirmCreateCycleBtn">Create Cycle</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AREA DETAILS MODAL -->
+    <div class="modal" id="areaDetailsModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="areaModalTitle">Area Details</h3>
+                <button class="modal-close" id="closeAreaModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="areaModalContent">
+                    <!-- Area details will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ASSIGN MODAL -->
+    <div class="modal" id="assignModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="assignModalTitle">Assign</h3>
+                <button class="modal-close" id="closeAssignModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label id="assignLabel">Select Person</label>
+                    <select id="assignSelect" required>
+                        <option value="">Select...</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelAssignBtn">Cancel</button>
+                <button class="btn-primary" id="confirmAssignBtn">Assign</button>
+            </div>
+        </div>
+    </div>
 
 <!-- Scripts -->
 <script src="/private/js/admin/admiLlave/adminLlave.js"></script> 

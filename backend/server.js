@@ -8,6 +8,7 @@ import pool from "./db.js";
 import fs from "fs";
 import XLSX from "xlsx";
 
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -28,6 +29,7 @@ import userManagementRoute from './routes/userManagementRoute.js'
 import chatbotRoute from './routes/chatbotRoute.js'
 import feedbackRoute from "./routes/feedbackRoute.js";
 import trashRoute from './routes/trashRoute.js'; // NEW: Unified trash route
+import accreditationRoute from './routes/accreditationRoute.js';
 
 // initialize 
 dotenv.config();
@@ -61,6 +63,7 @@ app.use("/api", roleManagementRoute);
 app.use("/api", userManagementRoute);
 app.use("/api", feedbackRoute);
 app.use("/api", trashRoute); // NEW: Unified trash management
+app.use('/api', accreditationRoute);
 
 // SINGLE /api/files/data endpoint with trash support
 app.get("/api/files/data", async (req, res) => {
