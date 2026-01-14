@@ -1,4 +1,4 @@
-// feedbackDashboard.js - Service Feedback Dashboard for SuperAdmin
+// feedbackDashboard.js - FIXED VERSION with Real-time Polling
 
 document.addEventListener('DOMContentLoaded', async () => {
   const API_URL = 'http://localhost:3000/api';
@@ -13,6 +13,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     startDate: '',
     endDate: ''
   };
+  
+  let pollingInterval = null;
+  let lastFeedbackCount = 0;
+  let isPollingEnabled = true;
+  let isFirstLoad = true;
 
   // Initialize Dashboard
   await initializeDashboard();
@@ -27,9 +32,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       populateDepartmentFilters();
       updateDashboard();
       attachEventListeners();
+      
+      // Mark first load complete
+      isFirstLoad = false;
+      
+      // Start real-time polling
+      startRealtimePolling();
+      
+      console.log('✅ Feedback Dashboard initialized with real-time polling');
     } catch (error) {
-      console.error('Error initializing dashboard:', error);
-      showToast('Failed to load dashboard data', 'error');
+      console.error('❌ Error initializing dashboard:', error);
+      showToast('Failed to load dashboard. Check console for details.', 'error');
     }
   }
 
@@ -37,7 +50,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function fetchDepartments() {
     try {
-      // Hardcoded departments for now
       departments = [
         { id: 1, name: 'Registrar' },
         { id: 2, name: 'Cashier' },
@@ -53,39 +65,156 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function fetchAllFeedback() {
     try {
-      // Fetch aggregated analytics
+      console.log('🔄 Fetching feedback from API...');
+      
       const response = await fetch(`${API_URL}/feedback/director/analytics`);
       
       if (!response.ok) {
-        throw new Error('Failed to fetch feedback');
+        const errorText = await response.text();
+        console.error('❌ API Error Response:', errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
       const data = await response.json();
+      console.log('📊 Analytics data received:', data);
       
       // Transform analytics data into feedback items
-      allFeedback = [];
+      const newFeedback = [];
       
       for (const dept of data.analytics) {
         if (dept.total_feedback > 0) {
-          // Fetch individual feedback for this department
-          const deptResponse = await fetch(`${API_URL}/feedback/department/${dept.department_id}`);
-          if (deptResponse.ok) {
-            const deptData = await deptResponse.json();
-            allFeedback = allFeedback.concat(deptData.feedback.map(f => ({
-              ...f,
-              department_name: dept.department_name,
-              department_id: dept.department_id
-            })));
+          console.log(`📥 Fetching feedback for ${dept.department_name}...`);
+          
+          try {
+            const deptResponse = await fetch(`${API_URL}/feedback/department/${dept.department_id}`);
+            
+            if (deptResponse.ok) {
+              const deptData = await deptResponse.json();
+              console.log(`✅ Got ${deptData.feedback.length} feedback items from ${dept.department_name}`);
+              
+              deptData.feedback.forEach(f => {
+                newFeedback.push({
+                  ...f,
+                  department_name: dept.department_name,
+                  department_id: dept.department_id
+                });
+              });
+            }
+          } catch (deptError) {
+            console.error(`Error fetching department ${dept.department_id}:`, deptError);
           }
         }
       }
 
+      console.log(`✅ Total feedback loaded: ${newFeedback.length}`);
+
+      // Detect new submissions (only after first load)
+      if (!isFirstLoad && allFeedback.length > 0 && newFeedback.length > allFeedback.length) {
+        const newCount = newFeedback.length - allFeedback.length;
+        console.log(`🆕 ${newCount} new feedback detected!`);
+        showNewFeedbackNotification(newCount);
+        playNotificationSound();
+      }
+      
+      // Update feedback arrays
+      allFeedback = newFeedback;
       filteredFeedback = [...allFeedback];
+      lastFeedbackCount = newFeedback.length;
+      
     } catch (error) {
-      console.error('Error fetching feedback:', error);
-      // Use mock data if API fails
-      allFeedback = getMockFeedback();
-      filteredFeedback = [...allFeedback];
+      console.error('❌ Error fetching feedback:', error);
+      
+      // Use mock data only if this is the first load and we have no data
+      if (isFirstLoad && allFeedback.length === 0) {
+        console.log('⚠️ Using mock data (API unavailable)');
+        allFeedback = getMockFeedback();
+        filteredFeedback = [...allFeedback];
+        showToast('Using demo data - API connection failed', 'warning');
+      }
+    }
+  }
+
+  // ============ REAL-TIME POLLING ============
+  
+  function startRealtimePolling() {
+    // Clear any existing interval
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+    }
+    
+    // Poll every 5 seconds for new feedback
+    pollingInterval = setInterval(async () => {
+      if (isPollingEnabled) {
+        await checkForNewFeedback();
+      }
+    }, 5000); // 5 seconds for faster updates
+    
+    console.log('📡 Real-time polling started (every 5 seconds)');
+  }
+  
+  function stopRealtimePolling() {
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+      pollingInterval = null;
+      console.log('📡 Real-time polling stopped');
+    }
+  }
+  
+  async function checkForNewFeedback() {
+    try {
+      console.log('🔄 Polling for new feedback...');
+      
+      // Silently fetch new data
+      await fetchAllFeedback();
+      
+      // Re-apply current filters
+      applyFilters();
+      
+    } catch (error) {
+      console.error('❌ Error polling for new feedback:', error);
+    }
+  }
+  
+  function showNewFeedbackNotification(count) {
+    console.log(`🔔 Showing notification for ${count} new feedback`);
+    
+    // Show visual notification
+    showToast(
+      `🎉 ${count} new feedback submission${count > 1 ? 's' : ''} received!`, 
+      'success'
+    );
+    
+    // Animate notification badge
+    const badge = document.getElementById('notificationBadge');
+    if (badge) {
+      badge.style.animation = 'none';
+      setTimeout(() => {
+        badge.style.animation = 'pulse 1s ease-in-out 3';
+      }, 10);
+    }
+  }
+  
+  function playNotificationSound() {
+    try {
+      // Simple beep sound
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = 800;
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.5);
+    } catch (error) {
+      // Silently fail if audio doesn't work
+      console.log('Audio notification not available');
     }
   }
 
@@ -134,7 +263,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   function updateDepartmentPerformance() {
     const container = document.getElementById('departmentPerformance');
     
-    // Calculate stats per department
     const deptStats = {};
     
     departments.forEach(dept => {
@@ -180,9 +308,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   function updateRatingDistribution() {
     const container = document.getElementById('ratingDistribution');
     
-    const ratingCounts = {
-      5: 0, 4: 0, 3: 0, 2: 0, 1: 0
-    };
+    const ratingCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
 
     filteredFeedback.forEach(f => {
       ratingCounts[f.overall_rating]++;
@@ -252,16 +378,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const response = await fetch(`${API_URL}/feedback/director/trends?months=6`);
       
-      if (!response.ok) throw new Error('Failed to fetch trends');
+      if (!response.ok) {
+        throw new Error('Failed to fetch trends');
+      }
       
       const data = await response.json();
       
       if (data.trends.length === 0) {
-        container.innerHTML = '<div class="trend-placeholder"><i class="fas fa-chart-line"></i><p>No trend data available</p></div>';
+        container.innerHTML = '<div class="trend-placeholder"><i class="fas fa-chart-line"></i><p>No trend data available yet</p></div>';
         return;
       }
 
-      // Simple text-based trend display
       container.innerHTML = `
         <div style="padding: 20px;">
           <h4 style="margin: 0 0 20px 0; color: #2d3748;">Last 6 Months Performance</h4>
@@ -275,7 +402,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       `;
     } catch (error) {
       console.error('Error updating trend chart:', error);
-      container.innerHTML = '<div class="trend-placeholder"><i class="fas fa-exclamation-circle"></i><p>Failed to load trend data</p></div>';
+      container.innerHTML = '<div class="trend-placeholder"><i class="fas fa-info-circle"></i><p>Trend data will appear after collecting feedback</p></div>';
     }
   }
 
@@ -343,17 +470,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function applyFilters() {
     filteredFeedback = allFeedback.filter(feedback => {
-      // Department filter
       if (currentFilters.department && feedback.department_name !== currentFilters.department) {
         return false;
       }
 
-      // Rating filter
       if (currentFilters.rating && feedback.overall_rating !== parseInt(currentFilters.rating)) {
         return false;
       }
 
-      // Time range filter
       if (currentFilters.timeRange) {
         const feedbackDate = new Date(feedback.created_at);
         const now = new Date();
@@ -519,10 +643,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ============ EVENT LISTENERS ============
 
   function attachEventListeners() {
-    // Refresh button
     document.getElementById('refreshDashboard').addEventListener('click', handleRefresh);
 
-    // Filters
     document.getElementById('departmentFilter').addEventListener('change', (e) => {
       currentFilters.department = e.target.value;
       applyFilters();
@@ -552,15 +674,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     document.getElementById('clearFilters').addEventListener('click', clearFilters);
-
-    // Export buttons
     document.getElementById('exportCSV').addEventListener('click', exportToCSV);
     document.getElementById('exportPDF').addEventListener('click', exportToPDF);
-
-    // View all feedback
     document.getElementById('viewAllFeedback').addEventListener('click', viewAllFeedback);
-
-    // Modal close buttons
     document.getElementById('closeFeedbackModal').addEventListener('click', closeModals);
     document.getElementById('closeAllFeedbackModal').addEventListener('click', closeModals);
     
@@ -568,7 +684,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       overlay.addEventListener('click', closeModals);
     });
 
-    // Modal filters
     document.getElementById('modalSearchInput').addEventListener('input', filterModalFeedback);
     document.getElementById('modalDepartmentFilter').addEventListener('change', filterModalFeedback);
     document.getElementById('modalRatingFilter').addEventListener('change', filterModalFeedback);
@@ -667,7 +782,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     try {
       await fetchAllFeedback();
-      updateDashboard();
+      applyFilters();
       showToast('Dashboard refreshed successfully', 'success');
     } catch (error) {
       showToast('Failed to refresh dashboard', 'error');
@@ -742,7 +857,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       {
         feedback_id: 1,
         transaction_id: 'TXN-2026-001234',
-        student_identifier: '2021-12345-MN-0',
+        student_identifier: '2021-55555-MN-0',
         department_name: 'Registrar',
         department_id: 1,
         overall_rating: 5,
@@ -756,14 +871,45 @@ document.addEventListener('DOMContentLoaded', async () => {
       {
         feedback_id: 2,
         transaction_id: 'TXN-2026-001235',
-        student_identifier: '2021-12346-MN-0',
-        department_name: 'Library',
+        student_identifier: 'Anonymous',
+        department_name: 'Cashier',
         department_id: 2,
+        overall_rating: 2,
+        processing_time: 2,
+        staff_assistance: 3,
+        clarity: 2,
+        facility: 3,
+        comments: 'Long wait time. Staff could be more helpful.',
+        created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        feedback_id: 3,
+        transaction_id: 'TXN-2026-001236',
+        student_identifier: '2022-67890-MN-0',
+        department_name: 'Library',
+        department_id: 3,
         overall_rating: 4,
-        processing_time: 3,
+        processing_time: 4,
         staff_assistance: 4,
-        clarity: 5,
-        facility: 4,
-        comments: 'Good service but slow processing.',
-        created_at: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString()
-      },} {}
+        clarity: 4,
+        facility: 5,
+        comments: 'Good experience overall. Staff was helpful.',
+        created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+      }
+    ];
+  }
+
+  // Expose for debugging
+  window.feedbackDebug = {
+    getPollingStatus: () => ({
+      isEnabled: isPollingEnabled,
+      intervalId: pollingInterval,
+      feedbackCount: allFeedback.length
+    }),
+    forceRefresh: () => fetchAllFeedback(),
+    togglePolling: () => {
+      isPollingEnabled = !isPollingEnabled;
+      console.log(`Polling ${isPollingEnabled ? 'enabled' : 'disabled'}`);
+    }
+  };
+});

@@ -26,6 +26,7 @@ import activityLogsRoute from "./routes/activityLogsRoute.js"; // NEW ROUTE
 import roleManagementRoute from './routes/roleManagementRoute.js';
 import userManagementRoute from './routes/userManagementRoute.js'
 import chatbotRoute from './routes/chatbotRoute.js'
+import feedbackRoute from "./routes/feedbackRoute.js";
 
 // initialize 
 dotenv.config();
@@ -57,6 +58,7 @@ app.use("/api", activityLogsRoute); // ADD THIS LINE
 app.use('/private', express.static(path.join(__dirname, '../private')));
 app.use("/api", roleManagementRoute);
 app.use("/api", userManagementRoute);
+app.use("/api", feedbackRoute);
 
 // UPDATED /api/files/data endpoint to include proper adminid
 app.get("/api/files/data", async (req, res) => {
