@@ -1,9 +1,14 @@
-// private/js/admin/admiLlave/management.js - PART 1
+// private/js/admin/admiLlave/management.js - PART 1: CORE & SECTIONS
 
 const adminid = 6; // AdminLlave's ID
 let activeCycleId = null;
 let currentCycle = null;
 let activeSubTab = 'sections'; // Default sub-tab
+
+// Global storage for filtering
+let allSections = [];
+let allAreaHeads = [];
+let allAccreditors = [];
 
 // ============================================
 // INITIALIZATION
@@ -179,8 +184,6 @@ function switchSubTab(tabName) {
 // LOAD SECTIONS
 // ============================================
 
-let allSections = []; // Store all sections for filtering
-
 async function loadSections() {
     if (!activeCycleId) {
         document.getElementById('sectionsTableBody').innerHTML = `
@@ -308,7 +311,7 @@ function filterSections() {
 }
 
 // ============================================
-// ADD SECTION MODAL
+// SECTION MODALS
 // ============================================
 
 function openAddSectionModal() {
@@ -381,10 +384,6 @@ async function addSection(sectionName, areaId) {
     }
 }
 
-// ============================================
-// EDIT SECTION
-// ============================================
-
 async function editSection(sectionId) {
     const section = allSections.find(s => s.section_id === sectionId);
     if (!section) return;
@@ -451,10 +450,6 @@ async function updateSection(sectionId, sectionName, areaId) {
     }
 }
 
-// ============================================
-// DELETE SECTION
-// ============================================
-
 async function deleteSection(sectionId, sectionName) {
     if (!confirm(`Are you sure you want to delete "${sectionName}"?\n\nThis action cannot be undone.`)) {
         return;
@@ -480,10 +475,9 @@ async function deleteSection(sectionId, sectionName) {
         showToast('Failed to delete section', 'error');
     }
 }
-// private/js/admin/admiLlave/Management.js - PART 2
 
 // ============================================
-// BULK IMPORT MODAL
+// BULK IMPORT
 // ============================================
 
 function openBulkImportModal() {
@@ -569,6 +563,7 @@ async function processBulkImport(file) {
 
     reader.readAsText(file);
 }
+// private/js/admin/admiLlave/management.js - PART 2: ACCOUNTS TAB & ACCOUNT MANAGEMENT
 
 // ============================================
 // RENDER ACCOUNTS TAB
@@ -673,14 +668,23 @@ function renderAccountsTab() {
 // LOAD AREA HEADS
 // ============================================
 
+// Replace the loadAreaHeads function with this updated version:
 async function loadAreaHeads() {
+    if (!activeCycleId) {
+        document.getElementById('areaHeadsTableBody').innerHTML = 
+            '<tr><td colspan="7" class="no-data">No active cycle</td></tr>';
+        return;
+    }
+
     try {
-        const response = await fetch('/api/accreditation/area-heads');
+        const response = await fetch(`/api/accreditation/accounts-with-assignments/${activeCycleId}`);
         const data = await response.json();
 
         const tbody = document.getElementById('areaHeadsTableBody');
         
         if (data.areaHeads && data.areaHeads.length > 0) {
+            allAreaHeads = data.areaHeads;
+            
             tbody.innerHTML = data.areaHeads.map(head => {
                 const status = head.is_active ? 
                     '<span class="badge badge-green">Active</span>' : 
@@ -690,20 +694,28 @@ async function loadAreaHeads() {
                     new Date(head.last_login).toLocaleDateString() : 
                     'Never';
 
+                const assignedAreas = head.assigned_areas || '-';
+                const areaDisplay = !head.assigned_areas ? 
+                    '<span style="color: #f59e0b;">No areas assigned</span>' : 
+                    assignedAreas;
+
                 return `
                     <tr>
                         <td><strong>${head.name}</strong></td>
                         <td>${head.email}</td>
-                        <td>${head.assigned_areas || '-'}</td>
+                        <td>${areaDisplay}</td>
                         <td>${head.section_count || 0}</td>
                         <td>${lastLogin}</td>
                         <td>${status}</td>
                         <td class="action-buttons">
+                            <button class="btn-icon" onclick="manageAreaHeadAssignments(${head.id})" title="Manage Assignments">
+                                <i class="fas fa-tasks"></i>
+                            </button>
                             <button class="btn-icon" onclick="editAreaHead(${head.id})" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn-icon" onclick="viewAreaHeadActivity(${head.id})" title="View Activity">
-                                <i class="fas fa-history"></i>
+                            <button class="btn-icon" onclick="viewAreaHeadActivity(${head.id})" title="View Details">
+                                <i class="fas fa-info-circle"></i>
                             </button>
                             <button class="btn-icon btn-danger" onclick="deleteAreaHead(${head.id}, '${head.name}')" title="Delete">
                                 <i class="fas fa-trash"></i>
@@ -718,9 +730,12 @@ async function loadAreaHeads() {
                 data.areaHeads.filter(h => h.is_active).length;
         } else {
             tbody.innerHTML = '<tr><td colspan="7" class="no-data">No area heads found</td></tr>';
+            document.getElementById('totalAreaHeads').textContent = 0;
+            document.getElementById('activeAreaHeads').textContent = 0;
         }
     } catch (error) {
         console.error('Error loading area heads:', error);
+        showToast('Failed to load area heads', 'error');
     }
 }
 
@@ -729,13 +744,21 @@ async function loadAreaHeads() {
 // ============================================
 
 async function loadAccreditors() {
+    if (!activeCycleId) {
+        document.getElementById('accreditorsTableBody').innerHTML = 
+            '<tr><td colspan="7" class="no-data">No active cycle</td></tr>';
+        return;
+    }
+
     try {
-        const response = await fetch('/api/accreditation/accreditors');
+        const response = await fetch(`/api/accreditation/accounts-with-assignments/${activeCycleId}`);
         const data = await response.json();
 
         const tbody = document.getElementById('accreditorsTableBody');
         
         if (data.accreditors && data.accreditors.length > 0) {
+            allAccreditors = data.accreditors;
+            
             tbody.innerHTML = data.accreditors.map(acc => {
                 const status = acc.is_active ? 
                     '<span class="badge badge-green">Active</span>' : 
@@ -745,20 +768,28 @@ async function loadAccreditors() {
                     new Date(acc.last_login).toLocaleDateString() : 
                     'Never';
 
+                const assignedAreas = acc.assigned_areas || '-';
+                const areaDisplay = !acc.assigned_areas ? 
+                    '<span style="color: #f59e0b;">No areas assigned</span>' : 
+                    assignedAreas;
+
                 return `
                     <tr>
                         <td><strong>${acc.name}</strong></td>
                         <td>${acc.email}</td>
-                        <td>${acc.assigned_areas || '-'}</td>
+                        <td>${areaDisplay}</td>
                         <td>${acc.review_count || 0}</td>
                         <td>${lastLogin}</td>
                         <td>${status}</td>
                         <td class="action-buttons">
+                            <button class="btn-icon" onclick="manageAccreditorAssignments(${acc.id})" title="Manage Assignments">
+                                <i class="fas fa-tasks"></i>
+                            </button>
                             <button class="btn-icon" onclick="editAccreditor(${acc.id})" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn-icon" onclick="viewAccreditorActivity(${acc.id})" title="View Activity">
-                                <i class="fas fa-history"></i>
+                            <button class="btn-icon" onclick="viewAccreditorActivity(${acc.id})" title="View Details">
+                                <i class="fas fa-info-circle"></i>
                             </button>
                             <button class="btn-icon btn-danger" onclick="deleteAccreditor(${acc.id}, '${acc.name}')" title="Delete">
                                 <i class="fas fa-trash"></i>
@@ -773,31 +804,857 @@ async function loadAccreditors() {
                 data.accreditors.filter(a => a.is_active).length;
         } else {
             tbody.innerHTML = '<tr><td colspan="7" class="no-data">No accreditors found</td></tr>';
+            document.getElementById('totalAccreditors').textContent = 0;
+            document.getElementById('activeAccreditors').textContent = 0;
         }
     } catch (error) {
         console.error('Error loading accreditors:', error);
+        showToast('Failed to load accreditors', 'error');
     }
 }
 
 // ============================================
-// ACCOUNT MANAGEMENT MODALS (Placeholders)
+// ADD AREA HEAD MODAL
 // ============================================
 
 function openAddAreaHeadModal() {
-    showToast('Area Head account creation will be integrated with user management system', 'info');
+    const modal = createModal('Create Area Head Account', `
+        <div class="form-group">
+            <label for="areaHeadUsername">Username *</label>
+            <input type="text" id="areaHeadUsername" placeholder="Enter username" required>
+            <small class="form-hint">Username must be unique</small>
+        </div>
+        <div class="form-group">
+            <label for="areaHeadFullName">Full Name *</label>
+            <input type="text" id="areaHeadFullName" placeholder="Enter full name" required>
+        </div>
+        <div class="form-group">
+            <label for="areaHeadEmail">Email *</label>
+            <input type="email" id="areaHeadEmail" placeholder="Enter email address" required>
+            <small class="form-hint">Must be a valid email address</small>
+        </div>
+        <div class="form-group">
+            <label for="areaHeadPassword">Password *</label>
+            <input type="password" id="areaHeadPassword" placeholder="Enter password" required>
+            <small class="form-hint">Minimum 8 characters</small>
+        </div>
+        <div class="form-group">
+            <label for="areaHeadPasswordConfirm">Confirm Password *</label>
+            <input type="password" id="areaHeadPasswordConfirm" placeholder="Re-enter password" required>
+        </div>
+    `, async () => {
+        const username = document.getElementById('areaHeadUsername').value.trim();
+        const fullName = document.getElementById('areaHeadFullName').value.trim();
+        const email = document.getElementById('areaHeadEmail').value.trim();
+        const password = document.getElementById('areaHeadPassword').value;
+        const confirmPassword = document.getElementById('areaHeadPasswordConfirm').value;
+
+        // Validation
+        if (!username || !fullName || !email || !password || !confirmPassword) {
+            showToast('Please fill in all required fields', 'error');
+            return;
+        }
+
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            showToast('Please enter a valid email address', 'error');
+            return;
+        }
+
+        // Password validation
+        if (password.length < 8) {
+            showToast('Password must be at least 8 characters long', 'error');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            showToast('Passwords do not match', 'error');
+            return;
+        }
+
+        await createAreaHeadAccount(username, fullName, email, password);
+    });
+
+    document.body.appendChild(modal);
 }
+
+async function createAreaHeadAccount(username, fullName, email, password) {
+    try {
+        const response = await fetch('/api/accreditation/account/area-head', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username,
+                full_name: fullName,
+                email,
+                password,
+                created_by: adminid
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast('Area Head account created successfully', 'success');
+            closeAllModals();
+            await loadAreaHeads();
+        } else {
+            showToast(data.error || 'Failed to create Area Head account', 'error');
+        }
+    } catch (error) {
+        console.error('Error creating Area Head account:', error);
+        showToast('Failed to create Area Head account', 'error');
+    }
+}
+
+// ============================================
+// ADD ACCREDITOR MODAL
+// ============================================
 
 function openAddAccreditorModal() {
-    showToast('Accreditor account creation will be integrated with user management system', 'info');
+    const modal = createModal('Create Accreditor Account', `
+        <div class="form-group">
+            <label for="accreditorUsername">Username *</label>
+            <input type="text" id="accreditorUsername" placeholder="Enter username" required>
+            <small class="form-hint">Username must be unique</small>
+        </div>
+        <div class="form-group">
+            <label for="accreditorFullName">Full Name *</label>
+            <input type="text" id="accreditorFullName" placeholder="Enter full name" required>
+        </div>
+        <div class="form-group">
+            <label for="accreditorEmail">Email *</label>
+            <input type="email" id="accreditorEmail" placeholder="Enter email address" required>
+            <small class="form-hint">Must be a valid email address</small>
+        </div>
+        <div class="form-group">
+            <label for="accreditorPassword">Password *</label>
+            <input type="password" id="accreditorPassword" placeholder="Enter password" required>
+            <small class="form-hint">Minimum 8 characters</small>
+        </div>
+        <div class="form-group">
+            <label for="accreditorPasswordConfirm">Confirm Password *</label>
+            <input type="password" id="accreditorPasswordConfirm" placeholder="Re-enter password" required>
+        </div>
+    `, async () => {
+        const username = document.getElementById('accreditorUsername').value.trim();
+        const fullName = document.getElementById('accreditorFullName').value.trim();
+        const email = document.getElementById('accreditorEmail').value.trim();
+        const password = document.getElementById('accreditorPassword').value;
+        const confirmPassword = document.getElementById('accreditorPasswordConfirm').value;
+
+        // Validation
+        if (!username || !fullName || !email || !password || !confirmPassword) {
+            showToast('Please fill in all required fields', 'error');
+            return;
+        }
+
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            showToast('Please enter a valid email address', 'error');
+            return;
+        }
+
+        // Password validation
+        if (password.length < 8) {
+            showToast('Password must be at least 8 characters long', 'error');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            showToast('Passwords do not match', 'error');
+            return;
+        }
+
+        await createAccreditorAccount(username, fullName, email, password);
+    });
+
+    document.body.appendChild(modal);
 }
+
+async function createAccreditorAccount(username, fullName, email, password) {
+    try {
+        const response = await fetch('/api/accreditation/account/accreditor', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username,
+                full_name: fullName,
+                email,
+                password,
+                created_by: adminid
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast('Accreditor account created successfully', 'success');
+            closeAllModals();
+            await loadAccreditors();
+        } else {
+            showToast(data.error || 'Failed to create Accreditor account', 'error');
+        }
+    } catch (error) {
+        console.error('Error creating Accreditor account:', error);
+        showToast('Failed to create Accreditor account', 'error');
+    }
+}
+
+// ============================================
+// EDIT AREA HEAD
+// ============================================
 
 function editAreaHead(id) {
-    showToast('Edit Area Head functionality coming soon', 'info');
+    const areaHead = allAreaHeads.find(ah => ah.id === id);
+    if (!areaHead) return;
+
+    const modal = createModal('Edit Area Head Account', `
+        <div class="form-group">
+            <label for="editAreaHeadFullName">Full Name *</label>
+            <input type="text" id="editAreaHeadFullName" value="${areaHead.name}" required>
+        </div>
+        <div class="form-group">
+            <label for="editAreaHeadEmail">Email *</label>
+            <input type="email" id="editAreaHeadEmail" value="${areaHead.email}" required>
+        </div>
+        <div class="form-group">
+            <label>
+                <input type="checkbox" id="editAreaHeadActive" ${areaHead.is_active ? 'checked' : ''}>
+                Active Account
+            </label>
+        </div>
+        <div class="form-group">
+            <button class="btn-secondary" onclick="openResetPasswordModal(${id}, 'Area Head')" style="width: 100%;">
+                <i class="fas fa-key"></i> Reset Password
+            </button>
+        </div>
+    `, async () => {
+        const fullName = document.getElementById('editAreaHeadFullName').value.trim();
+        const email = document.getElementById('editAreaHeadEmail').value.trim();
+        const isActive = document.getElementById('editAreaHeadActive').checked;
+
+        if (!fullName || !email) {
+            showToast('Please fill in all required fields', 'error');
+            return;
+        }
+
+        await updateAccount(id, fullName, email, isActive);
+    });
+
+    document.body.appendChild(modal);
 }
 
+// ============================================
+// EDIT ACCREDITOR
+// ============================================
+
 function editAccreditor(id) {
-    showToast('Edit Accreditor functionality coming soon', 'info');
+    const accreditor = allAccreditors.find(acc => acc.id === id);
+    if (!accreditor) return;
+
+    const modal = createModal('Edit Accreditor Account', `
+        <div class="form-group">
+            <label for="editAccreditorFullName">Full Name *</label>
+            <input type="text" id="editAccreditorFullName" value="${accreditor.name}" required>
+        </div>
+        <div class="form-group">
+            <label for="editAccreditorEmail">Email *</label>
+            <input type="email" id="editAccreditorEmail" value="${accreditor.email}" required>
+        </div>
+        <div class="form-group">
+            <label>
+                <input type="checkbox" id="editAccreditorActive" ${accreditor.is_active ? 'checked' : ''}>
+                Active Account
+            </label>
+        </div>
+        <div class="form-group">
+            <button class="btn-secondary" onclick="openResetPasswordModal(${id}, 'Accreditor')" style="width: 100%;">
+                <i class="fas fa-key"></i> Reset Password
+            </button>
+        </div>
+    `, async () => {
+        const fullName = document.getElementById('editAccreditorFullName').value.trim();
+        const email = document.getElementById('editAccreditorEmail').value.trim();
+        const isActive = document.getElementById('editAccreditorActive').checked;
+
+        if (!fullName || !email) {
+            showToast('Please fill in all required fields', 'error');
+            return;
+        }
+
+        await updateAccount(id, fullName, email, isActive);
+    });
+
+    document.body.appendChild(modal);
 }
+
+async function updateAccount(accountId, fullName, email, isActive) {
+    try {
+        const response = await fetch(`/api/accreditation/account/${accountId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                full_name: fullName,
+                email,
+                is_active: isActive,
+                updated_by: adminid
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast('Account updated successfully', 'success');
+            closeAllModals();
+            await loadAreaHeads();
+            await loadAccreditors();
+        } else {
+            showToast(data.error || 'Failed to update account', 'error');
+        }
+    } catch (error) {
+        console.error('Error updating account:', error);
+        showToast('Failed to update account', 'error');
+    }
+}
+// private/js/admin/admiLlave/management.js - PART 3: PASSWORD RESET, DELETE & UTILITIES
+
+// ============================================
+// RESET PASSWORD
+// ============================================
+
+function openResetPasswordModal(accountId, accountType) {
+    closeAllModals();
+
+    const modal = createModal(`Reset Password - ${accountType}`, `
+        <div class="form-group">
+            <label for="newPassword">New Password *</label>
+            <input type="password" id="newPassword" placeholder="Enter new password" required>
+            <small class="form-hint">Minimum 8 characters</small>
+        </div>
+        <div class="form-group">
+            <label for="confirmNewPassword">Confirm New Password *</label>
+            <input type="password" id="confirmNewPassword" placeholder="Re-enter new password" required>
+        </div>
+    `, async () => {
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmNewPassword').value;
+
+        if (!newPassword || !confirmPassword) {
+            showToast('Please fill in all fields', 'error');
+            return;
+        }
+
+        if (newPassword.length < 8) {
+            showToast('Password must be at least 8 characters long', 'error');
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            showToast('Passwords do not match', 'error');
+            return;
+        }
+
+        await resetPassword(accountId, newPassword);
+    });
+
+    document.body.appendChild(modal);
+}
+
+async function resetPassword(accountId, newPassword) {
+    try {
+        const response = await fetch(`/api/accreditation/account/${accountId}/reset-password`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                new_password: newPassword,
+                reset_by: adminid
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast('Password reset successfully', 'success');
+            closeAllModals();
+        } else {
+            showToast(data.error || 'Failed to reset password', 'error');
+        }
+    } catch (error) {
+        console.error('Error resetting password:', error);
+        showToast('Failed to reset password', 'error');
+    }
+}
+
+// ============================================
+// DELETE ACCOUNTS
+// ============================================
+
+function deleteAreaHead(id, name) {
+    if (!confirm(`Are you sure you want to delete Area Head "${name}"?\n\nThis action cannot be undone.`)) {
+        return;
+    }
+
+    deleteAccount(id, 'Area Head');
+}
+
+function deleteAccreditor(id, name) {
+    if (!confirm(`Are you sure you want to delete Accreditor "${name}"?\n\nThis action cannot be undone.`)) {
+        return;
+    }
+
+    deleteAccount(id, 'Accreditor');
+}
+
+async function deleteAccount(accountId, accountType) {
+    try {
+        const response = await fetch(`/api/accreditation/account/${accountId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ deleted_by: adminid })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast(`${accountType} account deleted successfully`, 'success');
+            await loadAreaHeads();
+            await loadAccreditors();
+        } else {
+            showToast(data.error || `Failed to delete ${accountType} account`, 'error');
+        }
+    } catch (error) {
+        console.error(`Error deleting ${accountType} account:`, error);
+        showToast(`Failed to delete ${accountType} account`, 'error');
+    }
+}
+// ============================================
+// VIEW AREA HEAD ACTIVITY WITH ASSIGNMENTS
+// ============================================
+
+async function viewAreaHeadActivity(id) {
+    if (!activeCycleId) {
+        showToast('No active cycle', 'warning');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/accreditation/account/${id}/details/${activeCycleId}`);
+        const data = await response.json();
+
+        if (!data.account) {
+            showToast('Failed to load account details', 'error');
+            return;
+        }
+
+        const account = data.account;
+        const assignments = account.assignments || [];
+
+        let assignmentHTML = '';
+        if (assignments.length > 0) {
+            assignmentHTML = `
+                <h4>Assigned Areas:</h4>
+                <div class="assignment-list">
+                    ${assignments.map(a => `
+                        <div class="assignment-item">
+                            <strong>Area ${a.area_number}: ${a.area_name}</strong>
+                            <p>Sections: ${a.section_count}</p>
+                            <p>Assigned: ${new Date(a.assigned_at).toLocaleDateString()}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        } else {
+            assignmentHTML = '<p class="no-data">No areas assigned yet</p>';
+        }
+
+        const modal = createModal(`Area Head Details - ${account.full_name}`, `
+            <div class="account-details">
+                <div class="detail-row">
+                    <strong>Username:</strong> ${account.username}
+                </div>
+                <div class="detail-row">
+                    <strong>Email:</strong> ${account.email}
+                </div>
+                <div class="detail-row">
+                    <strong>Status:</strong> 
+                    ${account.is_active ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-gray">Inactive</span>'}
+                </div>
+                <div class="detail-row">
+                    <strong>Last Login:</strong> 
+                    ${account.last_login ? new Date(account.last_login).toLocaleString() : 'Never'}
+                </div>
+                <div class="detail-row">
+                    <strong>Created:</strong> ${new Date(account.created_at).toLocaleDateString()}
+                </div>
+            </div>
+            ${assignmentHTML}
+        `, () => {
+            closeAllModals();
+        });
+
+        document.body.appendChild(modal);
+    } catch (error) {
+        console.error('Error loading area head details:', error);
+        showToast('Failed to load area head details', 'error');
+    }
+}
+// ============================================
+// MANAGE AREA HEAD ASSIGNMENTS
+// ============================================
+
+async function manageAreaHeadAssignments(accountId) {
+    if (!activeCycleId) {
+        showToast('No active cycle', 'warning');
+        return;
+    }
+
+    try {
+        // Fetch account details
+        const accountResponse = await fetch(`/api/accreditation/account/${accountId}/details/${activeCycleId}`);
+        const accountData = await accountResponse.json();
+
+        if (!accountData.account) {
+            showToast('Failed to load account details', 'error');
+            return;
+        }
+
+        const account = accountData.account;
+        const currentAssignments = account.assignments || [];
+
+        // Fetch available areas (areas not assigned to this area head)
+        const areasResponse = await fetch(`/api/accreditation/areas/${activeCycleId}`);
+        const areasData = await areasResponse.json();
+        const allAreas = areasData.areas || [];
+
+        // Create assignment interface
+        let areasHTML = '';
+        allAreas.forEach(area => {
+            const isAssigned = currentAssignments.some(a => a.area_id === area.area_id);
+            const hasOtherHead = area.area_head_id && area.area_head_id !== accountId;
+            
+            let statusHTML = '';
+            if (isAssigned) {
+                statusHTML = `
+                    <button class="btn-danger btn-sm" onclick="removeAreaHeadAssignment(${activeCycleId}, ${area.area_id}, ${accountId})">
+                        <i class="fas fa-times"></i> Remove
+                    </button>
+                `;
+            } else if (hasOtherHead) {
+                statusHTML = `<span class="text-muted">Assigned to ${area.area_head_name}</span>`;
+            } else {
+                statusHTML = `
+                    <button class="btn-primary btn-sm" onclick="assignAreaHead(${activeCycleId}, ${area.area_id}, ${accountId})">
+                        <i class="fas fa-plus"></i> Assign
+                    </button>
+                `;
+            }
+
+            areasHTML += `
+                <div class="area-assignment-row">
+                    <div class="area-info">
+                        <strong>Area ${area.area_number}: ${area.area_name}</strong>
+                        <p class="text-sm">Sections: ${area.total_sections}</p>
+                    </div>
+                    <div class="area-action">
+                        ${statusHTML}
+                    </div>
+                </div>
+            `;
+        });
+
+        const modal = createModal(`Manage Area Assignments - ${account.full_name}`, `
+            <div class="assignment-manager">
+                <p class="info-text">Assign this Area Head to specific areas. Each area can only have one Area Head.</p>
+                <div class="areas-list">
+                    ${areasHTML}
+                </div>
+            </div>
+        `, () => {
+            closeAllModals();
+            loadAreaHeads(); // Reload to show updated assignments
+        });
+
+        document.body.appendChild(modal);
+    } catch (error) {
+        console.error('Error loading area assignments:', error);
+        showToast('Failed to load area assignments', 'error');
+    }
+}
+
+async function assignAreaHead(cycleId, areaId, accountId) {
+    try {
+        const response = await fetch('/api/accreditation/assign/area-head', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                cycle_id: cycleId,
+                area_id: areaId,
+                area_head_id: accountId,
+                assigned_by: adminid
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast('Area Head assigned successfully', 'success');
+            // Reload the modal
+            closeAllModals();
+            manageAreaHeadAssignments(accountId);
+        } else {
+            showToast(data.error || 'Failed to assign Area Head', 'error');
+        }
+    } catch (error) {
+        console.error('Error assigning Area Head:', error);
+        showToast('Failed to assign Area Head', 'error');
+    }
+}
+
+async function removeAreaHeadAssignment(cycleId, areaId, accountId) {
+    if (!confirm('Are you sure you want to remove this area assignment?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/accreditation/assign/area-head/${cycleId}/${areaId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ removed_by: adminid })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast('Area assignment removed successfully', 'success');
+            // Reload the modal
+            closeAllModals();
+            manageAreaHeadAssignments(accountId);
+        } else {
+            showToast(data.error || 'Failed to remove area assignment', 'error');
+        }
+    } catch (error) {
+        console.error('Error removing area assignment:', error);
+        showToast('Failed to remove area assignment', 'error');
+    }
+}
+
+// ============================================
+// MANAGE ACCREDITOR ASSIGNMENTS
+// ============================================
+
+async function manageAccreditorAssignments(accountId) {
+    if (!activeCycleId) {
+        showToast('No active cycle', 'warning');
+        return;
+    }
+
+    try {
+        // Fetch account details
+        const accountResponse = await fetch(`/api/accreditation/account/${accountId}/details/${activeCycleId}`);
+        const accountData = await accountResponse.json();
+
+        if (!accountData.account) {
+            showToast('Failed to load account details', 'error');
+            return;
+        }
+
+        const account = accountData.account;
+        const currentAssignments = account.assignments || [];
+
+        // Fetch all areas
+        const areasResponse = await fetch(`/api/accreditation/areas/${activeCycleId}`);
+        const areasData = await areasResponse.json();
+        const allAreas = areasData.areas || [];
+
+        // Create assignment interface
+        let areasHTML = '';
+        allAreas.forEach(area => {
+            const isAssigned = currentAssignments.some(a => a.area_id === area.area_id);
+            
+            let statusHTML = '';
+            if (isAssigned) {
+                // Get assignment ID to remove
+                const assignment = currentAssignments.find(a => a.area_id === area.area_id);
+                statusHTML = `
+                    <button class="btn-danger btn-sm" onclick="removeAccreditorAssignment(${activeCycleId}, ${area.area_id}, ${accountId})">
+                        <i class="fas fa-times"></i> Remove
+                    </button>
+                `;
+            } else {
+                statusHTML = `
+                    <button class="btn-primary btn-sm" onclick="assignAccreditor(${activeCycleId}, ${area.area_id}, ${accountId})">
+                        <i class="fas fa-plus"></i> Assign
+                    </button>
+                `;
+            }
+
+            areasHTML += `
+                <div class="area-assignment-row">
+                    <div class="area-info">
+                        <strong>Area ${area.area_number}: ${area.area_name}</strong>
+                        <p class="text-sm">Sections: ${area.total_sections}</p>
+                    </div>
+                    <div class="area-action">
+                        ${statusHTML}
+                    </div>
+                </div>
+            `;
+        });
+
+        const modal = createModal(`Manage Area Assignments - ${account.full_name}`, `
+            <div class="assignment-manager">
+                <p class="info-text">Assign this Accreditor to specific areas. Accreditors can be assigned to multiple areas.</p>
+                <div class="areas-list">
+                    ${areasHTML}
+                </div>
+            </div>
+        `, () => {
+            closeAllModals();
+            loadAccreditors(); // Reload to show updated assignments
+        });
+
+        document.body.appendChild(modal);
+    } catch (error) {
+        console.error('Error loading accreditor assignments:', error);
+        showToast('Failed to load accreditor assignments', 'error');
+    }
+}
+
+async function assignAccreditor(cycleId, areaId, accountId) {
+    try {
+        const response = await fetch('/api/accreditation/assign/accreditor', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                cycle_id: cycleId,
+                area_id: areaId,
+                accreditor_id: accountId,
+                assigned_by: adminid
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast('Accreditor assigned successfully', 'success');
+            // Reload the modal
+            closeAllModals();
+            manageAccreditorAssignments(accountId);
+        } else {
+            showToast(data.error || 'Failed to assign Accreditor', 'error');
+        }
+    } catch (error) {
+        console.error('Error assigning Accreditor:', error);
+        showToast('Failed to assign Accreditor', 'error');
+    }
+}
+
+async function removeAccreditorAssignment(cycleId, areaId, accountId) {
+    if (!confirm('Are you sure you want to remove this area assignment?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/accreditation/assign/accreditor/${cycleId}/${areaId}/${accountId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ removed_by: adminid })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast('Area assignment removed successfully', 'success');
+            // Reload the modal
+            closeAllModals();
+            manageAccreditorAssignments(accountId);
+        } else {
+            showToast(data.error || 'Failed to remove area assignment', 'error');
+        }
+    } catch (error) {
+        console.error('Error removing accreditor assignment:', error);
+        showToast('Failed to remove accreditor assignment', 'error');
+    }
+}
+
+// ============================================
+// VIEW ACCREDITOR ACTIVITY WITH ASSIGNMENTS
+// ============================================
+
+async function viewAccreditorActivity(id) {
+    if (!activeCycleId) {
+        showToast('No active cycle', 'warning');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/accreditation/account/${id}/details/${activeCycleId}`);
+        const data = await response.json();
+
+        if (!data.account) {
+            showToast('Failed to load account details', 'error');
+            return;
+        }
+
+        const account = data.account;
+        const assignments = account.assignments || [];
+
+        let assignmentHTML = '';
+        if (assignments.length > 0) {
+            assignmentHTML = `
+                <h4>Assigned Areas:</h4>
+                <div class="assignment-list">
+                    ${assignments.map(a => `
+                        <div class="assignment-item">
+                            <strong>Area ${a.area_number}: ${a.area_name}</strong>
+                            <p>Reviews Completed: ${a.review_count}</p>
+                            <p>Assigned: ${new Date(a.assigned_at).toLocaleDateString()}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        } else {
+            assignmentHTML = '<p class="no-data">No areas assigned yet</p>';
+        }
+
+        const modal = createModal(`Accreditor Details - ${account.full_name}`, `
+            <div class="account-details">
+                <div class="detail-row">
+                    <strong>Username:</strong> ${account.username}
+                </div>
+                <div class="detail-row">
+                    <strong>Email:</strong> ${account.email}
+                </div>
+                <div class="detail-row">
+                    <strong>Status:</strong> 
+                    ${account.is_active ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-gray">Inactive</span>'}
+                </div>
+                <div class="detail-row">
+                    <strong>Last Login:</strong> 
+                    ${account.last_login ? new Date(account.last_login).toLocaleString() : 'Never'}
+                </div>
+                <div class="detail-row">
+                    <strong>Created:</strong> ${new Date(account.created_at).toLocaleDateString()}
+                </div>
+            </div>
+            ${assignmentHTML}
+        `, () => {
+            closeAllModals();
+        });
+
+        document.body.appendChild(modal);
+    } catch (error) {
+        console.error('Error loading accreditor details:', error);
+        showToast('Failed to load accreditor details', 'error');
+    }
+}
+
+// ============================================
+// VIEW ACTIVITY (PLACEHOLDER)
+// ============================================
 
 function viewAreaHeadActivity(id) {
     showToast('Activity view coming soon', 'info');
@@ -805,14 +1662,6 @@ function viewAreaHeadActivity(id) {
 
 function viewAccreditorActivity(id) {
     showToast('Activity view coming soon', 'info');
-}
-
-function deleteAreaHead(id, name) {
-    showToast('Delete functionality will check for area assignments first', 'info');
-}
-
-function deleteAccreditor(id, name) {
-    showToast('Delete functionality will check for area assignments first', 'info');
 }
 
 // ============================================
