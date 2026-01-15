@@ -147,6 +147,60 @@ router.put('/accreditation/cycle/:cycleId/archive', async (req, res) => {
     }
 });
 
+// PUT: Restore Archived Cycle
+router.put('/accreditation/cycle/:cycleId/restore', async (req, res) => {
+    const { cycleId } = req.params;
+    const { restored_by } = req.body;
+
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // Check if there's already an active cycle
+        const activeCheck = await client.query(`
+            SELECT id FROM accreditation_cycles WHERE status = 'Active'
+        `);
+
+        if (activeCheck.rows.length > 0) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ 
+                error: 'An active cycle already exists. Please archive it first.' 
+            });
+        }
+
+        // Restore the cycle
+        const result = await client.query(`
+            UPDATE accreditation_cycles
+            SET status = 'Active', archived_at = NULL
+            WHERE id = $1
+            RETURNING id, academic_year, status
+        `, [cycleId]);
+
+        if (result.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'Cycle not found' });
+        }
+
+        // Log activity
+        await client.query(`
+            INSERT INTO accreditation_activity_log (
+                cycle_id, user_id, user_role, action_type, 
+                target_type, target_name, details
+            )
+            VALUES ($1, $2, 'AdminLlave', 'Restored', 'Cycle', $3, 'Restored archived cycle to active status')
+        `, [cycleId, restored_by, result.rows[0].academic_year]);
+
+        await client.query('COMMIT');
+        res.json({ success: true, cycle: result.rows[0] });
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Error restoring cycle:', error);
+        res.status(500).json({ error: 'Failed to restore cycle' });
+    } finally {
+        client.release();
+    }
+});
+
 // ============================================
 // DASHBOARD STATS
 // ============================================
