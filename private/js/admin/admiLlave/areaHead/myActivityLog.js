@@ -491,11 +491,6 @@ function showToast(message, type = 'info') {
         setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
-
-function initializeProfileDropdown() {
-    console.log('Profile dropdown initialized');
-}
-
 // Add CSS animations
 const style = document.createElement('style');
 style.textContent = `

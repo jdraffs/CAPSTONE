@@ -7,7 +7,9 @@
 /* ============================================
    PAGE HEADER
    ============================================ */
-
+#searchActivity {
+    width: 80%;
+}
 .page-header {
     display: flex;
     justify-content: space-between;
