@@ -650,3 +650,580 @@ function showToast(message, type = 'info') {
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 3000);
 }
+// ============================================
+// VIEW ARCHIVED CYCLES MODAL
+// ============================================
+
+async function openArchivedCyclesModal() {
+    try {
+        const response = await fetch('/api/accreditation/cycles');
+        const data = await response.json();
+
+        const archivedCycles = data.cycles.filter(c => c.status === 'Archived');
+
+        if (archivedCycles.length === 0) {
+            showToast('No archived cycles found', 'info');
+            return;
+        }
+
+        const cyclesHTML = archivedCycles.map(cycle => {
+            const createdDate = new Date(cycle.created_at).toLocaleDateString();
+            const archivedDate = cycle.archived_at 
+                ? new Date(cycle.archived_at).toLocaleDateString() 
+                : '-';
+
+            return `
+                <div class="archived-cycle-item">
+                    <div class="cycle-info">
+                        <h4 class="cycle-name">${cycle.academic_year}</h4>
+                        <div class="cycle-dates">
+                            <span><strong>Created:</strong> ${createdDate}</span>
+                            <span><strong>Archived:</strong> ${archivedDate}</span>
+                        </div>
+                    </div>
+                    <div class="cycle-actions">
+                        <button class="btn-primary btn-sm" onclick="viewArchivedCycleDetails(${cycle.id})">
+                            <i class="fas fa-eye"></i> View Details
+                        </button>
+                        <button class="btn-secondary btn-sm" onclick="restoreCycle(${cycle.id})">
+                            <i class="fas fa-undo"></i> Restore
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        const modal = createModal('Archived Cycles', `
+            <div class="archived-cycles-container">
+                ${cyclesHTML}
+            </div>
+        `, null, true); // closeOnly = true
+
+        document.body.appendChild(modal);
+    } catch (error) {
+        console.error('Error loading archived cycles:', error);
+        showToast('Failed to load archived cycles', 'error');
+    }
+}
+
+// ============================================
+// VIEW ARCHIVED CYCLE DETAILS
+// ============================================
+
+async function viewArchivedCycleDetails(cycleId) {
+    try {
+        // Load all data for this archived cycle
+        const [statsRes, areasRes, sectionsRes] = await Promise.all([
+            fetch(`/api/accreditation/dashboard/stats/${cycleId}`),
+            fetch(`/api/accreditation/areas/${cycleId}`),
+            fetch(`/api/accreditation/sections/all/${cycleId}`)
+        ]);
+
+        const stats = await statsRes.json();
+        const areas = await areasRes.json();
+        const sections = await sectionsRes.json();
+
+        const totalSections = parseInt(stats.stats?.total_sections) || 0;
+        const submitted = parseInt(stats.stats?.submitted_count) || 0;
+        const reviewed = parseInt(stats.stats?.reviewed_count) || 0;
+        const complete = parseInt(stats.stats?.complete_count) || 0;
+
+        const detailsHTML = `
+            <div class="archived-cycle-details">
+                <!-- Statistics Summary -->
+                <div class="detail-section">
+                    <h4>Summary Statistics</h4>
+                    <div class="stats-grid-small">
+                        <div class="stat-item-small">
+                            <span class="stat-label">Total Sections:</span>
+                            <span class="stat-value">${totalSections}</span>
+                        </div>
+                        <div class="stat-item-small">
+                            <span class="stat-label">Submitted:</span>
+                            <span class="stat-value">${submitted} (${totalSections > 0 ? Math.round((submitted/totalSections)*100) : 0}%)</span>
+                        </div>
+                        <div class="stat-item-small">
+                            <span class="stat-label">Reviewed:</span>
+                            <span class="stat-value">${reviewed} (${totalSections > 0 ? Math.round((reviewed/totalSections)*100) : 0}%)</span>
+                        </div>
+                        <div class="stat-item-small">
+                            <span class="stat-label">Complete:</span>
+                            <span class="stat-value">${complete} (${totalSections > 0 ? Math.round((complete/totalSections)*100) : 0}%)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Area Breakdown -->
+                <div class="detail-section">
+                    <h4>Area Breakdown</h4>
+                    <div class="area-list-compact">
+                        ${areas.areas.map(area => `
+                            <div class="area-row-compact">
+                                <span class="area-name">Area ${area.area_number}: ${area.area_name}</span>
+                                <span class="area-progress">${area.complete_sections}/${area.total_sections} Complete</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- Export Options -->
+                <div class="detail-section">
+                    <h4>Export Data</h4>
+                    <div class="export-buttons">
+                        <button class="btn-secondary" onclick="exportArchivedCycleData(${cycleId}, 'sections')">
+                            <i class="fas fa-download"></i> Export Sections
+                        </button>
+                        <button class="btn-secondary" onclick="exportArchivedCycleData(${cycleId}, 'reviews')">
+                            <i class="fas fa-download"></i> Export Reviews
+                        </button>
+                        <button class="btn-secondary" onclick="exportArchivedCycleData(${cycleId}, 'complete')">
+                            <i class="fas fa-download"></i> Complete Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        closeAllModals();
+        const modal = createModal('Archived Cycle Details', detailsHTML, null, true);
+        document.body.appendChild(modal);
+
+    } catch (error) {
+        console.error('Error loading cycle details:', error);
+        showToast('Failed to load cycle details', 'error');
+    }
+}
+
+// ============================================
+// RESTORE ARCHIVED CYCLE
+// ============================================
+
+async function restoreCycle(cycleId) {
+    if (!confirm('Restore this cycle? It will become the active cycle again.')) {
+        return;
+    }
+
+    try {
+        // First check if there's already an active cycle
+        const activeCheck = await fetch('/api/accreditation/cycle/active');
+        const activeData = await activeCheck.json();
+
+        if (activeData.cycle) {
+            showToast('Cannot restore: Another cycle is currently active. Archive it first.', 'error');
+            return;
+        }
+
+        // Restore the cycle
+        const response = await fetch(`/api/accreditation/cycle/${cycleId}/restore`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ restored_by: adminid })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast('Cycle restored successfully', 'success');
+            closeAllModals();
+            await loadActiveCycle();
+        } else {
+            showToast(data.error || 'Failed to restore cycle', 'error');
+        }
+    } catch (error) {
+        console.error('Error restoring cycle:', error);
+        showToast('Failed to restore cycle', 'error');
+    }
+}
+
+// ============================================
+// EXPORT ARCHIVED CYCLE DATA
+// ============================================
+
+async function exportArchivedCycleData(cycleId, type) {
+    try {
+        showToast('Generating export...', 'info');
+
+        const response = await fetch(`/api/accreditation/sections/all/${cycleId}`);
+        const data = await response.json();
+
+        if (!data.sections || data.sections.length === 0) {
+            showToast('No data to export', 'warning');
+            return;
+        }
+
+        // Get cycle info
+        const cycleRes = await fetch('/api/accreditation/cycles');
+        const cyclesData = await cycleRes.json();
+        const cycle = cyclesData.cycles.find(c => c.id === cycleId);
+
+        const wb = XLSX.utils.book_new();
+
+        if (type === 'sections' || type === 'complete') {
+            const wsData = [
+                [`Sections Export - ${cycle.academic_year}`],
+                [`Generated: ${new Date().toLocaleDateString()}`],
+                [],
+                ['Section Name', 'Area', 'Google Drive Link', 'Submitted By', 'Date Submitted', 'Review Status']
+            ];
+
+            data.sections.forEach(section => {
+                wsData.push([
+                    section.section_name,
+                    `Area ${section.area_number}`,
+                    section.google_drive_link || 'Not Submitted',
+                    section.area_head_name || '-',
+                    section.submitted_at ? new Date(section.submitted_at).toLocaleDateString() : '-',
+                    section.review_status || 'Not Reviewed'
+                ]);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            XLSX.utils.book_append_sheet(wb, ws, 'Sections');
+        }
+
+        if (type === 'reviews' || type === 'complete') {
+            const reviewData = data.sections.filter(s => s.review_status && s.review_status !== 'Not Reviewed');
+            
+            const wsData = [
+                [`Reviews Export - ${cycle.academic_year}`],
+                [`Generated: ${new Date().toLocaleDateString()}`],
+                [],
+                ['Section', 'Area', 'Status', 'Reviewed By', 'Date', 'Comments']
+            ];
+
+            reviewData.forEach(section => {
+                wsData.push([
+                    section.section_name,
+                    `Area ${section.area_number}`,
+                    section.review_status,
+                    section.reviewed_by_name || '-',
+                    section.submitted_at ? new Date(section.submitted_at).toLocaleDateString() : '-',
+                    '-' // Comments would come from section_reviews table
+                ]);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            XLSX.utils.book_append_sheet(wb, ws, 'Reviews');
+        }
+
+        XLSX.writeFile(wb, `Archived_Cycle_${cycle.academic_year}_${type}.xlsx`);
+        showToast('Export complete', 'success');
+
+    } catch (error) {
+        console.error('Error exporting data:', error);
+        showToast('Failed to export data', 'error');
+    }
+}
+// ============================================
+// MODAL UTILITY FUNCTIONS
+// ============================================
+
+function createModal(title, bodyHTML, onConfirm = null, closeOnly = false) {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'flex';
+    
+    const footerHTML = closeOnly 
+        ? '<button class="btn-primary" onclick="closeAllModals()">Close</button>'
+        : `
+            <button class="btn-secondary" onclick="closeAllModals()">Cancel</button>
+            <button class="btn-primary" id="modalConfirmBtn">Confirm</button>
+          `;
+    
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>${title}</h3>
+                <button class="modal-close" onclick="closeAllModals()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                ${bodyHTML}
+            </div>
+            <div class="modal-footer">
+                ${footerHTML}
+            </div>
+        </div>
+    `;
+
+    if (!closeOnly && onConfirm) {
+        setTimeout(() => {
+            const confirmBtn = document.getElementById('modalConfirmBtn');
+            if (confirmBtn) {
+                confirmBtn.onclick = onConfirm;
+            }
+        }, 100);
+    }
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeAllModals();
+        }
+    });
+
+    return modal;
+}
+
+function closeAllModals() {
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.remove();
+    });
+}
+
+// ============================================
+// VIEW ARCHIVED CYCLES MODAL
+// ============================================
+
+async function openArchivedCyclesModal() {
+    try {
+        const response = await fetch('/api/accreditation/cycles');
+        const data = await response.json();
+
+        const archivedCycles = data.cycles.filter(c => c.status === 'Archived');
+
+        if (archivedCycles.length === 0) {
+            showToast('No archived cycles found', 'info');
+            return;
+        }
+
+        const cyclesHTML = archivedCycles.map(cycle => {
+            const createdDate = new Date(cycle.created_at).toLocaleDateString();
+            const archivedDate = cycle.archived_at 
+                ? new Date(cycle.archived_at).toLocaleDateString() 
+                : '-';
+
+            return `
+                <div class="archived-cycle-item">
+                    <div class="cycle-info">
+                        <h4 class="cycle-name">${cycle.academic_year}</h4>
+                        <div class="cycle-dates">
+                            <span><strong>Created:</strong> ${createdDate}</span>
+                            <span><strong>Archived:</strong> ${archivedDate}</span>
+                        </div>
+                    </div>
+                    <div class="cycle-actions">
+                        <button class="btn-primary btn-sm" onclick="viewArchivedCycleDetails(${cycle.id})">
+                            <i class="fas fa-eye"></i> View Details
+                        </button>
+                        <button class="btn-secondary btn-sm" onclick="restoreCycle(${cycle.id})">
+                            <i class="fas fa-undo"></i> Restore
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        const modal = createModal('Archived Cycles', `
+            <div class="archived-cycles-container">
+                ${cyclesHTML}
+            </div>
+        `, null, true);
+
+        document.body.appendChild(modal);
+    } catch (error) {
+        console.error('Error loading archived cycles:', error);
+        showToast('Failed to load archived cycles', 'error');
+    }
+}
+
+// ============================================
+// VIEW ARCHIVED CYCLE DETAILS
+// ============================================
+
+async function viewArchivedCycleDetails(cycleId) {
+    try {
+        const [statsRes, areasRes, sectionsRes] = await Promise.all([
+            fetch(`/api/accreditation/dashboard/stats/${cycleId}`),
+            fetch(`/api/accreditation/areas/${cycleId}`),
+            fetch(`/api/accreditation/sections/all/${cycleId}`)
+        ]);
+
+        const stats = await statsRes.json();
+        const areas = await areasRes.json();
+        const sections = await sectionsRes.json();
+
+        const totalSections = parseInt(stats.stats?.total_sections) || 0;
+        const submitted = parseInt(stats.stats?.submitted_count) || 0;
+        const reviewed = parseInt(stats.stats?.reviewed_count) || 0;
+        const complete = parseInt(stats.stats?.complete_count) || 0;
+
+        const detailsHTML = `
+            <div class="archived-cycle-details">
+                <div class="detail-section">
+                    <h4>Summary Statistics</h4>
+                    <div class="stats-grid-small">
+                        <div class="stat-item-small">
+                            <span class="stat-label">Total Sections:</span>
+                            <span class="stat-value">${totalSections}</span>
+                        </div>
+                        <div class="stat-item-small">
+                            <span class="stat-label">Submitted:</span>
+                            <span class="stat-value">${submitted} (${totalSections > 0 ? Math.round((submitted/totalSections)*100) : 0}%)</span>
+                        </div>
+                        <div class="stat-item-small">
+                            <span class="stat-label">Reviewed:</span>
+                            <span class="stat-value">${reviewed} (${totalSections > 0 ? Math.round((reviewed/totalSections)*100) : 0}%)</span>
+                        </div>
+                        <div class="stat-item-small">
+                            <span class="stat-label">Complete:</span>
+                            <span class="stat-value">${complete} (${totalSections > 0 ? Math.round((complete/totalSections)*100) : 0}%)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h4>Area Breakdown</h4>
+                    <div class="area-list-compact">
+                        ${areas.areas.map(area => `
+                            <div class="area-row-compact">
+                                <span class="area-name">Area ${area.area_number}: ${area.area_name}</span>
+                                <span class="area-progress">${area.complete_sections}/${area.total_sections} Complete</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h4>Export Data</h4>
+                    <div class="export-buttons">
+                        <button class="btn-secondary" onclick="exportArchivedCycleData(${cycleId}, 'sections')">
+                            <i class="fas fa-download"></i> Export Sections
+                        </button>
+                        <button class="btn-secondary" onclick="exportArchivedCycleData(${cycleId}, 'reviews')">
+                            <i class="fas fa-download"></i> Export Reviews
+                        </button>
+                        <button class="btn-secondary" onclick="exportArchivedCycleData(${cycleId}, 'complete')">
+                            <i class="fas fa-download"></i> Complete Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        closeAllModals();
+        const modal = createModal('Archived Cycle Details', detailsHTML, null, true);
+        document.body.appendChild(modal);
+
+    } catch (error) {
+        console.error('Error loading cycle details:', error);
+        showToast('Failed to load cycle details', 'error');
+    }
+}
+
+// ============================================
+// RESTORE ARCHIVED CYCLE
+// ============================================
+
+async function restoreCycle(cycleId) {
+    if (!confirm('Restore this cycle? It will become the active cycle again.')) {
+        return;
+    }
+
+    try {
+        const activeCheck = await fetch('/api/accreditation/cycle/active');
+        const activeData = await activeCheck.json();
+
+        if (activeData.cycle) {
+            showToast('Cannot restore: Another cycle is currently active. Archive it first.', 'error');
+            return;
+        }
+
+        const response = await fetch(`/api/accreditation/cycle/${cycleId}/restore`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ restored_by: adminid })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast('Cycle restored successfully', 'success');
+            closeAllModals();
+            await loadActiveCycle();
+        } else {
+            showToast(data.error || 'Failed to restore cycle', 'error');
+        }
+    } catch (error) {
+        console.error('Error restoring cycle:', error);
+        showToast('Failed to restore cycle', 'error');
+    }
+}
+
+// ============================================
+// EXPORT ARCHIVED CYCLE DATA
+// ============================================
+
+async function exportArchivedCycleData(cycleId, type) {
+    try {
+        showToast('Generating export...', 'info');
+
+        const response = await fetch(`/api/accreditation/sections/all/${cycleId}`);
+        const data = await response.json();
+
+        if (!data.sections || data.sections.length === 0) {
+            showToast('No data to export', 'warning');
+            return;
+        }
+
+        const cycleRes = await fetch('/api/accreditation/cycles');
+        const cyclesData = await cycleRes.json();
+        const cycle = cyclesData.cycles.find(c => c.id === cycleId);
+
+        const wb = XLSX.utils.book_new();
+
+        if (type === 'sections' || type === 'complete') {
+            const wsData = [
+                [`Sections Export - ${cycle.academic_year}`],
+                [`Generated: ${new Date().toLocaleDateString()}`],
+                [],
+                ['Section Name', 'Area', 'Google Drive Link', 'Submitted By', 'Date Submitted', 'Review Status']
+            ];
+
+            data.sections.forEach(section => {
+                wsData.push([
+                    section.section_name,
+                    `Area ${section.area_number}`,
+                    section.google_drive_link || 'Not Submitted',
+                    section.area_head_name || '-',
+                    section.submitted_at ? new Date(section.submitted_at).toLocaleDateString() : '-',
+                    section.review_status || 'Not Reviewed'
+                ]);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            XLSX.utils.book_append_sheet(wb, ws, 'Sections');
+        }
+
+        if (type === 'reviews' || type === 'complete') {
+            const reviewData = data.sections.filter(s => s.review_status && s.review_status !== 'Not Reviewed');
+            
+            const wsData = [
+                [`Reviews Export - ${cycle.academic_year}`],
+                [`Generated: ${new Date().toLocaleDateString()}`],
+                [],
+                ['Section', 'Area', 'Status', 'Reviewed By', 'Date']
+            ];
+
+            reviewData.forEach(section => {
+                wsData.push([
+                    section.section_name,
+                    `Area ${section.area_number}`,
+                    section.review_status,
+                    section.reviewed_by_name || '-',
+                    section.submitted_at ? new Date(section.submitted_at).toLocaleDateString() : '-'
+                ]);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            XLSX.utils.book_append_sheet(wb, ws, 'Reviews');
+        }
+
+        XLSX.writeFile(wb, `Archived_Cycle_${cycle.academic_year}_${type}.xlsx`);
+        showToast('Export complete', 'success');
+
+    } catch (error) {
+        console.error('Error exporting data:', error);
+        showToast('Failed to export data', 'error');
+    }
+}
