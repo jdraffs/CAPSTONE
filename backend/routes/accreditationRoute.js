@@ -1630,4 +1630,409 @@ router.delete('/accreditation/assign/accreditor/:cycleId/:areaId/:accreditorId',
         res.status(500).json({ error: 'Failed to remove accreditor assignment' });
     }
 });
+// Add these routes to backend/routes/accreditationRoute.js
+// Place them after the existing routes
+
+// ============================================
+// AREA HEAD - SUBMISSION ROUTES
+// ============================================
+
+// POST: Submit Google Drive Link
+router.post('/accreditation/submission/:sectionId', async (req, res) => {
+    const { sectionId } = req.params;
+    const { google_drive_link, submitted_by } = req.body;
+
+    if (!google_drive_link || !submitted_by) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // Check if submissions are open
+        const sectionResult = await client.query(`
+            SELECT s.cycle_id, s.section_name, s.area_id
+            FROM accreditation_sections s
+            WHERE s.id = $1
+        `, [sectionId]);
+
+        if (sectionResult.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'Section not found' });
+        }
+
+        const section = sectionResult.rows[0];
+
+        // Check submission control
+        const controlResult = await client.query(`
+            SELECT is_open FROM submission_control WHERE cycle_id = $1
+        `, [section.cycle_id]);
+
+        if (controlResult.rows.length === 0 || !controlResult.rows[0].is_open) {
+            await client.query('ROLLBACK');
+            return res.status(403).json({ error: 'Submissions are currently closed' });
+        }
+
+        // Insert or update submission
+        const submissionResult = await client.query(`
+            INSERT INTO section_submissions (section_id, google_drive_link, submitted_by)
+            VALUES ($1, $2, $3)
+            ON CONFLICT (section_id) 
+            DO UPDATE SET 
+                google_drive_link = $2,
+                last_updated_at = CURRENT_TIMESTAMP
+            RETURNING id, submitted_at
+        `, [sectionId, google_drive_link, submitted_by]);
+
+        // Log activity
+        await client.query(`
+            INSERT INTO accreditation_activity_log (
+                cycle_id, user_id, user_role, action_type,
+                target_type, target_id, target_name, details
+            )
+            VALUES ($1, $2, 'Area Head', 'Submitted', 'Section Link', $3, $4, $5)
+        `, [
+            section.cycle_id,
+            submitted_by,
+            sectionId,
+            section.section_name,
+            `Submitted Google Drive link`
+        ]);
+
+        await client.query('COMMIT');
+        res.json({ 
+            success: true, 
+            submission: submissionResult.rows[0],
+            message: 'Link submitted successfully'
+        });
+
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Error submitting link:', error);
+        res.status(500).json({ error: 'Failed to submit link' });
+    } finally {
+        client.release();
+    }
+});
+
+// PUT: Update Google Drive Link
+router.put('/accreditation/submission/:sectionId', async (req, res) => {
+    const { sectionId } = req.params;
+    const { google_drive_link, submitted_by } = req.body;
+
+    if (!google_drive_link) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // Check if submissions are open
+        const sectionResult = await client.query(`
+            SELECT s.cycle_id, s.section_name, sub.is_locked
+            FROM accreditation_sections s
+            LEFT JOIN section_submissions sub ON s.id = sub.section_id
+            WHERE s.id = $1
+        `, [sectionId]);
+
+        if (sectionResult.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'Section not found' });
+        }
+
+        const section = sectionResult.rows[0];
+
+        // Check if locked
+        if (section.is_locked) {
+            await client.query('ROLLBACK');
+            return res.status(403).json({ error: 'This submission is locked' });
+        }
+
+        // Check submission control
+        const controlResult = await client.query(`
+            SELECT is_open FROM submission_control WHERE cycle_id = $1
+        `, [section.cycle_id]);
+
+        if (controlResult.rows.length === 0 || !controlResult.rows[0].is_open) {
+            await client.query('ROLLBACK');
+            return res.status(403).json({ error: 'Submissions are currently closed' });
+        }
+
+        // Update submission
+        const updateResult = await client.query(`
+            UPDATE section_submissions
+            SET google_drive_link = $1, last_updated_at = CURRENT_TIMESTAMP
+            WHERE section_id = $2
+            RETURNING id, last_updated_at
+        `, [google_drive_link, sectionId]);
+
+        if (updateResult.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'Submission not found' });
+        }
+
+        // Log activity
+        await client.query(`
+            INSERT INTO accreditation_activity_log (
+                cycle_id, user_id, user_role, action_type,
+                target_type, target_id, target_name, details
+            )
+            VALUES ($1, $2, 'Area Head', 'Updated', 'Section Link', $3, $4, $5)
+        `, [
+            section.cycle_id,
+            submitted_by,
+            sectionId,
+            section.section_name,
+            `Updated Google Drive link`
+        ]);
+
+        await client.query('COMMIT');
+        res.json({ 
+            success: true, 
+            submission: updateResult.rows[0],
+            message: 'Link updated successfully'
+        });
+
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Error updating link:', error);
+        res.status(500).json({ error: 'Failed to update link' });
+    } finally {
+        client.release();
+    }
+});
+
+// DELETE: Remove Google Drive Link
+router.delete('/accreditation/submission/:sectionId', async (req, res) => {
+    const { sectionId } = req.params;
+
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // Check if submissions are open
+        const sectionResult = await client.query(`
+            SELECT s.cycle_id, s.section_name, sub.is_locked
+            FROM accreditation_sections s
+            LEFT JOIN section_submissions sub ON s.id = sub.section_id
+            WHERE s.id = $1
+        `, [sectionId]);
+
+        if (sectionResult.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'Section not found' });
+        }
+
+        const section = sectionResult.rows[0];
+
+        // Check if locked
+        if (section.is_locked) {
+            await client.query('ROLLBACK');
+            return res.status(403).json({ error: 'This submission is locked' });
+        }
+
+        // Check submission control
+        const controlResult = await client.query(`
+            SELECT is_open FROM submission_control WHERE cycle_id = $1
+        `, [section.cycle_id]);
+
+        if (controlResult.rows.length === 0 || !controlResult.rows[0].is_open) {
+            await client.query('ROLLBACK');
+            return res.status(403).json({ error: 'Submissions are currently closed' });
+        }
+
+        // Delete submission
+        await client.query(`
+            DELETE FROM section_submissions WHERE section_id = $1
+        `, [sectionId]);
+
+        await client.query('COMMIT');
+        res.json({ 
+            success: true,
+            message: 'Link removed successfully'
+        });
+
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Error removing link:', error);
+        res.status(500).json({ error: 'Failed to remove link' });
+    } finally {
+        client.release();
+    }
+});
+
+// GET: Get Area Head's Activity
+router.get('/accreditation/area-head/activity/:areaHeadId/:cycleId', async (req, res) => {
+    const { areaHeadId, cycleId } = req.params;
+
+    try {
+        const result = await pool.query(`
+            SELECT 
+                log.id,
+                log.action_type,
+                log.target_type,
+                log.target_name,
+                log.details,
+                log.created_at
+            FROM accreditation_activity_log log
+            WHERE log.user_id = $1 
+                AND log.cycle_id = $2
+                AND log.user_role = 'Area Head'
+            ORDER BY log.created_at DESC
+            LIMIT 50
+        `, [areaHeadId, cycleId]);
+
+        res.json({ activities: result.rows });
+    } catch (error) {
+        console.error('Error fetching area head activity:', error);
+        res.status(500).json({ error: 'Failed to fetch activity' });
+    }
+});
+
+// POST: Submit/Update Review
+router.post('/accreditation/review/:sectionId', async (req, res) => {
+    const { sectionId } = req.params;
+    const { review_status, comments, accreditor_id } = req.body;
+
+    if (!review_status || !accreditor_id) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // Get section info
+        const sectionResult = await client.query(`
+            SELECT s.cycle_id, s.section_name, s.area_id
+            FROM accreditation_sections s
+            WHERE s.id = $1
+        `, [sectionId]);
+
+        if (sectionResult.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'Section not found' });
+        }
+
+        const section = sectionResult.rows[0];
+
+        // Insert or update review
+        const reviewResult = await client.query(`
+            INSERT INTO section_reviews (section_id, accreditor_id, review_status, comments)
+            VALUES ($1, $2, $3, $4)
+            ON CONFLICT (section_id) 
+            DO UPDATE SET 
+                accreditor_id = $2,
+                review_status = $3,
+                comments = $4,
+                reviewed_at = CURRENT_TIMESTAMP,
+                last_updated_at = CURRENT_TIMESTAMP
+            RETURNING id, reviewed_at
+        `, [sectionId, accreditor_id, review_status, comments]);
+
+        // Log activity
+        await client.query(`
+            INSERT INTO accreditation_activity_log (
+                cycle_id, user_id, user_role, action_type,
+                target_type, target_id, target_name, details
+            )
+            VALUES ($1, $2, 'Accreditor', 'Reviewed', 'Section', $3, $4, $5)
+        `, [
+            section.cycle_id,
+            accreditor_id,
+            sectionId,
+            section.section_name,
+            `Marked as ${review_status}`
+        ]);
+
+        await client.query('COMMIT');
+        res.json({ 
+            success: true, 
+            review: reviewResult.rows[0],
+            message: 'Review submitted successfully'
+        });
+
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Error submitting review:', error);
+        res.status(500).json({ error: 'Failed to submit review' });
+    } finally {
+        client.release();
+    }
+});
+
+//login
+router.post('/accreditation/login', async (req, res) => {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+        return res.status(400).json({ 
+            success: false, 
+            error: 'Username and password are required' 
+        });
+    }
+
+    try {
+        const result = await pool.query(`
+            SELECT 
+                id, username, password, full_name, email, role, is_active
+            FROM accreditation_accounts
+            WHERE username = $1
+        `, [username]);
+
+        if (result.rows.length === 0) {
+            return res.status(401).json({ 
+                success: false, 
+                error: 'Invalid username or password' 
+            });
+        }
+
+        const user = result.rows[0];
+
+        if (!user.is_active) {
+            return res.status(403).json({ 
+                success: false, 
+                error: 'Account is inactive. Please contact administrator.' 
+            });
+        }
+
+        // ✅ FIXED: Use bcrypt to compare passwords
+        const isValidPassword = await bcrypt.compare(password, user.password);
+        
+        if (!isValidPassword) {
+            return res.status(401).json({ 
+                success: false, 
+                error: 'Invalid username or password' 
+            });
+        }
+
+        // Update last login
+        await pool.query(`
+            UPDATE accreditation_accounts
+            SET last_login = CURRENT_TIMESTAMP
+            WHERE id = $1
+        `, [user.id]);
+
+        // Remove password from response
+        delete user.password;
+
+        res.json({
+            success: true,
+            message: 'Login successful',
+            user: user,
+            redirectUrl: user.role === 'Area Head' 
+                ? '/private/html/adminPages/adminLlave/areaHead/areaHead.html'
+                : '/private/html/adminPages/adminLlave/accreditor/accreditor.html'
+        });
+
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Login failed. Please try again.' 
+        });
+    }
+});
 export default router;
