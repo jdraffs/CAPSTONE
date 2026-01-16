@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Career Directory - AdminMila</title>
+    <link rel="stylesheet" href="/private/css/pages/careers.css">
+    <link rel="stylesheet" href="/private/css/layout/dashboardsidebar.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!--SIDEBAR-->
+    <section class="sidebar">
+        <div class="logo">
+            <img class="logoimage" src="/public/assets/images/PUPLogo.webp" alt="PUP Logo">
+            <div class="logotitlewrap">
+                <h2 class="logotitle logotitle1">PUP</h2>
+                <h2 class="logotitle">Parañaque</h2>
+            </div>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <nav class="sidebar-nav">
+            <div class="sidebar-scroll">
+                <div class="nav-section">
+                    <h3 class="nav-title">Main</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/adminMila/adminMila.html">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <h3 class="nav-title">Management</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/adminMila/scholarships.html">
+                                <i class="fa-solid fa-graduation-cap"></i>
+                                <span>Scholarship Opportunities</span>
+                            </a>
+                        </li>
+                        <li class="nav-item active">
+                            <a class="nav-link" href="/private/html/adminPages/adminMila/careers.html">
+                                <i class="fa-solid fa-briefcase"></i>
+                                <span>Career & Job Placement</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/adminMila/certificates.html">
+                                <i class="fa-solid fa-certificate"></i>
+                                <span>Digital Certificates</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-details">
+                        <span class="user-name">AdminMila</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </section>
+
+    <main class="main">
+        <header class="dashboard-header">
+            <div class="header-left">
+                <h1 class="page-title">Career & Job Placement Directory</h1>
+                <p class="page-subtitle">Information dissemination platform - Directory of partner organizations only</p>
+            </div>
+            <div class="header-right">
+                <div class="notification-button">
+                    <a class="notif-link" href="#notifications">
+                        <i class="fa fa-bell" aria-hidden="true"></i>
+                    </a>
+                </div>
+                <div class="profile-button">
+                    <a class="profile-link">
+                        <i class="fa fa-user" aria-hidden="true"></i>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Category Filter Tabs -->
+            <div class="category-filters">
+                <button class="filter-tab active" data-category="all">
+                    <i class="fa-solid fa-list"></i> All Organizations
+                </button>
+                <button class="filter-tab" data-category="Government">
+                    <i class="fa-solid fa-landmark"></i> Government
+                </button>
+                <button class="filter-tab" data-category="University Unit">
+                    <i class="fa-solid fa-university"></i> University Unit
+                </button>
+                <button class="filter-tab" data-category="Private Company">
+                    <i class="fa-solid fa-building"></i> Private Company
+                </button>
+            </div>
+
+            <div class="orgs-container">
+                <div class="orgs-feed" id="orgsFeed">
+                    <div class="placeholder">
+                        <i class="fa-solid fa-building"></i>
+                        <h2>No partner organizations yet</h2>
+                        <p>Add partner organizations to build your career directory.</p>
+                    </div>
+                </div>
+
+                <button class="action-btn" id="openOrgModal">
+                    <i class="fa-solid fa-plus"></i> Add Organization
+                </button>
+            </div>
+        </div>
+
+        <!-- Organization Modal -->
+        <div class="modal" id="orgModal">
+            <div class="modal-content">
+                <h2 id="orgModalTitle">Add Partner Organization</h2>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="orgName">Organization Name *</label>
+                        <input type="text" id="orgName" placeholder="e.g., PESO Parañaque" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="orgCategory">Category *</label>
+                        <select id="orgCategory" required>
+                            <option value="">Select category...</option>
+                            <option value="Government">Government</option>
+                            <option value="University Unit">University Unit</option>
+                            <option value="Private Company">Private Company</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="orgDescription">Description *</label>
+                        <textarea id="orgDescription" rows="3" placeholder="Brief description of what the organization does..." required></textarea>
+                        <small>Describe the organization's purpose or industry focus</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="orgWebsite">Official Website URL *</label>
+                        <input type="url" id="orgWebsite" placeholder="https://organization.com" required />
+                        <small>Main website of the organization</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="orgCareersPage">Careers Page URL</label>
+                        <input type="url" id="orgCareersPage" placeholder="https://organization.com/careers" />
+                        <small>Direct link to their careers/jobs page (optional but recommended)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="orgLogo">Logo URL (Optional)</label>
+                        <input type="url" id="orgLogo" placeholder="https://organization.com/logo.png" />
+                        <small>URL to organization's logo image</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="orgStatus">Status *</label>
+                        <select id="orgStatus" required>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button id="cancelOrg">Cancel</button>
+                    <button id="submitOrg">Add Organization</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/private/js/admin/adminMila/careers.js"></script>
+    <script src="/private/js/admin/profileFunction.js"></script>
+</body>
+</html>

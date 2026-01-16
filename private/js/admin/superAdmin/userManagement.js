@@ -629,7 +629,7 @@ function openCreateUserModal() {
             
             <div class="form-group">
               <label for="newFullName">Full Name <span class="required">*</span></label>
-              <input type="text" id="newFullName" required placeholder="e.g., John Doe">
+              <input type="text" id="newFullName" required placeholder="e.g., Jenny Kim">
             </div>
           </div>
 
