@@ -7,19 +7,17 @@
   <link rel="stylesheet" type="text/css" href="/private/css/pages/login.css" />
   <link rel="stylesheet" href="/public/css/layout/navbar.css">
   <link rel="stylesheet" href="/public/css/layout/footer.css">
-  <link rel="stylesheet" href="/https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
 </head>
 <body>
  <header>
     <nav id="navbar" class="navbar">
-
       <div class="logo">
         <img class="logoimage" src="/public/assets/images/PUPLogo.webp" alt="PUP logo" />
         <div class="logotitlewrap">
           <h1 class="logotitle">Polytechnic University of the Philippines</h1>
           <h2 class="logotitle2">PARAÑAQUE CAMPUS</h2>
         </div>
-
       </div>
 
       <hr class="hr1">
@@ -62,13 +60,9 @@
           <a href="/public/html/Alumni&Services/alumni.html">Alumni & Services</a>
         </li>
 
-
         <li class="nav-item">
           <a href="/public/html/Contact&Support/QuickHelp&Chatbot.html">Contact/Support</a>
         </li>
-          </div>
-        </div>
-
       </ul>
 
       <div class="search-hamburger">
@@ -78,35 +72,40 @@
           <span class="bar"></span>
         </div>
 
-          <div class="search-bar">
-            <form class="search" action="/public/index.html">
-              <input type="text" placeholder="Search" name="search" class="searchbox">
-              <button type="submit" class="searchbutton"><i class="fa fa-search"></i></button>
-            </form>
-          </div>
+        <div class="search-bar">
+          <form class="search" action="/public/index.html">
+            <input type="text" placeholder="Search" name="search" class="searchbox">
+            <button type="submit" class="searchbutton"><i class="fa fa-search"></i></button>
+          </form>
+        </div>
       </div>
-
     </nav>
   </header>
 
   <main class="main">
     <div class="welcome-container">
       <h1 class="welcome-title">Admin Login Portal</h1>
-      <p class="welcome-desc">Access the official PUP Parañaque Campus system to manage academic content, announcements, and campus activities.
-
- </p>
+      <p class="welcome-desc">Access the official PUP Parañaque Campus system to manage academic content, announcements, and campus activities.</p>
     </div>
     
     <hr class="hr2">
+    
     <div class="login-container">
+      <!-- Login Tabs -->
       <div class="login-tabs">
-        <button class="tab-btn active" data-tab="faculty-login">Admin Login</button>
+        <button class="tab-btn active" data-tab="admin-login" onclick="switchTab('admin-login')">
+          <i class="fas fa-user-shield"></i> Admin Login
+        </button>
+        <button class="tab-btn" data-tab="accreditation-login" onclick="switchTab('accreditation-login')">
+          <i class="fas fa-certificate"></i> Accreditation Login
+        </button>
       </div>
       
       <div class="tab-content">
-        <!-- Faculty Login Form -->
-        <h2 id="login-title" class="login-title"> Login to Your Admin Account </h2>
+        <!-- Admin Login Form -->
         <div class="tab-pane active" id="admin-login">
+          <h2 class="login-title">Login to Your Admin Account</h2>
+          
           <form id="admin-login-form" class="login-form">
             <div class="form-group">
               <label for="admin-username">Admin ID</label>
@@ -116,31 +115,71 @@
             <div class="form-group">
               <label for="admin-password">Password</label>
               <div class="password-field">
-              <input type="password" id="admin-password" name="password" placeholder="Enter your password" required>
-              <span class="toggle-password" onclick="togglePassword('admin-password')">
-              </span>
+                <input type="password" id="admin-password" name="password" placeholder="Enter your password" required>
+                <span class="toggle-password" onclick="togglePassword('admin-password')">
+                  <i class="fas fa-eye"></i>
+                </span>
               </div>
             </div>
             
             <div class="form-group remember-forgot">
               <div class="remember-me">
-                <input type="checkbox" id="faculty-remember" name="remember">
-                <label for="faculty-remember">Remember me</label>
+                <input type="checkbox" id="admin-remember" name="remember">
+                <label for="admin-remember">Remember me</label>
               </div>
               <a href="#" class="forgot-password">Forgot password?</a>
             </div>
             
             <button type="submit" class="login-btn">Login</button>
-            
-
           </form>
+        </div>
+
+        <!-- Accreditation Login Form -->
+        <div class="tab-pane" id="accreditation-login">
+          <h2 class="login-title">Accreditation Portal Login</h2>
+          <p class="login-subtitle">For Area Heads and Accreditors</p>
+          
+          <div class="error-message" id="accreditation-error" style="display: none;">
+            <i class="fas fa-exclamation-circle"></i>
+            <span id="accreditation-error-text"></span>
+          </div>
+
+          <form id="accreditation-login-form" class="login-form">
+            <div class="form-group">
+              <label for="accreditation-username">Username</label>
+              <input type="text" id="accreditation-username" name="username" placeholder="Enter your username" required autocomplete="username">
+            </div>
+            
+            <div class="form-group">
+              <label for="accreditation-password">Password</label>
+              <div class="password-field">
+                <input type="password" id="accreditation-password" name="password" placeholder="Enter your password" required autocomplete="current-password">
+                <span class="toggle-password" onclick="togglePassword('accreditation-password')">
+                  <i class="fas fa-eye"></i>
+                </span>
+              </div>
+            </div>
+            
+            <div class="form-group remember-forgot">
+              <div class="remember-me">
+                <input type="checkbox" id="accreditation-remember" name="remember">
+                <label for="accreditation-remember">Remember me</label>
+              </div>
+              <a href="#" class="forgot-password">Forgot password?</a>
+            </div>
+            
+            <button type="submit" class="login-btn">
+              <span class="btn-text">Login</span>
+            </button>
+          </form>
+        </div>
       </div>
+    </div>
   </main>
 
   <div class="footer-box">
     <footer class="footer">
       <div class="footer-container">
-
         <!-- Logo and Description -->
         <div class="footer-section">
           <div class="logo-wrapper">
@@ -200,7 +239,6 @@
           <p class="contact-info"><i class="fas fa-phone-alt"></i> (63 2) 553-8623</p>
           <p class="contact-info"><i class="fas fa-envelope"></i> <a href="mailto:inquire@pup.edu.ph">paranaque@pup.edu.ph</a></p>
         </div>
-        
       </div>
 
       <hr class="footer-divider" />
@@ -211,4 +249,3 @@
   <script src="/private/js/login.js"></script>
 </body>
 </html>
-

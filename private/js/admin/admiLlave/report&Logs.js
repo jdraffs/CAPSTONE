@@ -905,10 +905,10 @@ function exportActivityLog() {
 function showNoCycleMessage() {
     const mainContent = document.getElementById('mainContent');
     mainContent.innerHTML = `
-        <div class="no-data-message" style="padding: 80px 20px;">
+        <div class="no-data-message">
             <i class="fas fa-exclamation-circle"></i>
             <h2>No Active Cycle</h2>
-            <p>Please create an accreditation cycle first to generate reports and view activity logs.</p>
+            <p>Please create accreditation cycle first to generate reports & view activity logs.</p>
             <a href="/private/html/adminPages/adminLlave/adminLlave.html" class="btn-primary">
                 <i class="fas fa-arrow-left"></i> Go to Dashboard
             </a>

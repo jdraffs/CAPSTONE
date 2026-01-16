@@ -88,19 +88,19 @@
 }
 
 .btn-primary:hover {
-    background: var(--secondary-color);
+    background: #ffbf48;
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .btn-secondary {
-    background: rgb(255, 91, 91);
-    color: white;
-    border: 2px solid white;
+    background: #ffbf48;
+    color:  #fffdf8;
+    border: 2px solid #ffdc9b;
 }
 
 .btn-secondary:hover {
-    background: rgb(255, 0, 0);
+    background: #fda606;
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
@@ -149,7 +149,7 @@
 }
 
 .stat-value {
-    font-size: 2rem;
+    font-size: 1.3rem;
     font-weight: 700;
     color: var(--text-primary);
     margin-bottom: 4px;
@@ -727,3 +727,103 @@
         width: 95%;
     }
 }
+    .archived-cycles-container {
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    .archived-cycle-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        background: #f8f9fa;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+
+    .cycle-info h4 {
+        margin: 0 0 10px 0;
+        color: #1e293b;
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    .cycle-dates {
+        display: flex;
+        gap: 20px;
+        font-size: 14px;
+        color: #64748b;
+    }
+
+    .cycle-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-sm {
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+
+    .archived-cycle-details {
+        padding: 10px 0;
+    }
+
+    .detail-section {
+        margin-bottom: 30px;
+    }
+
+    .detail-section h4 {
+        margin: 0 0 15px 0;
+        color: #1e293b;
+        font-size: 16px;
+        font-weight: 600;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e0e0e0;
+    }
+
+    .stats-grid-small {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+
+    .stat-item-small {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 6px;
+    }
+
+    .area-list-compact {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .area-row-compact {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px;
+        background: #f8f9fa;
+        border-radius: 6px;
+    }
+
+    .area-name {
+        font-weight: 500;
+        color: #1e293b;
+    }
+
+    .area-progress {
+        color: #64748b;
+        font-size: 14px;
+    }
+
+    .export-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }

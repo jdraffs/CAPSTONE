@@ -97,6 +97,9 @@
                         <p class="cycle-status" id="cycleStatus">Create a new cycle to begin</p>
                     </div>
                     <div class="cycle-actions">
+                        <button class="btn-secondary" id="viewArchivedBtn" onclick="openArchivedCyclesModal()">
+                            <i class="fas fa-archive"></i> View Archived Cycles
+                        </button>
                         <button class="btn-primary" id="createCycleBtn">
                             <i class="fas fa-plus"></i> Create New Cycle
                         </button>
@@ -265,6 +268,7 @@
 
 <!-- Scripts -->
 <script src="/private/js/admin/admiLlave/adminLlave.js"></script> 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="/private/js/admin/profileFunction.js"></script>
 </body>
 </html>
