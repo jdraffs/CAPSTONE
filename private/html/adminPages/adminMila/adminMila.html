@@ -1,10 +1,9 @@
-<!--adminMila.html-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - SuperAdmin</title>
+    <title>Dashboard - AdminMila</title>
     <link rel="stylesheet" href="/private/css/pages/superAdmin.css">
     <link rel="stylesheet" href="/private/css/layout/dashboardsidebar.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
@@ -41,17 +40,21 @@
                     <h3 class="nav-title">Management</h3>
                     <ul class="nav-list">
                         <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="fa-solid fa-chart-line"></i>
-                                <span>Placeholder</span>
+                            <a class="nav-link" href="/private/html/adminPages/adminMila/scholarships.html">
+                                <i class="fa-solid fa-graduation-cap"></i>
+                                <span>Scholarship Opportunities</span>
                             </a>
                         </li>
-                    </ul>
-                    <ul class="nav-list">
                         <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="fa-solid fa-copy"></i>
-                                <span>Placeholder</span>
+                            <a class="nav-link" href="/private/html/adminPages/adminMila/careers.html">
+                                <i class="fa-solid fa-briefcase"></i>
+                                <span>Career & Job Placement</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/adminMila/certificates.html">
+                                <i class="fa-solid fa-certificate"></i>
+                                <span>Digital Certificates</span>
                             </a>
                         </li>
                     </ul>
@@ -92,7 +95,42 @@
         </header>
 
         <div class="dashboard-content">
-        <!-- Welcome Section -->
+            <!-- Welcome Section -->
+            <div class="welcome-card">
+                <h2>Welcome, AdminMila!</h2>
+                <p>Manage scholarship and career opportunities for PUP Parañaque students.</p>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #d4edda;">
+                        <i class="fa-solid fa-graduation-cap" style="color: #155724;"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalScholarships">0</h3>
+                        <p>Total Scholarships</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #fff3cd;">
+                        <i class="fa-solid fa-door-open" style="color: #856404;"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="openScholarships">0</h3>
+                        <p>Open Scholarships</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #e3f2fd;">
+                        <i class="fa-solid fa-building" style="color: #1976d2;"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="activeOrganizations">0</h3>
+                        <p>Career Partners</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 

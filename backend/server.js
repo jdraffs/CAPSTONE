@@ -30,6 +30,9 @@ import chatbotRoute from './routes/chatbotRoute.js'
 import feedbackRoute from "./routes/feedbackRoute.js";
 import trashRoute from './routes/trashRoute.js'; // NEW: Unified trash route
 import accreditationRoute from './routes/accreditationRoute.js';
+import scholarshipRoutes from './routes/scholarshipRoutes.js';
+import careerRoutes from './routes/careerRoutes.js';
+import certificateRequestRoute from './routes/certificateRequestRoute.js';
 
 // initialize 
 dotenv.config();
@@ -64,6 +67,9 @@ app.use("/api", userManagementRoute);
 app.use("/api", feedbackRoute);
 app.use("/api", trashRoute); // NEW: Unified trash management
 app.use('/api', accreditationRoute);
+app.use('/api/scholarships', scholarshipRoutes);
+app.use('/api/career', careerRoutes);
+app.use('/api/certificate-requests', certificateRequestRoute);
 
 // SINGLE /api/files/data endpoint with trash support
 app.get("/api/files/data", async (req, res) => {

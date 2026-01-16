@@ -1,0 +1,226 @@
+<!-- scholarships.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scholarship Opportunities - AdminMila</title>
+    <link rel="stylesheet" href="/private/css/pages/scholarships.css">
+    <link rel="stylesheet" href="/private/css/layout/post.css">
+    <link rel="stylesheet" href="/private/css/layout/dashboardsidebar.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!--SIDEBAR-->
+    <section class="sidebar">
+        <div class="logo">
+            <img class="logoimage" src="/public/assets/images/PUPLogo.webp" alt="PUP Logo">
+            <div class="logotitlewrap">
+                <h2 class="logotitle logotitle1">PUP</h2>
+                <h2 class="logotitle">Parañaque</h2>
+            </div>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <nav class="sidebar-nav">
+            <div class="sidebar-scroll">
+                <div class="nav-section">
+                    <h3 class="nav-title">Main</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/adminMila/adminMila.html">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <h3 class="nav-title">Management</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item active">
+                            <a class="nav-link" href="/private/html/adminPages/adminMila/scholarships.html">
+                                <i class="fa-solid fa-graduation-cap"></i>
+                                <span>Scholarship Opportunities</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/adminMila/careers.html">
+                                <i class="fa-solid fa-briefcase"></i>
+                                <span>Career & Job Placement</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/adminMila/certificates.html">
+                                <i class="fa-solid fa-certificate"></i>
+                                <span>Digital Certificates</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-details">
+                        <span class="user-name">AdminMila</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </section>
+
+    <main class="main">
+        <header class="dashboard-header">
+            <div class="header-left">
+                <h1 class="page-title" id="pageTitle">Scholarship Opportunities</h1>
+            </div>
+            <div class="header-right">
+                <div class="notification-button">
+                    <a class="notif-link" href="#notifications" data-page="overview">
+                        <i class="fa fa-bell" aria-hidden="true"></i>
+                    </a>
+                </div>
+                <div class="profile-button">
+                    <a class="profile-link" data-page="profile">
+                        <i class="fa fa-user" aria-hidden="true"></i>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content" id="mainContent">
+            <!-- Status Filter Tabs -->
+            <div class="scholarship-filters">
+                <button class="filter-tab active" data-status="all">
+                    <i class="fa-solid fa-list"></i> All Scholarships
+                </button>
+                <button class="filter-tab" data-status="open">
+                    <i class="fa-solid fa-door-open"></i> Open
+                </button>
+                <button class="filter-tab" data-status="upcoming">
+                    <i class="fa-solid fa-clock"></i> Upcoming
+                </button>
+                <button class="filter-tab" data-status="closed">
+                    <i class="fa-solid fa-door-closed"></i> Closed
+                </button>
+            </div>
+
+            <div class="post-container">
+                <div class="post-feed" id="postFeed">
+                    <div class="post-placeholder">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                        <h2>No scholarships yet</h2>
+                        <p>Create scholarship opportunities to inform students.</p>
+                    </div>
+                </div>
+
+                <button class="post-btn" id="openPostModal">
+                    <i class="fa-solid fa-plus"></i> Create Scholarship
+                </button>
+
+                <!-- Scholarship Modal -->
+                <div class="post-modal" id="postModal">
+                    <div class="post-modal-content scholarship-modal">
+                        <h2 id="modalTitle">Create Scholarship Opportunity</h2>
+
+                        <div class="form-grid">
+                            <!-- Left Column -->
+                            <div class="form-column">
+                                <div class="form-group">
+                                    <label for="scholarshipTitle">Scholarship Title *</label>
+                                    <input type="text" id="scholarshipTitle" placeholder="e.g., CHED Merit Scholarship" required />
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="provider">Provider/Organization *</label>
+                                    <input type="text" id="provider" placeholder="e.g., Commission on Higher Education" required />
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="amount">Scholarship Amount *</label>
+                                        <input type="text" id="amount" placeholder="e.g., ₱50,000 per semester" required />
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="slots">Available Slots</label>
+                                        <input type="number" id="slots" placeholder="e.g., 20" min="1" />
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="openDate">Opening Date *</label>
+                                        <input type="date" id="openDate" required />
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="deadline">Deadline *</label>
+                                        <input type="date" id="deadline" required />
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="status">Status *</label>
+                                    <select id="status" required>
+                                        <option value="upcoming">Upcoming</option>
+                                        <option value="open">Open</option>
+                                        <option value="closed">Closed</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Right Column -->
+                            <div class="form-column">
+                                <div class="form-group">
+                                    <label for="description">Description *</label>
+                                    <textarea id="description" rows="4" placeholder="Brief description of the scholarship..." required></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="eligibility">Eligibility Requirements *</label>
+                                    <textarea id="eligibility" rows="4" placeholder="List eligibility criteria..." required></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="benefits">Benefits/Coverage *</label>
+                                    <textarea id="benefits" rows="4" placeholder="What does this scholarship cover?" required></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="contactInfo">Contact Information</label>
+                                    <textarea id="contactInfo" rows="3" placeholder="Email, phone, or office details..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- File Upload Section -->
+                        <div class="file-upload-section">
+                            <label for="fileUpload" class="file-upload-label">
+                                <i class="fa fa-paperclip"></i> Attach Files (Guidelines, Forms) - Max 3
+                            </label>
+                            <input type="file" id="fileUpload" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp" />
+                            <div id="fileList" class="file-list"></div>
+                        </div>
+
+                        <div class="post-modal-actions">
+                            <button id="cancelPost">Cancel</button>
+                            <button id="submitPost">Create Scholarship</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/private/js/admin/adminMila/scholarships.js"></script>
+    <script src="/private/js/admin/profileFunction.js"></script>
+</body>
+</html>
