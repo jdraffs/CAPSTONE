@@ -10,8 +10,7 @@ router.get('/', async (req, res) => {
     const queries = [
       "SELECT COUNT(*) FROM public.ojt_posts WHERE created_at >= (NOW() + INTERVAL '8 hour') - INTERVAL '1 day'",
       "SELECT COUNT(*) FROM public.researchextension_posts WHERE created_at >= (NOW() + INTERVAL '8 hour') - INTERVAL '1 day'",
-      "SELECT COUNT(*) FROM public.nstp_posts WHERE created_at >= (NOW() + INTERVAL '8 hour') - INTERVAL '1 day'",
-      "SELECT COUNT(*) FROM public.announcements_posts WHERE created_at >= (NOW() + INTERVAL '8 hour') - INTERVAL '1 day'"
+      "SELECT COUNT(*) FROM public.nstp_posts WHERE created_at >= (NOW() + INTERVAL '8 hour') - INTERVAL '1 day'"
     ];
 
     // Run all queries in parallel

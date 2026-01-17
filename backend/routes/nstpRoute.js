@@ -1,4 +1,4 @@
-// nstpRoute.js - Fixed file ID handling in update
+// nstpRoute.js - Complete with Trash System
 import express from 'express';
 import multer from 'multer';
 import pkg from 'pg';
@@ -126,6 +126,7 @@ router.post('/create', upload.array('files', 3), async (req, res) => {
   }
 });
 
+// Get active posts (not deleted)
 router.get('/posts', async (req, res) => {
   try {
     const postsQuery = `
@@ -143,6 +144,7 @@ router.get('/posts', async (req, res) => {
       FROM nstp_posts p
       LEFT JOIN nstp_post_files pf ON p.id = pf.post_id
       LEFT JOIN forms_repository_files f ON pf.file_id = f.id
+      WHERE p.deleted_at IS NULL
       GROUP BY p.id
       ORDER BY p.created_at DESC
     `;
@@ -155,6 +157,80 @@ router.get('/posts', async (req, res) => {
   }
 });
 
+// Get trash posts (deleted)
+router.get('/trash', async (req, res) => {
+  try {
+    const postsQuery = `
+      SELECT 
+        p.*,
+        json_agg(
+          json_build_object(
+            'id', f.id,
+            'file_name', f.file_name,
+            'file_path', f.file_path,
+            'file_type', f.file_type,
+            'file_size', f.file_size
+          )
+        ) FILTER (WHERE f.id IS NOT NULL) as files
+      FROM nstp_posts p
+      LEFT JOIN nstp_post_files pf ON p.id = pf.post_id
+      LEFT JOIN forms_repository_files f ON pf.file_id = f.id
+      WHERE p.deleted_at IS NOT NULL
+      GROUP BY p.id
+      ORDER BY p.deleted_at DESC
+    `;
+    
+    const result = await pool.query(postsQuery);
+    res.json({ success: true, posts: result.rows });
+  } catch (err) {
+    console.error('Error fetching NSTP trash:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch trash' });
+  }
+});
+
+// Move to trash (soft delete)
+router.put('/trash/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const result = await pool.query(
+      'UPDATE nstp_posts SET deleted_at = NOW() WHERE id = $1 RETURNING *',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Post not found' });
+    }
+
+    res.json({ success: true, message: 'Post moved to trash' });
+  } catch (err) {
+    console.error('Error moving post to trash:', err);
+    res.status(500).json({ success: false, message: 'Failed to move to trash' });
+  }
+});
+
+// Restore from trash
+router.put('/restore/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const result = await pool.query(
+      'UPDATE nstp_posts SET deleted_at = NULL WHERE id = $1 RETURNING *',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Post not found' });
+    }
+
+    res.json({ success: true, message: 'Post restored successfully' });
+  } catch (err) {
+    console.error('Error restoring post:', err);
+    res.status(500).json({ success: false, message: 'Failed to restore post' });
+  }
+});
+
+// Permanent delete
 router.delete('/delete/:id', async (req, res) => {
   const client = await pool.connect();
   
@@ -186,11 +262,58 @@ router.delete('/delete/:id', async (req, res) => {
     await client.query('DELETE FROM nstp_posts WHERE id = $1', [id]);
 
     await client.query('COMMIT');
-    res.json({ success: true, message: 'Post deleted successfully' });
+    res.json({ success: true, message: 'Post permanently deleted' });
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('Error deleting NSTP post:', err);
     res.status(500).json({ success: false, message: 'Failed to delete post' });
+  } finally {
+    client.release();
+  }
+});
+
+// Empty trash (delete all trashed posts)
+router.delete('/empty-trash', async (req, res) => {
+  const client = await pool.connect();
+  
+  try {
+    await client.query('BEGIN');
+
+    const trashedPosts = await client.query(
+      'SELECT id FROM nstp_posts WHERE deleted_at IS NOT NULL'
+    );
+
+    for (const post of trashedPosts.rows) {
+      const filesQuery = `
+        SELECT f.id, f.file_path
+        FROM forms_repository_files f
+        JOIN nstp_post_files pf ON f.id = pf.file_id
+        WHERE pf.post_id = $1
+      `;
+      const filesResult = await client.query(filesQuery, [post.id]);
+
+      for (const file of filesResult.rows) {
+        const fullPath = path.join('./public', file.file_path);
+        if (fs.existsSync(fullPath)) {
+          fs.unlinkSync(fullPath);
+        }
+        await client.query('DELETE FROM forms_repository_files WHERE id = $1', [file.id]);
+      }
+
+      await client.query('DELETE FROM nstp_post_files WHERE post_id = $1', [post.id]);
+    }
+
+    const result = await client.query('DELETE FROM nstp_posts WHERE deleted_at IS NOT NULL');
+
+    await client.query('COMMIT');
+    res.json({ 
+      success: true, 
+      message: `Trash emptied. ${result.rowCount} posts permanently deleted.` 
+    });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Error emptying trash:', err);
+    res.status(500).json({ success: false, message: 'Failed to empty trash' });
   } finally {
     client.release();
   }
@@ -205,19 +328,15 @@ router.put('/update/:id', upload.array('files', 3), async (req, res) => {
     const { id } = req.params;
     const { title, content, adminid, keepFiles } = req.body;
 
-    // FIXED: Convert keepFiles to numbers for proper comparison
     let filesToKeep = [];
     if (keepFiles) {
       try {
         const parsed = JSON.parse(keepFiles);
-        // Ensure all IDs are numbers
         filesToKeep = parsed.map(id => parseInt(id, 10));
       } catch (e) {
         console.error('Error parsing keepFiles:', e);
       }
     }
-
-    console.log('Files to keep:', filesToKeep); // Debug log
 
     const updateQuery = `
       UPDATE nstp_posts
@@ -227,7 +346,6 @@ router.put('/update/:id', upload.array('files', 3), async (req, res) => {
     `;
     const result = await client.query(updateQuery, [title, content, id]);
 
-    // Get all existing files for this post
     const existingFiles = await client.query(
       `SELECT f.id, f.file_path
        FROM forms_repository_files f
@@ -236,23 +354,16 @@ router.put('/update/:id', upload.array('files', 3), async (req, res) => {
       [id]
     );
 
-    console.log('Existing files:', existingFiles.rows.map(f => f.id)); // Debug log
-
-    // Delete files that are NOT in the keepFiles array
     for (const file of existingFiles.rows) {
       if (!filesToKeep.includes(file.id)) {
-        console.log('Deleting file:', file.id); // Debug log
         const fullPath = path.join('./public', file.file_path);
         if (fs.existsSync(fullPath)) {
           fs.unlinkSync(fullPath);
         }
         await client.query('DELETE FROM forms_repository_files WHERE id = $1', [file.id]);
-      } else {
-        console.log('Keeping file:', file.id); // Debug log
       }
     }
 
-    // Add new files if any
     if (req.files && req.files.length > 0) {
       const nstpFolderId = await getNSTPFolderId(adminid);
 

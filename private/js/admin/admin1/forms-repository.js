@@ -561,10 +561,10 @@ document.addEventListener("DOMContentLoaded", () => {
                              currentFolderId !== null && !window.folderMap[currentFolderId];
 
       if (["favorites", "recent", "trash"].includes(currentFilter) || needAllFolders) {
-        [foldersRes, filesRes] = await Promise.all([
-          fetch(`${API_BASE}/folders?all=true`),
-          fetch(`${API_BASE}/files?all=true`)
-        ]);
+      [foldersRes, filesRes] = await Promise.all([
+        fetch(`${API_BASE}/folders?all=true`),
+        fetch(`${API_BASE}/files?all=true`)
+      ]);
       } else {
         [foldersRes, filesRes] = await Promise.all([
           fetch(`${API_BASE}/folders${currentFolderId ? `?parent_id=${currentFolderId}` : ""}`),

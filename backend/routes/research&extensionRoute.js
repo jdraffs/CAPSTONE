@@ -1,4 +1,4 @@
-// research&extensionRoute.js - Single image only, using existing DB structure
+// research&extensionRoute.js - Complete with Trash System
 import express from 'express';
 import multer from 'multer';
 import pkg from 'pg';
@@ -29,9 +29,8 @@ const storage = multer.diskStorage({
 
 const upload = multer({ 
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    // ONLY IMAGES ALLOWED
     const allowedTypes = [
       'image/jpeg',
       'image/jpg',
@@ -80,7 +79,6 @@ async function saveFileToRepository(folderId, file, adminid) {
   return result.rows[0];
 }
 
-// CREATE POST - Single image only
 router.post('/create', upload.single('thumbnail'), async (req, res) => {
   const client = await pool.connect();
   
@@ -89,13 +87,11 @@ router.post('/create', upload.single('thumbnail'), async (req, res) => {
 
     const { title, content, adminid } = req.body;
     
-    // Validate thumbnail exists
     if (!req.file) {
       await client.query('ROLLBACK');
       return res.status(400).json({ success: false, message: 'Thumbnail image is required' });
     }
 
-    // Create post
     const postQuery = `
       INSERT INTO researchextension_posts (title, content, adminid)
       VALUES ($1, $2, $3)
@@ -104,11 +100,9 @@ router.post('/create', upload.single('thumbnail'), async (req, res) => {
     const postResult = await client.query(postQuery, [title, content, adminid]);
     const post = postResult.rows[0];
 
-    // Save thumbnail to repository
     const folderId = await getResearchExtensionFolderId(adminid);
     const savedFile = await saveFileToRepository(folderId, req.file, adminid);
     
-    // Link thumbnail to post
     await client.query(
       'INSERT INTO researchextension_post_files (post_id, file_id) VALUES ($1, $2)',
       [post.id, savedFile.id]
@@ -120,7 +114,6 @@ router.post('/create', upload.single('thumbnail'), async (req, res) => {
     await client.query('ROLLBACK');
     console.error('Error creating Research & Extension post:', err);
     
-    // Delete uploaded file if database operation fails
     if (req.file) {
       const filePath = path.join(uploadDir, req.file.filename);
       if (fs.existsSync(filePath)) {
@@ -134,7 +127,7 @@ router.post('/create', upload.single('thumbnail'), async (req, res) => {
   }
 });
 
-// GET ALL POSTS with thumbnail
+// Get active posts (not deleted)
 router.get('/posts', async (req, res) => {
   try {
     const postsQuery = `
@@ -146,6 +139,7 @@ router.get('/posts', async (req, res) => {
       FROM researchextension_posts p
       LEFT JOIN researchextension_post_files pf ON p.id = pf.post_id
       LEFT JOIN forms_repository_files f ON pf.file_id = f.id
+      WHERE p.deleted_at IS NULL
       ORDER BY p.created_at DESC
     `;
     
@@ -157,7 +151,161 @@ router.get('/posts', async (req, res) => {
   }
 });
 
-// UPDATE POST - Replace thumbnail if new one provided
+// Get trash posts (deleted)
+router.get('/trash', async (req, res) => {
+  try {
+    const postsQuery = `
+      SELECT 
+        p.*,
+        f.id as thumbnail_id,
+        f.file_path as thumbnail_path,
+        f.file_name as thumbnail_name
+      FROM researchextension_posts p
+      LEFT JOIN researchextension_post_files pf ON p.id = pf.post_id
+      LEFT JOIN forms_repository_files f ON pf.file_id = f.id
+      WHERE p.deleted_at IS NOT NULL
+      ORDER BY p.deleted_at DESC
+    `;
+    
+    const result = await pool.query(postsQuery);
+    res.json({ success: true, posts: result.rows });
+  } catch (err) {
+    console.error('Error fetching Research & Extension trash:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch trash' });
+  }
+});
+
+// Move to trash (soft delete)
+router.put('/trash/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const result = await pool.query(
+      'UPDATE researchextension_posts SET deleted_at = NOW() WHERE id = $1 RETURNING *',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Post not found' });
+    }
+
+    res.json({ success: true, message: 'Post moved to trash' });
+  } catch (err) {
+    console.error('Error moving post to trash:', err);
+    res.status(500).json({ success: false, message: 'Failed to move to trash' });
+  }
+});
+
+// Restore from trash
+router.put('/restore/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const result = await pool.query(
+      'UPDATE researchextension_posts SET deleted_at = NULL WHERE id = $1 RETURNING *',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Post not found' });
+    }
+
+    res.json({ success: true, message: 'Post restored successfully' });
+  } catch (err) {
+    console.error('Error restoring post:', err);
+    res.status(500).json({ success: false, message: 'Failed to restore post' });
+  }
+});
+
+// Permanent delete
+router.delete('/delete/:id', async (req, res) => {
+  const client = await pool.connect();
+  
+  try {
+    await client.query('BEGIN');
+
+    const { id } = req.params;
+
+    const filesQuery = `
+      SELECT f.id, f.file_path
+      FROM forms_repository_files f
+      JOIN researchextension_post_files pf ON f.id = pf.file_id
+      WHERE pf.post_id = $1
+    `;
+    const filesResult = await client.query(filesQuery, [id]);
+
+    for (const file of filesResult.rows) {
+      const fullPath = path.join('./public', file.file_path);
+      if (fs.existsSync(fullPath)) {
+        fs.unlinkSync(fullPath);
+      }
+    }
+
+    for (const file of filesResult.rows) {
+      await client.query('DELETE FROM forms_repository_files WHERE id = $1', [file.id]);
+    }
+
+    await client.query('DELETE FROM researchextension_post_files WHERE post_id = $1', [id]);
+    await client.query('DELETE FROM researchextension_posts WHERE id = $1', [id]);
+
+    await client.query('COMMIT');
+    res.json({ success: true, message: 'Post permanently deleted' });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Error deleting Research & Extension post:', err);
+    res.status(500).json({ success: false, message: 'Failed to delete post' });
+  } finally {
+    client.release();
+  }
+});
+
+// Empty trash (delete all trashed posts)
+router.delete('/empty-trash', async (req, res) => {
+  const client = await pool.connect();
+  
+  try {
+    await client.query('BEGIN');
+
+    const trashedPosts = await client.query(
+      'SELECT id FROM researchextension_posts WHERE deleted_at IS NOT NULL'
+    );
+
+    for (const post of trashedPosts.rows) {
+      const filesQuery = `
+        SELECT f.id, f.file_path
+        FROM forms_repository_files f
+        JOIN researchextension_post_files pf ON f.id = pf.file_id
+        WHERE pf.post_id = $1
+      `;
+      const filesResult = await client.query(filesQuery, [post.id]);
+
+      for (const file of filesResult.rows) {
+        const fullPath = path.join('./public', file.file_path);
+        if (fs.existsSync(fullPath)) {
+          fs.unlinkSync(fullPath);
+        }
+        await client.query('DELETE FROM forms_repository_files WHERE id = $1', [file.id]);
+      }
+
+      await client.query('DELETE FROM researchextension_post_files WHERE post_id = $1', [post.id]);
+    }
+
+    const result = await client.query('DELETE FROM researchextension_posts WHERE deleted_at IS NOT NULL');
+
+    await client.query('COMMIT');
+    res.json({ 
+      success: true, 
+      message: `Trash emptied. ${result.rowCount} posts permanently deleted.` 
+    });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Error emptying trash:', err);
+    res.status(500).json({ success: false, message: 'Failed to empty trash' });
+  } finally {
+    client.release();
+  }
+});
+
 router.put('/update/:id', upload.single('thumbnail'), async (req, res) => {
   const client = await pool.connect();
   
@@ -167,7 +315,6 @@ router.put('/update/:id', upload.single('thumbnail'), async (req, res) => {
     const { id } = req.params;
     const { title, content, adminid, keepThumbnail } = req.body;
 
-    // Update post content
     const updateQuery = `
       UPDATE researchextension_posts
       SET title = $1, content = $2
@@ -176,9 +323,7 @@ router.put('/update/:id', upload.single('thumbnail'), async (req, res) => {
     `;
     const result = await client.query(updateQuery, [title, content, id]);
 
-    // If new thumbnail uploaded, replace the old one
     if (req.file) {
-      // Get existing thumbnail
       const existingFile = await client.query(
         `SELECT f.id, f.file_path
          FROM forms_repository_files f
@@ -187,27 +332,22 @@ router.put('/update/:id', upload.single('thumbnail'), async (req, res) => {
         [id]
       );
 
-      // Delete old thumbnail file from disk
       if (existingFile.rows.length > 0) {
         const oldPath = path.join('./public', existingFile.rows[0].file_path);
         if (fs.existsSync(oldPath)) {
           fs.unlinkSync(oldPath);
         }
-        // Delete from database
         await client.query('DELETE FROM forms_repository_files WHERE id = $1', [existingFile.rows[0].id]);
       }
 
-      // Save new thumbnail
       const folderId = await getResearchExtensionFolderId(adminid);
       const savedFile = await saveFileToRepository(folderId, req.file, adminid);
       
-      // Link new thumbnail to post
       await client.query(
         'INSERT INTO researchextension_post_files (post_id, file_id) VALUES ($1, $2)',
         [id, savedFile.id]
       );
     } else if (!keepThumbnail) {
-      // No new thumbnail and not keeping existing = error
       await client.query('ROLLBACK');
       return res.status(400).json({ success: false, message: 'Thumbnail is required' });
     }
@@ -218,7 +358,6 @@ router.put('/update/:id', upload.single('thumbnail'), async (req, res) => {
     await client.query('ROLLBACK');
     console.error('Error updating Research & Extension post:', err);
     
-    // Delete uploaded file if database operation fails
     if (req.file) {
       const filePath = path.join(uploadDir, req.file.filename);
       if (fs.existsSync(filePath)) {
@@ -227,51 +366,6 @@ router.put('/update/:id', upload.single('thumbnail'), async (req, res) => {
     }
     
     res.status(500).json({ success: false, message: 'Failed to update post' });
-  } finally {
-    client.release();
-  }
-});
-
-// DELETE POST and thumbnail
-router.delete('/delete/:id', async (req, res) => {
-  const client = await pool.connect();
-  
-  try {
-    await client.query('BEGIN');
-
-    const { id } = req.params;
-
-    // Get thumbnail info
-    const filesQuery = `
-      SELECT f.id, f.file_path
-      FROM forms_repository_files f
-      JOIN researchextension_post_files pf ON f.id = pf.file_id
-      WHERE pf.post_id = $1
-    `;
-    const filesResult = await client.query(filesQuery, [id]);
-
-    // Delete thumbnail file from disk
-    for (const file of filesResult.rows) {
-      const fullPath = path.join('./public', file.file_path);
-      if (fs.existsSync(fullPath)) {
-        fs.unlinkSync(fullPath);
-      }
-    }
-
-    // Delete from database
-    for (const file of filesResult.rows) {
-      await client.query('DELETE FROM forms_repository_files WHERE id = $1', [file.id]);
-    }
-
-    await client.query('DELETE FROM researchextension_post_files WHERE post_id = $1', [id]);
-    await client.query('DELETE FROM researchextension_posts WHERE id = $1', [id]);
-
-    await client.query('COMMIT');
-    res.json({ success: true, message: 'Post deleted successfully' });
-  } catch (err) {
-    await client.query('ROLLBACK');
-    console.error('Error deleting Research & Extension post:', err);
-    res.status(500).json({ success: false, message: 'Failed to delete post' });
   } finally {
     client.release();
   }
