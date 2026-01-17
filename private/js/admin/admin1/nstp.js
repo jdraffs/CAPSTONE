@@ -10,6 +10,12 @@ const fileUpload = document.getElementById('fileUpload');
 const fileListContainer = document.getElementById('fileList');
 const toolbarButtons = document.querySelectorAll('.post-toolbar button');
 const fontSizeSelect = document.getElementById('fontSize');
+const API_BASE = 'http://localhost:3000/api/nstp';
+const trashModal = document.getElementById('trashModal');
+const openTrashBtn = document.getElementById('openTrashBtn');
+const closeTrashBtn = document.getElementById('closeTrashBtn');
+const emptyTrashBtn = document.getElementById('emptyTrashBtn');
+const trashItems = document.getElementById('trashItems');
 
 let editingPostId = null;
 let selectedFiles = [];
@@ -336,10 +342,10 @@ async function loadPosts() {
             <button class="post-menu-btn">
               <i class="fa-solid fa-ellipsis-v"></i>
             </button>
-            <div class="post-menu-dropdown" style="display: none;">
-              <button class="post-edit"><i class="fa-solid fa-pen"></i> Edit</button>
-              <button class="post-delete"><i class="fa-solid fa-trash"></i> Delete</button>
-            </div>
+          <div class="post-menu-dropdown" style="display: none;">
+            <button class="post-edit"><i class="fa-solid fa-pen"></i> Edit</button>
+            <button class="post-delete"><i class="fa-solid fa-trash"></i> Move to Trash</button>
+          </div>
           </div>
           <h1>${post.title}</h1>
           <div class="post-content">${post.content}</div>
@@ -380,10 +386,10 @@ async function loadPosts() {
           e.stopPropagation();
           dropdown.style.display = 'none';
           
-          if (confirm('Are you sure you want to delete this NSTP post and all its files?')) {
+          if (confirm('Move this post to trash?')) {
             try {
-              const response = await fetch(`http://localhost:3000/api/nstp/delete/${post.id}`, { 
-                method: 'DELETE' 
+              const response = await fetch(`http://localhost:3000/api/nstp/trash/${post.id}`, { 
+                method: 'PUT' 
               });
               const result = await response.json();
               
@@ -421,5 +427,175 @@ async function loadPosts() {
     `;
   }
 }
+// Open trash modal
+openTrashBtn?.addEventListener('click', async () => {
+  trashModal.style.display = 'flex';
+  await loadTrash();
+});
+
+// Close trash modal
+closeTrashBtn?.addEventListener('click', () => {
+  trashModal.style.display = 'none';
+});
+
+// Close trash modal on outside click - UPDATE THIS SECTION
+// Find the existing window.addEventListener('click') and update it to:
+window.addEventListener('click', (e) => {
+  if (e.target === modal) {
+    modal.style.display = 'none';
+  }
+  if (e.target === trashModal) {
+    trashModal.style.display = 'none';
+  }
+});
+
+// Load trash items
+async function loadTrash() {
+  trashItems.innerHTML = '<div style="text-align:center;padding:40px;"><div class="spinner"></div></div>';
+  
+  try {
+    const res = await fetch(`${API_BASE}/trash`);
+    const data = await res.json();
+
+    if (data.success && data.posts.length > 0) {
+      renderTrashItems(data.posts);
+      emptyTrashBtn.disabled = false;
+    } else {
+      trashItems.innerHTML = `
+        <div class="trash-empty">
+          <i class="fa fa-trash"></i>
+          <h3>Trash is empty</h3>
+          <p>Deleted items will appear here</p>
+        </div>
+      `;
+      emptyTrashBtn.disabled = true;
+    }
+  } catch (err) {
+    console.error('Error loading trash:', err);
+    trashItems.innerHTML = `
+      <div class="error-message">
+        <i class="fa fa-exclamation-triangle"></i>
+        <h3>Error loading trash</h3>
+        <p>Please try again</p>
+      </div>
+    `;
+    emptyTrashBtn.disabled = true;
+  }
+}
+
+// Render trash items
+function renderTrashItems(posts) {
+  trashItems.innerHTML = '';
+  
+  posts.forEach(post => {
+    const deletedDate = new Date(post.deleted_at);
+    const formattedDate = deletedDate.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    const fileCount = post.files ? post.files.length : 0;
+
+    const trashItem = document.createElement('div');
+    trashItem.className = 'trash-item';
+    trashItem.innerHTML = `
+      <div class="trash-item-content">
+        <div class="trash-item-title">${post.title || 'Untitled'}</div>
+        <div class="trash-item-meta">
+          <span><i class="fa fa-calendar"></i> Deleted: ${formattedDate}</span>
+          ${fileCount > 0 ? `<span><i class="fa fa-paperclip"></i> ${fileCount} file(s)</span>` : ''}
+        </div>
+      </div>
+      <div class="trash-item-actions">
+        <button class="restore-btn" data-id="${post.id}">
+          <i class="fa fa-undo"></i> Restore
+        </button>
+        <button class="delete-permanent-btn" data-id="${post.id}">
+          <i class="fa fa-trash-alt"></i> Delete Permanently
+        </button>
+      </div>
+    `;
+
+    trashItem.querySelector('.restore-btn').addEventListener('click', async () => {
+      if (confirm('Restore this post?')) {
+        await restorePost(post.id);
+      }
+    });
+
+    trashItem.querySelector('.delete-permanent-btn').addEventListener('click', async () => {
+      if (confirm('Permanently delete this post? This action cannot be undone.')) {
+        await deletePermanently(post.id);
+      }
+    });
+
+    trashItems.appendChild(trashItem);
+  });
+}
+
+// Restore post from trash
+async function restorePost(id) {
+  try {
+    const res = await fetch(`${API_BASE}/restore/${id}`, {
+      method: 'PUT'
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      alert('Post restored successfully');
+      await loadTrash();
+      loadPosts();
+    } else {
+      alert('Failed to restore post');
+    }
+  } catch (err) {
+    console.error('Error restoring post:', err);
+    alert('Error restoring post');
+  }
+}
+
+// Delete post permanently
+async function deletePermanently(id) {
+  try {
+    const res = await fetch(`${API_BASE}/delete/${id}`, {
+      method: 'DELETE'
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      alert('Post permanently deleted');
+      await loadTrash();
+    } else {
+      alert('Failed to delete post');
+    }
+  } catch (err) {
+    console.error('Error deleting post:', err);
+    alert('Error deleting post');
+  }
+}
+
+// Empty trash
+emptyTrashBtn?.addEventListener('click', async () => {
+  if (confirm('Empty trash? All items will be permanently deleted. This action cannot be undone.')) {
+    try {
+      const res = await fetch(`${API_BASE}/empty-trash`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        alert(data.message);
+        await loadTrash();
+      } else {
+        alert('Failed to empty trash');
+      }
+    } catch (err) {
+      console.error('Error emptying trash:', err);
+      alert('Error emptying trash');
+    }
+  }
+});
 
 window.addEventListener('DOMContentLoaded', loadPosts);

@@ -155,8 +155,39 @@
                         </div>
                     </div>
                     </div>
-
                 </div>
+                <!-- Trash Modal -->
+                <div class="trash-modal" id="trashModal" style="display: none;">
+                <div class="trash-modal-content">
+                    <div class="trash-modal-header">
+                    <h2><i class="fa fa-trash"></i> Trash</h2>
+                    <button class="close-trash-btn" id="closeTrashBtn">
+                        <i class="fa fa-times"></i>
+                    </button>
+                    </div>
+                    
+                    <div class="trash-modal-body">
+                    <div class="trash-actions">
+                        <p class="trash-info">
+                        <i class="fa fa-info-circle"></i>
+                        Items in trash will be kept for 30 days before automatic deletion
+                        </p>
+                        <button class="empty-trash-btn" id="emptyTrashBtn">
+                        <i class="fa fa-trash-alt"></i> Empty Trash
+                        </button>
+                    </div>
+                    
+                    <div class="trash-items" id="trashItems">
+                        <!-- Trash items will be loaded here -->
+                    </div>
+                    </div>
+                </div>
+                </div>
+
+                <!-- Trash Button (Add this near your existing post button) -->
+                <button class="trash-btn" id="openTrashBtn" title="View Trash">
+                <i class="fa fa-trash"></i>
+                </button>
 
             </div>
     </main>
