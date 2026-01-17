@@ -1,9 +1,4 @@
-// formsrepositoryRoute.js - CLEANED VERSION
-// Assumptions:
-// 1) Files must ALWAYS belong to a folder (no root files)
-// 2) Root folders are identified by parent_id IS NULL
-// 3) Remove unnecessary NULL/undefined handling and noisy logs
-
+// formsrepositoryRoute.js - FIXED VERSION
 import express from "express";
 import multer from "multer";
 import pkg from "pg";
@@ -58,14 +53,22 @@ router.post("/folders", async (req, res) => {
   }
 });
 
-// Get Folders
+// Get Folders - UPDATED to support ?all=true
 router.get("/folders", async (req, res) => {
   try {
-    const { parent_id } = req.query;
+    const { parent_id, all } = req.query;
 
     let query = `SELECT * FROM forms_repository_folders WHERE adminid = $1`;
     const params = [ADMIN_ID];
 
+    // If ?all=true, fetch ALL folders (for trash/favorites/recent views)
+    if (all === "true") {
+      query += " ORDER BY id DESC";
+      const result = await pool.query(query, params);
+      return res.json({ success: true, folders: result.rows });
+    }
+
+    // Otherwise, filter by parent_id
     if (parent_id !== undefined) {
       if (parent_id === "null") {
         query += " AND parent_id IS NULL";
@@ -143,13 +146,25 @@ router.post("/files", upload.single("file"), async (req, res) => {
   }
 });
 
-// Get Files (folder_id REQUIRED)
+// ✅ UPDATED: Get Files - support ?all=true for trash/favorites/recent
 router.get("/files", async (req, res) => {
   try {
-    const { folder_id } = req.query;
+    const { folder_id, all } = req.query;
 
+    // If ?all=true, return ALL files (for trash, favorites, recent views)
+    if (all === "true") {
+      const result = await pool.query(
+        `SELECT * FROM forms_repository_files
+         WHERE adminid = $1
+         ORDER BY id DESC`,
+        [ADMIN_ID]
+      );
+      return res.json({ success: true, files: result.rows });
+    }
+
+    // Otherwise, folder_id is required
     if (!folder_id) {
-      return res.status(400).json({ success: false, message: "folder_id is required" });
+      return res.status(400).json({ success: false, message: "folder_id is required when all=true is not set" });
     }
 
     const result = await pool.query(

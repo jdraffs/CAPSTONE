@@ -1,4 +1,4 @@
-// nstp.js - Fixed version with proper file handling and image ordering
+// nstp.js - Fixed file list display
 const openBtn = document.getElementById('openPostModal');
 const modal = document.getElementById('postModal');
 const cancelBtn = document.getElementById('cancelPost');
@@ -40,8 +40,14 @@ function clearForm() {
   editingPostId = null;
 }
 
+// ✅ FIXED: File upload handler with proper debugging
 fileUpload.addEventListener('change', (e) => {
+  console.log('File input changed!'); // Debug log
+  console.log('Files selected:', e.target.files); // Debug log
+  
   const newFiles = Array.from(e.target.files);
+  console.log('New files array:', newFiles); // Debug log
+  
   const totalFiles = selectedFiles.length + existingFiles.length + newFiles.length;
   
   if (totalFiles > 3) {
@@ -51,13 +57,15 @@ fileUpload.addEventListener('change', (e) => {
   }
   
   selectedFiles = [...selectedFiles, ...newFiles];
-  fileUpload.value = '';
-  updateFileList();
+  console.log('Selected files after update:', selectedFiles); // Debug log
+  
+  fileUpload.value = ''; // Reset input
+  updateFileList(); // Update the display
 });
 
 function sortFilesByType(files) {
-  // Sort files so images come first
   return files.sort((a, b) => {
+    // Handle both database files and browser File objects
     const aIsImage = isImageFile(a.file_type || a.type);
     const bIsImage = isImageFile(b.file_type || b.type);
     
@@ -67,42 +75,94 @@ function sortFilesByType(files) {
   });
 }
 
+// ✅ FIXED: Updated file list display with better styling and debugging
 function updateFileList() {
+  console.log('Updating file list...');
+  console.log('Existing files:', existingFiles);
+  console.log('Selected files:', selectedFiles);
+  
   fileListContainer.innerHTML = '';
   
-  // Combine and sort all files (images first)
-  const allFiles = [
-    ...existingFiles.map((file, index) => ({ ...file, isExisting: true, originalIndex: index })),
-    ...selectedFiles.map((file, index) => ({ ...file, isExisting: false, originalIndex: index }))
-  ];
+  // ✅ FIX: Don't spread File objects - keep them as-is and add metadata separately
+  const allFiles = [];
   
-  const sortedFiles = sortFilesByType(allFiles);
+  // Add existing files (from database)
+  existingFiles.forEach((file, index) => {
+    allFiles.push({
+      fileData: file,
+      isExisting: true,
+      originalIndex: index
+    });
+  });
   
-  sortedFiles.forEach((file) => {
+  // Add selected files (browser File objects)
+  selectedFiles.forEach((file, index) => {
+    allFiles.push({
+      fileData: file,
+      isExisting: false,
+      originalIndex: index
+    });
+  });
+  
+  console.log('All files combined:', allFiles);
+  
+  // Sort by file type (images first)
+  const sortedFiles = allFiles.sort((a, b) => {
+    const aType = a.isExisting ? a.fileData.file_type : a.fileData.type;
+    const bType = b.isExisting ? b.fileData.file_type : b.fileData.type;
+    
+    const aIsImage = aType && aType.includes('image/');
+    const bIsImage = bType && bType.includes('image/');
+    
+    if (aIsImage && !bIsImage) return -1;
+    if (!aIsImage && bIsImage) return 1;
+    return 0;
+  });
+  
+  sortedFiles.forEach((item) => {
     const fileItem = document.createElement('div');
     fileItem.className = 'file-item';
     
-    const fileName = file.file_name || file.name;
-    const fileSize = file.file_size || file.size;
-    const fileType = file.file_type || file.type;
+    let fileName, fileSize, fileType;
+    
+    if (item.isExisting) {
+      // Database file (from existing post)
+      fileName = item.fileData.file_name || 'Unknown file';
+      fileSize = item.fileData.file_size || 0;
+      fileType = item.fileData.file_type || '';
+    } else {
+      // Browser File object (newly selected)
+      // Access properties directly from the File object
+      fileName = item.fileData.name || 'Unknown file';
+      fileSize = item.fileData.size || 0;
+      fileType = item.fileData.type || '';
+    }
+    
+    console.log('File item:', { fileName, fileSize, fileType, isExisting: item.isExisting });
     
     fileItem.innerHTML = `
-      <i class="fa ${getFileIcon(fileType)}"></i>
-      <span class="file-name">${fileName}</span>
-      <span class="file-size">${formatFileSize(fileSize)}</span>
-      <button type="button" class="remove-file-btn" ${file.isExisting ? `data-existing-index="${file.originalIndex}"` : `data-new-index="${file.originalIndex}"`}>
-        <i class="fa fa-times"></i>
+      <i class="fa ${getFileIcon(fileType)}" style="color: #666; font-size: 18px;"></i>
+      <span class="file-name" style="flex: 1;">${fileName}</span>
+      <span class="file-size" style="color: #999; font-size: 12px; margin-right: 10px;">${formatFileSize(fileSize)}</span>
+      <button type="button" class="remove-file-btn" ${item.isExisting ? `data-existing-index="${item.originalIndex}"` : `data-new-index="${item.originalIndex}"`}>
+        <i class="fa fa-times" style="color: #ff4d4d;"></i>
       </button>
     `;
     fileListContainer.appendChild(fileItem);
   });
   
+  console.log('File list updated. Items in container:', fileListContainer.children.length);
+  
   // Add event listeners to remove buttons
   document.querySelectorAll('.remove-file-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
+      e.stopPropagation();
+      
       const existingIndex = btn.dataset.existingIndex;
       const newIndex = btn.dataset.newIndex;
+      
+      console.log('Removing file - existing index:', existingIndex, 'new index:', newIndex);
       
       if (existingIndex !== undefined) {
         existingFiles.splice(parseInt(existingIndex), 1);
@@ -116,6 +176,7 @@ function updateFileList() {
 }
 
 function getFileIcon(mimeType) {
+  if (!mimeType) return 'fa-file';
   if (mimeType.includes('pdf')) return 'fa-file-pdf';
   if (mimeType.includes('word')) return 'fa-file-word';
   if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) return 'fa-file-powerpoint';
@@ -168,12 +229,10 @@ submitBtn.addEventListener('click', async (e) => {
   formData.append('content', content);
   formData.append('adminid', 'adminave');
 
-  // Add new files
   selectedFiles.forEach(file => {
     formData.append('files', file);
   });
   
-  // FIXED: Send the IDs as numbers in an array
   if (editingPostId) {
     const keepFileIds = existingFiles.map(f => f.id);
     formData.append('keepFiles', JSON.stringify(keepFileIds));
@@ -232,7 +291,6 @@ async function loadPosts() {
 
         let filesHtml = '';
         if (post.files && post.files.length > 0) {
-          // Sort files so images appear first
           const sortedFiles = sortFilesByType([...post.files]);
           
           filesHtml = '<div class="post-files">';
@@ -289,7 +347,6 @@ async function loadPosts() {
           <div class="post-divider"><span>${new Date(post.created_at).toLocaleString()}</span></div>
         `;
 
-        // Dropdown menu toggle
         const menuBtn = postElem.querySelector('.post-menu-btn');
         const dropdown = postElem.querySelector('.post-menu-dropdown');
         

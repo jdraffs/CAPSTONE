@@ -1,12 +1,13 @@
-// fileRepository.js - PART 1
-// Copy this first, then append Part 2 below it
-
+// fileRepository.js - UPDATED TO USE UNIFIED TRASH API
 document.addEventListener("DOMContentLoaded", () => {
   const container = document.getElementById("mainContent");
   let currentFolderId = null;
   let currentFilter = "all";
   let favorites = new Set(JSON.parse(localStorage.getItem("favorites") || "[]"));
-  let trash = new Set(JSON.parse(localStorage.getItem("trash") || "[]"));
+  
+  // ✅ REMOVED: localStorage trash management
+  // let trash = new Set(JSON.parse(localStorage.getItem("trash") || "[]"));
+  
   let selectedItems = new Set();
   let lastSelectedIndex = -1;
   let lastClickTime = 0;
@@ -19,10 +20,9 @@ document.addEventListener("DOMContentLoaded", () => {
   function saveFavorites() {
     localStorage.setItem("favorites", JSON.stringify([...favorites]));
   }
-  function saveTrash() {
-    localStorage.setItem("trash", JSON.stringify([...trash]));
-  }
 
+  // ✅ REMOVED: saveTrash() - no longer needed
+  
   // ===== FILE PREVIEW MODAL =====
   function createPreviewModal() {
     const modal = document.createElement("div");
@@ -94,7 +94,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const fileType = file.file_type;
 
     try {
-      // Excel/CSV files - Display as table
       if (fileExt === 'xlsx' || fileExt === 'xls' || fileExt === 'csv' || fileType.includes('spreadsheet') || fileType === 'text/csv') {
         modalBody.innerHTML = '<div class="loading">Loading spreadsheet data...</div>';
         
@@ -158,18 +157,14 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
           `;
         }
-      }
-      // JSON files - Display formatted
-      else if (fileExt === 'json' || fileType === 'application/json') {
+      } else if (fileExt === 'json' || fileType === 'application/json') {
         const response = await fetch(file.file_path);
         const jsonData = await response.json();
         const formatted = JSON.stringify(jsonData, null, 2);
         modalBody.innerHTML = `
           <pre style="white-space: pre-wrap; padding: 20px; max-height: 70vh; overflow: auto; background: #f5f5f5; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.5;">${escapeHtml(formatted)}</pre>
         `;
-      }
-      // Unsupported - offer download
-      else {
+      } else {
         modalBody.innerHTML = `
           <div style="padding: 20px; text-align: center;">
             <i class="fa fa-file" style="font-size: 64px; color: #666; margin-bottom: 20px;"></i>
@@ -294,20 +289,38 @@ document.addEventListener("DOMContentLoaded", () => {
     clearSelection();
   }
 
-  function bulkMoveToTrash() {
+  // ✅ UPDATED: Use unified trash API
+  async function bulkMoveToTrash() {
     if (selectedItems.size === 0) return;
     
     const count = selectedItems.size;
     if (!confirm(`Move ${count} item(s) to trash?`)) return;
     
-    selectedItems.forEach(itemKey => {
-      trash.add(itemKey);
-    });
+    const items = Array.from(selectedItems);
+    let successCount = 0;
     
-    saveTrash();
+    for (const itemKey of items) {
+      const [type, id] = itemKey.split('-');
+      
+      if (type === 'file') {
+        try {
+          const response = await fetch(`http://localhost:3000/api/trash/move/${id}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" }
+          });
+          
+          if (response.ok) {
+            successCount++;
+          }
+        } catch (error) {
+          console.error(`Error moving file ${id} to trash:`, error);
+        }
+      }
+    }
+    
     clearSelection();
-    fetchFoldersAndFiles();
-    window.toast.success(`${count} item(s) moved to trash.`);
+    await fetchFoldersAndFiles();
+    toast.success(`${successCount} of ${count} item(s) moved to trash.`);
   }
 
   async function bulkDeletePermanently() {
@@ -342,11 +355,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function deleteFilePermanent(id) {
     try {
-      const response = await fetch(`${API_BASE}/files/${id}`, { method: "DELETE" });
+      const response = await fetch(`http://localhost:3000/api/trash/permanent/${id}`, {
+        method: "DELETE"
+      });
+      
       if (!response.ok) throw new Error('failed');
-      trash.delete(`file-${id}`);
+      
       favorites.delete(`file-${id}`);
-      saveTrash();
       saveFavorites();
       return true;
     } catch (err) {
@@ -354,9 +369,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return false;
     }
   }
-
-// fileRepository.js - PART 2
-// Append this after Part 1
 
   async function deleteFolderPermanent(folderId) {
     try {
@@ -368,7 +380,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (window.folderMap && window.folderMap[folderId]) {
         delete window.folderMap[folderId];
       }
-      trash.delete(`folder-${folderId}`);
       favorites.delete(`folder-${folderId}`);
 
       if (window.folderMap) {
@@ -406,12 +417,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         descendants.forEach(did => {
           delete window.folderMap[did];
-          trash.delete(`folder-${did}`);
           favorites.delete(`folder-${did}`);
         });
       }
 
-      saveTrash();
       saveFavorites();
       return true;
     } catch (err) {
@@ -420,29 +429,27 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-async function emptyTrashAll() {
-  if (trash.size === 0) {
-    toast.warning("Trash is already empty.");
-    return;
-  }
+  // ✅ UPDATED: Use unified trash API
+  async function emptyTrashAll() {
+    try {
+      const response = await fetch('http://localhost:3000/api/trash/empty', {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" }
+      });
 
-  if (!confirm("Permanently delete everything in Trash? This cannot be undone.")) return;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to empty trash');
+      }
 
-  const items = Array.from(trash);
-  for (const entry of items) {
-    const [type, id] = entry.split('-');
-    if (type === 'file') {
-      await deleteFilePermanent(id);
-    } else if (type === 'folder') {
-      await deleteFolderPermanent(id);
+      const result = await response.json();
+      toast.success(`Trash emptied: ${result.deletedCount} file(s) permanently deleted.`);
+      await fetchFoldersAndFiles();
+    } catch (error) {
+      console.error('Error emptying trash:', error);
+      toast.error(`Failed to empty trash: ${error.message}`);
     }
-    trash.delete(entry);
   }
-  
-  saveTrash();
-  await fetchFoldersAndFiles();
-  toast.success("Trash has been emptied successfully.", "Trash Emptied"); // ✅ CHANGED
-}
 
   function toggleFavorite(id, type) {
     const favId = `${type}-${id}`;
@@ -456,16 +463,47 @@ async function emptyTrashAll() {
     return favorites.has(`${type}-${id}`);
   }
 
-  function toggleTrash(id, type) {
-    const trashId = `${type}-${id}`;
-    if (trash.has(trashId)) trash.delete(trashId);
-    else trash.add(trashId);
-    saveTrash();
-    fetchFoldersAndFiles();
+  // ✅ UPDATED: Check trash status from database
+  function isTrashed(id, type) {
+    // This will be determined by the is_trashed field from the database
+    // No longer using localStorage
+    return false; // Placeholder - actual status comes from DB
   }
 
-  function isTrashed(id, type) {
-    return trash.has(`${type}-${id}`);
+  // ✅ UPDATED: Use unified trash API
+  async function toggleTrash(id, type, fileName) {
+    try {
+      const response = await fetch(`http://localhost:3000/api/trash/move/${id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+
+      if (!response.ok) throw new Error('Failed to move to trash');
+
+      toast.info(`"${fileName}" moved to trash.`);
+      await fetchFoldersAndFiles();
+    } catch (error) {
+      console.error('Error moving to trash:', error);
+      toast.error('Failed to move to trash. Please try again.');
+    }
+  }
+
+  // ✅ UPDATED: Use unified trash API
+  async function restoreFromTrash(id, fileName) {
+    try {
+      const response = await fetch(`http://localhost:3000/api/trash/restore/${id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+
+      if (!response.ok) throw new Error('Failed to restore');
+
+      toast.success(`"${fileName}" has been restored.`);
+      await fetchFoldersAndFiles();
+    } catch (error) {
+      console.error('Error restoring:', error);
+      toast.error('Failed to restore. Please try again.');
+    }
   }
 
   async function fetchFoldersAndFiles() {
@@ -478,7 +516,10 @@ async function emptyTrashAll() {
       if (["favorites", "recent", "trash"].includes(currentFilter) || needAllFolders) {
         [foldersRes, filesRes] = await Promise.all([
           fetch(`${API_BASE}/folders?all=true`),
-          fetch(`${API_BASE}/files?all=true`)
+          // ✅ UPDATED: Fetch from trash endpoint when in trash view
+          currentFilter === "trash" 
+            ? fetch(`http://localhost:3000/api/trash`)
+            : fetch(`${API_BASE}/files?all=true`)
         ]);
       } else {
         [foldersRes, filesRes] = await Promise.all([
@@ -491,7 +532,9 @@ async function emptyTrashAll() {
       const filesData = await filesRes.json();
 
       let folders = foldersData.folders || [];
-      let files = filesData.files || [];
+      
+      // ✅ UPDATED: Handle trash API response format
+      let files = currentFilter === "trash" ? (filesData.files || []) : (filesData.files || []);
 
       folders.forEach(f => {
         if (f && f.id !== undefined) window.folderMap[f.id] = f;
@@ -515,12 +558,13 @@ async function emptyTrashAll() {
       case "files":
         return {
           folders: [],
-          files: files.filter(f => !isTrashed(f.id, "file"))
+          // ✅ UPDATED: Filter by is_trashed field from database
+          files: files.filter(f => !f.is_trashed)
         };
 
       case "recent":
         const recentFiles = [...files]
-          .filter(f => !isTrashed(f.id, "file"))
+          .filter(f => !f.is_trashed) // ✅ UPDATED
           .sort((a, b) => {
             const dateA = new Date(a.created_at || a.uploaded_at || 0);
             const dateB = new Date(b.created_at || b.uploaded_at || 0);
@@ -530,19 +574,18 @@ async function emptyTrashAll() {
         return { folders: [], files: recentFiles };
 
       case "favorites":
-        const favFolders = folders.filter(f => isFavorite(f.id, "folder") && !isTrashed(f.id, "folder"));
-        const favFiles = files.filter(f => isFavorite(f.id, "file") && !isTrashed(f.id, "file"));
+        const favFolders = folders.filter(f => isFavorite(f.id, "folder") && !f.is_trashed); // ✅ UPDATED
+        const favFiles = files.filter(f => isFavorite(f.id, "file") && !f.is_trashed); // ✅ UPDATED
         return { folders: favFolders, files: favFiles };
 
       case "trash":
-        const trashedFolders = folders.filter(f => isTrashed(f.id, "folder"));
-        const trashedFiles = files.filter(f => isTrashed(f.id, "file"));
-        return { folders: trashedFolders, files: trashedFiles };
+        // ✅ UPDATED: Files are already filtered by trash endpoint
+        return { folders: [], files: files };
 
       default:
         return {
-          folders: folders.filter(f => !isTrashed(f.id, "folder")),
-          files: files.filter(f => !isTrashed(f.id, "file"))
+          folders: folders.filter(f => !f.is_trashed), // ✅ UPDATED
+          files: files.filter(f => !f.is_trashed) // ✅ UPDATED
         };
     }
   }
