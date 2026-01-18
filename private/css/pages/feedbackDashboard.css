@@ -935,3 +935,6 @@
     width: 100%;
   }
 }
+.user-avatar {
+  background-color: #800000;
+}

@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Dashboard</title>
+    <title>AdminMila - Dashboard</title>
     <link rel="icon" type="image" href="/public/assets/images/PUPLogo.webp">
-    <link rel="stylesheet" href="/private/css/pages/superAdmin.css">
+    <link rel="stylesheet" href="/private/css/pages/adminMila.css">
     <link rel="stylesheet" href="/private/css/layout/dashboardsidebar.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -90,12 +90,12 @@
             <div class="header-right">
                 <div class="notification-button">
                     <a class="notif-link" href="#notifications" data-page="overview">
-                    <i class="fa fa-bell" aria-hidden="true"></i>
+                        <i class="fa fa-bell" aria-hidden="true"></i>
                     </a>
                 </div>
                 <div class="profile-button">
                     <a class="profile-link" data-page="profile">
-                    <i class="fa fa-user" aria-hidden="true"></i>
+                        <i class="fa fa-user" aria-hidden="true"></i>
                     </a>
                 </div>
             </div>
@@ -103,16 +103,35 @@
 
         <div class="dashboard-content">
             <!-- Welcome Section -->
-            <div class="welcome-card">
-                <h2>Welcome, AdminMila!</h2>
-                <p>Manage scholarship and career opportunities for PUP Parañaque students.</p>
-            </div>
+            <section class="welcome-section">
+                <div class="welcome-content">
+                    <h1 class="welcome-title">Welcome back, <span>AdminMila</span>!</h1>
+                    <p class="welcome-subtitle">Manage scholarship and career opportunities for PUP Parañaque students</p>
+                    <div class="datetime-display">
+                        <i class="far fa-clock"></i>
+                        <span id="currentDateTime">Loading...</span>
+                    </div>
+                </div>
+                <div class="system-status">
+                    <div class="status-indicator">
+                        <div class="status-dot operational"></div>
+                        <div class="status-text">
+                            <span class="status-label">System Status</span>
+                            <span class="status-value">Operational</span>
+                        </div>
+                    </div>
+                    <div class="last-sync">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Last sync: <span id="lastSync">Just now</span></span>
+                    </div>
+                </div>
+            </section>
 
-            <!-- Quick Stats -->
+            <!-- Main Stats Grid -->
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-icon" style="background: #d4edda;">
-                        <i class="fa-solid fa-graduation-cap" style="color: #155724;"></i>
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #48bb78, #38a169);">
+                        <i class="fa-solid fa-graduation-cap" style="color: white;"></i>
                     </div>
                     <div class="stat-info">
                         <h3 id="totalScholarships">0</h3>
@@ -120,8 +139,8 @@
                     </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon" style="background: #fff3cd;">
-                        <i class="fa-solid fa-door-open" style="color: #856404;"></i>
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #38a169, #2f855a);">
+                        <i class="fa-solid fa-door-open" style="color: white;"></i>
                     </div>
                     <div class="stat-info">
                         <h3 id="openScholarships">0</h3>
@@ -129,20 +148,183 @@
                     </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon" style="background: #e3f2fd;">
-                        <i class="fa-solid fa-building" style="color: #1976d2;"></i>
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                        <i class="fa-solid fa-building" style="color: white;"></i>
                     </div>
                     <div class="stat-info">
                         <h3 id="activeOrganizations">0</h3>
                         <p>Career Partners</p>
                     </div>
                 </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #ed8936, #dd6b20);">
+                        <i class="fa-solid fa-certificate" style="color: white;"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="pendingCertificates">0</h3>
+                        <p>Pending Certificates</p>
+                    </div>
+                </div>
             </div>
+
+            <!-- Insights Section -->
+            <section class="insights-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-lightbulb"></i>
+                        Insights & Alerts
+                    </h2>
+                </div>
+                <div class="insights-container">
+                    <div id="dashboardInsights">
+                        <div class="skeleton-loader"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quick Actions -->
+            <section class="quick-actions-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-bolt"></i>
+                        Quick Actions
+                    </h2>
+                </div>
+                <div class="quick-actions-grid">
+                    <a href="./scholarships.html" class="quick-action-card scholarships">
+                        <div class="quick-action-icon">
+                            <i class="fa-solid fa-graduation-cap"></i>
+                        </div>
+                        <h4>Manage Scholarships</h4>
+                        <p>Create and update opportunities</p>
+                    </a>
+                    <a href="./careers.html" class="quick-action-card careers">
+                        <div class="quick-action-icon">
+                            <i class="fa-solid fa-briefcase"></i>
+                        </div>
+                        <h4>Career Directory</h4>
+                        <p>Manage partner organizations</p>
+                    </a>
+                    <a href="./certificates.html" class="quick-action-card certificates">
+                        <div class="quick-action-icon">
+                            <i class="fa-solid fa-certificate"></i>
+                        </div>
+                        <h4>Process Certificates</h4>
+                        <p>Handle student requests</p>
+                    </a>
+                </div>
+            </section>
+
+            <!-- Detailed Statistics -->
+            <section class="insights-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-chart-bar"></i>
+                        Detailed Statistics
+                    </h2>
+                </div>
+                
+                <div class="detailed-stats-container">
+                    <!-- Scholarships Breakdown -->
+                    <div class="detailed-stats-section">
+                        <h3>
+                            <i class="fa-solid fa-graduation-cap"></i>
+                            Scholarships Breakdown
+                        </h3>
+                        <div class="detailed-stats">
+                            <div class="detail-stat-card">
+                                <div class="detail-stat-value" id="upcomingScholarships">0</div>
+                                <div class="detail-stat-label">Upcoming</div>
+                            </div>
+                            <div class="detail-stat-card">
+                                <div class="detail-stat-value" id="closedScholarships">0</div>
+                                <div class="detail-stat-label">Closed</div>
+                            </div>
+                            <div class="detail-stat-card">
+                                <div class="detail-stat-value" id="recentScholarshipsCount">0</div>
+                                <div class="detail-stat-label">Added (30 days)</div>
+                            </div>
+                            <div class="detail-stat-card">
+                                <div class="detail-stat-value" id="upcomingDeadlinesCount">0</div>
+                                <div class="detail-stat-label">Deadlines (7 days)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Career Partners Breakdown -->
+                    <div class="detailed-stats-section">
+                        <h3>
+                            <i class="fa-solid fa-briefcase"></i>
+                            Career Partners Breakdown
+                        </h3>
+                        <div class="detailed-stats">
+                            <div class="detail-stat-card">
+                                <div class="detail-stat-value" id="governmentOrgs">0</div>
+                                <div class="detail-stat-label">Government</div>
+                            </div>
+                            <div class="detail-stat-card">
+                                <div class="detail-stat-value" id="universityOrgs">0</div>
+                                <div class="detail-stat-label">University Units</div>
+                            </div>
+                            <div class="detail-stat-card">
+                                <div class="detail-stat-value" id="privateOrgs">0</div>
+                                <div class="detail-stat-label">Private Companies</div>
+                            </div>
+                            <div class="detail-stat-card">
+                                <div class="detail-stat-value" id="totalOrganizations">0</div>
+                                <div class="detail-stat-label">Total Partners</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Certificate Requests Status -->
+                    <div class="detailed-stats-section">
+                        <h3>
+                            <i class="fa-solid fa-certificate"></i>
+                            Certificate Requests Status
+                        </h3>
+                        <div class="detailed-stats">
+                            <div class="detail-stat-card">
+                                <div class="detail-stat-value" id="generatedCertificates">0</div>
+                                <div class="detail-stat-label">Generated</div>
+                            </div>
+                            <div class="detail-stat-card">
+                                <div class="detail-stat-value" id="printedCertificates">0</div>
+                                <div class="detail-stat-label">Printed</div>
+                            </div>
+                            <div class="detail-stat-card">
+                                <div class="detail-stat-value" id="releasedCertificates">0</div>
+                                <div class="detail-stat-label">Released</div>
+                            </div>
+                            <div class="detail-stat-card">
+                                <div class="detail-stat-value" id="totalCertificateRequests">0</div>
+                                <div class="detail-stat-label">Total Requests</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recent Activity Feed -->
+            <section class="recent-activity-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-history"></i>
+                        Recent Activity
+                    </h2>
+                </div>
+                <div class="activity-feed" id="activityFeed">
+                    <div class="skeleton-loader"></div>
+                </div>
+            </section>
         </div>
     </main>
 
-<!-- Scripts -->
-<script src="/private/js/admin/adminMila/adminMila.js"></script> 
-<script src="/private/js/admin/profileFunction.js"></script>
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="/private/js/admin/adminMila/adminMila.js"></script> 
+    <script src="/private/js/admin/profileFunction.js"></script>
 </body>
 </html>
