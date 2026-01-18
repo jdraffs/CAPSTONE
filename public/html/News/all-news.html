@@ -3,15 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PUP Paranaque - Faculty Portal</title>
+  <title>News & Updates - PUP Parañaque</title>
   <link rel="icon" type="image" href="/public/assets/images/PUPLogo.webp">
-  <link rel="stylesheet" type="text/css" href="/private/css/pages/login.css" />
   <link rel="stylesheet" href="/public/css/layout/navbar.css">
   <link rel="stylesheet" href="/public/css/layout/footer.css">
+  <link rel="stylesheet" href="/public/css/layout/news.css">
+  <link rel="stylesheet" href="/public/css/pages/all-news.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="icon" type="image" href="/public/assets/images/PUPLogo.webp">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
- <header>
+  <header>
     <nav id="navbar" class="navbar">
       <div class="logo">
         <img class="logoimage" src="/public/assets/images/PUPLogo.webp" alt="PUP logo" />
@@ -27,15 +30,17 @@
         <li class="nav-item">
           <a href="/public/index.html">Home</a>
         </li>
+
         <li class="nav-item dropdown-btn">
           <a href="#about">About <span class="arrow">&#11206;</span></a>
           <div class="dropdown-content">
             <a href="/public/html/About/history.html">History</a>
             <a href="/public/html/About/research&extension-public.html">Research & Extension</a>
             <a href="/public/html/About/administrativeofficials.html">Administrative Officials</a>
-            <a href="/public/html/About/vicinitymap.html">Maps</a>
+            <a href="/public/html/About/vicinitymap.html">Vicinity Map</a>
           </div>
         </li>
+
         <li class="nav-item">
           <a href="/public/html/Admission/admission.html">Admission</a>
         </li>
@@ -63,9 +68,8 @@
         <li class="nav-item">
           <a href="/public/html/Contact&Support/QuickHelp&Chatbot.html">Contact/Support</a>
         </li>
-          </div>
-        </div>
       </ul>
+
       <div class="search-hamburger">
         <div class="hamburger">
           <span class="bar"></span>
@@ -83,98 +87,38 @@
     </nav>
   </header>
 
-  <main class="main">
-    <div class="welcome-container">
-      <h1 class="welcome-title">Admin Login Portal</h1>
-      <p class="welcome-desc">Access the official PUP Parañaque Campus system to manage academic content, announcements, and campus activities.</p>
-    </div>
-    
-    <hr class="hr2">
-    
-    <div class="login-container">
-      <!-- Login Tabs -->
-      <div class="login-tabs">
-        <button class="tab-btn active" data-tab="admin-login" onclick="switchTab('admin-login')">
-          <i class="fas fa-user-shield"></i> Admin Login
-        </button>
-        <button class="tab-btn" data-tab="accreditation-login" onclick="switchTab('accreditation-login')">
-          <i class="fas fa-certificate"></i> Accreditation Login
-        </button>
+  <main>
+    <div class="all-news-container">
+      <!-- Page Header -->
+      <div class="page-header">
+        <h1>News & Updates</h1>
+        <p>Stay informed with the latest news and announcements from PUP Parañaque Campus</p>
       </div>
-      
-      <div class="tab-content">
-        <!-- Admin Login Form -->
-        <div class="tab-pane active" id="admin-login">
-          <h2 class="login-title">Login to Your Admin Account</h2>
-          
-          <form id="admin-login-form" class="login-form">
-            <div class="form-group">
-              <label for="admin-username">Admin ID</label>
-              <input type="text" id="admin-username" name="username" placeholder="Enter admin ID" required>
-            </div>
-            
-            <div class="form-group">
-              <label for="admin-password">Password</label>
-              <div class="password-field">
-                <input type="password" id="admin-password" name="password" placeholder="Enter your password" required>
-                <span class="toggle-password" onclick="togglePassword('admin-password')">
-                  <i class="fas fa-eye"></i>
-                </span>
-              </div>
-            </div>
-            
-            <div class="form-group remember-forgot">
-              <div class="remember-me">
-                <input type="checkbox" id="admin-remember" name="remember">
-                <label for="admin-remember">Remember me</label>
-              </div>
-              <a href="#" class="forgot-password">Forgot password?</a>
-            </div>
-            
-            <button type="submit" class="login-btn">Login</button>
-          </form>
+
+      <!-- Search and Filter Section -->
+      <div class="news-controls">
+        <div class="search-box">
+          <i class="fa fa-search"></i>
+          <input type="text" id="newsSearch" placeholder="Search news articles...">
         </div>
-
-        <!-- Accreditation Login Form -->
-        <div class="tab-pane" id="accreditation-login">
-          <h2 class="login-title">Accreditation Portal Login</h2>
-          <p class="login-subtitle">For Area Heads and Accreditors</p>
-          
-          <div class="error-message" id="accreditation-error" style="display: none;">
-            <i class="fas fa-exclamation-circle"></i>
-            <span id="accreditation-error-text"></span>
-          </div>
-
-          <form id="accreditation-login-form" class="login-form">
-            <div class="form-group">
-              <label for="accreditation-username">Username</label>
-              <input type="text" id="accreditation-username" name="username" placeholder="Enter your username" required autocomplete="username">
-            </div>
-            
-            <div class="form-group">
-              <label for="accreditation-password">Password</label>
-              <div class="password-field">
-                <input type="password" id="accreditation-password" name="password" placeholder="Enter your password" required autocomplete="current-password">
-                <span class="toggle-password" onclick="togglePassword('accreditation-password')">
-                  <i class="fas fa-eye"></i>
-                </span>
-              </div>
-            </div>
-            
-            <div class="form-group remember-forgot">
-              <div class="remember-me">
-                <input type="checkbox" id="accreditation-remember" name="remember">
-                <label for="accreditation-remember">Remember me</label>
-              </div>
-              <a href="#" class="forgot-password">Forgot password?</a>
-            </div>
-            
-            <button type="submit" class="login-btn">
-              <span class="btn-text">Login</span>
-            </button>
-          </form>
+        <div class="filter-buttons">
+          <button class="filter-btn active" data-filter="all">All News</button>
+          <button class="filter-btn" data-filter="recent">Recent</button>
+          <button class="filter-btn" data-filter="events">Events</button>
+          <button class="filter-btn" data-filter="announcements">Announcements</button>
         </div>
       </div>
+
+      <!-- News Grid -->
+      <div id="allNewsGrid" class="all-news-grid">
+        <div class="news-loading">
+          <i class="fa fa-spinner fa-spin"></i>
+          <p>Loading news articles...</p>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div id="pagination" class="pagination"></div>
     </div>
   </main>
 
@@ -206,10 +150,10 @@
         <div class="footer-section">
           <h3>Quick Links</h3>
           <ul class="footer-links">
-            <li><a href="#">Home</a></li>
-            <li><a href="#">About</a></li>
+            <li><a href="/public/index.html">Home</a></li>
+            <li><a href="#about">About</a></li>
             <li><a href="#">Programs</a></li>
-            <li><a href="#">Admission</a></li>
+            <li><a href="/public/html/Admission/admission.html">Admission</a></li>
             <li><a href="#">Extension Services</a></li>
           </ul>
         </div>
@@ -238,7 +182,7 @@
             </a>
           </p>
           <p class="contact-info"><i class="fas fa-phone-alt"></i> (63 2) 553-8623</p>
-          <p class="contact-info"><i class="fas fa-envelope"></i> <a href="mailto:inquire@pup.edu.ph">paranaque@pup.edu.ph</a></p>
+          <p class="contact-info"><i class="fas fa-envelope"></i> <a href="mailto:paranaque@pup.edu.ph">paranaque@pup.edu.ph</a></p>
         </div>
       </div>
 
@@ -247,6 +191,7 @@
     </footer>
   </div>
 
-  <script src="/private/js/login.js"></script>
+  <script src="/public/js/navbar.js"></script>
+  <script src="/public/js/all-news.js"></script>
 </body>
 </html>

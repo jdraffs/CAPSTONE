@@ -51,7 +51,7 @@ function renderReportsLogsUI() {
         <!-- Sub-Tab Toggle -->
         <div class="sub-tab-toggle">
             <button class="sub-tab-btn active" data-tab="reports" onclick="switchSubTab('reports')">
-                <i class="fas fa-chart-bar"></i> Reports & Analytics
+                <i class="fas fa-chart-bar"></i> Accreditation Reports 
             </button>
             <button class="sub-tab-btn" data-tab="logs" onclick="switchSubTab('logs')">
                 <i class="fas fa-history"></i> Activity Log
@@ -73,69 +73,6 @@ function renderReportsLogsUI() {
                 </div>
             </div>
 
-            <!-- Previously Generated Reports -->
-            <div class="report-card">
-                <div class="previous-reports-title">
-                    <i class="fas fa-folder-open"></i> Previously Generated Reports
-                </div>
-                <div class="reports-list" id="previousReportsList">
-                    <div class="no-data-message">
-                        <i class="fas fa-inbox"></i>
-                        <p>No reports generated yet</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Analytics Dashboard -->
-            <div class="report-card">
-                <div class="analytics-title">
-                    <i class="fas fa-chart-line"></i> Analytics Dashboard
-                </div>
-
-                <!-- Summary Stats -->
-                <div class="summary-stats-grid" id="analyticsStats">
-                    <!-- Will be populated dynamically -->
-                </div>
-
-                <!-- Charts -->
-                <div class="charts-grid" style="margin-top: 30px;">
-                    <div class="chart-card">
-                        <div class="chart-title">
-                            <i class="fas fa-chart-bar"></i> Completion by Area
-                        </div>
-                        <div class="chart-container" id="completionChart">
-                            <div class="chart-placeholder">Chart will display here</div>
-                        </div>
-                    </div>
-
-                    <div class="chart-card">
-                        <div class="chart-title">
-                            <i class="fas fa-chart-pie"></i> Review Status Distribution
-                        </div>
-                        <div class="chart-container" id="statusChart">
-                            <div class="chart-placeholder">Chart will display here</div>
-                        </div>
-                    </div>
-
-                    <div class="chart-card">
-                        <div class="chart-title">
-                            <i class="fas fa-chart-line"></i> Submission Timeline
-                        </div>
-                        <div class="chart-container" id="timelineChart">
-                            <div class="chart-placeholder">Chart will display here</div>
-                        </div>
-                    </div>
-
-                    <div class="chart-card">
-                        <div class="chart-title">
-                            <i class="fas fa-users"></i> Accreditor Workload
-                        </div>
-                        <div class="chart-container" id="workloadChart">
-                            <div class="chart-placeholder">Chart will display here</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <!-- Activity Log Sub-Tab -->
@@ -200,8 +137,8 @@ function loadReportTypes() {
         },
         {
             id: 'section-compliance',
-            title: 'Section Compliance Report',
-            description: 'Complete list of all sections with submission and review status',
+            title: 'Accreditation Compliance Report',
+            description: 'Complete list of all accreditation items with submission and review status',
             icon: 'fa-list-check',
             formats: ['PDF', 'Excel']
         },

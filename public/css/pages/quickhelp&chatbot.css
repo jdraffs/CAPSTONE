@@ -128,8 +128,8 @@ form textarea {
   position: fixed;
   bottom: 30px;
   right: 30px;
-  width: 60px;
-  height: 60px;
+  width: 70px;
+  height: 70px;
   border-radius: 50%;
   background: linear-gradient(135deg, #8B0000 0%, #A52A2A 100%);
   border: none;
@@ -147,6 +147,11 @@ form textarea {
 #chatToggleBtn:hover {
   transform: scale(1.1);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  color: #ffcc00;
+}
+
+.fa-robot {
+  font-size: 30px;
 }
 
 /* Chatbox Container */
@@ -199,7 +204,7 @@ form textarea {
   background: rgba(255, 255, 255, 0.2);
 }
 
-.close-chat-btn .material-icons {
+.close-chat-btn {
   font-size: 24px;
 }
 

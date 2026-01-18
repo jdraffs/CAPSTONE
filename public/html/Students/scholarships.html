@@ -2,13 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-
+  <link rel="icon" type="image" href="/public/assets/images/PUPLogo.webp">scale=1.0"/>
   <title>Scholarship Opportunities - PUP Parañaque</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
   <link rel="stylesheet" href="/public/css/layout/navbar.css">
   <link rel="stylesheet" href="/public/css/pages/scholarships.css">
+  <link rel="stylesheet" href="/public/css/pages/quickhelp&chatbot.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="/public/css/layout/footer.css">
-  <link rel="icon" type="image" href="/public/assets/images/PUPLogo.webp">
 </head>
 <body>
 <!--NAVBAR-->
@@ -25,24 +27,22 @@
 
         <hr class="hr1">
         <!--Nav Items-->
-        <ul class="nav-menu">
-          <li class="nav-item">
-            <a href="index.html">Home</a>
-          </li>
-
-          <li class="nav-item dropdown-btn">
-              <a href="#about">About <span class="arrow">&#11206;</span></a>
-            <div class="dropdown-content">
-              <a href="./html/About/history.html">History</a>
-              <a href="./html/About/research&extension-public.html">Research & Extension</a>
-              <a href="./html/About/administrativeofficials.html">Administrative Officials</a>
-              <a href="./html/About/vicinitymap.html">Vicinity Map</a>
-            </div>
-          </li>
-
-          <li class="nav-item">
-            <a href="./html/Admission/admission.html">Admission</a>
-          </li>
+      <ul class="nav-menu">
+        <li class="nav-item">
+          <a href="/public/index.html">Home</a>
+        </li>
+        <li class="nav-item dropdown-btn">
+          <a href="#about">About <span class="arrow">&#11206;</span></a>
+          <div class="dropdown-content">
+            <a href="/public/html/About/history.html">History</a>
+            <a href="/public/html/About/research&extension-public.html">Research & Extension</a>
+            <a href="/public/html/About/administrativeofficials.html">Administrative Officials</a>
+            <a href="/public/html/About/vicinitymap.html">Maps</a>
+          </div>
+        </li>
+        <li class="nav-item">
+          <a href="/public/html/Admission/admission.html">Admission</a>
+        </li>
 
         <li class="nav-item dropdown-btn">
           <a href="/public/html/Students/students.html">Students <span class="arrow">&#11206;</span></a>
@@ -58,18 +58,21 @@
           </div>
         </li>
 
-          <li class="nav-item">
-            <a href="./html/CampusLife/campus-life.html">Campus Life</a>
-          </li>
+        <li class="nav-item">
+          <a href="/public/html/CampusLife/campus-life.html">Campus Life</a>
+        </li>
 
         <li class="nav-item">
           <a href="/public/html/Alumni&Services/alumni-survey.html">Alumni & Services</a>
+          <a href="/public/html/Alumni&Services/alumni.html">Alumni & Services</a>
         </li>
 
-          <li class="nav-item">
-            <a href="./html/Contact&Support/QuickHelp&Chatbot.html">Contact/Support</a>
-          </li>
-        </ul>
+        <li class="nav-item">
+          <a href="/public/html/Contact&Support/QuickHelp&Chatbot.html">Contact/Support</a>
+        </li>
+          </div>
+        </div>
+      </ul>
         <!--HAMBURGER AND SEARCH-->
         <div class="search-hamburger">
           <div class="hamburger">
@@ -200,6 +203,41 @@
         </div>
       </div>
     </section>
+        <section class="chatbotSection">
+      <!-- Chatbot Button -->
+      <button id="chatToggleBtn">
+        <i class="fa-solid fa-robot"></i>
+      </button>
+      
+      <!-- Chatbox -->
+      <div id="chatbox">
+        <div id="chatHeader">PUP Parañaque Assistant</div>
+        <div id="chatMessages">
+          <div class="message assistant">
+            <strong>Assistant</strong> <span class="timestamp" id="timeStamp"></span><br>
+            Welcome to PUP Parañaque chatbot! How can I help you today?
+          </div>
+        </div>
+      
+        <div id="commonQuestions">
+          <p>Common questions:</p>
+          <div>
+            <button class="question-button">What programs are offered at PUP Parañaque?</button>
+            <button class="question-button">How do I apply for admission?</button>
+            <button class="question-button">What are the tuition fees?</button>
+            <button class="question-button">Where is the campus located?</button>
+            <button class="question-button">What are the requirements for enrollment?</button>
+          </div>
+        </div>
+      
+        <div id="chatInput">
+          <input type="text" id="chatText" placeholder="Enter your questions here..."/>
+          <button onclick="sendMessage()">
+            <span class="material-icons-outlined">send</span>
+          </button>
+        </div>
+      </div>
+    </section>
   </main>
 
   <!-- Scholarship Detail Modal -->
@@ -284,5 +322,6 @@
   <!-- SCRIPTS -->
   <script src="/public/js/navbar.js"></script>
   <script src="/public/js/scholarships.js"></script>
+  <script src="/public/js/quickhelp&chatbot.js"></script>
 </body>
 </html>

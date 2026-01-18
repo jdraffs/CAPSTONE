@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Manager - Dashboard</title>
+    <link rel="icon" type="image" href="/public/assets/images/PUPLogo.webp">
+    <link rel="stylesheet" href="/private/css/pages/cmoDashboard.css">
+    <link rel="stylesheet" href="/private/css/layout/dashboardsidebar.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!--SIDEBAR-->
+    <section class="sidebar">
+        <div class="logo">
+            <img class="logoimage" src="/public/assets/images/PUPLogo.webp" alt="PUP Logo">
+            <div class="logotitlewrap">
+                <h2 class="logotitle logotitle1">PUP</h2>
+                <h2 class="logotitle">Parañaque</h2>
+            </div>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <nav class="sidebar-nav">
+            <div class="sidebar-scroll">
+                <div class="nav-section">
+                    <h3 class="nav-title">Main</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item active">
+                            <a class="nav-link" href="/private/html/adminPages/adminCMO/adminCMO.html">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <h3 class="nav-title">Management</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/adminCMO/news-management.html">
+                                <i class="fa-solid fa-newspaper"></i>
+                                <span>News & Updates</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-details">
+                        <span class="user-name">Admin CMO</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </section>
+
+    <!--MAIN CONTENT-->
+    <main class="main">
+        <!--HEADER-->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <h1 class="page-title">Dashboard</h1>
+            </div>
+            <div class="header-right">
+                <div class="notification-button">
+                    <a class="notif-link" href="#notifications">
+                        <i class="fa fa-bell" aria-hidden="true"></i>
+                        <span class="notification-badge" id="notificationBadge">0</span>
+                    </a>
+                </div>
+                <div class="profile-button">
+                    <a class="profile-link">
+                        <i class="fa fa-user" aria-hidden="true"></i>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!--DASHBOARD CONTENT-->
+        <div class="dashboard-content">
+            <!-- Welcome Section -->
+            <section class="welcome-section">
+                <div class="welcome-content">
+                    <h1 class="welcome-title">Welcome back, <span>Admin CMO</span>!</h1>
+                    <p class="welcome-subtitle">Communications & Marketing Office Overview</p>
+                    <div class="datetime-display">
+                        <i class="far fa-clock"></i>
+                        <span id="currentDateTime">Loading...</span>
+                    </div>
+                </div>
+                <div class="system-status">
+                    <div class="status-indicator" id="systemStatus">
+                        <div class="status-dot operational"></div>
+                        <div class="status-text">
+                            <span class="status-label">System Status</span>
+                            <span class="status-value">Operational</span>
+                        </div>
+                    </div>
+                    <div class="last-sync">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Last sync: <span id="lastSync">Just now</span></span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Key Metrics Cards -->
+            <section class="metrics-section">
+                <div class="metrics-grid">
+                    <!-- Total News -->
+                    <div class="metric-card gradient-blue">
+                        <div class="metric-icon">
+                            <i class="fas fa-newspaper"></i>
+                        </div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="totalNews">
+                                <div class="skeleton-loader"></div>
+                            </div>
+                            <div class="metric-label">Total Articles</div>
+                            <div class="metric-subtext">All-time posts</div>
+                        </div>
+                    </div>
+
+                    <!-- Published News -->
+                    <div class="metric-card gradient-green">
+                        <div class="metric-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="publishedNews">
+                                <div class="skeleton-loader"></div>
+                            </div>
+                            <div class="metric-label">Published</div>
+                            <div class="metric-subtext">Live on site</div>
+                        </div>
+                    </div>
+
+                    <!-- This Month -->
+                    <div class="metric-card gradient-purple">
+                        <div class="metric-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="recentNews">
+                                <div class="skeleton-loader"></div>
+                            </div>
+                            <div class="metric-label">This Month</div>
+                            <div class="metric-subtext">Recent articles</div>
+                        </div>
+                    </div>
+
+                    <!-- Trashed -->
+                    <div class="metric-card gradient-orange">
+                        <div class="metric-icon">
+                            <i class="fas fa-trash"></i>
+                        </div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="trashedNews">
+                                <div class="skeleton-loader"></div>
+                            </div>
+                            <div class="metric-label">In Trash</div>
+                            <div class="metric-subtext">Deleted items</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Two Column Layout -->
+            <div class="content-columns">
+                <!-- Left Column -->
+                <div class="left-column">
+                    <!-- Recent News Articles -->
+                    <section class="insights-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-newspaper"></i> Recent Articles</h3>
+                            <a href="/private/html/adminPages/adminCMO/news-management.html" class="view-all-btn">View All</a>
+                        </div>
+                        <div class="card-body">
+                            <div class="recent-news-list" id="recentNewsGrid">
+                                <div class="skeleton-activity">
+                                    <div class="skeleton-loader"></div>
+                                    <div class="skeleton-loader"></div>
+                                    <div class="skeleton-loader"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Publishing Insights -->
+                    <section class="insights-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-chart-line"></i> Publishing Insights</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="insight-item">
+                                <div class="insight-icon trending" id="trendIcon">
+                                    <i class="fas fa-arrow-up"></i>
+                                </div>
+                                <div class="insight-content">
+                                    <div class="insight-label">Publishing Trend</div>
+                                    <div class="insight-value" id="publishingTrend">Loading...</div>
+                                </div>
+                            </div>
+
+                            <div class="insight-item">
+                                <div class="insight-icon">
+                                    <i class="fas fa-calendar"></i>
+                                </div>
+                                <div class="insight-content">
+                                    <div class="insight-label">Last Published</div>
+                                    <div class="insight-value" id="lastPublishedTime">No recent posts</div>
+                                </div>
+                            </div>
+
+                            <div class="insight-message" id="publishingInsight">
+                                <i class="fas fa-lightbulb"></i>
+                                <p>Analyzing publishing patterns...</p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Right Column -->
+                <div class="right-column">
+                    <!-- Quick Actions -->
+                    <section class="quick-actions-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="actions-grid">
+                                <button class="action-button green" onclick="window.location.href='/private/html/adminPages/adminCMO/news-management.html'">
+                                    <i class="fas fa-plus"></i>
+                                    <span>Create News</span>
+                                </button>
+                                <button class="action-button blue" onclick="window.location.href='/private/html/adminPages/adminCMO/news-management.html'">
+                                    <i class="fas fa-edit"></i>
+                                    <span>Manage Posts</span>
+                                </button>
+                                <button class="action-button purple" onclick="window.location.href='/private/html/adminPages/adminCMO/news-management.html'">
+                                    <i class="fas fa-eye"></i>
+                                    <span>View Published</span>
+                                </button>
+                                <button class="action-button orange" onclick="window.location.href='/private/html/adminPages/adminCMO/news-management.html'">
+                                    <i class="fas fa-trash-restore"></i>
+                                    <span>Restore Deleted</span>
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- System Notifications -->
+                    <section class="notifications-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-bell"></i> System Alerts</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="notifications-list" id="notificationsList">
+                                <div class="notification-item success">
+                                    <div class="notification-icon">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                    <div class="notification-content">
+                                        <div class="notification-title">System Healthy</div>
+                                        <div class="notification-message">All systems operational</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- SCRIPTS -->
+    <script src="/private/js/admin/profileFunction.js"></script>
+    <script src="/private/js/admin/adminCMO/cmoDashboard.js"></script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 /* feedbackDashboard.css - Service Feedback Dashboard */
 
 .dashboard-content {
-  padding: 30px;
+  margin: 30px;
   background: #f5f7fa;
   min-height: 100vh;
 }

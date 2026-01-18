@@ -4,12 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>PUP Parañaque</title>
+  <link rel="icon" type="image" href="./assets/images/PUPLogo.webp">
   <link rel="stylesheet" href="css/pages/home.css" />
   <link rel="stylesheet" href="css/layout/navbarhome.css">
   <link rel="stylesheet" href="css/layout/news.css">
+  <link rel="stylesheet" href="/public/css/pages/quickhelp&chatbot.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="css/layout/footer.css">
-  <link rel="icon" type="image" href="./assets/images/PUPLogo.webp">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
 </head>
@@ -58,6 +60,7 @@
             <a href="/public/html/Students/certificate-request.html">Digital Certificate Request</a>
             <a href="https://pupsinta.freshservice.com/support/home">PUP Sinta</a>
             <a href="https://sis8.pup.edu.ph/student/">PUP Student Portal</a>
+            <a href="/public/html/Students/certificate-request.html">Digital Certificate Request</a>
           </div>
         </li>
 
@@ -227,11 +230,48 @@
     <!-- News Section -->
     <section class="news-section">
       <div class="container" data-aos="fade-up">
-          <h2 class="section-title">News and Updates</h2>
-          <hr style="width: 90px; border: 1px solid black; margin:auto; margin-bottom: 50px;">
+        <h2 class="section-title">News and Updates</h2>
+        <hr style="width: 90px; border: 2px solid black; margin:auto; margin-bottom: 50px;">
         <div id="news-grid" class="news-grid"></div>
         <div class="view-more">
-          <a href="#" class="button">View All News</a>
+          <div class="view-more">
+            <a href="/public/html/News/all-news.html" class="button">View All News</a>
+          </div>
+        </div>
+      </div>
+    </section>
+        <section class="chatbotSection">
+      <!-- Chatbot Button -->
+      <button id="chatToggleBtn">
+        <i class="fa-solid fa-robot"></i>
+      </button>
+      
+      <!-- Chatbox -->
+      <div id="chatbox">
+        <div id="chatHeader">PUP Parañaque Assistant</div>
+        <div id="chatMessages">
+          <div class="message assistant">
+            <strong>Assistant</strong> <span class="timestamp" id="timeStamp"></span><br>
+            Welcome to PUP Parañaque chatbot! How can I help you today?
+          </div>
+        </div>
+      
+        <div id="commonQuestions">
+          <p>Common questions:</p>
+          <div>
+            <button class="question-button">What programs are offered at PUP Parañaque?</button>
+            <button class="question-button">How do I apply for admission?</button>
+            <button class="question-button">What are the tuition fees?</button>
+            <button class="question-button">Where is the campus located?</button>
+            <button class="question-button">What are the requirements for enrollment?</button>
+          </div>
+        </div>
+      
+        <div id="chatInput">
+          <input type="text" id="chatText" placeholder="Enter your questions here..."/>
+          <button onclick="sendMessage()">
+            <span class="material-icons-outlined">send</span>
+          </button>
         </div>
       </div>
     </section>
@@ -309,6 +349,7 @@
   <script src="js/navbar.js"></script>
   <script src="js/news.js"></script>
   <script src="js/glance.js"></script>
+  <script src="/public/js/quickhelp&chatbot.js"></script>
   <!-- AOS JS -->
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
     <script>
