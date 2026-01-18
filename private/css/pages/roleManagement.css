@@ -673,24 +673,6 @@
   border-radius: 8px;
 }
 
-.user-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-}
-
-.user-info .user-name {
-  font-weight: 600;
-  color: #2d3748;
-  font-size: 0.95rem;
-}
-
 .user-info .user-email {
   font-size: 0.85rem;
   color: #718096;

@@ -449,4 +449,7 @@ async function loadScholarships() {
   }
 }
 
-window.addEventListener('DOMContentLoaded', loadScholarships);
+window.addEventListener('DOMContentLoaded', () => {
+  loadScholarships();
+  initializeProfileDropdown();
+});

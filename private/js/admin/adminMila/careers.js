@@ -312,4 +312,5 @@ function editOrganization(org) {
 
 window.addEventListener('DOMContentLoaded', () => {
   loadOrganizations();
+  initializeProfileDropdown();
 });
