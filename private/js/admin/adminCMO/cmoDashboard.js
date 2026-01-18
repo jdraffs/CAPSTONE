@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadDashboardStats();
   updateLastSync();
   setInterval(updateLastSync, 60000);
+  initializeProfileDropdown();
 });
 
 // Update date and time

@@ -641,3 +641,4 @@ function extractTextPreview(htmlContent, maxLength = 200) {
 }
 
 window.addEventListener('DOMContentLoaded', loadPosts);
+  initializeProfileDropdown();
