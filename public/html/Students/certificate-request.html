@@ -6,6 +6,8 @@
     <title>Digital Certificate Request | PUP Parañaque</title>
     <link rel="stylesheet" href="/public/css/pages/certificate-request.css">
     <link rel="stylesheet" href="/public/css/layout/navbar.css">
+    <link rel="stylesheet" href="/public/css/pages/quickhelp&chatbot.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="/public/css/layout/footer.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -280,6 +282,41 @@
                 </div>
             </div>
         </div>
+            <section class="chatbotSection">
+      <!-- Chatbot Button -->
+      <button id="chatToggleBtn">
+        <i class="fa-solid fa-robot"></i>
+      </button>
+      
+      <!-- Chatbox -->
+      <div id="chatbox">
+        <div id="chatHeader">PUP Parañaque Assistant</div>
+        <div id="chatMessages">
+          <div class="message assistant">
+            <strong>Assistant</strong> <span class="timestamp" id="timeStamp"></span><br>
+            Welcome to PUP Parañaque chatbot! How can I help you today?
+          </div>
+        </div>
+      
+        <div id="commonQuestions">
+          <p>Common questions:</p>
+          <div>
+            <button class="question-button">What programs are offered at PUP Parañaque?</button>
+            <button class="question-button">How do I apply for admission?</button>
+            <button class="question-button">What are the tuition fees?</button>
+            <button class="question-button">Where is the campus located?</button>
+            <button class="question-button">What are the requirements for enrollment?</button>
+          </div>
+        </div>
+      
+        <div id="chatInput">
+          <input type="text" id="chatText" placeholder="Enter your questions here..."/>
+          <button onclick="sendMessage()">
+            <span class="material-icons-outlined">send</span>
+          </button>
+        </div>
+      </div>
+    </section>
     </main>
 
     <!-- Success Modal -->
@@ -373,5 +410,6 @@
     </footer>
 
     <script src="/public/js/certificate-request.js"></script>
+    <script src="/public/js/quickhelp&chatbot.js"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-// /public/js/news.js - Medium-style news display (matches research&extension)
+// /public/js/news.js - Homepage news display (shows first 3 articles)
 const newsGrid = document.getElementById('news-grid');
 
 // Extract text preview from HTML content
@@ -150,6 +150,12 @@ async function loadNews() {
 
         newsGrid.appendChild(newsCard);
       });
+
+      // Update "View All News" button link
+      const viewAllBtn = document.querySelector('.view-more .button');
+      if (viewAllBtn) {
+        viewAllBtn.href = '/public/html/News/all-news.html';
+      }
     } else {
       newsGrid.innerHTML = `
         <div class="news-empty">
