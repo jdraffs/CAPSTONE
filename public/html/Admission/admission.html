@@ -104,11 +104,11 @@
           <p class="hero-text" data-aos="fade-in">Welcome to the Polytechnic University of the Philippines Parañaque Campus Admission Page. 
             Here, you will find all the information you need to apply and become a part of our vibrant academic community.</p>
           <section class="hero-buttons">
-            <button class="hero-button" onclick="location.href='#'">How to apply</button>
+            <button class="hero-button" onclick="openModal('howToApply')">How to apply</button>
             <div class="vl"></div>
-            <button class="hero-button" onclick="location.href='#'">Pup iApply</button>
+            <button class="hero-button" onclick="openModal('iApply')">Pup iApply</button>
             <div class="vl"></div>
-            <button class="hero-button" onclick="location.href='#'">Courses Offered</button>
+            <button class="hero-button" onclick="openModal('courses')">Courses Offered</button>
         </div>
       </section>
 
@@ -123,7 +123,7 @@
                 <section class="text-container">
                   <div class="text-button-wrap">
                     <p class="content-text" data-aos="fade-right">Ready to become part of the vibrant community at PUP Parañaque? <br><br>We’re excited to welcome aspiring students who are driven, passionate, and eager to grow. Learn about the qualifications you need, the documents to prepare, and the steps to take to begin your academic journey with us. Your future at PUP starts here.</p>
-                    <button class="more-info" href="">Learn More</button>
+                    <button class="more-info" onclick="openModal('howToApply')">Learn More</button>
                     </div>
                 </section>
             </section>
@@ -132,7 +132,7 @@
                 <section class="text-container">
                   <div class="text-button-wrap1">
                     <p class="content-text" data-aos="fade-right">Online registration for various University admission evaluation and entrance exams.<br><br> PUP iApply enable applicants to register for University college admission evaluation and entrance exams. Online application for PUPCET is for the First Semester only.</p>
-                    <button class="more-info" href="">Learn More</button>
+                    <button class="more-info" onclick="openModal('iApply')">Learn More</button>
                   </div>
                 </section>
                 <div class="vl1"></div>
@@ -151,10 +151,21 @@
                 <section class="text-container">
                   <div class="text-button-wrap">
                     <p class="content-text" data-aos="fade-right">Pursue your academic goals with the diverse range of programs offered at PUP Parañaque. Our courses are designed to equip students with practical skills, critical thinking, and a strong foundation for their future careers. Explore the paths that can shape your journey toward excellence and meaningful impact.</p>
-                    <button class="more-info" href="#">Learn More</button>
+                    <button class="more-info" onclick="openModal('courses')">Learn More</button>
                     </div>
                 </section>
             </section>
+            <!-- Admission Modal -->
+            <div id="admissionModal" class="modal">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h2 id="modalTitle"></h2>
+                  <button class="close-btn" onclick="closeModal()">&times;</button>
+                </div>
+                <div class="modal-body" id="modalBody"></div>
+                <div class="modal-actions" id="modalActions"></div>
+              </div>
+            </div>
         </div>
 
         <ul class="social-links1">
@@ -243,6 +254,7 @@
   </div>
 
   <script src="/public/js/news.js"></script>
+  <script src="/public/js/admission.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
   <script>
     AOS.init({
