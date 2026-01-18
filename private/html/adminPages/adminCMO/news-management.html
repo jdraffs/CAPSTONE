@@ -1,0 +1,245 @@
+<!-- adminCMO.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Management - PUP Parañaque Admin</title>
+    <link rel="stylesheet" href="/private/css/pages/news-management.css">
+    <link rel="stylesheet" href="/private/css/layout/dashboardsidebar.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!--SIDEBAR-->
+    <section class="sidebar">
+        <div class="logo">
+            <img class="logoimage" src="/public/assets/images/PUPLogo.webp" alt="PUP Logo">
+            <div class="logotitlewrap">
+                <h2 class="logotitle logotitle1">PUP</h2>
+                <h2 class="logotitle">Parañaque</h2>
+            </div>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <nav class="sidebar-nav">
+            <div class="sidebar-scroll">
+                <div class="nav-section">
+                    <h3 class="nav-title">Main</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/adminCMO/adminCMO.html">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <h3 class="nav-title">Management</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item active">
+                            <a class="nav-link" href="/private/html/adminPages/adminCMO/news.html">
+                                <i class="fa-solid fa-newspaper"></i>
+                                <span>News & Updates</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-details">
+                        <span class="user-name">Admin CMO</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </section>
+
+    <!--MAIN CONTENT-->
+    <main class="main">
+        <!--TOP-->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <h1 class="page-title" id="pageTitle">News & Updates</h1>
+            </div>
+            <div class="header-right">
+                <div class="notification-button">
+                    <a class="notif-link" href="#notifications">
+                        <i class="fa fa-bell" aria-hidden="true"></i>
+                    </a>
+                </div>
+                <div class="profile-button">
+                    <a class="profile-link">
+                        <i class="fa fa-user" aria-hidden="true"></i>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!--DASHBOARD CONTENT-->
+        <div class="main-content" id="mainContent">
+            <div class="post-container">
+                <div class="post-feed" id="postFeed">
+                    <div class="post-placeholder">
+                        <i class="fa-solid fa-newspaper"></i>
+                        <h2>No news yet</h2>
+                        <p>Start writing your first news article.</p>
+                    </div>
+                </div>
+
+                <!-- Floating Post Button -->
+                <button class="post-btn" id="openPostModal">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+
+                <!-- Post Modal -->
+                <div class="post-modal" id="postModal">
+                    <div class="post-modal-content">
+                        <!-- Fixed Header -->
+                        <div class="post-modal-header">
+                            <h2>Write News Article</h2>
+                            <button class="close-modal-btn" id="closeModalBtn">
+                                <i class="fa-solid fa-times"></i>
+                            </button>
+                        </div>
+
+                        <!-- Scrollable Body -->
+                        <div class="post-modal-body">
+                            <!-- Title Input -->
+                            <input 
+                                type="text" 
+                                id="postTitle" 
+                                placeholder="News Title" 
+                                class="post-title" 
+                            />
+
+                            <!-- Thumbnail Upload Section -->
+                            <div class="thumbnail-section">
+                                <label class="thumbnail-label">
+                                    <i class="fa-solid fa-image"></i>
+                                    Thumbnail Image <span class="required">*</span>
+                                </label>
+                                
+                                <div class="thumbnail-upload-area" id="thumbnailUploadArea">
+                                    <input 
+                                        type="file" 
+                                        id="thumbnailInput" 
+                                        accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                                        style="display: none;"
+                                    />
+                                    <div class="thumbnail-placeholder" id="thumbnailPlaceholder">
+                                        <i class="fa-solid fa-cloud-upload-alt"></i>
+                                        <p>Click to upload thumbnail</p>
+                                        <span>JPG, PNG, WEBP or GIF (max 5MB)</span>
+                                    </div>
+                                    <div class="thumbnail-preview" id="thumbnailPreview" style="display: none;">
+                                        <img id="thumbnailImage" src="" alt="Thumbnail">
+                                        <div class="thumbnail-overlay">
+                                            <button type="button" class="thumbnail-change-btn" id="changeThumbnailBtn">
+                                                <i class="fa-solid fa-camera"></i> Change
+                                            </button>
+                                            <button type="button" class="thumbnail-remove-btn" id="removeThumbnailBtn">
+                                                <i class="fa-solid fa-trash"></i> Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="thumbnail-hint">This image will be displayed as the news preview</p>
+                            </div>
+
+                            <!-- Rich Text Editor -->
+                            <div class="editor-section">
+                                <label class="editor-label">
+                                    <i class="fa-solid fa-pen"></i>
+                                    News Content
+                                </label>
+                                
+                                <!-- Toolbar -->
+                                <div class="post-toolbar">
+                                    <button type="button" data-command="bold" title="Bold">
+                                        <i class="fa-solid fa-bold"></i>
+                                    </button>
+                                    <button type="button" data-command="italic" title="Italic">
+                                        <i class="fa-solid fa-italic"></i>
+                                    </button>
+                                    <button type="button" data-command="underline" title="Underline">
+                                        <i class="fa-solid fa-underline"></i>
+                                    </button>
+                                    <button type="button" data-command="highlight" title="Highlight">
+                                        <i class="fa-solid fa-highlighter"></i>
+                                    </button>
+                                    <select id="fontSize" title="Font Size">
+                                        <option value="3">Normal</option>
+                                        <option value="4">Large</option>
+                                        <option value="5">Larger</option>
+                                        <option value="6">Huge</option>
+                                    </select>
+                                </div>
+
+                                <!-- Rich Text Area -->
+                                <div 
+                                    id="postText" 
+                                    class="post-editor" 
+                                    contenteditable="true" 
+                                    placeholder="Write your news story..."
+                                ></div>
+                            </div>
+                        </div>
+
+                        <!-- Fixed Footer -->
+                        <div class="post-modal-footer">
+                            <button type="button" id="cancelPost" class="btn-cancel">Cancel</button>
+                            <button type="button" id="submitPost" class="btn-submit">Publish News</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trash Modal -->
+        <div class="trash-modal" id="trashModal" style="display: none;">
+            <div class="trash-modal-content">
+                <div class="trash-modal-header">
+                    <h2><i class="fa fa-trash"></i> Trash</h2>
+                    <button class="close-trash-btn" id="closeTrashBtn">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="trash-modal-body">
+                    <div class="trash-actions">
+                        <p class="trash-info">
+                            <i class="fa fa-info-circle"></i>
+                            Items in trash will be kept for 30 days before automatic deletion
+                        </p>
+                        <button class="empty-trash-btn" id="emptyTrashBtn">
+                            <i class="fa fa-trash-alt"></i> Empty Trash
+                        </button>
+                    </div>
+                    
+                    <div class="trash-items" id="trashItems">
+                        <!-- Trash items will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trash Button -->
+        <button class="trash-btn" id="openTrashBtn" title="View Trash">
+            <i class="fa fa-trash"></i>
+        </button>
+    </main>
+
+    <!-- SCRIPTS -->
+    <script src="/private/js/admin/profileFunction.js"></script>
+    <script src="/private/js/admin/adminCMO/news-management.js"></script>
+</body>
+</html>

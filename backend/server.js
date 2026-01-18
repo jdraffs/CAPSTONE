@@ -33,7 +33,7 @@ import accreditationRoute from './routes/accreditationRoute.js';
 import scholarshipRoutes from './routes/scholarshipRoutes.js';
 import careerRoutes from './routes/careerRoutes.js';
 import certificateRequestRoute from './routes/certificateRequestRoute.js';
-
+import newsRoute from './routes/newsRoute.js';
 // initialize 
 dotenv.config();
 const app = express();
@@ -70,6 +70,7 @@ app.use('/api', accreditationRoute);
 app.use('/api/scholarships', scholarshipRoutes);
 app.use('/api/career', careerRoutes);
 app.use('/api/certificate-requests', certificateRequestRoute);
+app.use('/api/news', newsRoute);
 
 // SINGLE /api/files/data endpoint with trash support
 app.get("/api/files/data", async (req, res) => {
