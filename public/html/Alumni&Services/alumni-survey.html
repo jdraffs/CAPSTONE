@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Alumni Employment Survey - PUP Parañaque</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="/public/css/layout/navbar.css">
+  <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+  <link rel="stylesheet" href="/public/css/layout/footer.css">
+  <link rel="stylesheet" href="/public/css/pages/alumni-survey.css">
+  <link rel="icon" type="image" href="/public/assets/images/PUPLogo.webp">
+</head>
+<body>
+<!--NAVBAR-->
+  <header>
+    <nav id="navbar" class="navbar">
+      <!--Logo and Title-->
+        <div class="logo">
+            <img class="logoimage" src="./assets/images/PUPLogo.webp" alt="PUP logo" />
+          <div class="logotitlewrap">
+            <h1 class="logotitle">Polytechnic University of the Philippines</h1>
+            <h2 class="logotitle2">PARAÑAQUE CAMPUS</h2>
+          </div>
+        </div>
+
+        <hr class="hr1">
+        <!--Nav Items-->
+        <ul class="nav-menu">
+          <li class="nav-item">
+            <a href="index.html">Home</a>
+          </li>
+
+          <li class="nav-item dropdown-btn">
+              <a href="#about">About <span class="arrow">&#11206;</span></a>
+            <div class="dropdown-content">
+              <a href="./html/About/history.html">History</a>
+              <a href="./html/About/research&extension-public.html">Research & Extension</a>
+              <a href="./html/About/administrativeofficials.html">Administrative Officials</a>
+              <a href="./html/About/vicinitymap.html">Vicinity Map</a>
+            </div>
+          </li>
+
+          <li class="nav-item">
+            <a href="./html/Admission/admission.html">Admission</a>
+          </li>
+
+        <li class="nav-item dropdown-btn">
+          <a href="/public/html/Students/students.html">Students <span class="arrow">&#11206;</span></a>
+          <div class="dropdown-content">
+            <a href="/public/html/Students/nstp-public.html">NSTP Announcements</a>
+            <a href="/public/html/Students/ojt-public.html">OJT Announcements</a>
+            <a href="/public/html/Students/feedback.html">Service Feedback</a>
+            <a href="/public/html/Students/scholarships.html">Scholarship Opportunities</a>
+            <a href="/public/html/Students/careers.html">Career & Job Placement</a>
+            <a href="/public/html/Students/certificate-request.html">Digital Certificate Request</a>
+            <a href="https://pupsinta.freshservice.com/support/home">PUP Sinta</a>
+            <a href="https://sis8.pup.edu.ph/student/">PUP Student Portal</a>
+          </div>
+        </li>
+
+          <li class="nav-item">
+            <a href="./html/CampusLife/campus-life.html">Campus Life</a>
+          </li>
+
+        <li class="nav-item">
+          <a href="/public/html/Alumni&Services/alumni-survey.html">Alumni & Services</a>
+        </li>
+
+          <li class="nav-item">
+            <a href="./html/Contact&Support/QuickHelp&Chatbot.html">Contact/Support</a>
+          </li>
+        </ul>
+        <!--HAMBURGER AND SEARCH-->
+        <div class="search-hamburger">
+          <div class="hamburger">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+          </div>
+
+          <div class="search-bar">
+            <form class="search" action="/public/index.html">
+              <input type="text" placeholder="Search" name="search" class="searchbox">
+              <button type="submit" class="searchbutton"><i class="fa fa-search"></i></button>
+            </form>
+          </div>
+        </div>
+    </nav>
+  </header>
+
+  <main class="main">
+    <!-- Hero Section -->
+    <section class="hero-section" style="background-image: url('/public/assets/images/buttonimage/alumni.jpg');">
+      <div class="hero-content">
+        <h1 class="hero-title" data-aos="fade-in">Alumni Employment Survey</h1>
+        <hr class="hero-divider">
+        <p class="hero-text" data-aos="fade-in">
+          We invite our valued alumni to participate in this employment survey. Your responses will provide important insights that will help the university better understand career trends, employment outcomes, and the professional journeys of our graduates, ultimately guiding future programs and initiatives.
+        </p>
+      </div>
+    </section>
+
+    <div class="survey-container">
+      <!-- Survey Form -->
+      <div class="survey-form-card" id="surveyFormCard">
+        <div class="form-intro">
+          <i class="fa-solid fa-clipboard-list"></i>
+          <h2>Help Us Track Your Career Progress</h2>
+          <p>This survey takes less than 2 minutes to complete. Your information helps us improve our programs and meet institutional reporting requirements.</p>
+        </div>
+
+        <div class="form-container">
+          <div class="form-group">
+            <label for="fullName">
+              Full Name <span class="required">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="fullName" 
+              placeholder="e.g., Juan Gabriel Dela Cruz"
+              required
+            >
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="batch">
+                Graduation Year <span class="required">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="batch" 
+                placeholder="e.g., 2023"
+                required
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="program">
+                Program / Course <span class="required">*</span>
+              </label>
+              <select id="program" required>
+                <option value="">Select your program</option>
+                <option value="BSIT">BSIT - BS Information Technology</option>
+                <option value="BSCE">BSCE - BS Civil Engineering</option>
+                <option value="BSOA">BSOA - BS Office Administration</option>
+                <option value="BSHM">BSHM - BS Hospitality Management</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>
+              Current Employment Status <span class="required">*</span>
+            </label>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" name="employmentStatus" value="Employed" required>
+                <span class="radio-label">
+                  <i class="fa-solid fa-briefcase"></i>
+                  Employed
+                </span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="employmentStatus" value="Self-Employed" required>
+                <span class="radio-label">
+                  <i class="fa-solid fa-user-tie"></i>
+                  Self-Employed / Business Owner
+                </span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="employmentStatus" value="Unemployed" required>
+                <span class="radio-label">
+                  <i class="fa-solid fa-user-slash"></i>
+                  Unemployed
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Employment Details (Hidden by default) -->
+          <div id="employmentDetails" style="display: none;">
+            <div class="form-group">
+              <label for="workType">
+                Type of Work <span class="optional">(Optional)</span>
+              </label>
+              <input 
+                type="text" 
+                id="workType" 
+                placeholder="e.g., Software Engineer, Business Owner"
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="timeline">
+                How long after graduation did you find employment?
+              </label>
+              <select id="timeline">
+                <option value="">Select timeline</option>
+                <option value="Within 3 months">Within 3 months</option>
+                <option value="Within 6 months">Within 6 months</option>
+                <option value="Within 1 year">Within 1 year</option>
+                <option value="More than 1 year">More than 1 year</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-notice">
+            <i class="fa-solid fa-shield-alt"></i>
+            <p><strong>Privacy Notice:</strong> Your information will be used solely for institutional reporting and program improvement. We respect your privacy.</p>
+          </div>
+
+          <button type="button" class="submit-btn" id="submitBtn">
+            <i class="fa-solid fa-paper-plane"></i>
+            Submit Response
+          </button>
+        </div>
+      </div>
+
+      <!-- Success Message (Hidden by default) -->
+      <div class="success-card" id="successCard" style="display: none;">
+        <div class="success-icon">
+          <i class="fa-solid fa-check-circle"></i>
+        </div>
+        <h2>Thank You!</h2>
+        <p>Your response has been successfully submitted. We appreciate your participation in helping us track alumni career progress.</p>
+        <button class="back-btn" onclick="window.location.href='/public/index.html'">
+          <i class="fa-solid fa-home"></i>
+          Back to Homepage
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <div class="footer-box">
+    <footer class="footer">
+      <div class="footer-container">
+        <div class="footer-section">
+          <div class="logo-wrapper">
+            <img src="/public/assets/images/PUPLogo.webp" alt="PUP logo" class="logo-img">
+            <div class="logo-text">
+              <p class="logo-name">Polytechnic University of the Philippines</p>
+              <p class="logo-branch">PARAÑAQUE CAMPUS</p>
+            </div>
+          </div>
+          <p class="footer-desc">
+            PUP Parañaque recognizes the vital contributions of its faculty and staff in delivering quality 
+            education and services to its students and the community.
+          </p>
+          <div class="social-links">
+            <a href="#" aria-label="Facebook"><i class="fas fa-lightbulb"></i></a>
+            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+            <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#" aria-label="Globe"><i class="fas fa-globe"></i></a>
+          </div>
+        </div>
+
+        <div class="footer-section">
+          <h3>Quick Links</h3>
+          <ul class="footer-links">
+            <li><a href="/public/index.html">Home</a></li>
+            <li><a href="/public/html/About/history.html">About</a></li>
+            <li><a href="#">Programs</a></li>
+            <li><a href="/public/html/Admission/admission.html">Admission</a></li>
+            <li><a href="#">Extension Services</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h3>Resources</h3>
+          <ul class="footer-links">
+            <li><a href="#">Forms</a></li>
+            <li><a href="#">Academic Calendar</a></li>
+            <li><a href="#">Faculty Resources</a></li>
+            <li><a href="#">Staff Resources</a></li>
+            <li><a href="#">University Policies</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h3>Contact</h3>
+          <p class="contact-text">
+            <a href="#" class="contact-link">
+              PUP Parañaque Campus<br/>
+              Col. E. De Leon St. Wawa, Brgy. Sto. Niño<br/>
+              Parañaque City, Philippines 1700,
+            </a><br/>
+            Metro Manila
+          </p>
+          <p class="contact-info"><i class="fas fa-phone-alt"></i> (63 2) 553-8623</p>
+          <p class="contact-info"><i class="fas fa-envelope"></i> <a href="mailto:paranaque@pup.edu.ph">paranaque@pup.edu.ph</a></p>
+        </div>
+      </div>
+
+      <hr class="footer-divider" />
+      <p class="footer-copy">© 2025 Polytechnic University of the Philippines Parañaque Campus. All rights reserved.</p>
+    </footer>
+  </div>
+
+  <script src="/public/js/navbar.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+  <script>
+    AOS.init({
+      duration: 1000,
+      once: true
+    });
+
+    // Employment Survey Form Functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const employmentStatusRadios = document.querySelectorAll('input[name="employmentStatus"]');
+      const employmentDetails = document.getElementById('employmentDetails');
+      const submitBtn = document.getElementById('submitBtn');
+      const surveyFormCard = document.getElementById('surveyFormCard');
+      const successCard = document.getElementById('successCard');
+      const fullNameInput = document.getElementById('fullName');
+      const batchInput = document.getElementById('batch');
+      const programSelect = document.getElementById('program');
+      const workTypeInput = document.getElementById('workType');
+      const timelineSelect = document.getElementById('timeline');
+
+      // Show/hide employment details based on status
+      employmentStatusRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+          const status = this.value;
+          
+          if (status === 'Employed' || status === 'Self-Employed') {
+            employmentDetails.style.display = 'block';
+            setTimeout(() => {
+              employmentDetails.style.maxHeight = '500px';
+              employmentDetails.style.opacity = '1';
+            }, 10);
+            
+            setTimeout(() => {
+              employmentDetails.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+          } else {
+            employmentDetails.style.maxHeight = '0';
+            employmentDetails.style.opacity = '0';
+            
+            setTimeout(() => {
+              employmentDetails.style.display = 'none';
+            }, 400);
+            
+            if (workTypeInput) workTypeInput.value = '';
+            if (timelineSelect) timelineSelect.value = '';
+          }
+        });
+      });
+
+      // Validate form
+      function validateForm() {
+        const fullName = fullNameInput.value.trim();
+        const batch = batchInput.value.trim();
+        const program = programSelect.value;
+        const employmentStatus = document.querySelector('input[name="employmentStatus"]:checked');
+
+        if (!fullName) {
+          alert('Please enter your full name');
+          fullNameInput.focus();
+          return false;
+        }
+
+        if (!batch) {
+          alert('Please enter your graduation year');
+          batchInput.focus();
+          return false;
+        }
+
+        if (!/^\d{4}$/.test(batch)) {
+          alert('Please enter a valid 4-digit graduation year (e.g., 2023)');
+          batchInput.focus();
+          return false;
+        }
+
+        const year = parseInt(batch);
+        const currentYear = new Date().getFullYear();
+        if (year < 2000 || year > currentYear + 1) {
+          alert(`Please enter a graduation year between 2000 and ${currentYear + 1}`);
+          batchInput.focus();
+          return false;
+        }
+
+        if (!program) {
+          alert('Please select your program/course');
+          programSelect.focus();
+          return false;
+        }
+
+        if (!employmentStatus) {
+          alert('Please select your current employment status');
+          return false;
+        }
+
+        return true;
+      }
+
+      // Handle submit
+      submitBtn.addEventListener('click', async function() {
+        if (!validateForm()) {
+          return;
+        }
+
+        const formData = {
+          full_name: fullNameInput.value.trim(),
+          batch: batchInput.value.trim(),
+          program: programSelect.value,
+          employment_status: document.querySelector('input[name="employmentStatus"]:checked').value,
+          work_type: workTypeInput.value.trim() || null,
+          employment_timeline: timelineSelect.value || null
+        };
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
+
+        try {
+          const response = await fetch('http://localhost:3000/api/alumni-employment/submit', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            surveyFormCard.style.display = 'none';
+            successCard.style.display = 'block';
+            
+            setTimeout(() => {
+              successCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+          } else {
+            alert(data.message || 'Failed to submit response. Please try again.');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Response';
+          }
+        } catch (error) {
+          console.error('Error submitting survey:', error);
+          alert('An error occurred while submitting your response. Please check your connection and try again.');
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Response';
+        }
+      });
+
+      // Enter key on inputs
+      [fullNameInput, batchInput].forEach(input => {
+        if (input) {
+          input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              submitBtn.click();
+            }
+          });
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,18 +1,14 @@
-<!-- research&extension-public.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Research & Extension - PUP Paranaque</title>
-  <link rel="icon" type="image" href="/public/assets/images/PUPLogo.webp">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <title>Career & Job Placement - PUP Parañaque</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
   <link rel="stylesheet" href="/public/css/layout/navbar.css">
-  <link rel="stylesheet" href="/public/css/pages/research&extension-public.css">
-  <link rel="stylesheet" href="/public/css/pages/quickhelp&chatbot.css">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="/public/css/pages/careers-public.css">
   <link rel="stylesheet" href="/public/css/layout/footer.css">
-  <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+  <link rel="icon" type="image" href="/public/assets/images/PUPLogo.webp">
 </head>
 <body>
 <!--NAVBAR-->
@@ -92,100 +88,124 @@
     </nav>
   </header>
 
+  <!-- MAIN CONTENT -->
   <main class="main">
-    <section class="hero-section" style="background-image: url('/public/assets/images/PUPBg4.jpg');">
-      <div class="hero-content">
-        <div class="hero-title-design">
-          <div class="vl1"></div>
-          <div class="hero-title&desc" data-aos="fade">
-            <h1 class="hero-title">Research and Extension</h1>
-            <p class="hero-text">
-              Through faculty-led research and community extension programs, PUP Parañaque Campus generates
-              knowledge-driven solutions that address real-world challenges. Our initiatives span education,
-              technology, innovation, and public service—strengthening communities today while shaping a
-              sustainable and inclusive future.
-            </p>
+    <!-- Hero Banner -->
+    <div class="hero-banner">
+      <div class="hero-overlay">
+        <h1 class="hero-title">Career & Job Placement Directory</h1>
+        <p class="hero-subtitle">PUP Parañaque Campus</p>
+      </div>
+    </div>
+
+    <!-- Page Header -->
+    <section class="page-header">
+      <div class="container">
+        <h2 class="section-title">Partner Organizations & Career Resources</h2>
+        <p class="section-description">
+          Browse our curated list of trusted partner organizations where you can explore job opportunities and career resources.
+        </p>
+      </div>
+    </section>
+
+    <!-- Disclaimer Banner -->
+    <section class="disclaimer-banner">
+      <div class="container">
+        <div class="disclaimer-content">
+          <i class="fas fa-exclamation-triangle disclaimer-icon"></i>
+          <div class="disclaimer-text">
+            <strong>Important Notice:</strong> 
+            The campus serves as an <strong>information dissemination platform only</strong>. 
+            Job availability, requirements, and application processes are managed solely by partner organizations. 
+            Students are advised to visit the official websites for updated job listings.
           </div>
         </div>
       </div>
     </section>
 
-    <!-- NSTP Posts Container - Posts will be loaded dynamically -->
-    <section class="posts-section">
-      <div class="posts-container" id="nstpPostsContainer" data-aos="fade-up">
-        <!-- Posts will be loaded here by nstp-public.js -->
+        <!-- Info Section -->
+    <section class="info-section">
+      <div class="container">
+        <div class="info-grid">
+          <div class="info-card">
+            <i class="fas fa-handshake info-icon"></i>
+            <h3>Trusted Partners</h3>
+            <p>All listed organizations are verified partners of PUP Parañaque Campus.</p>
+          </div>
+          <div class="info-card">
+            <i class="fas fa-link info-icon"></i>
+            <h3>Direct Access</h3>
+            <p>Click on any organization to visit their official website or careers page directly.</p>
+          </div>
+          <div class="info-card">
+            <i class="fas fa-sync info-icon"></i>
+            <h3>Regular Updates</h3>
+            <p>Our partner directory is regularly updated to ensure accuracy and relevance.</p>
+          </div>
+        </div>
       </div>
     </section>
 
-    <section class="text-section">
-      <div class="text-content">
-        <div class="text-description" data-aos="fade">
-          <p class="desc-box">
-            <span class="desc-text-content">
-            PUP Parañaque Campus researchers comprising dedicated faculty members, scholars, students, and
-            extension partners work collaboratively to produce research that deepens academic understanding
-            and responds to real societal needs. Drawing from diverse disciplines and local contexts, their
-            work explores educational innovation, technology development, social issues, and community-based
-            solutions that contribute to national and local development.
-            </span>
-          </p>
+    <!-- Filter Section -->
+    <section class="filter-section">
+      <div class="container">
+        <div class="filter-container">
+          <!-- Search Bar -->
+          <div class="search-container">
+            <i class="fas fa-search search-icon"></i>
+            <input 
+              type="text" 
+              id="organizationSearch" 
+              class="search-input" 
+              placeholder="Search organizations by name..."
+            >
+          </div>
 
-          <p class="desc-box">
-            <span class="desc-text-content">
-            Guided by a commitment to inclusivity, public service, and shared knowledge, PUP Parañaque’s
-            research and extension initiatives transform ideas into meaningful action. By integrating
-            research with community engagement, these efforts help address complex challenges, support
-            evidence-based decision-making, and create positive, lasting impact for individuals, communities,
-            and society.
-            </span>
-          </p>
-
-          <p class="desc-box">
-            <span class="desc-text-content">
-            What defines our researchers? A shared purpose to ensure that knowledge serves the people and
-            contributes to a better future.
-            </span>
-          </p>
+          <!-- Category Filters -->
+          <div class="category-filters">
+            <button class="category-btn active" data-category="all">
+              <i class="fas fa-th"></i> All Organizations
+            </button>
+            <button class="category-btn" data-category="Government">
+              <i class="fas fa-landmark"></i> Government
+            </button>
+            <button class="category-btn" data-category="University Unit">
+              <i class="fas fa-university"></i> University Unit
+            </button>
+            <button class="category-btn" data-category="Private Company">
+              <i class="fas fa-building"></i> Private Company
+            </button>
+          </div>
         </div>
       </div>
     </section>
-        <section class="chatbotSection">
-      <!-- Chatbot Button -->
-      <button id="chatToggleBtn">
-        <i class="fa-solid fa-robot"></i>
-      </button>
-      
-      <!-- Chatbox -->
-      <div id="chatbox">
-        <div id="chatHeader">PUP Parañaque Assistant</div>
-        <div id="chatMessages">
-          <div class="message assistant">
-            <strong>Assistant</strong> <span class="timestamp" id="timeStamp"></span><br>
-            Welcome to PUP Parañaque chatbot! How can I help you today?
-          </div>
+
+    <!-- Organizations Grid -->
+    <section class="organizations-section">
+      <div class="container">
+        <div id="organizationsGrid" class="organizations-grid">
+          <!-- Organizations will be loaded here by JavaScript -->
         </div>
-      
-        <div id="commonQuestions">
-          <p>Common questions:</p>
-          <div>
-            <button class="question-button">What programs are offered at PUP Parañaque?</button>
-            <button class="question-button">How do I apply for admission?</button>
-            <button class="question-button">What are the tuition fees?</button>
-            <button class="question-button">Where is the campus located?</button>
-            <button class="question-button">What are the requirements for enrollment?</button>
-          </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+          <i class="fas fa-search empty-icon"></i>
+          <h3 class="empty-title">No Organizations Found</h3>
+          <p class="empty-text">
+            No partner organizations match your search criteria. Please try adjusting your filters or search terms.
+          </p>
         </div>
-      
-        <div id="chatInput">
-          <input type="text" id="chatText" placeholder="Enter your questions here..."/>
-          <button onclick="sendMessage()">
-            <span class="material-icons-outlined">send</span>
-          </button>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading partner organizations...</p>
         </div>
       </div>
     </section>
   </main>
 
+  <!-- FOOTER -->
   <div class="footer-box">
     <footer class="footer">
       <div class="footer-container">
@@ -212,12 +232,11 @@
         <div class="footer-section">
           <h3>Quick Links</h3>
           <ul class="footer-links">
-            <li><a href="#">Home</a></li>
-            <li><a href="#">About</a></li>
+            <li><a href="/public/index.html">Home</a></li>
+            <li><a href="/public/html/About/history.html">About</a></li>
             <li><a href="#">Programs</a></li>
-            <li><a href="#">Admission</a></li>
+            <li><a href="/public/html/Admission/admission.html">Admission</a></li>
             <li><a href="#">Extension Services</a></li>
-            <li><a href="login.html">Log in</a></li>
           </ul>
         </div>
 
@@ -235,13 +254,15 @@
         <div class="footer-section">
           <h3>Contact</h3>
           <p class="contact-text">
-            <a href="#" class="contact-link">PUP Parañaque Campus
-              Col. E. De Leon St. Wawa, Brgy. Sto. Niño
-              Parañaque City, Philippines 1700,</a><br/>
+            <a href="#" class="contact-link">
+              PUP Parañaque Campus<br/>
+              Col. E. De Leon St. Wawa, Brgy. Sto. Niño<br/>
+              Parañaque City, Philippines 1700,
+            </a><br/>
             Metro Manila
           </p>
           <p class="contact-info"><i class="fas fa-phone-alt"></i> (63 2) 553-8623</p>
-          <p class="contact-info"><i class="fas fa-envelope"></i> <a href="mailto:inquire@pup.edu.ph">paranaque@pup.edu.ph</a></p>
+          <p class="contact-info"><i class="fas fa-envelope"></i> <a href="mailto:paranaque@pup.edu.ph">paranaque@pup.edu.ph</a></p>
         </div>
       </div>
 
@@ -250,15 +271,8 @@
     </footer>
   </div>
 
+  <!-- SCRIPTS -->
   <script src="/public/js/navbar.js"></script>
-  <script src="/public/js/research&extension-public.js"></script>
-  <script src="/public/js/quickhelp&chatbot.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
-  <script>
-    AOS.init({
-    duration: 3000,
-    once: true,
-    });
-  </script>
+  <script src="/public/js/careers-public.js"></script>
 </body>
 </html>

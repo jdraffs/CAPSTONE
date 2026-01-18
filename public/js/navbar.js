@@ -4,10 +4,9 @@ const navMenu = document.querySelector(".nav-menu");
 const dropdown = document.querySelector(".dropdown-content");
 
 function handleScroll() {
-  if (window.scrollY > 10) {
-    navbar.classList.add('scrolled');
-  } else {
-    navbar.classList.remove('scrolled');
+  const navbar = document.querySelector('.navbar');
+  if (navbar) {
+    navbar.classList.add('scrolled'); // Add null check
   }
 }
 

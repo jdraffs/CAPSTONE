@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digital Certificate Request - PUP Parañaque</title>
+    <title>Digital Certificate Request | PUP Parañaque</title>
     <link rel="icon" type="image" href="/public/assets/images/PUPLogo.webp">
     <link rel="stylesheet" href="/public/css/pages/certificate-request.css">
     <link rel="stylesheet" href="/public/css/layout/navbar.css">
     <link rel="stylesheet" href="/public/css/pages/quickhelp&chatbot.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="/public/css/layout/footer.css">
+    <link rel="stylesheet" href="/public/css/pages/certificate-request.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -19,7 +20,7 @@
     <nav id="navbar" class="navbar">
       <!--Logo and Title-->
         <div class="logo">
-            <img class="logoimage" src="/public/assets/images/PUPLogo.webp" alt="PUP logo" />
+            <img class="logoimage" src="./assets/images/PUPLogo.webp" alt="PUP logo" />
           <div class="logotitlewrap">
             <h1 class="logotitle">Polytechnic University of the Philippines</h1>
             <h2 class="logotitle2">PARAÑAQUE CAMPUS</h2>
@@ -52,6 +53,8 @@
             <a href="/public/html/Students/ojt-public.html">OJT Announcements</a>
             <a href="/public/html/Students/feedback.html">Service Feedback</a>
             <a href="/public/html/Students/scholarships.html">Scholarship Opportunities</a>
+            <a href="/public/html/Students/careers.html">Career & Job Placement</a>
+            <a href="/public/html/Students/certificate-request.html">Digital Certificate Request</a>
             <a href="https://pupsinta.freshservice.com/support/home">PUP Sinta</a>
             <a href="https://sis8.pup.edu.ph/student/">PUP Student Portal</a>
              <a href="/public/html/Students/certificate-request.html">Digital Certificate Request</a>
@@ -63,6 +66,7 @@
         </li>
 
         <li class="nav-item">
+          <a href="/public/html/Alumni&Services/alumni-survey.html">Alumni & Services</a>
           <a href="/public/html/Alumni&Services/alumni.html">Alumni & Services</a>
         </li>
 
@@ -146,7 +150,7 @@
                                     type="text" 
                                     id="studentNumber" 
                                     name="studentNumber" 
-                                    placeholder="e.g., 2021-12345-PR-0" 
+                                    placeholder="e.g., 2021-12345-PQ-0" 
                                     required 
                                 />
                             </div>
@@ -158,11 +162,9 @@
                                 <select id="course" name="course" required>
                                     <option value="">Select Course</option>
                                     <option value="BSIT">BS Information Technology</option>
-                                    <option value="BSHM">BS Hospitality Management</option>
-                                    <option value="BSBA">BS Business Administration</option>
+                                    <option value="BSCE">BS Civil Engineering</option>
                                     <option value="BSOA">BS Office Administration</option>
-                                    <option value="BEED">Bachelor of Elementary Education</option>
-                                    <option value="BSED">Bachelor of Secondary Education</option>
+                                    <option value="BSHM">BS Hospitality Management</option>
                                 </select>
                             </div>
 
@@ -183,7 +185,7 @@
                                     type="text" 
                                     id="section" 
                                     name="section" 
-                                    placeholder="e.g., A, B, 1" 
+                                    placeholder="e.g., 3-1" 
                                 />
                             </div>
                         </div>
@@ -197,7 +199,8 @@
                             <select id="certificateType" name="certificateType" required>
                                 <option value="">Select Certificate Type</option>
                                 <option value="no_id">Certificate of No ID</option>
-                                <option value="id_fillout">ID Fill-Out Certificate</option>
+                                <option value="recommendation_scholarship">Recommendation Letter for Scholarship</option>
+                                <option value="recommendation_abroad">Recommendation Letter for Abroad</option>
                             </select>
                         </div>
 
@@ -410,6 +413,8 @@
         <p class="footer-copy">© 2025 Polytechnic University of the Philippines Parañaque Campus. All rights reserved.</p>
     </footer>
 
+    <!-- Scripts -->
+    <script src="/public/js/navbar.js"></script>
     <script src="/public/js/certificate-request.js"></script>
     <script src="/public/js/quickhelp&chatbot.js"></script>
 </body>

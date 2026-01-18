@@ -251,15 +251,33 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 12px;
-  padding: 10px 0;
+  gap: 15px;
+  padding: 20px 0 10px;
 }
 
 .org-logo {
-  width: 80px;
-  height: 80px;
+  width: 100%;
+  max-width: 180px;
+  height: 120px;
   object-fit: contain;
   border-radius: 8px;
+  padding: 10px;
+  background: #f8f9fa;
+}
+
+.org-logo-fallback {
+  width: 180px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 8px;
+}
+
+.org-logo-fallback i {
+  font-size: 48px;
+  color: #adb5bd;
 }
 
 .org-header h3 {
@@ -268,6 +286,7 @@
   color: #822020;
   margin: 0;
   line-height: 1.3;
+  padding: 0 15px;
 }
 
 /* Organization Description */
