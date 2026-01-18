@@ -1,4 +1,4 @@
-// scholarshipRoutes.js - Backend routes for scholarship management
+// scholarshipRoutes.js - Updated with new fields
 import express from 'express';
 import multer from 'multer';
 import pkg from 'pg';
@@ -58,19 +58,23 @@ router.post('/create', upload.array('files', 3), async (req, res) => {
     await client.query('BEGIN');
 
     const { title, provider, amount, slots, open_date, deadline, status, 
-            description, eligibility, benefits, contact_info, adminid } = req.body;
+            description, eligibility, benefits, contact_info, 
+            required_documents, application_process, external_links, adminid } = req.body;
 
     const scholarshipQuery = `
       INSERT INTO scholarships 
       (title, provider, amount, slots, open_date, deadline, status, 
-       description, eligibility, benefits, contact_info, adminid)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+       description, eligibility, benefits, contact_info, 
+       required_documents, application_process, external_links, adminid)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
       RETURNING *;
     `;
     
     const values = [
       title, provider, amount, slots || null, open_date, deadline, status,
-      description, eligibility, benefits, contact_info || null, adminid
+      description, eligibility, benefits, contact_info || null,
+      required_documents || null, application_process || null, 
+      external_links || null, adminid
     ];
     
     const scholarshipResult = await client.query(scholarshipQuery, values);
@@ -181,7 +185,8 @@ router.put('/update/:id', upload.array('files', 3), async (req, res) => {
 
     const { id } = req.params;
     const { title, provider, amount, slots, open_date, deadline, status,
-            description, eligibility, benefits, contact_info, keepFiles } = req.body;
+            description, eligibility, benefits, contact_info,
+            required_documents, application_process, external_links, keepFiles } = req.body;
 
     // Parse keepFiles
     let filesToKeep = [];
@@ -200,14 +205,17 @@ router.put('/update/:id', upload.array('files', 3), async (req, res) => {
       SET title = $1, provider = $2, amount = $3, slots = $4,
           open_date = $5, deadline = $6, status = $7,
           description = $8, eligibility = $9, benefits = $10,
-          contact_info = $11
-      WHERE id = $12
+          contact_info = $11, required_documents = $12,
+          application_process = $13, external_links = $14
+      WHERE id = $15
       RETURNING *;
     `;
     
     const values = [
       title, provider, amount, slots || null, open_date, deadline, status,
-      description, eligibility, benefits, contact_info || null, id
+      description, eligibility, benefits, contact_info || null,
+      required_documents || null, application_process || null,
+      external_links || null, id
     ];
     
     const result = await client.query(updateQuery, values);
