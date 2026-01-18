@@ -63,7 +63,7 @@ async function renderReviewMonitoringUI() {
                     <h3 class="stat-title">Total Reviews</h3>
                     <div class="stat-numbers">
                         <span class="stat-value" id="totalToReview">0</span>
-                        <span class="stat-label">sections</span>
+                        <span class="stat-label">Items</span>
                     </div>
                     <div class="stat-breakdown">
                         <div class="breakdown-item">
@@ -160,7 +160,7 @@ async function renderReviewMonitoringUI() {
         <div class="search-filter-bar">
             <div class="search-box">
                 <i class="fas fa-search"></i>
-                <input type="text" id="searchReviews" placeholder="Search sections..." onkeyup="filterReviews()">
+                <input type="text" id="searchReviews" placeholder="Search items..." onkeyup="filterReviews()">
             </div>
             <div class="filter-group">
                 <select id="filterAreaReview" onchange="filterReviews()">
@@ -195,7 +195,7 @@ async function renderReviewMonitoringUI() {
                 <table class="data-table review-table" id="reviewsTable">
                     <thead>
                         <tr>
-                            <th>Section Name</th>
+                            <th>Item Name</th>
                             <th>Area</th>
                             <th>Google Drive Link</th>
                             <th>Review Status</th>
@@ -233,7 +233,6 @@ async function renderReviewMonitoringUI() {
                             <th>Pending</th>
                             <th>Completion %</th>
                             <th>Last Activity</th>
-                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="accreditorPerformanceBody">
@@ -615,9 +614,6 @@ async function loadAccreditorPerformance() {
                         </td>
                         <td>${lastActivity}</td>
                         <td class="action-buttons">
-                            <button class="btn-icon" onclick="viewAccreditorReviews(${acc.accreditor_id}, '${acc.accreditor_name}')" title="View Reviews">
-                                <i class="fas fa-eye"></i>
-                            </button>
                             ${pendingCount > 0 ? 
                                 `<button class="btn-icon btn-warning" onclick="sendReminderToAccreditor(${acc.accreditor_id})" title="Send Reminder">
                                     <i class="fas fa-bell"></i>

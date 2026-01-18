@@ -1,4 +1,4 @@
-// roleManagementRoute.js - Works WITHOUT users table
+// roleManagementRoute.js - FIXED USERS ENDPOINT
 import express from 'express';
 import pool from '../db.js';
 
@@ -15,7 +15,7 @@ router.get('/roles', async (req, res) => {
         r.is_system,
         r.created_at,
         r.updated_at,
-        0 as user_count,
+        (SELECT COUNT(*) FROM admin_accounts WHERE role_id = r.id) as user_count,
         ARRAY_REMOVE(ARRAY_AGG(DISTINCT p.name), NULL) as permissions,
         ARRAY_REMOVE(ARRAY_AGG(DISTINCT p.id), NULL) as permission_ids
       FROM roles r
@@ -55,7 +55,7 @@ router.get('/roles/:id', async (req, res) => {
         r.is_system,
         r.created_at,
         r.updated_at,
-        0 as user_count,
+        (SELECT COUNT(*) FROM admin_accounts WHERE role_id = r.id) as user_count,
         COALESCE(ARRAY_AGG(DISTINCT p.name) FILTER (WHERE p.name IS NOT NULL), ARRAY[]::varchar[]) as permissions,
         COALESCE(ARRAY_AGG(DISTINCT p.id) FILTER (WHERE p.id IS NOT NULL), ARRAY[]::integer[]) as permission_ids
       FROM roles r
@@ -87,7 +87,6 @@ router.post('/roles', async (req, res) => {
 
     console.log('📝 Creating role:', { name, description, permission_ids });
 
-    // Validate input
     if (!name || !name.trim()) {
       return res.status(400).json({ error: 'Role name is required' });
     }
@@ -98,7 +97,6 @@ router.post('/roles', async (req, res) => {
 
     await client.query('BEGIN');
 
-    // Check if role name already exists
     const checkQuery = 'SELECT id FROM roles WHERE LOWER(name) = LOWER($1)';
     const checkResult = await client.query(checkQuery, [name.trim()]);
     
@@ -107,7 +105,6 @@ router.post('/roles', async (req, res) => {
       return res.status(409).json({ error: 'Role name already exists' });
     }
 
-    // Insert new role
     const insertRoleQuery = `
       INSERT INTO roles (name, description, is_system, created_at, updated_at)
       VALUES ($1, $2, false, NOW(), NOW())
@@ -119,7 +116,6 @@ router.post('/roles', async (req, res) => {
 
     console.log('✅ Role created:', newRole);
 
-    // Insert role permissions
     if (permission_ids && permission_ids.length > 0) {
       for (const permId of permission_ids) {
         const insertPermQuery = `
@@ -132,7 +128,6 @@ router.post('/roles', async (req, res) => {
 
     console.log('✅ Permissions assigned:', permission_ids.length);
 
-    // Log to history
     const historyQuery = `
       INSERT INTO role_history (role_id, role_name, action, details, user_name, timestamp)
       VALUES ($1, $2, $3, $4, $5, NOW())
@@ -148,7 +143,6 @@ router.post('/roles', async (req, res) => {
 
     await client.query('COMMIT');
 
-    // Fetch complete role data
     const completeRoleQuery = `
       SELECT 
         r.id,
@@ -157,7 +151,7 @@ router.post('/roles', async (req, res) => {
         r.is_system,
         r.created_at,
         r.updated_at,
-        0 as user_count,
+        (SELECT COUNT(*) FROM admin_accounts WHERE role_id = r.id) as user_count,
         COALESCE(ARRAY_AGG(p.name), ARRAY[]::varchar[]) as permissions,
         COALESCE(ARRAY_AGG(p.id), ARRAY[]::integer[]) as permission_ids
       FROM roles r
@@ -191,14 +185,12 @@ router.put('/roles/:id', async (req, res) => {
 
     console.log('📝 Updating role:', id, { name, description, permission_ids });
 
-    // Validate input
     if (!name || !name.trim()) {
       return res.status(400).json({ error: 'Role name is required' });
     }
 
     await client.query('BEGIN');
 
-    // Check if role exists and is not a system role
     const roleCheck = await client.query('SELECT is_system, name FROM roles WHERE id = $1', [id]);
     
     if (roleCheck.rows.length === 0) {
@@ -213,7 +205,6 @@ router.put('/roles/:id', async (req, res) => {
 
     const oldRoleName = roleCheck.rows[0].name;
 
-    // Check if new name conflicts with another role
     const nameCheckQuery = 'SELECT id FROM roles WHERE LOWER(name) = LOWER($1) AND id != $2';
     const nameCheck = await client.query(nameCheckQuery, [name.trim(), id]);
     
@@ -222,7 +213,6 @@ router.put('/roles/:id', async (req, res) => {
       return res.status(409).json({ error: 'Role name already exists' });
     }
 
-    // Update role
     const updateRoleQuery = `
       UPDATE roles 
       SET name = $1, description = $2, updated_at = NOW()
@@ -232,10 +222,8 @@ router.put('/roles/:id', async (req, res) => {
     
     await client.query(updateRoleQuery, [name.trim(), description?.trim() || null, id]);
 
-    // Delete existing permissions
     await client.query('DELETE FROM role_permissions WHERE role_id = $1', [id]);
 
-    // Insert new permissions
     if (permission_ids && permission_ids.length > 0) {
       for (const permId of permission_ids) {
         const insertPermQuery = `
@@ -246,7 +234,6 @@ router.put('/roles/:id', async (req, res) => {
       }
     }
 
-    // Log to history
     const changes = [];
     if (oldRoleName !== name.trim()) changes.push(`Name changed from "${oldRoleName}" to "${name}"`);
     changes.push(`Permissions updated (${permission_ids?.length || 0} permissions)`);
@@ -266,7 +253,6 @@ router.put('/roles/:id', async (req, res) => {
 
     await client.query('COMMIT');
 
-    // Fetch complete role data
     const completeRoleQuery = `
       SELECT 
         r.id,
@@ -275,7 +261,7 @@ router.put('/roles/:id', async (req, res) => {
         r.is_system,
         r.created_at,
         r.updated_at,
-        0 as user_count,
+        (SELECT COUNT(*) FROM admin_accounts WHERE role_id = r.id) as user_count,
         COALESCE(ARRAY_AGG(DISTINCT p.name) FILTER (WHERE p.name IS NOT NULL), ARRAY[]::varchar[]) as permissions,
         COALESCE(ARRAY_AGG(DISTINCT p.id) FILTER (WHERE p.id IS NOT NULL), ARRAY[]::integer[]) as permission_ids
       FROM roles r
@@ -309,7 +295,6 @@ router.delete('/roles/:id', async (req, res) => {
 
     await client.query('BEGIN');
 
-    // Check if role exists and is not a system role
     const roleCheck = await client.query(
       'SELECT is_system, name FROM roles WHERE id = $1',
       [id]
@@ -327,7 +312,14 @@ router.delete('/roles/:id', async (req, res) => {
 
     const roleName = roleCheck.rows[0].name;
 
-    // Log to history before deletion
+    // Check if role has users assigned
+    const userCountResult = await client.query(
+      'SELECT COUNT(*) as count FROM admin_accounts WHERE role_id = $1',
+      [id]
+    );
+    
+    const userCount = parseInt(userCountResult.rows[0].count);
+
     const historyQuery = `
       INSERT INTO role_history (role_id, role_name, action, details, user_name, timestamp)
       VALUES ($1, $2, $3, $4, $5, NOW())
@@ -337,14 +329,11 @@ router.delete('/roles/:id', async (req, res) => {
       id,
       roleName,
       'Role Deleted',
-      `Role "${roleName}" was deleted.`,
+      `Role "${roleName}" was deleted. ${userCount} user(s) affected.`,
       'SuperAdmin'
     ]);
 
-    // Delete role permissions (will cascade if foreign key is set up)
     await client.query('DELETE FROM role_permissions WHERE role_id = $1', [id]);
-
-    // Delete role
     await client.query('DELETE FROM roles WHERE id = $1', [id]);
 
     await client.query('COMMIT');
@@ -353,7 +342,7 @@ router.delete('/roles/:id', async (req, res) => {
     res.json({ 
       success: true, 
       message: `Role "${roleName}" deleted successfully`,
-      users_affected: 0
+      users_affected: userCount
     });
   } catch (error) {
     await client.query('ROLLBACK');
@@ -375,7 +364,6 @@ router.post('/roles/:id/duplicate', async (req, res) => {
 
     await client.query('BEGIN');
 
-    // Get original role
     const originalRoleQuery = `
       SELECT name, description
       FROM roles
@@ -393,7 +381,6 @@ router.post('/roles/:id/duplicate', async (req, res) => {
     let newName = `${original.name} (Copy)`;
     let counter = 1;
 
-    // Ensure unique name
     while (true) {
       const checkQuery = 'SELECT id FROM roles WHERE name = $1';
       const check = await client.query(checkQuery, [newName]);
@@ -404,7 +391,6 @@ router.post('/roles/:id/duplicate', async (req, res) => {
       newName = `${original.name} (Copy ${counter})`;
     }
 
-    // Create new role
     const insertRoleQuery = `
       INSERT INTO roles (name, description, is_system, created_at, updated_at)
       VALUES ($1, $2, false, NOW(), NOW())
@@ -414,7 +400,6 @@ router.post('/roles/:id/duplicate', async (req, res) => {
     const newRoleResult = await client.query(insertRoleQuery, [newName, original.description]);
     const newRole = newRoleResult.rows[0];
 
-    // Copy permissions
     const copyPermissionsQuery = `
       INSERT INTO role_permissions (role_id, permission_id)
       SELECT $1, permission_id
@@ -424,11 +409,9 @@ router.post('/roles/:id/duplicate', async (req, res) => {
     
     await client.query(copyPermissionsQuery, [newRole.id, id]);
 
-    // Get permission count
     const permCountQuery = 'SELECT COUNT(*) as count FROM role_permissions WHERE role_id = $1';
     const permCount = await client.query(permCountQuery, [newRole.id]);
 
-    // Log to history
     const historyQuery = `
       INSERT INTO role_history (role_id, role_name, action, details, user_name, timestamp)
       VALUES ($1, $2, $3, $4, $5, NOW())
@@ -444,7 +427,6 @@ router.post('/roles/:id/duplicate', async (req, res) => {
 
     await client.query('COMMIT');
 
-    // Fetch complete role data
     const completeRoleQuery = `
       SELECT 
         r.id,
@@ -453,7 +435,7 @@ router.post('/roles/:id/duplicate', async (req, res) => {
         r.is_system,
         r.created_at,
         r.updated_at,
-        0 as user_count,
+        (SELECT COUNT(*) FROM admin_accounts WHERE role_id = r.id) as user_count,
         COALESCE(ARRAY_AGG(p.name), ARRAY[]::varchar[]) as permissions,
         COALESCE(ARRAY_AGG(p.id), ARRAY[]::integer[]) as permission_ids
       FROM roles r
@@ -511,14 +493,28 @@ router.get('/permissions', async (req, res) => {
   }
 });
 
-// ============ GET USERS (Returns empty array for now) ============
+// ============ GET USERS (FIXED - Now fetches from admin_accounts) ============
 router.get('/users', async (req, res) => {
   try {
-    // Return empty array since users table doesn't exist yet
-    res.json([]);
+    const usersQuery = `
+      SELECT 
+        a.id,
+        a.adminid as name,
+        CONCAT(a.adminid, '@pup.edu.ph') as email,
+        a.role_id,
+        a.status,
+        a.created_at
+      FROM admin_accounts a
+      ORDER BY a.created_at DESC
+    `;
+
+    const result = await pool.query(usersQuery);
+    
+    console.log('✅ Fetched users:', result.rows.length);
+    res.json(result.rows);
   } catch (error) {
     console.error('❌ Error fetching users:', error.message);
-    res.json([]);
+    res.status(500).json({ error: 'Failed to fetch users', details: error.message });
   }
 });
 
