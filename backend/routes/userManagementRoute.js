@@ -1,10 +1,9 @@
-// routes/userManagementRoute.js - FIXED VERSION
+// routes/userManagementRoute.js - ENHANCED WITH STATUS & ROLE MANAGEMENT
 import express from 'express';
 import pool from '../db.js';
 
 const router = express.Router();
 
-// Helper: Generate Random Password
 function generateTempPassword(length = 12) {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*';
   let password = '';
@@ -14,60 +13,100 @@ function generateTempPassword(length = 12) {
   return password;
 }
 
-// ============ GET ALL USERS (WITH ROLE INFO) ============
-router.get('/users', async (req, res) => {
+// ============================================
+// GET ALL ADMIN ACCOUNTS
+// ============================================
+router.get('/admin-accounts', async (req, res) => {
   try {
-    console.log('📊 Fetching users...');
+    console.log('🔍 Fetching admin accounts...');
     
     const query = `
       SELECT 
-        u.id,
-        u.adminid,
-        u.full_name,
-        u.email,
-        u.role_id,
-        COALESCE(r.name, 'No Role') as role,
-        COALESCE(u.status, 'active') as status,
-        u.last_login,
-        u.created_at,
-        u.updated_at
-      FROM users u
-      LEFT JOIN roles r ON r.id = u.role_id
-      ORDER BY u.created_at DESC
+        a.id,
+        a.adminid,
+        a.password,
+        a.created_at,
+        a.role_id,
+        a.status,
+        COALESCE(r.name, 'No Role') as role_name
+      FROM admin_accounts a
+      LEFT JOIN roles r ON r.id = a.role_id
+      ORDER BY a.created_at DESC
     `;
 
     const result = await pool.query(query);
     
-    console.log('✅ Users found:', result.rows.length);
-    console.log('📋 Users:', result.rows);
-
+    console.log(`✅ Found ${result.rows.length} admin accounts`);
+    
     res.json({
       success: true,
-      users: result.rows
+      count: result.rows.length,
+      admins: result.rows
     });
 
   } catch (error) {
-    console.error('❌ Error fetching users:', error.message);
-    console.error('Full error:', error);
+    console.error('❌ Error fetching admin accounts:', error);
     res.status(500).json({ 
       success: false, 
-      error: 'Failed to fetch users',
-      details: error.message
+      error: 'Failed to fetch admin accounts',
+      message: error.message
     });
   }
 });
 
+// ============================================
+// GET SINGLE ADMIN
+// ============================================
+router.get('/admin-accounts/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const query = `
+      SELECT 
+        a.id,
+        a.adminid,
+        a.created_at,
+        a.role_id,
+        a.status,
+        COALESCE(r.name, 'No Role') as role_name
+      FROM admin_accounts a
+      LEFT JOIN roles r ON r.id = a.role_id
+      WHERE a.id = $1
+    `;
 
-// ============ CREATE NEW USER ============
-router.post('/users', async (req, res) => {
+    const result = await pool.query(query, [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Admin not found' 
+      });
+    }
+
+    res.json({
+      success: true,
+      admin: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error('❌ Error fetching admin:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch admin',
+      message: error.message
+    });
+  }
+});
+
+// ============================================
+// CREATE NEW ADMIN
+// ============================================
+router.post('/admin-accounts', async (req, res) => {
   const client = await pool.connect();
   
   try {
-    const { adminid, password, full_name, email, role_id } = req.body;
+    const { adminid, password, role_id } = req.body;
 
-    console.log('Creating user:', { adminid, full_name, email, role_id });
-
-    // Validate input
     if (!adminid || !password) {
       return res.status(400).json({ 
         success: false, 
@@ -78,506 +117,299 @@ router.post('/users', async (req, res) => {
     if (!role_id) {
       return res.status(400).json({ 
         success: false, 
-        error: 'Role selection is required' 
+        error: 'Role is required' 
       });
     }
 
     await client.query('BEGIN');
 
-    // Check if user already exists
-    const checkQuery = 'SELECT adminid FROM users WHERE adminid = $1';
+    // Check if admin exists
+    const checkQuery = 'SELECT id FROM admin_accounts WHERE adminid = $1';
     const checkResult = await client.query(checkQuery, [adminid]);
 
     if (checkResult.rows.length > 0) {
       await client.query('ROLLBACK');
       return res.status(409).json({ 
         success: false, 
-        error: 'User already exists' 
+        error: `Admin "${adminid}" already exists` 
       });
     }
 
-    // Insert new user
+    // Insert new admin with default status 'active'
     const insertQuery = `
-      INSERT INTO users (adminid, password, full_name, email, role_id, status, created_at, updated_at)
-      VALUES ($1, $2, $3, $4, $5, 'active', NOW(), NOW())
-      RETURNING id, adminid, full_name, email, role_id, status, created_at
+      INSERT INTO admin_accounts (adminid, password, role_id, status, created_at)
+      VALUES ($1, $2, $3, 'active', NOW())
+      RETURNING id, adminid, role_id, status, created_at
     `;
 
-    const result = await client.query(insertQuery, [
-      adminid, 
-      password,  // In production, hash this!
-      full_name || null, 
-      email || null, 
-      parseInt(role_id)
-    ]);
-
-    const newUser = result.rows[0];
-
-    // Log activity
-    await client.query(
-      `INSERT INTO activity_logs (type, message, adminid, details, timestamp)
-       VALUES ($1, $2, $3, $4, NOW())`,
-      [
-        'user_created',
-        `User account created for ${adminid}`,
-        adminid,
-        JSON.stringify({ full_name, email, role_id })
-      ]
-    );
+    const result = await client.query(insertQuery, [adminid, password, parseInt(role_id)]);
+    const newAdmin = result.rows[0];
 
     await client.query('COMMIT');
 
-    console.log('User created successfully:', newUser);
+    console.log(`✅ Created admin: ${adminid}`);
 
     res.status(201).json({
       success: true,
-      message: 'User created successfully',
-      user: newUser
+      message: `Admin "${adminid}" created successfully`,
+      admin: newAdmin
     });
 
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('Error creating user:', error);
+    console.error('❌ Error creating admin:', error);
     res.status(500).json({ 
       success: false, 
-      error: 'Failed to create user',
-      details: error.message
+      error: 'Failed to create admin',
+      message: error.message
     });
   } finally {
     client.release();
   }
 });
 
-// ============ UPDATE USER ============
-router.put('/users/:adminId', async (req, res) => {
+// ============================================
+// UPDATE ADMIN (Password, Role, Status)
+// ============================================
+router.put('/admin-accounts/:id', async (req, res) => {
   const client = await pool.connect();
   
   try {
-    const { adminId } = req.params;
-    const { full_name, email, role_id, status } = req.body;
+    const { id } = req.params;
+    const { password, role_id, status } = req.body;
 
-    console.log('Updating user:', adminId, { full_name, email, role_id, status });
+    if (!password && !role_id && !status) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'At least one field (password, role_id, or status) is required' 
+      });
+    }
 
     await client.query('BEGIN');
 
-    // Check if user exists
-    const checkQuery = 'SELECT * FROM users WHERE adminid = $1';
-    const checkResult = await client.query(checkQuery, [adminId]);
+    // Check if admin exists
+    const checkQuery = 'SELECT id, adminid FROM admin_accounts WHERE id = $1';
+    const checkResult = await client.query(checkQuery, [id]);
 
     if (checkResult.rows.length === 0) {
       await client.query('ROLLBACK');
       return res.status(404).json({ 
         success: false, 
-        error: 'User not found' 
+        error: 'Admin not found' 
       });
     }
 
-    // Update user
+    const admin = checkResult.rows[0];
+
+    // Prevent modifying Super Admin
+    if (admin.adminid === 'adminSalao' && status === 'suspended') {
+      await client.query('ROLLBACK');
+      return res.status(403).json({
+        success: false,
+        error: 'Cannot suspend Super Administrator'
+      });
+    }
+
+    // Build dynamic update query
+    const updates = [];
+    const values = [];
+    let paramCount = 1;
+
+    if (password) {
+      updates.push(`password = $${paramCount}`);
+      values.push(password);
+      paramCount++;
+    }
+
+    if (role_id) {
+      updates.push(`role_id = $${paramCount}`);
+      values.push(parseInt(role_id));
+      paramCount++;
+    }
+
+    if (status) {
+      updates.push(`status = $${paramCount}`);
+      values.push(status);
+      paramCount++;
+    }
+
+    values.push(id); // for WHERE clause
+
     const updateQuery = `
-      UPDATE users 
-      SET 
-        full_name = $1,
-        email = $2,
-        role_id = $3,
-        status = $4,
-        updated_at = NOW()
-      WHERE adminid = $5
-      RETURNING id, adminid, full_name, email, role_id, status, updated_at
+      UPDATE admin_accounts 
+      SET ${updates.join(', ')}
+      WHERE id = $${paramCount}
+      RETURNING id, adminid, role_id, status
     `;
 
-    const result = await client.query(updateQuery, [
-      full_name || null,
-      email || null,
-      role_id ? parseInt(role_id) : null,
-      status || 'active',
-      adminId
-    ]);
-
-    // Log activity
-    await client.query(
-      `INSERT INTO activity_logs (type, message, adminid, details, timestamp)
-       VALUES ($1, $2, $3, $4, NOW())`,
-      [
-        'user_updated',
-        `User account updated for ${adminId}`,
-        adminId,
-        JSON.stringify({ full_name, email, role_id, status })
-      ]
-    );
+    const result = await client.query(updateQuery, values);
 
     await client.query('COMMIT');
 
-    console.log('User updated successfully');
+    console.log(`✅ Updated admin: ${admin.adminid}`);
 
     res.json({
       success: true,
-      message: `User ${adminId} updated successfully`,
-      user: result.rows[0]
+      message: `Admin "${admin.adminid}" updated successfully`,
+      admin: result.rows[0]
     });
 
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('Error updating user:', error);
+    console.error('❌ Error updating admin:', error);
     res.status(500).json({ 
       success: false, 
-      error: 'Failed to update user',
-      details: error.message
+      error: 'Failed to update admin',
+      message: error.message
     });
   } finally {
     client.release();
   }
 });
 
-// ============ BULK CHANGE ROLE ============
-router.post('/users/bulk/change-role', async (req, res) => {
-  const client = await pool.connect();
-  
+// ============================================
+// RESET PASSWORD
+// ============================================
+router.post('/admin-accounts/:id/reset-password', async (req, res) => {
   try {
-    const { user_ids, role_id } = req.body;
-
-    if (!user_ids || user_ids.length === 0) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'No users selected' 
-      });
-    }
-
-    if (!role_id) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Role selection is required' 
-      });
-    }
-
-    await client.query('BEGIN');
-
-    // Update roles
-    const updateQuery = `
-      UPDATE users 
-      SET role_id = $1, updated_at = NOW()
-      WHERE adminid = ANY($2)
-    `;
-    await client.query(updateQuery, [parseInt(role_id), user_ids]);
-
-    // Log bulk role change
-    for (const userId of user_ids) {
-      await client.query(
-        `INSERT INTO activity_logs (type, message, adminid, details, timestamp)
-         VALUES ($1, $2, $3, $4, NOW())`,
-        [
-          'role_changed',
-          `Role changed for user ${userId}`,
-          userId,
-          JSON.stringify({ new_role_id: role_id })
-        ]
-      );
-    }
-
-    await client.query('COMMIT');
-
-    res.json({
-      success: true,
-      message: `Role changed for ${user_ids.length} user(s)`,
-      count: user_ids.length
-    });
-
-  } catch (error) {
-    await client.query('ROLLBACK');
-    console.error('Error changing roles:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Failed to change roles',
-      details: error.message
-    });
-  } finally {
-    client.release();
-  }
-});
-
-// ============ BULK STATUS CHANGE ============
-router.post('/users/bulk/change-status', async (req, res) => {
-  const client = await pool.connect();
-  
-  try {
-    const { user_ids, status } = req.body;
-
-    if (!user_ids || user_ids.length === 0) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'No users selected' 
-      });
-    }
-
-    const validStatuses = ['active', 'inactive', 'suspended'];
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Invalid status value' 
-      });
-    }
-
-    await client.query('BEGIN');
-
-    // Update status
-    const updateQuery = `
-      UPDATE users 
-      SET status = $1, updated_at = NOW()
-      WHERE adminid = ANY($2)
-    `;
-    await client.query(updateQuery, [status, user_ids]);
-
-    // Log bulk status change
-    for (const userId of user_ids) {
-      await client.query(
-        `INSERT INTO activity_logs (type, message, adminid, details, timestamp)
-         VALUES ($1, $2, $3, $4, NOW())`,
-        [
-          'status_changed',
-          `Status changed to ${status} for user ${userId}`,
-          userId,
-          JSON.stringify({ new_status: status })
-        ]
-      );
-    }
-
-    await client.query('COMMIT');
-
-    res.json({
-      success: true,
-      message: `Status changed for ${user_ids.length} user(s)`,
-      count: user_ids.length
-    });
-
-  } catch (error) {
-    await client.query('ROLLBACK');
-    console.error('Error changing status:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Failed to change status',
-      details: error.message
-    });
-  } finally {
-    client.release();
-  }
-});
-
-// ============ BULK DELETE USERS ============
-router.post('/users/bulk/delete', async (req, res) => {
-  const client = await pool.connect();
-  
-  try {
-    const { user_ids } = req.body;
-
-    if (!user_ids || user_ids.length === 0) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'No users selected' 
-      });
-    }
-
-    await client.query('BEGIN');
-
-    // Delete users
-    const deleteQuery = 'DELETE FROM users WHERE adminid = ANY($1)';
-    await client.query(deleteQuery, [user_ids]);
-
-    // Log deletions
-    await client.query(
-      `INSERT INTO activity_logs (type, message, adminid, details, timestamp)
-       VALUES ($1, $2, $3, $4, NOW())`,
-      [
-        'bulk_user_deletion',
-        `Bulk deleted ${user_ids.length} user accounts`,
-        'system',
-        JSON.stringify({ deleted_users: user_ids })
-      ]
-    );
-
-    await client.query('COMMIT');
-
-    res.json({
-      success: true,
-      message: `${user_ids.length} user(s) deleted successfully`,
-      count: user_ids.length
-    });
-
-  } catch (error) {
-    await client.query('ROLLBACK');
-    console.error('Error deleting users:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Failed to delete users',
-      details: error.message
-    });
-  } finally {
-    client.release();
-  }
-});
-
-// ============ GET USER BY ID ============
-router.get('/users/:adminId', async (req, res) => {
-  try {
-    const { adminId } = req.params;
-
-    const query = `
-      SELECT 
-        u.id,
-        u.adminid,
-        u.full_name,
-        u.email,
-        u.role_id,
-        r.name as role,
-        u.status,
-        u.last_login,
-        u.created_at,
-        u.updated_at
-      FROM users u
-      LEFT JOIN roles r ON r.id = u.role_id
-      WHERE u.adminid = $1
-    `;
-
-    const result = await pool.query(query, [adminId]);
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ 
-        success: false, 
-        error: 'User not found' 
-      });
-    }
-
-    res.json({
-      success: true,
-      user: result.rows[0]
-    });
-
-  } catch (error) {
-    console.error('Error fetching user:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Failed to fetch user',
-      details: error.message
-    });
-  }
-});
-
-// ============ UPDATE USER STATUS ============
-router.put('/users/:adminId/status', async (req, res) => {
-  try {
-    const { adminId } = req.params;
-    const { status } = req.body;
-
-    const validStatuses = ['active', 'inactive', 'suspended'];
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Invalid status value' 
-      });
-    }
-
-    const updateQuery = `
-      UPDATE users 
-      SET status = $1, updated_at = NOW()
-      WHERE adminid = $2
-      RETURNING adminid, status
-    `;
-
-    const result = await pool.query(updateQuery, [status, adminId]);
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ 
-        success: false, 
-        error: 'User not found' 
-      });
-    }
-
-    res.json({
-      success: true,
-      message: `User status updated to ${status}`,
-      adminId,
-      newStatus: status
-    });
-
-  } catch (error) {
-    console.error('Error updating user status:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Failed to update user status',
-      details: error.message
-    });
-  }
-});
-
-// ============ RESET USER PASSWORD ============
-router.post('/users/:adminId/reset-password', async (req, res) => {
-  try {
-    const { adminId } = req.params;
-
-    // Generate temporary password
+    const { id } = req.params;
     const tempPassword = generateTempPassword();
 
-    // Update password in database
-    const updateQuery = `
-      UPDATE users 
-      SET password = $1, updated_at = NOW()
-      WHERE adminid = $2
-      RETURNING adminid
-    `;
-
-    const result = await pool.query(updateQuery, [tempPassword, adminId]);
+    const result = await pool.query(
+      `UPDATE admin_accounts
+       SET password = $1
+       WHERE id = $2
+       RETURNING id, adminid`,
+      [tempPassword, id]
+    );
 
     if (result.rows.length === 0) {
       return res.status(404).json({ 
         success: false, 
-        error: 'User not found' 
+        error: 'Admin not found' 
       });
     }
 
+    console.log(`✅ Reset password for: ${result.rows[0].adminid}`);
+
     res.json({
       success: true,
-      message: 'Password reset successfully',
-      adminId,
-      tempPassword
+      adminid: result.rows[0].adminid,
+      tempPassword: tempPassword
     });
 
   } catch (error) {
-    console.error('Error resetting password:', error);
+    console.error('❌ Error resetting password:', error);
     res.status(500).json({ 
       success: false, 
       error: 'Failed to reset password',
-      details: error.message
+      message: error.message
     });
   }
 });
 
-// ============ DELETE USER ============
-router.delete('/users/:adminId', async (req, res) => {
+// ============================================
+// DELETE ADMIN
+// ============================================
+router.delete('/admin-accounts/:id', async (req, res) => {
   try {
-    const { adminId } = req.params;
+    const { id } = req.params;
 
-    // Delete user
-    const deleteQuery = 'DELETE FROM users WHERE adminid = $1 RETURNING adminid';
-    const result = await pool.query(deleteQuery, [adminId]);
+    const checkResult = await pool.query(
+      'SELECT id, adminid FROM admin_accounts WHERE id = $1',
+      [id]
+    );
 
-    if (result.rows.length === 0) {
+    if (checkResult.rows.length === 0) {
       return res.status(404).json({ 
         success: false, 
-        error: 'User not found' 
+        error: 'Admin not found' 
       });
     }
 
-    res.json({
-      success: true,
-      message: 'User deleted successfully',
-      adminId
+    const admin = checkResult.rows[0];
+
+    if (admin.adminid === 'adminSalao') {
+      return res.status(403).json({
+        success: false,
+        error: 'Cannot delete Super Administrator'
+      });
+    }
+
+    await pool.query('DELETE FROM admin_accounts WHERE id = $1', [id]);
+
+    console.log(`✅ Deleted admin: ${admin.adminid}`);
+
+    res.json({ 
+      success: true, 
+      message: `Admin "${admin.adminid}" deleted successfully` 
     });
 
   } catch (error) {
-    console.error('Error deleting user:', error);
+    console.error('❌ Error deleting admin:', error);
     res.status(500).json({ 
       success: false, 
-      error: 'Failed to delete user',
-      details: error.message
+      error: 'Failed to delete admin',
+      message: error.message
     });
+  }
+});
+
+// ============================================
+// BULK DELETE
+// ============================================
+router.post('/admin-accounts/bulk-delete', async (req, res) => {
+  const client = await pool.connect();
+  
+  try {
+    const { ids } = req.body;
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'No admin IDs provided' 
+      });
+    }
+
+    await client.query('BEGIN');
+
+    const superAdminResult = await client.query(
+      `SELECT id FROM admin_accounts WHERE adminid = 'adminSalao'`
+    );
+
+    const superAdminId = superAdminResult.rows[0]?.id;
+
+    if (ids.includes(superAdminId)) {
+      await client.query('ROLLBACK');
+      return res.status(403).json({
+        success: false,
+        error: 'Cannot delete Super Administrator'
+      });
+    }
+
+    const deleteQuery = 'DELETE FROM admin_accounts WHERE id = ANY($1::int[])';
+    const result = await client.query(deleteQuery, [ids]);
+
+    await client.query('COMMIT');
+
+    console.log(`✅ Bulk deleted ${result.rowCount} admins`);
+
+    res.json({
+      success: true,
+      message: `${result.rowCount} admin(s) deleted successfully`,
+      count: result.rowCount
+    });
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('❌ Error bulk deleting:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to delete admins',
+      message: error.message
+    });
+  } finally {
+    client.release();
   }
 });
 

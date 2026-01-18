@@ -1372,3 +1372,33 @@
     min-width: 800px;
   }
 }
+/* Add these styles to your userManagement.css */
+
+/* Suspended status badge */
+.status-badge.status-suspended {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Orange stat icon (for suspended count) */
+.stat-icon.orange { 
+  background: linear-gradient(135deg, #f59e0b, #d97706); 
+}
+
+/* Filter button styling */
+.um-filters {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Role badge colors for roles 4 & 5 */
+.role-badge.role-4 {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  color: #92400e;
+}
+
+.role-badge.role-5 {
+  background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+  color: #3730a3;
+}
