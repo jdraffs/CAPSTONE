@@ -85,7 +85,7 @@ document.getElementById('admin-login-form').addEventListener('submit', async (e)
       } else if (data.adminid === 'adminLlave') {
         window.location.href = '/private/html/adminPages/adminLlave/adminLlave.html';
       } else if (data.adminid === 'adminCMO') {
-        window.location.href = '/private/html/adminPages/adminCMO/news-management.html';
+        window.location.href = '/private/html/adminPages/adminCMO/cmoDashboard.html';
       } else {
         alert('Unknown admin ID.');
       }
