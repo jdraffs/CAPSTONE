@@ -148,7 +148,7 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 65%;
 }
 
 .um-filters {
@@ -324,6 +324,7 @@
 
 .action-buttons {
   display: flex;
+
   justify-content: center;
   gap: 0.5rem;
 }
