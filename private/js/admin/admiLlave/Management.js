@@ -53,7 +53,7 @@ function renderManagementUI() {
         <!-- Sub-Tab Toggle -->
         <div class="sub-tab-toggle">
             <button class="sub-tab-btn active" data-tab="sections" onclick="switchSubTab('sections')">
-                <i class="fas fa-list"></i> Sections
+                <i class="fas fa-list"></i> Accreditation Items
             </button>
             <button class="sub-tab-btn" data-tab="accounts" onclick="switchSubTab('accounts')">
                 <i class="fas fa-users"></i> Accounts
@@ -64,10 +64,10 @@ function renderManagementUI() {
         <div class="sub-tab-content" id="sectionsTab">
             <div class="management-card">
                 <div class="card-header">
-                    <h2 class="card-title">Section Management</h2>
+                    <h2 class="card-title">Accreditation Item Management</h2>
                     <div class="header-actions">
                         <button class="btn-primary" onclick="openAddSectionModal()">
-                            <i class="fas fa-plus"></i> Add Section
+                            <i class="fas fa-plus"></i> Add Item
                         </button>
                         <button class="btn-secondary" onclick="openBulkImportModal()">
                             <i class="fas fa-upload"></i> Bulk Import
@@ -78,7 +78,7 @@ function renderManagementUI() {
                 <!-- Summary Stats -->
                 <div class="summary-stats">
                     <div class="stat-item">
-                        <span class="stat-label">Total Sections:</span>
+                        <span class="stat-label">Total Items:</span>
                         <span class="stat-value" id="totalSectionsCount">0</span>
                     </div>
                     <div class="stat-item">
@@ -95,7 +95,7 @@ function renderManagementUI() {
                 <div class="search-filter-bar">
                     <div class="search-box">
                         <i class="fas fa-search"></i>
-                        <input type="text" id="searchSections" placeholder="Search sections..." onkeyup="filterSections()">
+                        <input type="text" id="searchSections" placeholder="Search Items..." onkeyup="filterSections()">
                     </div>
                     <div class="filter-group">
                         <select id="filterArea" onchange="filterSections()">
@@ -124,7 +124,7 @@ function renderManagementUI() {
                     <table class="data-table" id="sectionsTable">
                         <thead>
                             <tr>
-                                <th>Section Name</th>
+                                <th>Item Name</th>
                                 <th>Area</th>
                                 <th>Area Head</th>
                                 <th>Link Status</th>
@@ -320,10 +320,10 @@ function openAddSectionModal() {
         return;
     }
 
-    const modal = createModal('Add New Section', `
+    const modal = createModal('Add New Item', `
         <div class="form-group">
-            <label for="newSectionName">Section Name *</label>
-            <input type="text" id="newSectionName" placeholder="e.g., BSIT 1-1" required>
+            <label for="newSectionName">Item Name *</label>
+            <input type="text" id="newSectionName" placeholder="e.g., BSIT 1-1 / Course Syllabus" required>
         </div>
         <div class="form-group">
             <label for="newSectionArea">Area *</label>
@@ -390,7 +390,7 @@ async function editSection(sectionId) {
 
     const modal = createModal('Edit Section', `
         <div class="form-group">
-            <label for="editSectionName">Section Name *</label>
+            <label for="editSectionName">Item Name *</label>
             <input type="text" id="editSectionName" value="${section.section_name}" required>
         </div>
         <div class="form-group">
@@ -490,7 +490,7 @@ function openBulkImportModal() {
         <div class="import-instructions">
             <h4>CSV Format Instructions:</h4>
             <ul>
-                <li>Column 1: Section Name (e.g., "BSIT 1-1")</li>
+                <li>Column 1: Item Name (e.g., "BSIT 1-1")</li>
                 <li>Column 2: Area Number (1-10)</li>
                 <li>No header row required</li>
             </ul>
@@ -603,7 +603,7 @@ function renderAccountsTab() {
                                 <th>Name</th>
                                 <th>Email</th>
                                 <th>Assigned Area(s)</th>
-                                <th>Sections</th>
+                                <th>Accreditation Items</th>
                                 <th>Last Login</th>
                                 <th>Status</th>
                                 <th>Actions</th>

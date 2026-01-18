@@ -217,7 +217,7 @@ function displayAreas(areas) {
                     </div>
                     
                     <div class="info-row">
-                        <span class="info-label">Sections:</span>
+                        <span class="info-label">Accreditation Items:</span>
                         <span class="info-value">${totalSections}</span>
                     </div>
                 </div>
@@ -510,7 +510,7 @@ async function viewAreaDetails(areaId, areaName) {
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>Section Name</th>
+                            <th>Accreditation Item</th>
                             <th>Google Drive Link</th>
                             <th>Submitted By</th>
                             <th>Date</th>
@@ -735,7 +735,7 @@ async function viewArchivedCycleDetails(cycleId) {
                     <h4>Summary Statistics</h4>
                     <div class="stats-grid-small">
                         <div class="stat-item-small">
-                            <span class="stat-label">Total Sections:</span>
+                            <span class="stat-label">Total Items:</span>
                             <span class="stat-value">${totalSections}</span>
                         </div>
                         <div class="stat-item-small">
@@ -771,7 +771,7 @@ async function viewArchivedCycleDetails(cycleId) {
                     <h4>Export Data</h4>
                     <div class="export-buttons">
                         <button class="btn-secondary" onclick="exportArchivedCycleData(${cycleId}, 'sections')">
-                            <i class="fas fa-download"></i> Export Sections
+                            <i class="fas fa-download"></i> Export Accreditation Items
                         </button>
                         <button class="btn-secondary" onclick="exportArchivedCycleData(${cycleId}, 'reviews')">
                             <i class="fas fa-download"></i> Export Reviews
@@ -1054,7 +1054,7 @@ async function viewArchivedCycleDetails(cycleId) {
                     <h4>Summary Statistics</h4>
                     <div class="stats-grid-small">
                         <div class="stat-item-small">
-                            <span class="stat-label">Total Sections:</span>
+                            <span class="stat-label">Total Items:</span>
                             <span class="stat-value">${totalSections}</span>
                         </div>
                         <div class="stat-item-small">
@@ -1088,7 +1088,7 @@ async function viewArchivedCycleDetails(cycleId) {
                     <h4>Export Data</h4>
                     <div class="export-buttons">
                         <button class="btn-secondary" onclick="exportArchivedCycleData(${cycleId}, 'sections')">
-                            <i class="fas fa-download"></i> Export Sections
+                            <i class="fas fa-download"></i> Export Accreditation Items
                         </button>
                         <button class="btn-secondary" onclick="exportArchivedCycleData(${cycleId}, 'reviews')">
                             <i class="fas fa-download"></i> Export Reviews
