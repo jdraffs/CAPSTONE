@@ -753,6 +753,29 @@
   }
 }
 
+/* Custom Prompt Modal Textarea */
+#promptInput {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  resize: vertical;
+  min-height: 80px;
+  transition: all 0.3s ease;
+}
+
+#promptInput:focus {
+  outline: none;
+  border-color: #822020;
+  box-shadow: 0 0 0 3px rgba(130, 32, 32, 0.1);
+}
+
+#promptInput::placeholder {
+  color: #9ca3af;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .stats-grid {

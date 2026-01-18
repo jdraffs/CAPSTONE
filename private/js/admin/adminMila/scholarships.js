@@ -1,4 +1,4 @@
-// scholarships.js - Admin Scholarship Management
+// scholarships.js - Admin Scholarship Management (UPDATED)
 const openBtn = document.getElementById('openPostModal');
 const modal = document.getElementById('postModal');
 const cancelBtn = document.getElementById('cancelPost');
@@ -17,15 +17,58 @@ const status = document.getElementById('status');
 const description = document.getElementById('description');
 const eligibility = document.getElementById('eligibility');
 const benefits = document.getElementById('benefits');
+const requiredDocuments = document.getElementById('requiredDocuments');
+const applicationProcess = document.getElementById('applicationProcess');
+const externalLinks = document.getElementById('externalLinks');
 const contactInfo = document.getElementById('contactInfo');
 
 const fileUpload = document.getElementById('fileUpload');
 const fileListContainer = document.getElementById('fileList');
 
+// Course selection elements
+const allProgramsCheckbox = document.getElementById('allPrograms');
+const programCheckboxes = document.querySelectorAll('.program-checkbox');
+const eligibleCoursesInput = document.getElementById('eligibleCourses');
+
 let editingScholarshipId = null;
 let selectedFiles = [];
 let existingFiles = [];
 let currentFilter = 'all';
+
+// Course selection logic
+allProgramsCheckbox.addEventListener('change', function() {
+  if (this.checked) {
+    programCheckboxes.forEach(cb => {
+      cb.checked = false;
+      cb.disabled = true;
+    });
+  } else {
+    programCheckboxes.forEach(cb => {
+      cb.disabled = false;
+    });
+  }
+  updateEligibleCourses();
+});
+
+programCheckboxes.forEach(checkbox => {
+  checkbox.addEventListener('change', function() {
+    if (this.checked) {
+      allProgramsCheckbox.checked = false;
+    }
+    updateEligibleCourses();
+  });
+});
+
+function updateEligibleCourses() {
+  if (allProgramsCheckbox.checked) {
+    eligibleCoursesInput.value = 'All Programs';
+  } else {
+    const selected = Array.from(programCheckboxes)
+      .filter(cb => cb.checked)
+      .map(cb => cb.value);
+    eligibleCoursesInput.value = selected.join(',');
+  }
+}
 
 // Filter tabs
 const filterTabs = document.querySelectorAll('.filter-tab');
@@ -73,8 +116,20 @@ function clearForm() {
   description.value = '';
   eligibility.value = '';
   benefits.value = '';
+  requiredDocuments.value = '';
+  applicationProcess.value = '';
+  externalLinks.value = '';
   contactInfo.value = '';
   fileUpload.value = '';
+  
+  // Reset course checkboxes
+  allProgramsCheckbox.checked = true;
+  programCheckboxes.forEach(cb => {
+    cb.checked = false;
+    cb.disabled = true;
+  });
+  updateEligibleCourses();
+  
   selectedFiles = [];
   existingFiles = [];
   updateFileList();
@@ -142,6 +197,7 @@ function updateFileList() {
 }
 
 function getFileIcon(mimeType) {
+  if (!mimeType) return 'fa-file';
   if (mimeType.includes('pdf')) return 'fa-file-pdf';
   if (mimeType.includes('word')) return 'fa-file-word';
   if (mimeType.includes('image')) return 'fa-file-image';
@@ -163,8 +219,10 @@ submitBtn.addEventListener('click', async (e) => {
   // Validation
   if (!scholarshipTitle.value.trim() || !provider.value.trim() || !amount.value.trim() ||
       !openDate.value || !deadline.value || !description.value.trim() || 
-      !eligibility.value.trim() || !benefits.value.trim()) {
-    alert('Please fill in all required fields.');
+      !eligibility.value.trim() || !benefits.value.trim() ||
+      !requiredDocuments.value.trim() || !applicationProcess.value.trim() ||
+      !eligibleCoursesInput.value.trim()) {
+    alert('Please fill in all required fields and select at least one eligible program.');
     return;
   }
 
@@ -179,7 +237,11 @@ submitBtn.addEventListener('click', async (e) => {
   formData.append('description', description.value.trim());
   formData.append('eligibility', eligibility.value.trim());
   formData.append('benefits', benefits.value.trim());
+  formData.append('required_documents', requiredDocuments.value.trim());
+  formData.append('application_process', applicationProcess.value.trim());
+  formData.append('external_links', externalLinks.value.trim());
   formData.append('contact_info', contactInfo.value.trim());
+  formData.append('eligible_courses', eligibleCoursesInput.value.trim());
   formData.append('adminid', 'adminmila');
 
   selectedFiles.forEach(file => {
@@ -280,6 +342,21 @@ async function loadScholarships() {
         const openDateFormatted = new Date(scholarship.open_date).toLocaleDateString();
         const deadlineFormatted = new Date(scholarship.deadline).toLocaleDateString();
 
+        // Format eligible courses for display
+        let coursesHtml = '';
+        if (scholarship.eligible_courses) {
+          const courses = scholarship.eligible_courses.split(',');
+          const courseBadges = courses.map(course => 
+            `<span class="course-badge">${course.trim()}</span>`
+          ).join('');
+          coursesHtml = `
+            <div class="scholarship-section">
+              <h3><i class="fa-solid fa-user-graduate"></i> Eligible Programs</h3>
+              <div class="course-badges-container">${courseBadges}</div>
+            </div>
+          `;
+        }
+
         postElem.innerHTML = `
           <div class="scholarship-actions">
             <button class="post-menu-btn">
@@ -349,6 +426,29 @@ async function loadScholarships() {
             <p>${scholarship.benefits}</p>
           </div>
 
+          ${coursesHtml}
+
+          ${scholarship.required_documents ? `
+          <div class="scholarship-section">
+            <h3><i class="fa-solid fa-file-alt"></i> Required Documents</h3>
+            <p>${scholarship.required_documents}</p>
+          </div>
+          ` : ''}
+
+          ${scholarship.application_process ? `
+          <div class="scholarship-section">
+            <h3><i class="fa-solid fa-list-ol"></i> Application Process</h3>
+            <p>${scholarship.application_process}</p>
+          </div>
+          ` : ''}
+
+          ${scholarship.external_links ? `
+          <div class="scholarship-section">
+            <h3><i class="fa-solid fa-link"></i> External Links</h3>
+            <p>${scholarship.external_links}</p>
+          </div>
+          ` : ''}
+
           ${scholarship.contact_info ? `
           <div class="scholarship-section">
             <h3><i class="fa-solid fa-address-book"></i> Contact Information</h3>
@@ -393,7 +493,28 @@ async function loadScholarships() {
           description.value = scholarship.description;
           eligibility.value = scholarship.eligibility;
           benefits.value = scholarship.benefits;
+          requiredDocuments.value = scholarship.required_documents || '';
+          applicationProcess.value = scholarship.application_process || '';
+          externalLinks.value = scholarship.external_links || '';
           contactInfo.value = scholarship.contact_info || '';
+          
+          // Set eligible courses checkboxes
+          if (scholarship.eligible_courses === 'All Programs') {
+            allProgramsCheckbox.checked = true;
+            programCheckboxes.forEach(cb => {
+              cb.checked = false;
+              cb.disabled = true;
+            });
+          } else {
+            allProgramsCheckbox.checked = false;
+            const courses = scholarship.eligible_courses.split(',').map(c => c.trim());
+            programCheckboxes.forEach(cb => {
+              cb.checked = courses.includes(cb.value);
+              cb.disabled = false;
+            });
+          }
+          updateEligibleCourses();
+          
           existingFiles = scholarship.files || [];
           selectedFiles = [];
           updateFileList();

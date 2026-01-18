@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alumni Employment Tracking - AdminMila</title>
+    <link rel="stylesheet" href="/private/css/pages/alumni-employment.css">
+    <link rel="stylesheet" href="/private/css/layout/dashboardsidebar.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!--SIDEBAR-->
+    <section class="sidebar">
+        <div class="logo">
+            <img class="logoimage" src="/public/assets/images/PUPLogo.webp" alt="PUP Logo">
+            <div class="logotitlewrap">
+                <h2 class="logotitle logotitle1">PUP</h2>
+                <h2 class="logotitle">Parañaque</h2>
+            </div>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <nav class="sidebar-nav">
+            <div class="sidebar-scroll">
+                <div class="nav-section">
+                    <h3 class="nav-title">Main</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/adminMila/adminMila.html">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <h3 class="nav-title">Management</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/adminMila/scholarships.html">
+                                <i class="fa-solid fa-graduation-cap"></i>
+                                <span>Scholarship Opportunities</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/adminMila/careers.html">
+                                <i class="fa-solid fa-briefcase"></i>
+                                <span>Career & Job Placement</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/adminMila/certificates.html">
+                                <i class="fa-solid fa-certificate"></i>
+                                <span>Digital Certificates</span>
+                            </a>
+                        </li>
+                        <li class="nav-item active">
+                            <a class="nav-link" href="/private/html/adminPages/adminMila/alumni-employment.html">
+                                <i class="fa-solid fa-users"></i>
+                                <span>Alumni Employment Tracking</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-details">
+                        <span class="user-name">AdminMila</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </section>
+
+    <!--MAIN CONTENT-->
+    <main class="main">
+        <header class="dashboard-header">
+            <div class="header-left">
+                <h1 class="page-title">Alumni Employment Tracking</h1>
+            </div>
+            <div class="header-right">
+                <div class="notification-button">
+                    <a class="notif-link" href="#notifications">
+                        <i class="fa fa-bell" aria-hidden="true"></i>
+                    </a>
+                </div>
+                <div class="profile-button">
+                    <a class="profile-link">
+                        <i class="fa fa-user" aria-hidden="true"></i>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Survey Link Section -->
+            <div class="survey-link-card">
+                <div class="link-card-header">
+                    <i class="fa-solid fa-link"></i>
+                    <h3>Alumni Survey Link</h3>
+                </div>
+                <p class="link-description">Share this link with graduates via email, SMS, or social media:</p>
+                <div class="link-container">
+                    <input type="text" id="surveyLink" class="survey-link-input" readonly value="http://localhost:3000/public/html/Students/alumni-survey.html">
+                    <button class="copy-btn" id="copyLinkBtn">
+                        <i class="fa-solid fa-copy"></i> Copy Link
+                    </button>
+                </div>
+                <p class="link-note"><i class="fa-solid fa-info-circle"></i> Alumni can access this survey without logging in</p>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #e3f2fd;">
+                        <i class="fa-solid fa-users" style="color: #1976d2;"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalResponses">0</h3>
+                        <p>Total Responses</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #d4edda;">
+                        <i class="fa-solid fa-briefcase" style="color: #155724;"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="employedCount">0</h3>
+                        <p>Employed</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #fff3cd;">
+                        <i class="fa-solid fa-chart-line" style="color: #856404;"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="employmentRate">0%</h3>
+                        <p>Employment Rate</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #f8d7da;">
+                        <i class="fa-solid fa-user-slash" style="color: #721c24;"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="unemployedCount">0</h3>
+                        <p>Unemployed</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline Statistics -->
+            <div class="timeline-stats-card">
+                <h3 class="card-title"><i class="fa-solid fa-clock"></i> Time to Employment</h3>
+                <div class="timeline-grid">
+                    <div class="timeline-item" style="background: #e3f2fd;">
+                        <h4 id="timeline3months">0</h4>
+                        <p>Within 3 months</p>
+                    </div>
+                    <div class="timeline-item" style="background: #d4edda;">
+                        <h4 id="timeline6months">0</h4>
+                        <p>Within 6 months</p>
+                    </div>
+                    <div class="timeline-item" style="background: #fff3cd;">
+                        <h4 id="timeline1year">0</h4>
+                        <p>Within 1 year</p>
+                    </div>
+                    <div class="timeline-item" style="background: #ffe0b2;">
+                        <h4 id="timelineMore">0</h4>
+                        <p>More than 1 year</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters and Export -->
+            <div class="filters-card">
+                <div class="filters-header">
+                    <div class="filters-title">
+                        <i class="fa-solid fa-filter"></i>
+                        <h3>Filter Responses</h3>
+                    </div>
+                    <button class="export-btn" id="exportBtn">
+                        <i class="fa-solid fa-download"></i> Export to CSV
+                    </button>
+                </div>
+
+                <div class="filters-grid">
+                    <div class="filter-group">
+                        <label>Batch Year</label>
+                        <select id="batchFilter">
+                            <option value="">All Batches</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Program</label>
+                        <select id="programFilter">
+                            <option value="">All Programs</option>
+                            <option value="BSIT">BSIT</option>
+                            <option value="BSCE">BSCE</option>
+                            <option value="BSOA">BSOA</option>
+                            <option value="BSHM">BSHM</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Employment Status</label>
+                        <select id="statusFilter">
+                            <option value="">All Statuses</option>
+                            <option value="Employed">Employed</option>
+                            <option value="Self-Employed">Self-Employed</option>
+                            <option value="Unemployed">Unemployed</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <button class="clear-filter-btn" id="clearFiltersBtn">
+                            <i class="fa-solid fa-times"></i> Clear Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Responses Table -->
+            <div class="responses-table-card">
+                <h3 class="card-title"><i class="fa-solid fa-table"></i> Alumni Responses</h3>
+                <div class="table-container">
+                    <table class="responses-table">
+                        <thead>
+                            <tr>
+                                <th>Full Name</th>
+                                <th>Batch</th>
+                                <th>Program</th>
+                                <th>Status</th>
+                                <th>Work Type</th>
+                                <th>Timeline</th>
+                                <th>Submitted</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="responsesTableBody">
+                            <tr>
+                                <td colspan="8" class="no-data">
+                                    <i class="fa-solid fa-inbox"></i>
+                                    <p>No responses yet</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/private/js/admin/adminMila/alumni-employment.js"></script>
+    <script src="/private/js/admin/profileFunction.js"></script>
+</body>
+</html>

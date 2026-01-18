@@ -57,6 +57,12 @@
                                 <span>Digital Certificates</span>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/adminMila/alumni-employment.html">
+                                <i class="fa-solid fa-users"></i>
+                                <span>Alumni Employment Tracking</span>
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -162,7 +168,8 @@
                         <select id="certificateTypeFilter" class="filter-select">
                             <option value="all">All Certificate Types</option>
                             <option value="no_id">Certificate of No ID</option>
-                            <option value="id_fillout">ID Fill-Out Certificate</option>
+                            <option value="recommendation_scholarship">Recommendation Letter - Scholarship</option>
+                            <option value="recommendation_abroad">Recommendation Letter - Abroad</option>
                         </select>
 
                         <div class="search-box">
@@ -243,6 +250,46 @@
                     <button id="markAsPrintedBtn" class="btn btn-success">
                         <i class="fa-solid fa-check"></i> Mark as Printed
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Alert Modal -->
+    <div class="modal" id="customAlertModal">
+        <div class="modal-content" style="max-width: 450px; text-align: center;">
+            <div class="modal-body" style="padding: 40px 30px;">
+                <div id="alertIcon" style="font-size: 50px; margin-bottom: 20px;"></div>
+                <h3 id="alertTitle" style="font-size: 20px; font-weight: 700; margin-bottom: 15px; color: #333;"></h3>
+                <p id="alertMessage" style="font-size: 15px; color: #666; margin-bottom: 25px;"></p>
+                <button id="alertOkBtn" class="btn btn-primary" style="min-width: 120px;">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Prompt Modal -->
+    <div class="modal" id="customPromptModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2 id="promptTitle">Input Required</h2>
+                <button class="close-modal" id="closePromptModal">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 25px 30px;">
+                <p id="promptMessage" style="font-size: 14px; color: #666; margin-bottom: 15px;"></p>
+                <textarea 
+                    id="promptInput" 
+                    class="form-control" 
+                    rows="3" 
+                    placeholder="Enter your remarks here..."
+                    style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px; font-family: 'Inter', sans-serif; resize: vertical;"
+                ></textarea>
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                    <button id="promptCancelBtn" class="btn btn-secondary">Cancel</button>
+                    <button id="promptSubmitBtn" class="btn btn-primary">Submit</button>
                 </div>
             </div>
         </div>

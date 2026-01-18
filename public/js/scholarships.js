@@ -1,4 +1,4 @@
-// scholarships.js - Scholarship Opportunities Page Handler
+// scholarships.js - Public Side Connected to Database (COMPLETE VERSION)
 
 // State Management
 let allScholarships = [];
@@ -10,6 +10,7 @@ const emptyState = document.getElementById('emptyState');
 const loadingState = document.getElementById('loadingState');
 const searchInput = document.getElementById('scholarshipSearch');
 const statusFilter = document.getElementById('statusFilter');
+const courseFilter = document.getElementById('courseFilter');
 const providerFilter = document.getElementById('providerFilter');
 const typeFilter = document.getElementById('typeFilter');
 const clearFiltersBtn = document.getElementById('clearFilters');
@@ -24,26 +25,122 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
 });
 
-// Load scholarships data
+// Load scholarships from database
 async function loadScholarships() {
     showLoading();
     try {
-        // Try to fetch from API (future implementation)
-        // const response = await fetch('/api/scholarships');
-        // const data = await response.json();
-        
-        // For now, load from JSON file
-        const response = await fetch('/public/data/scholarships.json');
+        const response = await fetch('http://localhost:3000/api/scholarships/public');
         const data = await response.json();
         
-        allScholarships = data.scholarships || [];
-        filteredScholarships = [...allScholarships];
-        
-        renderScholarships();
+        if (data.success) {
+            allScholarships = data.scholarships.map(transformScholarship);
+            filteredScholarships = [...allScholarships];
+            renderScholarships();
+        } else {
+            throw new Error('Failed to load scholarships');
+        }
     } catch (error) {
         console.error('Error loading scholarships:', error);
         showError();
     }
+}
+
+// Transform database scholarship to display format
+function transformScholarship(dbScholarship) {
+    // Parse eligibility
+    let requirements = [];
+    if (dbScholarship.eligibility) {
+        requirements = dbScholarship.eligibility
+            .split(/\n|•/)
+            .map(r => r.trim())
+            .filter(r => r.length > 0);
+    }
+    
+    // Parse benefits
+    let benefitsList = [];
+    if (dbScholarship.benefits) {
+        benefitsList = dbScholarship.benefits
+            .split(/\n|•/)
+            .map(b => b.trim())
+            .filter(b => b.length > 0);
+    }
+    
+    // Parse required documents
+    let documents = [];
+    if (dbScholarship.required_documents) {
+        documents = dbScholarship.required_documents
+            .split(/\n|•/)
+            .map(d => d.trim())
+            .filter(d => d.length > 0);
+    }
+    if (documents.length === 0) {
+        documents = [
+            'Certificate of Enrollment',
+            'Transcript of Records',
+            'Valid ID',
+            'Other requirements as specified'
+        ];
+    }
+    
+    // Parse application process
+    let process = [];
+    if (dbScholarship.application_process) {
+        process = dbScholarship.application_process
+            .split(/\n|•/)
+            .map(p => p.trim())
+            .filter(p => p.length > 0);
+    }
+    if (process.length === 0) {
+        process = [
+            'Submit required documents to the Student Affairs Office',
+            'Wait for application review',
+            'Attend interview if required',
+            'Receive notification of application status'
+        ];
+    }
+    
+    // Parse external links
+    let externalLinks = [];
+    if (dbScholarship.external_links) {
+        externalLinks = dbScholarship.external_links
+            .split(/\n/)
+            .map(l => l.trim())
+            .filter(l => l.length > 0);
+    }
+    
+    // Format dates
+    const formatDate = (dateStr) => {
+        if (!dateStr) return 'N/A';
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+    };
+    
+    return {
+        id: dbScholarship.id,
+        title: dbScholarship.title,
+        provider: dbScholarship.provider,
+        provider_type: 'Government',
+        type: 'Academic',
+        status: dbScholarship.status.charAt(0).toUpperCase() + dbScholarship.status.slice(1),
+        description: dbScholarship.description,
+        eligibility: requirements[0] || dbScholarship.eligibility,
+        requirements: requirements,
+        benefits: benefitsList,
+        documents: documents,
+        process: process,
+        externalLinks: externalLinks,
+        deadline: formatDate(dbScholarship.deadline),
+        open_date: formatDate(dbScholarship.open_date),
+        contact: dbScholarship.contact_info || 'Student Affairs Office - PUP Parañaque',
+        amount: dbScholarship.amount,
+        slots: dbScholarship.slots,
+        files: dbScholarship.files || [],
+        eligibleCourses: dbScholarship.eligible_courses || 'All Programs'
+    };
 }
 
 // Render scholarships to the grid
@@ -88,6 +185,11 @@ function createScholarshipCard(scholarship) {
                 <span class="badge badge-campus">
                     <i class="fas fa-map-marker-alt"></i> PUP Parañaque
                 </span>
+                ${scholarship.eligibleCourses && scholarship.eligibleCourses !== 'All Programs' ? 
+                    `<span class="badge badge-courses">
+                        <i class="fas fa-user-graduate"></i> ${scholarship.eligibleCourses}
+                    </span>` : 
+                    ''}
             </div>
             
             <div class="card-info">
@@ -95,6 +197,12 @@ function createScholarshipCard(scholarship) {
                     <i class="fas fa-graduation-cap info-icon"></i>
                     <span>${scholarship.eligibility}</span>
                 </div>
+                ${scholarship.amount ? `
+                <div class="info-item">
+                    <i class="fas fa-money-bill-wave info-icon"></i>
+                    <span>${scholarship.amount}</span>
+                </div>
+                ` : ''}
             </div>
             
             <p class="card-description">${scholarship.description}</p>
@@ -112,9 +220,82 @@ function createScholarshipCard(scholarship) {
     return card;
 }
 
+// Get file icon based on file type
+function getFileIcon(mimeType) {
+    if (!mimeType) return 'fa-file';
+    if (mimeType.includes('pdf')) return 'fa-file-pdf';
+    if (mimeType.includes('word') || mimeType.includes('document')) return 'fa-file-word';
+    if (mimeType.includes('image')) return 'fa-image';
+    if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'fa-file-excel';
+    if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) return 'fa-file-powerpoint';
+    return 'fa-file';
+}
+
+// Check if file is an image
+function isImageFile(mimeType) {
+    return mimeType && mimeType.includes('image/');
+}
+
 // Open scholarship detail modal
 function openScholarshipModal(scholarship) {
     const statusClass = scholarship.status.toLowerCase();
+    
+    // Build attached files section
+    let filesSection = '';
+    if (scholarship.files && scholarship.files.length > 0) {
+        const imageFiles = scholarship.files.filter(f => isImageFile(f.file_type));
+        const documentFiles = scholarship.files.filter(f => !isImageFile(f.file_type));
+        
+        filesSection = `
+            <div class="modal-section">
+                <h3 class="modal-section-title">
+                    <i class="fas fa-paperclip"></i> Attached Files
+                </h3>
+                <div class="modal-files">
+                    ${imageFiles.map(file => `
+                        <div class="file-image-preview">
+                            <img src="http://localhost:3000${file.file_path}" alt="${file.file_name}">
+                            <a href="http://localhost:3000${file.file_path}" 
+                               target="_blank" 
+                               download="${file.file_name}"
+                               class="image-download-btn">
+                                <i class="fas fa-download"></i> Download ${file.file_name}
+                            </a>
+                        </div>
+                    `).join('')}
+                    ${documentFiles.map(file => `
+                        <a href="http://localhost:3000${file.file_path}" 
+                           target="_blank" 
+                           download="${file.file_name}"
+                           class="file-download-link">
+                            <i class="fas ${getFileIcon(file.file_type)}"></i>
+                            ${file.file_name}
+                        </a>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    // Build external links section
+    let linksSection = '';
+    if (scholarship.externalLinks && scholarship.externalLinks.length > 0) {
+        linksSection = `
+            <div class="modal-section">
+                <h3 class="modal-section-title">
+                    <i class="fas fa-link"></i> External Links
+                </h3>
+                <div class="modal-links">
+                    ${scholarship.externalLinks.map(link => `
+                        <a href="${link}" target="_blank" rel="noopener noreferrer" class="external-link">
+                            <i class="fas fa-external-link-alt"></i>
+                            ${link}
+                        </a>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
     
     modalBody.innerHTML = `
         <div class="modal-header">
@@ -148,6 +329,33 @@ function openScholarshipModal(scholarship) {
             </ul>
         </div>
         
+        ${scholarship.eligibleCourses && scholarship.eligibleCourses !== 'All Programs' ? `
+        <div class="modal-section">
+            <h3 class="modal-section-title">
+                <i class="fas fa-user-graduate"></i> Eligible Programs
+            </h3>
+            <div class="course-badges-container">
+                ${scholarship.eligibleCourses.split(',').map(course => 
+                    `<span class="course-badge-public">${course.trim()}</span>`
+                ).join('')}
+            </div>
+        </div>
+        ` : ''}
+        
+        ${scholarship.benefits && scholarship.benefits.length > 0 ? `
+        <div class="modal-section">
+            <h3 class="modal-section-title">
+                <i class="fas fa-gift"></i> Benefits & Coverage
+            </h3>
+            <ul class="modal-list">
+                ${scholarship.benefits.map(benefit => `<li>${benefit}</li>`).join('')}
+            </ul>
+        </div>
+        ` : ''}
+        
+        ${filesSection}
+        ${linksSection}
+        
         <div class="modal-section">
             <h3 class="modal-section-title">
                 <i class="fas fa-file-alt"></i> Required Documents
@@ -169,6 +377,28 @@ function openScholarshipModal(scholarship) {
         </div>
         
         <div class="modal-info-grid">
+            ${scholarship.amount ? `
+            <div class="modal-info-item">
+                <p class="modal-info-label">Scholarship Amount</p>
+                <p class="modal-info-value">
+                    <i class="fas fa-money-bill-wave"></i> ${scholarship.amount}
+                </p>
+            </div>
+            ` : ''}
+            ${scholarship.slots ? `
+            <div class="modal-info-item">
+                <p class="modal-info-label">Available Slots</p>
+                <p class="modal-info-value">
+                    <i class="fas fa-users"></i> ${scholarship.slots} slots
+                </p>
+            </div>
+            ` : ''}
+            <div class="modal-info-item">
+                <p class="modal-info-label">Opening Date</p>
+                <p class="modal-info-value">
+                    <i class="fas fa-calendar-check"></i> ${scholarship.open_date}
+                </p>
+            </div>
             <div class="modal-info-item">
                 <p class="modal-info-label">Application Deadline</p>
                 <p class="modal-info-value">
@@ -178,7 +408,7 @@ function openScholarshipModal(scholarship) {
             <div class="modal-info-item">
                 <p class="modal-info-label">Contact Information</p>
                 <p class="modal-info-value">
-                    <i class="fas fa-envelope"></i> ${scholarship.contact || 'See campus office'}
+                    <i class="fas fa-envelope"></i> ${scholarship.contact}
                 </p>
             </div>
         </div>
@@ -206,6 +436,7 @@ function closeModal() {
 function applyFilters() {
     const searchTerm = searchInput.value.toLowerCase().trim();
     const status = statusFilter.value;
+    const course = courseFilter.value;
     const provider = providerFilter.value;
     const type = typeFilter.value;
     
@@ -216,10 +447,16 @@ function applyFilters() {
             scholarship.description.toLowerCase().includes(searchTerm);
         
         const matchesStatus = !status || scholarship.status === status;
+        
+        // Course filtering logic
+        const matchesCourse = !course || 
+            scholarship.eligibleCourses === 'All Programs' || 
+            scholarship.eligibleCourses.includes(course);
+        
         const matchesProvider = !provider || scholarship.provider_type === provider;
         const matchesType = !type || scholarship.type === type;
         
-        return matchesSearch && matchesStatus && matchesProvider && matchesType;
+        return matchesSearch && matchesStatus && matchesCourse && matchesProvider && matchesType;
     });
     
     renderScholarships();
@@ -229,6 +466,7 @@ function applyFilters() {
 function clearFilters() {
     searchInput.value = '';
     statusFilter.value = '';
+    courseFilter.value = '';
     providerFilter.value = '';
     typeFilter.value = '';
     
@@ -238,26 +476,20 @@ function clearFilters() {
 
 // Setup event listeners
 function setupEventListeners() {
-    // Search input with debounce
     let searchTimeout;
     searchInput.addEventListener('input', () => {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(applyFilters, 300);
     });
     
-    // Filter dropdowns
     statusFilter.addEventListener('change', applyFilters);
+    courseFilter.addEventListener('change', applyFilters);
     providerFilter.addEventListener('change', applyFilters);
     typeFilter.addEventListener('change', applyFilters);
-    
-    // Clear filters button
     clearFiltersBtn.addEventListener('click', clearFilters);
-    
-    // Modal close events
     closeModalBtn.addEventListener('click', closeModal);
     modalOverlay.addEventListener('click', closeModal);
     
-    // Close modal on Escape key
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && modal.classList.contains('active')) {
             closeModal();

@@ -1,4 +1,4 @@
-<!-- scholarships.html -->
+<!-- scholarships.html - Updated with Eligible Courses/Programs -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,7 +12,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <!--SIDEBAR-->
     <section class="sidebar">
         <div class="logo">
             <img class="logoimage" src="/public/assets/images/PUPLogo.webp" alt="PUP Logo">
@@ -59,6 +58,12 @@
                                 <span>Digital Certificates</span>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/adminMila/alumni-employment.html">
+                                <i class="fa-solid fa-users"></i>
+                                <span>Alumni Employment Tracking</span>
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -96,7 +101,6 @@
         </header>
 
         <div class="main-content" id="mainContent">
-            <!-- Status Filter Tabs -->
             <div class="scholarship-filters">
                 <button class="filter-tab active" data-status="all">
                     <i class="fa-solid fa-list"></i> All Scholarships
@@ -125,7 +129,6 @@
                     <i class="fa-solid fa-plus"></i> Create Scholarship
                 </button>
 
-                <!-- Scholarship Modal -->
                 <div class="post-modal" id="postModal">
                     <div class="post-modal-content scholarship-modal">
                         <h2 id="modalTitle">Create Scholarship Opportunity</h2>
@@ -175,28 +178,72 @@
                                         <option value="closed">Closed</option>
                                     </select>
                                 </div>
+
+                                <div class="form-group">
+                                    <label for="eligibleCourses">Eligible Programs/Courses *</label>
+                                    <div class="courses-container">
+                                        <div class="course-options">
+                                            <label class="course-checkbox">
+                                                <input type="checkbox" value="All Programs" id="allPrograms" />
+                                                <span>All Programs</span>
+                                            </label>
+                                            <label class="course-checkbox">
+                                                <input type="checkbox" value="BSIT" class="program-checkbox" />
+                                                <span>BSIT</span>
+                                            </label>
+                                            <label class="course-checkbox">
+                                                <input type="checkbox" value="BSCE" class="program-checkbox" />
+                                                <span>BSCE</span>
+                                            </label>
+                                            <label class="course-checkbox">
+                                                <input type="checkbox" value="BSOA" class="program-checkbox" />
+                                                <span>BSOA</span>
+                                            </label>
+                                            <label class="course-checkbox">
+                                                <input type="checkbox" value="BSHM" class="program-checkbox" />
+                                                <span>BSHM</span>
+                                            </label>
+                                        </div>
+                                        <input type="hidden" id="eligibleCourses" />
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="description">Description *</label>
+                                    <textarea id="description" rows="4" placeholder="Brief description of the scholarship..." required></textarea>
+                                </div>
                             </div>
 
                             <!-- Right Column -->
                             <div class="form-column">
                                 <div class="form-group">
-                                    <label for="description">Description *</label>
-                                    <textarea id="description" rows="4" placeholder="Brief description of the scholarship..." required></textarea>
-                                </div>
-
-                                <div class="form-group">
                                     <label for="eligibility">Eligibility Requirements *</label>
-                                    <textarea id="eligibility" rows="4" placeholder="List eligibility criteria..." required></textarea>
+                                    <textarea id="eligibility" rows="3" placeholder="One requirement per line&#10;Must be a Filipino citizen&#10;Enrolled in PUP Parañaque" required></textarea>
                                 </div>
 
                                 <div class="form-group">
                                     <label for="benefits">Benefits/Coverage *</label>
-                                    <textarea id="benefits" rows="4" placeholder="What does this scholarship cover?" required></textarea>
+                                    <textarea id="benefits" rows="3" placeholder="One benefit per line&#10;Full tuition coverage&#10;Book allowance" required></textarea>
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="contactInfo">Contact Information</label>
-                                    <textarea id="contactInfo" rows="3" placeholder="Email, phone, or office details..."></textarea>
+                                    <label for="requiredDocuments">Required Documents *</label>
+                                    <textarea id="requiredDocuments" rows="3" placeholder="One document per line&#10;Certificate of Enrollment&#10;Transcript of Records&#10;Valid ID" required></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="applicationProcess">Application Process *</label>
+                                    <textarea id="applicationProcess" rows="3" placeholder="One step per line&#10;Submit documents to Student Affairs&#10;Wait for review&#10;Attend interview" required></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="externalLinks">External Links/URLs (Optional)</label>
+                                    <textarea id="externalLinks" rows="2" placeholder="One URL per line&#10;https://example.com/scholarship&#10;https://apply.example.com"></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="contactInfo">Contact Information (Optional)</label>
+                                    <textarea id="contactInfo" rows="2" placeholder="Email, phone, or office details..."></textarea>
                                 </div>
                             </div>
                         </div>
@@ -204,7 +251,7 @@
                         <!-- File Upload Section -->
                         <div class="file-upload-section">
                             <label for="fileUpload" class="file-upload-label">
-                                <i class="fa fa-paperclip"></i> Attach Files (Guidelines, Forms) - Max 3
+                                <i class="fa fa-paperclip"></i> Attach Files (Guidelines, Forms, Images) - Max 3
                             </label>
                             <input type="file" id="fileUpload" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp" />
                             <div id="fileList" class="file-list"></div>

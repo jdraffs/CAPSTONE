@@ -220,7 +220,18 @@ function createOrgCard(org) {
     </div>
     
     <div class="org-header">
-      ${org.logo_url ? `<img src="${org.logo_url}" alt="${org.name}" class="org-logo" onerror="this.style.display='none'">` : ''}
+      ${org.logo_url ? `
+        <img src="${org.logo_url}" 
+             alt="${org.name}" 
+             class="org-logo" 
+             onerror="this.onerror=null; this.style.display='none'; this.parentElement.insertAdjacentHTML('beforeend', '<div class=\\'org-logo-fallback\\'><i class=\\'fa-solid ${categoryIcon}\\'></i></div>');"
+             onload="this.style.opacity='1';"
+             style="opacity: 0; transition: opacity 0.3s ease;">
+      ` : `
+        <div class="org-logo-fallback">
+          <i class="fa-solid ${categoryIcon}"></i>
+        </div>
+      `}
       <h3>${org.name}</h3>
     </div>
 
