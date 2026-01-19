@@ -8,10 +8,10 @@ const router = express.Router();
 console.log('✅ Feedback routes file loaded');
 
 // ============================================
-// PUBLIC ENDPOINTS (Student Side)
+// PUBLIC ENDPOINTS (Student & Visitor Side)
 // ============================================
 
-// POST - Validate transaction before feedback
+// POST - Validate transaction before feedback (STUDENT)
 router.post("/feedback/validate", async (req, res) => {
   console.log('🔍 POST /feedback/validate hit');
   const { transaction_id, student_number, department } = req.body;
@@ -59,9 +59,9 @@ router.post("/feedback/validate", async (req, res) => {
   }
 });
 
-// POST - Submit feedback
+// POST - Submit feedback (STUDENT)
 router.post("/feedback", async (req, res) => {
-  console.log('🔍 POST /feedback hit');
+  console.log('🔍 POST /feedback (STUDENT) hit');
   console.log('📦 Request body:', req.body);
   
   const {
@@ -111,7 +111,7 @@ router.post("/feedback", async (req, res) => {
       });
     }
     
-    // Insert feedback
+    // Insert feedback with user_type = 'student'
     const insertQuery = `
       INSERT INTO feedback (
         transaction_id,
@@ -124,8 +124,9 @@ router.post("/feedback", async (req, res) => {
         facility,
         comments,
         is_anonymous,
+        user_type,
         created_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'student', NOW())
       RETURNING feedback_id, created_at
     `;
     
@@ -145,11 +146,11 @@ router.post("/feedback", async (req, res) => {
     const result = await pool.query(insertQuery, values);
     const feedback = result.rows[0];
     
-    console.log('✅ Feedback saved successfully:', feedback);
+    console.log('✅ Student feedback saved successfully:', feedback);
     
     // Send notification if rating is 2 or below
     if (overall_rating <= 2) {
-      await sendLowRatingNotification(department_id, feedback.feedback_id);
+      await sendLowRatingNotification(department_id, feedback.feedback_id, 'student');
     }
     
     res.status(201).json({
@@ -167,6 +168,109 @@ router.post("/feedback", async (req, res) => {
   }
 });
 
+// POST - Submit feedback (VISITOR)
+router.post("/feedback/visitor", async (req, res) => {
+  console.log('🔍 POST /feedback/visitor hit');
+  console.log('📦 Request body:', req.body);
+  
+  const {
+    visitor_name,
+    visitor_email,
+    visitor_phone,
+    department_id,
+    service_type,
+    visit_date,
+    overall_rating,
+    processing_time,
+    staff_assistance,
+    clarity,
+    facility,
+    comments
+  } = req.body;
+  
+  // Validation
+  if (!visitor_name || !department_id || !service_type || !visit_date ||
+      !overall_rating || !processing_time || !staff_assistance || 
+      !clarity || !facility) {
+    console.log('❌ Missing required fields');
+    return res.status(400).json({
+      success: false,
+      message: "Missing required fields"
+    });
+  }
+  
+  // Validate ratings are between 1-5
+  const ratings = [overall_rating, processing_time, staff_assistance, clarity, facility];
+  if (ratings.some(r => r < 1 || r > 5)) {
+    console.log('❌ Invalid rating values');
+    return res.status(400).json({
+      success: false,
+      message: "Invalid rating values. Must be between 1 and 5"
+    });
+  }
+  
+  try {
+    // Insert visitor feedback
+    const insertQuery = `
+      INSERT INTO feedback (
+        visitor_name,
+        visitor_email,
+        visitor_phone,
+        department_id,
+        service_type,
+        visit_date,
+        overall_rating,
+        processing_time,
+        staff_assistance,
+        clarity,
+        facility,
+        comments,
+        user_type,
+        created_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'visitor', NOW())
+      RETURNING feedback_id, created_at
+    `;
+    
+    const values = [
+      visitor_name,
+      visitor_email || null,
+      visitor_phone || null,
+      department_id,
+      service_type,
+      visit_date,
+      overall_rating,
+      processing_time,
+      staff_assistance,
+      clarity,
+      facility,
+      comments || null
+    ];
+    
+    const result = await pool.query(insertQuery, values);
+    const feedback = result.rows[0];
+    
+    console.log('✅ Visitor feedback saved successfully:', feedback);
+    
+    // Send notification if rating is 2 or below
+    if (overall_rating <= 2) {
+      await sendLowRatingNotification(department_id, feedback.feedback_id, 'visitor');
+    }
+    
+    res.status(201).json({
+      success: true,
+      message: "Feedback submitted successfully",
+      feedback_id: `FB-V-${feedback.feedback_id}`,
+      submitted_at: feedback.created_at
+    });
+  } catch (err) {
+    console.error("❌ Visitor feedback submission error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to submit feedback"
+    });
+  }
+});
+
 // ============================================
 // ADMIN ENDPOINTS (Department Staff)
 // ============================================
@@ -175,17 +279,26 @@ router.post("/feedback", async (req, res) => {
 router.get("/feedback/department/:department_id", async (req, res) => {
   console.log('🔍 GET /feedback/department/:id hit');
   const { department_id } = req.params;
-  const { start_date, end_date, min_rating, max_rating } = req.query;
+  const { start_date, end_date, min_rating, max_rating, user_type } = req.query;
   
   try {
     let query = `
       SELECT 
         f.feedback_id,
         f.transaction_id,
+        f.user_type,
         CASE 
-          WHEN f.is_anonymous = true THEN 'Anonymous'
-          ELSE f.student_number
-        END as student_identifier,
+          WHEN f.user_type = 'student' THEN
+            CASE 
+              WHEN f.is_anonymous = true THEN 'Anonymous Student'
+              ELSE f.student_number
+            END
+          WHEN f.user_type = 'visitor' THEN f.visitor_name
+        END as user_identifier,
+        f.visitor_email,
+        f.visitor_phone,
+        f.service_type,
+        f.visit_date,
         f.overall_rating,
         f.processing_time,
         f.staff_assistance,
@@ -196,12 +309,18 @@ router.get("/feedback/department/:department_id", async (req, res) => {
         t.transaction_type,
         t.transaction_date
       FROM feedback f
-      JOIN transactions t ON f.transaction_id = t.transaction_id
+      LEFT JOIN transactions t ON f.transaction_id = t.transaction_id
       WHERE f.department_id = $1
     `;
     
     const params = [department_id];
     let paramIndex = 2;
+    
+    if (user_type) {
+      query += ` AND f.user_type = $${paramIndex}`;
+      params.push(user_type);
+      paramIndex++;
+    }
     
     if (start_date) {
       query += ` AND f.created_at >= $${paramIndex}`;
@@ -256,6 +375,8 @@ router.get("/feedback/department/:department_id/stats", async (req, res) => {
     const query = `
       SELECT 
         COUNT(*) as total_feedback,
+        COUNT(CASE WHEN user_type = 'student' THEN 1 END) as student_feedback,
+        COUNT(CASE WHEN user_type = 'visitor' THEN 1 END) as visitor_feedback,
         ROUND(AVG(overall_rating), 2) as avg_overall_rating,
         ROUND(AVG(processing_time), 2) as avg_processing_time,
         ROUND(AVG(staff_assistance), 2) as avg_staff_assistance,
@@ -292,7 +413,7 @@ router.get("/feedback/department/:department_id/stats", async (req, res) => {
 // GET - Aggregated analytics across all departments
 router.get("/feedback/director/analytics", async (req, res) => {
   console.log('🔍 GET /feedback/director/analytics hit');
-  const { start_date, end_date } = req.query;
+  const { start_date, end_date, user_type } = req.query;
   
   try {
     let query = `
@@ -300,6 +421,8 @@ router.get("/feedback/director/analytics", async (req, res) => {
         d.department_name,
         d.department_id,
         COUNT(f.feedback_id) as total_feedback,
+        COUNT(CASE WHEN f.user_type = 'student' THEN 1 END) as student_feedback,
+        COUNT(CASE WHEN f.user_type = 'visitor' THEN 1 END) as visitor_feedback,
         ROUND(AVG(f.overall_rating), 2) as avg_rating,
         ROUND(AVG(f.processing_time), 2) as avg_processing_time,
         ROUND(AVG(f.staff_assistance), 2) as avg_staff_assistance,
@@ -312,19 +435,28 @@ router.get("/feedback/director/analytics", async (req, res) => {
     
     const params = [];
     let paramIndex = 1;
+    const conditions = [];
     
-    if (start_date || end_date) {
-      query += ' WHERE ';
-      if (start_date) {
-        query += `f.created_at >= $${paramIndex}`;
-        params.push(start_date);
-        paramIndex++;
-      }
-      if (end_date) {
-        if (start_date) query += ' AND ';
-        query += `f.created_at <= $${paramIndex}`;
-        params.push(end_date);
-      }
+    if (user_type) {
+      conditions.push(`f.user_type = $${paramIndex}`);
+      params.push(user_type);
+      paramIndex++;
+    }
+    
+    if (start_date) {
+      conditions.push(`f.created_at >= $${paramIndex}`);
+      params.push(start_date);
+      paramIndex++;
+    }
+    
+    if (end_date) {
+      conditions.push(`f.created_at <= $${paramIndex}`);
+      params.push(end_date);
+      paramIndex++;
+    }
+    
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ');
     }
     
     query += ` GROUP BY d.department_id, d.department_name ORDER BY avg_rating DESC NULLS LAST`;
@@ -349,16 +481,25 @@ router.get("/feedback/director/analytics", async (req, res) => {
 // GET - Monthly satisfaction trends
 router.get("/feedback/director/trends", async (req, res) => {
   console.log('🔍 GET /feedback/director/trends hit');
-  const { months = 6 } = req.query;
+  const { months = 6, user_type } = req.query;
   
   try {
-    const query = `
+    let query = `
       SELECT 
         TO_CHAR(created_at, 'YYYY-MM') as month,
         ROUND(AVG(overall_rating), 2) as avg_rating,
-        COUNT(*) as feedback_count
+        COUNT(*) as feedback_count,
+        COUNT(CASE WHEN user_type = 'student' THEN 1 END) as student_count,
+        COUNT(CASE WHEN user_type = 'visitor' THEN 1 END) as visitor_count
       FROM feedback
       WHERE created_at >= NOW() - INTERVAL '${parseInt(months)} months'
+    `;
+    
+    if (user_type) {
+      query += ` AND user_type = '${user_type}'`;
+    }
+    
+    query += `
       GROUP BY TO_CHAR(created_at, 'YYYY-MM')
       ORDER BY month ASC
     `;
@@ -383,11 +524,18 @@ router.get("/feedback/director/trends", async (req, res) => {
 // GET - Common complaints (keyword-based)
 router.get("/feedback/director/complaints", async (req, res) => {
   console.log('🔍 GET /feedback/director/complaints hit');
+  const { user_type } = req.query;
   
   try {
-    const query = `
+    let query = `
       SELECT 
         d.department_name,
+        f.user_type,
+        CASE 
+          WHEN f.user_type = 'student' THEN
+            CASE WHEN f.is_anonymous THEN 'Anonymous Student' ELSE f.student_number END
+          ELSE f.visitor_name
+        END as user_identifier,
         f.comments,
         f.overall_rating,
         f.created_at
@@ -396,9 +544,13 @@ router.get("/feedback/director/complaints", async (req, res) => {
       WHERE f.overall_rating <= 2 
         AND f.comments IS NOT NULL 
         AND LENGTH(f.comments) > 10
-      ORDER BY f.created_at DESC
-      LIMIT 50
     `;
+    
+    if (user_type) {
+      query += ` AND f.user_type = '${user_type}'`;
+    }
+    
+    query += ` ORDER BY f.created_at DESC LIMIT 50`;
     
     const result = await pool.query(query);
     
@@ -419,8 +571,8 @@ router.get("/feedback/director/complaints", async (req, res) => {
 // HELPER FUNCTIONS
 // ============================================
 
-async function sendLowRatingNotification(department_id, feedback_id) {
-  console.log(`🔔 Low rating notification: Department ${department_id}, Feedback ${feedback_id}`);
+async function sendLowRatingNotification(department_id, feedback_id, user_type) {
+  console.log(`🔔 Low rating notification: Department ${department_id}, Feedback ${feedback_id}, Type: ${user_type}`);
   // TODO: Integrate with notification system
 }
 
