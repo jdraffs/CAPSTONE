@@ -113,7 +113,6 @@ h1 {
 }
 
 .datetime::before {
-  content: '📅';
   font-size: 1.2rem;
 }
 
@@ -215,7 +214,6 @@ h1 {
 }
 
 .quick-actions h2::before {
-  content: '⚡';
   font-size: 1.5rem;
 }
 

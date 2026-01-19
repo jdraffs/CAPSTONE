@@ -310,6 +310,11 @@ function openScholarshipModal(scholarship) {
                 <span class="badge badge-campus">
                     <i class="fas fa-map-marker-alt"></i> For PUP Parañaque Students
                 </span>
+                ${scholarship.eligibleCourses && scholarship.eligibleCourses !== 'All Programs' ? 
+                `<span class="badge badge-courses">
+                    <i class="fas fa-user-graduate"></i> ${scholarship.eligibleCourses}
+                </span>` : 
+                ''}
             </div>
         </div>
         
