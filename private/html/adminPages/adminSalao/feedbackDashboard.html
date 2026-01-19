@@ -155,51 +155,63 @@
 
             <!-- Filters & Controls -->
             <section class="controls-section">
-                <div class="controls-container">
-                    <div class="filter-group">
-                        <select id="departmentFilter" class="filter-select">
-                            <option value="">All Departments</option>
-                        </select>
+            <div class="controls-container">
+                <div class="filter-group">
+                <!-- Existing filters -->
+                <select id="departmentFilter" class="filter-select">
+                    <option value="">All Departments</option>
+                </select>
 
-                        <select id="ratingFilter" class="filter-select">
-                            <option value="">All Ratings</option>
-                            <option value="5">5 Stars</option>
-                            <option value="4">4 Stars</option>
-                            <option value="3">3 Stars</option>
-                            <option value="2">2 Stars</option>
-                            <option value="1">1 Star</option>
-                        </select>
+                <select id="ratingFilter" class="filter-select">
+                    <option value="">All Ratings</option>
+                    <option value="5">5 Stars</option>
+                    <option value="4">4 Stars</option>
+                    <option value="3">3 Stars</option>
+                    <option value="2">2 Stars</option>
+                    <option value="1">1 Star</option>
+                </select>
 
-                        <select id="timeFilter" class="filter-select">
-                            <option value="">All Time</option>
-                            <option value="today">Today</option>
-                            <option value="week">This Week</option>
-                            <option value="month">This Month</option>
-                            <option value="custom">Custom Range</option>
-                        </select>
+                <!-- NEW: User Type Filter -->
+                <select id="userTypeFilter" class="filter-select">
+                    <option value="">All Users</option>
+                    <option value="student">
+                    <i class="fas fa-user-graduate"></i> Students Only
+                    </option>
+                    <option value="visitor">
+                    <i class="fas fa-users"></i> Visitors Only
+                    </option>
+                </select>
 
-                        <button class="btn-clear" id="clearFilters">
-                            <i class="fas fa-times"></i> Clear Filters
-                        </button>
-                    </div>
+                <select id="timeFilter" class="filter-select">
+                    <option value="">All Time</option>
+                    <option value="today">Today</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                    <option value="custom">Custom Range</option>
+                </select>
 
-                    <div class="action-group">
-                        <button class="btn-export" id="exportCSV">
-                            <i class="fas fa-file-csv"></i> Export CSV
-                        </button>
-                        <button class="btn-export" id="exportPDF">
-                            <i class="fas fa-file-pdf"></i> Export PDF
-                        </button>
-                    </div>
+                <button class="btn-clear" id="clearFilters">
+                    <i class="fas fa-times"></i> Clear Filters
+                </button>
                 </div>
 
-                <!-- Custom Date Range (Hidden by default) -->
-                <div class="date-range-container" id="dateRangeContainer" style="display: none;">
-                    <input type="date" id="startDate" class="date-input">
-                    <span>to</span>
-                    <input type="date" id="endDate" class="date-input">
-                    <button class="btn-apply" id="applyDateRange">Apply</button>
+                <div class="action-group">
+                <button class="btn-export" id="exportCSV">
+                    <i class="fas fa-file-csv"></i> Export CSV
+                </button>
+                <button class="btn-export" id="exportPDF">
+                    <i class="fas fa-file-pdf"></i> Export PDF
+                </button>
                 </div>
+            </div>
+
+            <!-- Custom Date Range (Hidden by default) -->
+            <div class="date-range-container" id="dateRangeContainer" style="display: none;">
+                <input type="date" id="startDate" class="date-input">
+                <span>to</span>
+                <input type="date" id="endDate" class="date-input">
+                <button class="btn-apply" id="applyDateRange">Apply</button>
+            </div>
             </section>
 
             <!-- Content Grid -->

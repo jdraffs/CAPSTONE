@@ -1,4 +1,4 @@
-// feedbackDashboard.js - FIXED VERSION with Real-time Polling
+// feedbackDashboard.js - UPDATED WITH STUDENT & VISITOR SUPPORT
 
 document.addEventListener('DOMContentLoaded', async () => {
   const API_URL = 'http://localhost:3000/api';
@@ -12,7 +12,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     rating: '',
     timeRange: '',
     startDate: '',
-    endDate: ''
+    endDate: '',
+    userType: '' // NEW: Filter by user type
   };
   
   let pollingInterval = null;
@@ -20,7 +21,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   let isPollingEnabled = true;
   let isFirstLoad = true;
 
-  // Initialize Dashboard
   await initializeDashboard();
 
   async function initializeDashboard() {
@@ -34,20 +34,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       updateDashboard();
       attachEventListeners();
       
-      // Mark first load complete
       isFirstLoad = false;
-      
-      // Start real-time polling
       startRealtimePolling();
       
-      console.log('✅ Feedback Dashboard initialized with real-time polling');
+      console.log('✅ Feedback Dashboard initialized with Student & Visitor support');
     } catch (error) {
       console.error('❌ Error initializing dashboard:', error);
       showToast('Failed to load dashboard. Check console for details.', 'error');
     }
   }
-
-  // ============ DATA FETCHING ============
 
   async function fetchDepartments() {
     try {
@@ -68,7 +63,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       console.log('🔄 Fetching feedback from API...');
       
-      const response = await fetch(`${API_URL}/feedback/director/analytics`);
+      // Build query params with user_type filter
+      const queryParams = new URLSearchParams();
+      if (currentFilters.userType) {
+        queryParams.append('user_type', currentFilters.userType);
+      }
+      
+      const response = await fetch(`${API_URL}/feedback/director/analytics?${queryParams}`);
       
       if (!response.ok) {
         const errorText = await response.text();
@@ -79,7 +80,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       const data = await response.json();
       console.log('📊 Analytics data received:', data);
       
-      // Transform analytics data into feedback items
       const newFeedback = [];
       
       for (const dept of data.analytics) {
@@ -87,7 +87,14 @@ document.addEventListener('DOMContentLoaded', async () => {
           console.log(`📥 Fetching feedback for ${dept.department_name}...`);
           
           try {
-            const deptResponse = await fetch(`${API_URL}/feedback/department/${dept.department_id}`);
+            const deptQueryParams = new URLSearchParams();
+            if (currentFilters.userType) {
+              deptQueryParams.append('user_type', currentFilters.userType);
+            }
+            
+            const deptResponse = await fetch(
+              `${API_URL}/feedback/department/${dept.department_id}?${deptQueryParams}`
+            );
             
             if (deptResponse.ok) {
               const deptData = await deptResponse.json();
@@ -109,7 +116,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       console.log(`✅ Total feedback loaded: ${newFeedback.length}`);
 
-      // Detect new submissions (only after first load)
       if (!isFirstLoad && allFeedback.length > 0 && newFeedback.length > allFeedback.length) {
         const newCount = newFeedback.length - allFeedback.length;
         console.log(`🆕 ${newCount} new feedback detected!`);
@@ -117,7 +123,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         playNotificationSound();
       }
       
-      // Update feedback arrays
       allFeedback = newFeedback;
       filteredFeedback = [...allFeedback];
       lastFeedbackCount = newFeedback.length;
@@ -125,7 +130,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (error) {
       console.error('❌ Error fetching feedback:', error);
       
-      // Use mock data only if this is the first load and we have no data
       if (isFirstLoad && allFeedback.length === 0) {
         console.log('⚠️ Using mock data (API unavailable)');
         allFeedback = getMockFeedback();
@@ -135,20 +139,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // ============ REAL-TIME POLLING ============
-  
   function startRealtimePolling() {
-    // Clear any existing interval
     if (pollingInterval) {
       clearInterval(pollingInterval);
     }
     
-    // Poll every 5 seconds for new feedback
     pollingInterval = setInterval(async () => {
       if (isPollingEnabled) {
         await checkForNewFeedback();
       }
-    }, 5000); // 5 seconds for faster updates
+    }, 5000);
     
     console.log('📡 Real-time polling started (every 5 seconds)');
   }
@@ -164,13 +164,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function checkForNewFeedback() {
     try {
       console.log('🔄 Polling for new feedback...');
-      
-      // Silently fetch new data
       await fetchAllFeedback();
-      
-      // Re-apply current filters
       applyFilters();
-      
     } catch (error) {
       console.error('❌ Error polling for new feedback:', error);
     }
@@ -178,26 +173,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   function showNewFeedbackNotification(count) {
     console.log(`🔔 Showing notification for ${count} new feedback`);
-    
-    // Show visual notification
     showToast(
       `🎉 ${count} new feedback submission${count > 1 ? 's' : ''} received!`, 
       'success'
     );
-    
-    // Animate notification badge
-    const badge = document.getElementById('notificationBadge');
-    if (badge) {
-      badge.style.animation = 'none';
-      setTimeout(() => {
-        badge.style.animation = 'pulse 1s ease-in-out 3';
-      }, 10);
-    }
   }
   
   function playNotificationSound() {
     try {
-      // Simple beep sound
       const audioContext = new (window.AudioContext || window.webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
@@ -214,12 +197,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + 0.5);
     } catch (error) {
-      // Silently fail if audio doesn't work
       console.log('Audio notification not available');
     }
   }
-
-  // ============ DASHBOARD UPDATES ============
 
   function updateDashboard() {
     updateSummaryCards();
@@ -253,12 +233,388 @@ document.addEventListener('DOMContentLoaded', async () => {
     const criticalCount = filteredFeedback.filter(f => f.overall_rating <= 2).length;
     document.getElementById('criticalAlerts').textContent = criticalCount;
     
-    // Update notification badge
     const notificationBadge = document.getElementById('notificationBadge');
     if (notificationBadge) {
       notificationBadge.textContent = criticalCount;
       notificationBadge.style.display = criticalCount > 0 ? 'block' : 'none';
     }
+  }
+
+  function updateRecentFeedback() {
+    const container = document.getElementById('recentFeedbackList');
+    
+    const recentFeedback = [...filteredFeedback]
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      .slice(0, 5);
+
+    if (recentFeedback.length === 0) {
+      container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>No recent feedback</p></div>';
+      return;
+    }
+
+    container.innerHTML = recentFeedback.map(feedback => {
+      const userBadge = getUserTypeBadge(feedback.user_type);
+      const userIdentifier = feedback.user_type === 'student' 
+        ? feedback.user_identifier || feedback.student_identifier
+        : feedback.visitor_name || feedback.user_identifier;
+      
+      return `
+        <div class="feedback-item ${feedback.overall_rating <= 2 ? 'critical' : ''}" onclick="viewFeedbackDetails(${feedback.feedback_id})">
+          <div class="feedback-header">
+            <span class="feedback-dept">${feedback.department_name}</span>
+            <span class="feedback-rating">
+              ${generateStars(feedback.overall_rating)}
+            </span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; margin: 8px 0;">
+            ${userBadge}
+            <span style="font-size: 0.85rem; color: #4a5568;">${userIdentifier}</span>
+          </div>
+          <p class="feedback-comment">${feedback.comments || 'No comments provided'}</p>
+          <div class="feedback-meta">
+            <span class="feedback-date">
+              <i class="far fa-clock"></i>
+              ${formatTimeAgo(new Date(feedback.created_at))}
+            </span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function getUserTypeBadge(userType) {
+    if (userType === 'student') {
+      return '<span style="background: #667eea; color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;"><i class="fas fa-user-graduate"></i> Student</span>';
+    } else if (userType === 'visitor') {
+      return '<span style="background: #48bb78; color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;"><i class="fas fa-users"></i> Visitor</span>';
+    }
+    return '';
+  }
+
+  window.viewFeedbackDetails = async function(feedbackId) {
+    const feedback = allFeedback.find(f => f.feedback_id === feedbackId);
+    if (!feedback) return;
+
+    const modalBody = document.getElementById('feedbackModalBody');
+    
+    const userBadge = getUserTypeBadge(feedback.user_type);
+    const userIdentifier = feedback.user_type === 'student' 
+      ? feedback.user_identifier || feedback.student_identifier
+      : feedback.visitor_name || feedback.user_identifier;
+    
+    let userInfoSection = '';
+    if (feedback.user_type === 'visitor') {
+      userInfoSection = `
+        <div class="detail-section">
+          <h4><i class="fas fa-user"></i> Visitor Information</h4>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="detail-label">Name</span>
+              <span class="detail-value">${feedback.visitor_name || feedback.user_identifier}</span>
+            </div>
+            ${feedback.visitor_email ? `
+              <div class="detail-item">
+                <span class="detail-label">Email</span>
+                <span class="detail-value">${feedback.visitor_email}</span>
+              </div>
+            ` : ''}
+            ${feedback.visitor_phone ? `
+              <div class="detail-item">
+                <span class="detail-label">Phone</span>
+                <span class="detail-value">${feedback.visitor_phone}</span>
+              </div>
+            ` : ''}
+            ${feedback.service_type ? `
+              <div class="detail-item">
+                <span class="detail-label">Service Type</span>
+                <span class="detail-value">${feedback.service_type}</span>
+              </div>
+            ` : ''}
+            ${feedback.visit_date ? `
+              <div class="detail-item">
+                <span class="detail-label">Visit Date</span>
+                <span class="detail-value">${new Date(feedback.visit_date).toLocaleDateString()}</span>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }
+    
+    modalBody.innerHTML = `
+      <div class="feedback-detail">
+        <div class="detail-section">
+          <h4><i class="fas fa-info-circle"></i> Feedback Information</h4>
+          <div style="margin-bottom: 15px;">${userBadge}</div>
+          <div class="detail-grid">
+            ${feedback.transaction_id ? `
+              <div class="detail-item">
+                <span class="detail-label">Transaction ID</span>
+                <span class="detail-value">${feedback.transaction_id}</span>
+              </div>
+            ` : ''}
+            <div class="detail-item">
+              <span class="detail-label">Department</span>
+              <span class="detail-value">${feedback.department_name}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">${feedback.user_type === 'student' ? 'Student' : 'Visitor'}</span>
+              <span class="detail-value">${userIdentifier}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Date Submitted</span>
+              <span class="detail-value">${new Date(feedback.created_at).toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+
+        ${userInfoSection}
+
+        <div class="detail-section">
+          <h4><i class="fas fa-star"></i> Overall Rating</h4>
+          <div style="text-align: center; font-size: 2rem; color: #ffd700;">
+            ${generateStars(feedback.overall_rating)}
+            <p style="margin: 10px 0 0 0; font-size: 1.2rem; color: #2d3748;">${feedback.overall_rating}/5</p>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h4><i class="fas fa-sliders-h"></i> Service Criteria Ratings</h4>
+          <div class="ratings-grid">
+            <div class="rating-item">
+              <span class="rating-item-label">Processing Time</span>
+              <span class="rating-item-value">${generateStars(feedback.processing_time)}</span>
+            </div>
+            <div class="rating-item">
+              <span class="rating-item-label">Staff Assistance</span>
+              <span class="rating-item-value">${generateStars(feedback.staff_assistance)}</span>
+            </div>
+            <div class="rating-item">
+              <span class="rating-item-label">Clarity</span>
+              <span class="rating-item-value">${generateStars(feedback.clarity)}</span>
+            </div>
+            <div class="rating-item">
+              <span class="rating-item-label">Facility</span>
+              <span class="rating-item-value">${generateStars(feedback.facility)}</span>
+            </div>
+          </div>
+        </div>
+
+        ${feedback.comments ? `
+          <div class="detail-section">
+            <h4><i class="fas fa-comment"></i> Comments</h4>
+            <p style="line-height: 1.6; color: #4a5568;">${feedback.comments}</p>
+          </div>
+        ` : ''}
+      </div>
+    `;
+
+    document.getElementById('feedbackModal').classList.add('active');
+  };
+
+  function applyFilters() {
+    filteredFeedback = allFeedback.filter(feedback => {
+      if (currentFilters.department && feedback.department_name !== currentFilters.department) {
+        return false;
+      }
+
+      if (currentFilters.rating && feedback.overall_rating !== parseInt(currentFilters.rating)) {
+        return false;
+      }
+      
+      if (currentFilters.userType && feedback.user_type !== currentFilters.userType) {
+        return false;
+      }
+
+      if (currentFilters.timeRange) {
+        const feedbackDate = new Date(feedback.created_at);
+        const now = new Date();
+
+        if (currentFilters.timeRange === 'today') {
+          if (feedbackDate.toDateString() !== now.toDateString()) return false;
+        } else if (currentFilters.timeRange === 'week') {
+          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          if (feedbackDate < weekAgo) return false;
+        } else if (currentFilters.timeRange === 'month') {
+          const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          if (feedbackDate < monthAgo) return false;
+        } else if (currentFilters.timeRange === 'custom') {
+          if (currentFilters.startDate && feedbackDate < new Date(currentFilters.startDate)) return false;
+          if (currentFilters.endDate && feedbackDate > new Date(currentFilters.endDate)) return false;
+        }
+      }
+
+      return true;
+    });
+
+    updateDashboard();
+  }
+
+  function attachEventListeners() {
+    document.getElementById('refreshDashboard').addEventListener('click', handleRefresh);
+
+    document.getElementById('departmentFilter').addEventListener('change', (e) => {
+      currentFilters.department = e.target.value;
+      applyFilters();
+    });
+
+    document.getElementById('ratingFilter').addEventListener('change', (e) => {
+      currentFilters.rating = e.target.value;
+      applyFilters();
+    });
+    
+    // NEW: User type filter
+    const userTypeFilter = document.getElementById('userTypeFilter');
+    if (userTypeFilter) {
+      userTypeFilter.addEventListener('change', (e) => {
+        currentFilters.userType = e.target.value;
+        applyFilters();
+      });
+    }
+
+    document.getElementById('timeFilter').addEventListener('change', (e) => {
+      currentFilters.timeRange = e.target.value;
+      const dateRangeContainer = document.getElementById('dateRangeContainer');
+      
+      if (e.target.value === 'custom') {
+        dateRangeContainer.style.display = 'flex';
+      } else {
+        dateRangeContainer.style.display = 'none';
+        applyFilters();
+      }
+    });
+
+    // Add more event listeners as needed...
+  }
+
+  function populateDepartmentFilters() {
+    const filters = [
+      document.getElementById('departmentFilter'),
+      document.getElementById('modalDepartmentFilter')
+    ];
+
+    filters.forEach(filter => {
+      if (filter) {
+        departments.forEach(dept => {
+          const option = document.createElement('option');
+          option.value = dept.name;
+          option.textContent = dept.name;
+          filter.appendChild(option);
+        });
+      }
+    });
+  }
+
+  // Utility functions
+  function generateStars(rating) {
+    return '★'.repeat(rating) + '☆'.repeat(5 - rating);
+  }
+
+  function formatTimeAgo(date) {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    const intervals = {
+      year: 31536000,
+      month: 2592000,
+      week: 604800,
+      day: 86400,
+      hour: 3600,
+      minute: 60
+    };
+
+    for (const [unit, secondsInUnit] of Object.entries(intervals)) {
+      const interval = Math.floor(seconds / secondsInUnit);
+      if (interval >= 1) {
+        return `${interval} ${unit}${interval > 1 ? 's' : ''} ago`;
+      }
+    }
+    return 'just now';
+  }
+
+  function showToast(message, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+
+    const icons = {
+      success: 'fa-check-circle',
+      error: 'fa-exclamation-circle',
+      warning: 'fa-exclamation-triangle',
+      info: 'fa-info-circle'
+    };
+
+    toast.innerHTML = `
+      <div class="toast-icon"><i class="fas ${icons[type]}"></i></div>
+      <div class="toast-content">
+        <div class="toast-message">${message}</div>
+      </div>
+    `;
+
+    container.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 300);
+    }, 4000);
+  }
+
+  async function handleRefresh() {
+    const refreshBtn = document.getElementById('refreshDashboard');
+    const icon = refreshBtn.querySelector('i');
+    
+    icon.classList.add('fa-spin');
+    refreshBtn.disabled = true;
+    
+    try {
+      await fetchAllFeedback();
+      applyFilters();
+      showToast('Dashboard refreshed successfully', 'success');
+    } catch (error) {
+      showToast('Failed to refresh dashboard', 'error');
+    } finally {
+      icon.classList.remove('fa-spin');
+      refreshBtn.disabled = false;
+    }
+  }
+
+  // Mock data with both student and visitor feedback
+  function getMockFeedback() {
+    return [
+      {
+        feedback_id: 1,
+        transaction_id: 'TXN-2026-001234',
+        user_identifier: '2021-55555-MN-0',
+        student_identifier: '2021-55555-MN-0',
+        department_name: 'Registrar',
+        department_id: 1,
+        user_type: 'student',
+        overall_rating: 5,
+        processing_time: 5,
+        staff_assistance: 5,
+        clarity: 4,
+        facility: 4,
+        comments: 'Excellent service! Very fast and efficient.',
+        created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        feedback_id: 2,
+        visitor_name: 'John Doe',
+        visitor_email: 'john@example.com',
+        user_identifier: 'John Doe',
+        department_name: 'Admission Office',
+        department_id: 6,
+        user_type: 'visitor',
+        service_type: 'Inquiry',
+        visit_date: '2026-01-18',
+        overall_rating: 4,
+        processing_time: 4,
+        staff_assistance: 5,
+        clarity: 4,
+        facility: 4,
+        comments: 'Very helpful staff. Got all the information I needed.',
+        created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString()
+      }
+    ];
   }
 
   function updateDepartmentPerformance() {
