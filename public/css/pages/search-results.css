@@ -1,0 +1,303 @@
+/* public/css/pages/search-results.css */
+
+.search-page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  min-height: calc(100vh - 200px);
+}
+
+/* Search Header */
+.search-header {
+  margin-bottom: 30px;
+}
+
+.search-header h1 {
+  color: #822020;
+  font-size: 32px;
+  margin-bottom: 20px;
+  font-weight: 700;
+}
+
+.search-input-container {
+  margin-bottom: 15px;
+}
+
+.main-search-form {
+  display: flex;
+  gap: 10px;
+  max-width: 700px;
+}
+
+.main-search-input {
+  flex: 1;
+  padding: 12px 20px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.main-search-input:focus {
+  outline: none;
+  border-color: #822020;
+  box-shadow: 0 0 0 3px rgba(130, 32, 32, 0.1);
+}
+
+.main-search-btn {
+  padding: 12px 30px;
+  background: #822020;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.main-search-btn:hover {
+  background: #a02828;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(130, 32, 32, 0.3);
+}
+
+.search-query {
+  font-size: 14px;
+  color: #666;
+}
+
+.search-query strong {
+  color: #822020;
+  font-weight: 600;
+}
+
+#resultsCount {
+  margin-left: 10px;
+  color: #999;
+}
+
+/* Filter Tabs */
+.filter-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 10px;
+}
+
+.filter-tab {
+  padding: 10px 20px;
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-tab i {
+  font-size: 16px;
+}
+
+.filter-tab:hover {
+  border-color: #822020;
+  color: #822020;
+  transform: translateY(-2px);
+}
+
+.filter-tab.active {
+  background: #822020;
+  border-color: #822020;
+  color: white;
+}
+
+/* Search Results */
+.search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.result-section {
+  margin-bottom: 30px;
+}
+
+.result-section-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #822020;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.result-section-title i {
+  font-size: 22px;
+}
+
+.result-item {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.result-item:hover {
+  border-color: #822020;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.result-type {
+  display: inline-block;
+  padding: 4px 12px;
+  background: #f0f0f0;
+  color: #666;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 20px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.result-type.news { background: #e3f2fd; color: #1976d2; }
+.result-type.scholarship { background: #f3e5f5; color: #7b1fa2; }
+.result-type.career { background: #e8f5e9; color: #388e3c; }
+.result-type.nstp { background: #fff3e0; color: #f57c00; }
+.result-type.ojt { background: #fce4ec; color: #c2185b; }
+.result-type.research { background: #e0f2f1; color: #00796b; }
+.result-type.page { background: #f5f5f5; color: #616161; }
+
+.result-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.result-title:hover {
+  color: #822020;
+}
+
+.result-meta {
+  font-size: 13px;
+  color: #999;
+  margin-bottom: 10px;
+}
+
+.result-excerpt {
+  font-size: 15px;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+.result-url {
+  font-size: 13px;
+  color: #822020;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 500;
+}
+
+.result-url i {
+  font-size: 12px;
+}
+
+.result-url:hover {
+  text-decoration: underline;
+}
+
+/* States */
+.loading-state,
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  color: #666;
+}
+
+.loading-state i {
+  font-size: 48px;
+  color: #822020;
+  margin-bottom: 20px;
+}
+
+.loading-state p {
+  font-size: 18px;
+}
+
+.empty-state i {
+  font-size: 64px;
+  color: #ddd;
+  margin-bottom: 20px;
+}
+
+.empty-state h2 {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.empty-state p {
+  font-size: 16px;
+  color: #999;
+}
+
+/* Highlight matched text */
+.highlight {
+  background: #fff176;
+  font-weight: 600;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .search-page-container {
+    padding: 20px 15px;
+  }
+
+  .search-header h1 {
+    font-size: 24px;
+  }
+
+  .main-search-form {
+    flex-direction: column;
+  }
+
+  .main-search-btn {
+    width: 100%;
+  }
+
+  .filter-tabs {
+    gap: 8px;
+  }
+
+  .filter-tab {
+    padding: 8px 15px;
+    font-size: 13px;
+  }
+
+  .result-item {
+    padding: 15px;
+  }
+
+  .result-title {
+    font-size: 18px;
+  }
+}
