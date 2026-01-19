@@ -258,207 +258,380 @@
           <p class="form-subtitle">We value your opinion - help us improve our services</p>
         </div>
 
-        <form id="visitorFeedbackForm" class="feedback-form">
-          <!-- Visitor Information -->
-          <div class="section-divider">
-            <h3><i class="fas fa-info-circle"></i> Your Information</h3>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="visitorName" class="form-label">
-                <i class="fas fa-user"></i> Full Name <span class="required">*</span>
-              </label>
-              <input 
-                type="text" 
-                id="visitorName" 
-                class="form-input" 
-                placeholder="e.g., Juan Dela Cruz"
-                required
-              >
-            </div>
-
-            <div class="form-group">
-              <label for="visitorEmail" class="form-label">
-                <i class="fas fa-envelope"></i> Email (Optional)
-              </label>
-              <input 
-                type="email" 
-                id="visitorEmail" 
-                class="form-input" 
-                placeholder="e.g., juan@example.com"
-              >
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="visitorPhone" class="form-label">
-                <i class="fas fa-phone"></i> Contact Number (Optional)
-              </label>
-              <input 
-                type="tel" 
-                id="visitorPhone" 
-                class="form-input" 
-                placeholder="e.g., 0912-345-6789"
-              >
-            </div>
-
-            <div class="form-group">
-              <label for="visitPurpose" class="form-label">
-                <i class="fas fa-clipboard"></i> Purpose of Visit <span class="required">*</span>
-              </label>
-              <select id="visitPurpose" class="form-select" required>
-                <option value="">Select Purpose</option>
-                <option value="Inquiry">General Inquiry</option>
-                <option value="Documentation">Document Request</option>
-                <option value="Enrollment">Enrollment</option>
-                <option value="Meeting">Meeting/Appointment</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="visitorDepartment" class="form-label">
-              <i class="fas fa-building"></i> Department Visited <span class="required">*</span>
-            </label>
-            <select id="visitorDepartment" class="form-select" required>
-              <option value="">Select Department</option>
-              <option value="Registrar">Registrar</option>
-              <option value="Cashier">Cashier</option>
-              <option value="Library">Library</option>
-              <option value="Student Affairs">Student Affairs</option>
-              <option value="Clinic">Clinic</option>
-              <option value="Admission Office">Admission Office</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-
-          <!-- Overall Rating -->
-          <div class="section-divider">
-            <h3><i class="fas fa-star"></i> Rate Your Experience</h3>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label rating-label">Overall Rating</label>
-            <div class="star-rating">
-              <input type="radio" name="visitor_overall_rating" id="vstar5" value="5" required>
-              <label for="vstar5" class="star">★</label>
-              <input type="radio" name="visitor_overall_rating" id="vstar4" value="4">
-              <label for="vstar4" class="star">★</label>
-              <input type="radio" name="visitor_overall_rating" id="vstar3" value="3">
-              <label for="vstar3" class="star">★</label>
-              <input type="radio" name="visitor_overall_rating" id="vstar2" value="2">
-              <label for="vstar2" class="star">★</label>
-              <input type="radio" name="visitor_overall_rating" id="vstar1" value="1">
-              <label for="vstar1" class="star">★</label>
-            </div>
-            <p class="rating-text" id="visitorRatingText">Select a rating</p>
-          </div>
-
-          <!-- Service Criteria -->
-          <div class="criteria-section">
-            <h3 class="criteria-title">Rate Each Service Aspect</h3>
-            
-            <div class="criteria-item">
-              <label class="criteria-label">
-                <i class="fas fa-clock"></i> Processing Time
-              </label>
-              <div class="star-rating-small">
-                <input type="radio" name="visitor_processing_time" id="vpt5" value="5" required>
-                <label for="vpt5" class="star-small">★</label>
-                <input type="radio" name="visitor_processing_time" id="vpt4" value="4">
-                <label for="vpt4" class="star-small">★</label>
-                <input type="radio" name="visitor_processing_time" id="vpt3" value="3">
-                <label for="vpt3" class="star-small">★</label>
-                <input type="radio" name="visitor_processing_time" id="vpt2" value="2">
-                <label for="vpt2" class="star-small">★</label>
-                <input type="radio" name="visitor_processing_time" id="vpt1" value="1">
-                <label for="vpt1" class="star-small">★</label>
-              </div>
-            </div>
-
-            <div class="criteria-item">
-              <label class="criteria-label">
-                <i class="fas fa-user-tie"></i> Staff Assistance
-              </label>
-              <div class="star-rating-small">
-                <input type="radio" name="visitor_staff_assistance" id="vsa5" value="5" required>
-                <label for="vsa5" class="star-small">★</label>
-                <input type="radio" name="visitor_staff_assistance" id="vsa4" value="4">
-                <label for="vsa4" class="star-small">★</label>
-                <input type="radio" name="visitor_staff_assistance" id="vsa3" value="3">
-                <label for="vsa3" class="star-small">★</label>
-                <input type="radio" name="visitor_staff_assistance" id="vsa2" value="2">
-                <label for="vsa2" class="star-small">★</label>
-                <input type="radio" name="visitor_staff_assistance" id="vsa1" value="1">
-                <label for="vsa1" class="star-small">★</label>
-              </div>
-            </div>
-
-            <div class="criteria-item">
-              <label class="criteria-label">
-                <i class="fas fa-clipboard-list"></i> Clarity of Information
-              </label>
-              <div class="star-rating-small">
-                <input type="radio" name="visitor_clarity" id="vci5" value="5" required>
-                <label for="vci5" class="star-small">★</label>
-                <input type="radio" name="visitor_clarity" id="vci4" value="4">
-                <label for="vci4" class="star-small">★</label>
-                <input type="radio" name="visitor_clarity" id="vci3" value="3">
-                <label for="vci3" class="star-small">★</label>
-                <input type="radio" name="visitor_clarity" id="vci2" value="2">
-                <label for="vci2" class="star-small">★</label>
-                <input type="radio" name="visitor_clarity" id="vci1" value="1">
-                <label for="vci1" class="star-small">★</label>
-              </div>
-            </div>
-
-            <div class="criteria-item">
-              <label class="criteria-label">
-                <i class="fas fa-door-open"></i> Facility Condition
-              </label>
-              <div class="star-rating-small">
-                <input type="radio" name="visitor_facility" id="vfc5" value="5" required>
-                <label for="vfc5" class="star-small">★</label>
-                <input type="radio" name="visitor_facility" id="vfc4" value="4">
-                <label for="vfc4" class="star-small">★</label>
-                <input type="radio" name="visitor_facility" id="vfc3" value="3">
-                <label for="vfc3" class="star-small">★</label>
-                <input type="radio" name="visitor_facility" id="vfc2" value="2">
-                <label for="vfc2" class="star-small">★</label>
-                <input type="radio" name="visitor_facility" id="vfc1" value="1">
-                <label for="vfc1" class="star-small">★</label>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="visitorComments" class="form-label">
-              <i class="fas fa-comment"></i> Additional Comments (Optional)
-            </label>
-            <textarea 
-              id="visitorComments" 
-              class="form-textarea" 
-              rows="5" 
-              placeholder="Tell us about your experience..."
-              maxlength="500"
-            ></textarea>
-            <small class="form-help"><span id="visitorCharCount">0</span>/500 characters</small>
-          </div>
-
-          <div class="error-message" id="visitorFeedbackError" style="display: none;">
-            <i class="fas fa-exclamation-circle"></i>
-            <span id="visitorFeedbackErrorText"></span>
-          </div>
-
-          <button type="submit" class="btn btn-primary btn-full">
-            <i class="fas fa-paper-plane"></i> Submit Feedback
+    <!-- Main Container -->
+    <section class="form-section">
+      <div class="container">
+        
+        <!-- User Type Tabs -->
+        <div class="feedback-tabs">
+          <button class="tab-button active" onclick="switchTab('student')">
+            <i class="fas fa-user-graduate"></i>
+            Student Feedback
           </button>
-        </form>
+          <button class="tab-button" onclick="switchTab('visitor')">
+            <i class="fas fa-users"></i>
+            Visitor Feedback
+          </button>
+        </div>
+
+        <!-- STUDENT TAB -->
+        <div id="studentTab" class="tab-content active">
+          <!-- Step 1: Transaction Validation -->
+          <div id="validationStep" class="form-container active">
+            <div class="form-header">
+              <i class="fas fa-shield-alt form-icon"></i>
+              <h2 class="form-title">Verify Your Transaction</h2>
+              <p class="form-subtitle">Please enter your transaction details to provide feedback</p>
+            </div>
+
+            <form id="validationForm" class="feedback-form">
+              <div class="form-group">
+                <label for="transactionId" class="form-label">
+                  <i class="fas fa-receipt"></i> Transaction ID / Reference Number
+                </label>
+                <input 
+                  type="text" 
+                  id="transactionId" 
+                  class="form-input" 
+                  placeholder="e.g., TXN-2026-001234"
+                  required
+                >
+                <small class="form-help">Found on your transaction receipt or confirmation</small>
+              </div>
+
+              <div class="form-group">
+                <label for="studentNumber" class="form-label">
+                  <i class="fas fa-id-card"></i> Student Number
+                </label>
+                <input 
+                  type="text" 
+                  id="studentNumber" 
+                  class="form-input" 
+                  placeholder="e.g., 2021-12345-MN-0"
+                  required
+                >
+              </div>
+
+              <div class="form-group">
+                <label for="department" class="form-label">
+                  <i class="fas fa-building"></i> Department
+                </label>
+                <select id="department" class="form-select" required>
+                  <option value="">Select Department</option>
+                  <option value="Registrar">Registrar</option>
+                  <option value="Cashier">Cashier</option>
+                  <option value="Library">Library</option>
+                  <option value="Student Affairs">Student Affairs</option>
+                  <option value="Clinic">Clinic</option>
+                  <option value="Admission Office">Admission Office</option>
+                </select>
+              </div>
+
+              <div class="error-message" id="validationError" style="display: none;">
+                <i class="fas fa-exclamation-circle"></i>
+                <span id="validationErrorText"></span>
+              </div>
+
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-check-circle"></i> Verify Transaction
+              </button>
+            </form>
+          </div>
+
+          <!-- Step 2: Student Feedback Form -->
+          <div id="feedbackStep" class="form-container" style="display: none;">
+            <div class="form-header">
+              <i class="fas fa-comment-dots form-icon"></i>
+              <h2 class="form-title">Share Your Experience</h2>
+              <p class="form-subtitle">Your feedback is valuable to us</p>
+            </div>
+
+            <!-- Transaction Info Display -->
+            <div class="transaction-info">
+              <h3 class="info-title">Transaction Details</h3>
+              <div class="info-grid">
+                <div class="info-item">
+                  <span class="info-label">Transaction ID:</span>
+                  <span class="info-value" id="displayTransactionId"></span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Department:</span>
+                  <span class="info-value" id="displayDepartment"></span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Date:</span>
+                  <span class="info-value" id="displayDate"></span>
+                </div>
+              </div>
+            </div>
+
+            <form id="feedbackForm" class="feedback-form">
+              <!-- Rating sections (keep existing code) -->
+              <!-- ... include all rating fields ... -->
+              
+              <div class="button-group">
+                <button type="button" class="btn btn-secondary" id="backBtn">
+                  <i class="fas fa-arrow-left"></i> Back
+                </button>
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-paper-plane"></i> Submit Feedback
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- VISITOR TAB -->
+        <div id="visitorTab" class="tab-content">
+          <div class="form-container">
+            <div class="form-header">
+              <i class="fas fa-comment-dots form-icon"></i>
+              <h2 class="form-title">Visitor Feedback</h2>
+              <p class="form-subtitle">We value your feedback as our guest</p>
+            </div>
+
+            <form id="visitorFeedbackForm" class="feedback-form">
+              <!-- Visitor Information -->
+              <div class="visitor-info">
+                <h4><i class="fas fa-user"></i> Your Information</h4>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="visitorName" class="form-label">
+                      <i class="fas fa-user"></i> Full Name *
+                    </label>
+                    <input 
+                      type="text" 
+                      id="visitorName" 
+                      class="form-input" 
+                      placeholder="Enter your full name"
+                      required
+                    >
+                  </div>
+
+                  <div class="form-group">
+                    <label for="visitorEmail" class="form-label">
+                      <i class="fas fa-envelope"></i> Email (Optional)
+                    </label>
+                    <input 
+                      type="email" 
+                      id="visitorEmail" 
+                      class="form-input" 
+                      placeholder="your.email@example.com"
+                    >
+                  </div>
+
+                  <div class="form-group">
+                    <label for="visitorPhone" class="form-label">
+                      <i class="fas fa-phone"></i> Phone (Optional)
+                    </label>
+                    <input 
+                      type="tel" 
+                      id="visitorPhone" 
+                      class="form-input" 
+                      placeholder="09XX XXX XXXX"
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <!-- Visit Information -->
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="visitorDepartment" class="form-label">
+                    <i class="fas fa-building"></i> Department Visited *
+                  </label>
+                  <select id="visitorDepartment" class="form-select" required>
+                    <option value="">Select Department</option>
+                    <option value="1">Registrar</option>
+                    <option value="2">Cashier</option>
+                    <option value="3">Library</option>
+                    <option value="4">Student Affairs</option>
+                    <option value="5">Clinic</option>
+                    <option value="6">Admission Office</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="serviceType" class="form-label">
+                    <i class="fas fa-concierge-bell"></i> Service Type *
+                  </label>
+                  <select id="serviceType" class="form-select" required>
+                    <option value="">Select Service</option>
+                    <option value="Inquiry">Inquiry</option>
+                    <option value="Document Request">Document Request</option>
+                    <option value="Consultation">Consultation</option>
+                    <option value="Enrollment">Enrollment</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="visitDate" class="form-label">
+                    <i class="fas fa-calendar"></i> Visit Date *
+                  </label>
+                  <input 
+                    type="date" 
+                    id="visitDate" 
+                    class="form-input" 
+                    required
+                    max=""
+                  >
+                </div>
+              </div>
+
+              <!-- Overall Rating -->
+              <div class="form-group">
+                <label class="form-label rating-label">
+                  <i class="fas fa-star"></i> Overall Rating
+                </label>
+                <div class="star-rating" id="visitorOverallRating">
+                  <input type="radio" name="visitor_overall_rating" id="vstar5" value="5" required>
+                  <label for="vstar5" class="star" title="Excellent">★</label>
+                  
+                  <input type="radio" name="visitor_overall_rating" id="vstar4" value="4">
+                  <label for="vstar4" class="star" title="Good">★</label>
+                  
+                  <input type="radio" name="visitor_overall_rating" id="vstar3" value="3">
+                  <label for="vstar3" class="star" title="Average">★</label>
+                  
+                  <input type="radio" name="visitor_overall_rating" id="vstar2" value="2">
+                  <label for="vstar2" class="star" title="Poor">★</label>
+                  
+                  <input type="radio" name="visitor_overall_rating" id="vstar1" value="1">
+                  <label for="vstar1" class="star" title="Very Poor">★</label>
+                </div>
+                <p class="rating-text" id="visitorRatingText">Select a rating</p>
+              </div>
+
+              <!-- Service Criteria Ratings -->
+              <div class="criteria-section">
+                <h3 class="criteria-title">Rate Each Service Aspect</h3>
+                
+                <!-- Processing Time -->
+                <div class="criteria-item">
+                  <label class="criteria-label">
+                    <i class="fas fa-clock"></i> Processing Time
+                  </label>
+                  <div class="star-rating-small">
+                    <input type="radio" name="visitor_processing_time" id="vpt5" value="5" required>
+                    <label for="vpt5" class="star-small">★</label>
+                    <input type="radio" name="visitor_processing_time" id="vpt4" value="4">
+                    <label for="vpt4" class="star-small">★</label>
+                    <input type="radio" name="visitor_processing_time" id="vpt3" value="3">
+                    <label for="vpt3" class="star-small">★</label>
+                    <input type="radio" name="visitor_processing_time" id="vpt2" value="2">
+                    <label for="vpt2" class="star-small">★</label>
+                    <input type="radio" name="visitor_processing_time" id="vpt1" value="1">
+                    <label for="vpt1" class="star-small">★</label>
+                  </div>
+                </div>
+
+                <!-- Staff Assistance -->
+                <div class="criteria-item">
+                  <label class="criteria-label">
+                    <i class="fas fa-user-tie"></i> Staff Assistance
+                  </label>
+                  <div class="star-rating-small">
+                    <input type="radio" name="visitor_staff_assistance" id="vsa5" value="5" required>
+                    <label for="vsa5" class="star-small">★</label>
+                    <input type="radio" name="visitor_staff_assistance" id="vsa4" value="4">
+                    <label for="vsa4" class="star-small">★</label>
+                    <input type="radio" name="visitor_staff_assistance" id="vsa3" value="3">
+                    <label for="vsa3" class="star-small">★</label>
+                    <input type="radio" name="visitor_staff_assistance" id="vsa2" value="2">
+                    <label for="vsa2" class="star-small">★</label>
+                    <input type="radio" name="visitor_staff_assistance" id="vsa1" value="1">
+                    <label for="vsa1" class="star-small">★</label>
+                  </div>
+                </div>
+
+                <!-- Clarity of Instructions -->
+                <div class="criteria-item">
+                  <label class="criteria-label">
+                    <i class="fas fa-clipboard-list"></i> Clarity of Instructions
+                  </label>
+                  <div class="star-rating-small">
+                    <input type="radio" name="visitor_clarity" id="vci5" value="5" required>
+                    <label for="vci5" class="star-small">★</label>
+                    <input type="radio" name="visitor_clarity" id="vci4" value="4">
+                    <label for="vci4" class="star-small">★</label>
+                    <input type="radio" name="visitor_clarity" id="vci3" value="3">
+                    <label for="vci3" class="star-small">★</label>
+                    <input type="radio" name="visitor_clarity" id="vci2" value="2">
+                    <label for="vci2" class="star-small">★</label>
+                    <input type="radio" name="visitor_clarity" id="vci1" value="1">
+                    <label for="vci1" class="star-small">★</label>
+                  </div>
+                </div>
+
+                <!-- Facility Condition -->
+                <div class="criteria-item">
+                  <label class="criteria-label">
+                    <i class="fas fa-door-open"></i> Facility Condition
+                  </label>
+                  <div class="star-rating-small">
+                    <input type="radio" name="visitor_facility" id="vfc5" value="5" required>
+                    <label for="vfc5" class="star-small">★</label>
+                    <input type="radio" name="visitor_facility" id="vfc4" value="4">
+                    <label for="vfc4" class="star-small">★</label>
+                    <input type="radio" name="visitor_facility" id="vfc3" value="3">
+                    <label for="vfc3" class="star-small">★</label>
+                    <input type="radio" name="visitor_facility" id="vfc2" value="2">
+                    <label for="vfc2" class="star-small">★</label>
+                    <input type="radio" name="visitor_facility" id="vfc1" value="1">
+                    <label for="vfc1" class="star-small">★</label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Comment Box -->
+              <div class="form-group">
+                <label for="visitorComments" class="form-label">
+                  <i class="fas fa-comment"></i> Additional Comments (Optional)
+                </label>
+                <textarea 
+                  id="visitorComments" 
+                  class="form-textarea" 
+                  rows="5" 
+                  placeholder="Share specific details about your experience..."
+                  maxlength="500"
+                ></textarea>
+                <small class="form-help"><span id="visitorCharCount">0</span>/500 characters</small>
+              </div>
+
+              <div class="error-message" id="visitorFeedbackError" style="display: none;">
+                <i class="fas fa-exclamation-circle"></i>
+                <span id="visitorFeedbackErrorText"></span>
+              </div>
+
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-paper-plane"></i> Submit Feedback
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Step 3: Success Message -->
+        <div id="successStep" class="form-container" style="display: none;">
+          <div class="success-content">
+            <i class="fas fa-check-circle success-icon"></i>
+            <h2 class="success-title">Thank You for Your Feedback!</h2>
+            <p class="success-text">
+              Your feedback has been successfully submitted and will help us improve our services. 
+              The administration will review your input as part of our continuous quality improvement efforts.
+            </p>
+            <div class="success-info">
+              <p><strong>Reference Number:</strong> <span id="feedbackReference"></span></p>
+              <p><strong>Submitted:</strong> <span id="submissionTime"></span></p>
+            </div>
+            <button class="btn btn-primary" onclick="location.reload()">
+              <i class="fas fa-redo"></i> Submit Another Feedback
+            </button>
+          </div>
+
       </div>
-    </div>
+    </section>
+  </main>
 
     <!-- Step 3: Success Message (Shared) -->
     <div id="successStep" class="form-container" style="display: none;">
@@ -480,4 +653,65 @@
     </div>
 
   </div>
-</section>
+
+  <!-- SCRIPTS -->
+  <script src="/public/js/navbar.js"></script>
+  <script src="/public/js/feedback.js"></script>
+  <script src="/public/js/quickhelp&chatbot.js"></script>
+  <script>
+    // Set max date for visitor visit date to today
+    document.getElementById('visitDate').max = new Date().toISOString().split('T')[0];
+    
+    // Tab switching
+    function switchTab(tabName) {
+      // Hide all tabs
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      // Remove active from all buttons
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      // Show selected tab
+      if (tabName === 'student') {
+        document.getElementById('studentTab').classList.add('active');
+        document.querySelectorAll('.tab-button')[0].classList.add('active');
+      } else {
+        document.getElementById('visitorTab').classList.add('active');
+        document.querySelectorAll('.tab-button')[1].classList.add('active');
+      }
+    }
+    
+    // Character count for visitor comments
+    document.getElementById('visitorComments').addEventListener('input', function() {
+      const count = this.value.length;
+      document.getElementById('visitorCharCount').textContent = count;
+      
+      if (count >= 450) {
+        document.getElementById('visitorCharCount').style.color = '#c62828';
+      } else {
+        document.getElementById('visitorCharCount').style.color = '#888';
+      }
+    });
+    
+    // Visitor rating text update
+    document.querySelectorAll('input[name="visitor_overall_rating"]').forEach(input => {
+      input.addEventListener('change', function() {
+        const ratingValue = parseInt(this.value);
+        const ratingLabels = {
+          5: 'Excellent',
+          4: 'Good',
+          3: 'Average',
+          2: 'Poor',
+          1: 'Very Poor'
+        };
+        const ratingText = document.getElementById('visitorRatingText');
+        ratingText.textContent = ratingLabels[ratingValue];
+        ratingText.style.color = ratingValue >= 4 ? '#4caf50' : ratingValue === 3 ? '#ff9800' : '#c62828';
+      });
+    });
+  </script>
+</body>
+</html>

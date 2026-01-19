@@ -1,4 +1,4 @@
-// feedback.js - Enhanced with Student/Visitor Tabs - COMPLETE VERSION
+// feedback.js - Transaction-Based Feedback System - UPDATED WITH VISITOR SUPPORT
 
 const API_URL = 'http://localhost:3000/api';
 
@@ -6,36 +6,26 @@ const API_URL = 'http://localhost:3000/api';
 let validatedTransaction = null;
 let currentUserType = 'student'; // 'student' or 'visitor'
 
-// DOM Elements
-const studentTab = document.getElementById('studentTab');
-const visitorTab = document.getElementById('visitorTab');
-const studentForm = document.getElementById('studentFormContainer');
-const visitorForm = document.getElementById('visitorFormContainer');
-
+// DOM Elements - Student
 const validationStep = document.getElementById('validationStep');
 const feedbackStep = document.getElementById('feedbackStep');
 const successStep = document.getElementById('successStep');
-
 const validationForm = document.getElementById('validationForm');
-const feedbackFormEl = document.getElementById('feedbackForm');
-const visitorFeedbackForm = document.getElementById('visitorFeedbackForm');
-
+const feedbackForm = document.getElementById('feedbackForm');
 const validationError = document.getElementById('validationError');
 const validationErrorText = document.getElementById('validationErrorText');
 const feedbackError = document.getElementById('feedbackError');
 const feedbackErrorText = document.getElementById('feedbackErrorText');
-
 const backBtn = document.getElementById('backBtn');
 const commentsTextarea = document.getElementById('comments');
 const charCount = document.getElementById('charCount');
-
-// Visitor form elements
-const visitorCommentsTextarea = document.getElementById('visitorComments');
-const visitorCharCount = document.getElementById('visitorCharCount');
-
-// Star rating elements
 const overallRatingInputs = document.querySelectorAll('input[name="overall_rating"]');
 const ratingText = document.getElementById('ratingText');
+
+// DOM Elements - Visitor
+const visitorFeedbackForm = document.getElementById('visitorFeedbackForm');
+const visitorFeedbackError = document.getElementById('visitorFeedbackError');
+const visitorFeedbackErrorText = document.getElementById('visitorFeedbackErrorText');
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -43,74 +33,29 @@ document.addEventListener('DOMContentLoaded', () => {
     setupTabSwitching();
 });
 
-// ============ TAB SWITCHING ============
-
-function setupTabSwitching() {
-    studentTab.addEventListener('click', () => switchTab('student'));
-    visitorTab.addEventListener('click', () => switchTab('visitor'));
-}
-
-function switchTab(userType) {
-    currentUserType = userType;
-    
-    // Update tab styling
-    if (userType === 'student') {
-        studentTab.classList.add('active');
-        visitorTab.classList.remove('active');
-        studentForm.style.display = 'block';
-        visitorForm.style.display = 'none';
-    } else {
-        visitorTab.classList.add('active');
-        studentTab.classList.remove('active');
-        visitorForm.style.display = 'block';
-        studentForm.style.display = 'none';
-    }
-    
-    console.log(`Switched to ${userType} form`);
-}
-
-// ============ EVENT LISTENERS ============
-
+// Setup Event Listeners
 function setupEventListeners() {
-    // Student form
-    if (validationForm) {
-        validationForm.addEventListener('submit', handleValidation);
+    // Student form listeners
+    if (validationForm) validationForm.addEventListener('submit', handleValidation);
+    if (feedbackForm) feedbackForm.addEventListener('submit', handleFeedbackSubmission);
+    if (backBtn) backBtn.addEventListener('click', goBackToValidation);
+    if (commentsTextarea) commentsTextarea.addEventListener('input', updateCharCount);
+    
+    if (overallRatingInputs) {
+        overallRatingInputs.forEach(input => {
+            input.addEventListener('change', updateRatingText);
+        });
     }
     
-    if (feedbackFormEl) {
-        feedbackFormEl.addEventListener('submit', handleFeedbackSubmission);
-    }
-    
-    if (backBtn) {
-        backBtn.addEventListener('click', goBackToValidation);
-    }
-    
-    if (commentsTextarea) {
-        commentsTextarea.addEventListener('input', updateCharCount);
-    }
-    
-    // Visitor form
+    // Visitor form listeners
     if (visitorFeedbackForm) {
         visitorFeedbackForm.addEventListener('submit', handleVisitorFeedbackSubmission);
     }
-    
-    if (visitorCommentsTextarea) {
-        visitorCommentsTextarea.addEventListener('input', updateVisitorCharCount);
-    }
-    
-    // Star ratings
-    overallRatingInputs.forEach(input => {
-        input.addEventListener('change', updateRatingText);
-    });
-    
-    // Visitor star ratings
-    const visitorRatingInputs = document.querySelectorAll('input[name="visitor_overall_rating"]');
-    visitorRatingInputs.forEach(input => {
-        input.addEventListener('change', updateVisitorRatingText);
-    });
 }
 
-// ============ STUDENT VALIDATION ============
+// ============================================
+// STUDENT FEEDBACK HANDLERS
+// ============================================
 
 async function handleValidation(e) {
     e.preventDefault();
@@ -186,7 +131,32 @@ function goBackToValidation() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ============ STUDENT FEEDBACK SUBMISSION ============
+function updateCharCount() {
+    const count = commentsTextarea.value.length;
+    charCount.textContent = count;
+    
+    if (count >= 450) {
+        charCount.style.color = '#c62828';
+    } else {
+        charCount.style.color = '#888';
+    }
+}
+
+function updateRatingText() {
+    const rating = document.querySelector('input[name="overall_rating"]:checked');
+    if (rating) {
+        const ratingValue = parseInt(rating.value);
+        const ratingLabels = {
+            5: 'Excellent',
+            4: 'Good',
+            3: 'Average',
+            2: 'Poor',
+            1: 'Very Poor'
+        };
+        ratingText.textContent = ratingLabels[ratingValue];
+        ratingText.style.color = ratingValue >= 4 ? '#4caf50' : ratingValue === 3 ? '#ff9800' : '#c62828';
+    }
+}
 
 async function handleFeedbackSubmission(e) {
     e.preventDefault();
@@ -221,8 +191,7 @@ async function handleFeedbackSubmission(e) {
         clarity: parseInt(clarity.value),
         facility: parseInt(facility.value),
         comments: comments || null,
-        is_anonymous: document.getElementById('anonymousToggle').checked,
-        feedback_type: 'student'
+        is_anonymous: document.getElementById('anonymousToggle')?.checked || false
     };
     
     console.log('📤 Submitting student feedback:', formData);
@@ -263,70 +232,50 @@ function showFeedbackError(message) {
     window.scrollTo({ top: feedbackError.offsetTop - 100, behavior: 'smooth' });
 }
 
-// ============ VISITOR FEEDBACK SUBMISSION ============
+// ============================================
+// VISITOR FEEDBACK HANDLERS
+// ============================================
 
 async function handleVisitorFeedbackSubmission(e) {
     e.preventDefault();
     
-    const visitorError = document.getElementById('visitorFeedbackError');
-    const visitorErrorText = document.getElementById('visitorFeedbackErrorText');
+    visitorFeedbackError.style.display = 'none';
     
-    if (visitorError) visitorError.style.display = 'none';
-    
-    // Get visitor information
-    const visitorName = document.getElementById('visitorName').value.trim();
-    const visitorEmail = document.getElementById('visitorEmail').value.trim();
-    const visitorPhone = document.getElementById('visitorPhone').value.trim();
-    const visitPurpose = document.getElementById('visitPurpose').value;
-    const department = document.getElementById('visitorDepartment').value;
-    
-    // Get ratings
+    // Get all ratings
     const overallRating = document.querySelector('input[name="visitor_overall_rating"]:checked');
     const processingTime = document.querySelector('input[name="visitor_processing_time"]:checked');
     const staffAssistance = document.querySelector('input[name="visitor_staff_assistance"]:checked');
     const clarity = document.querySelector('input[name="visitor_clarity"]:checked');
     const facility = document.querySelector('input[name="visitor_facility"]:checked');
     
-    // Validation
-    if (!visitorName) {
-        if (visitorErrorText) visitorErrorText.textContent = 'Please enter your name.';
-        if (visitorError) visitorError.style.display = 'flex';
-        return;
-    }
-    
-    if (!department || !visitPurpose) {
-        if (visitorErrorText) visitorErrorText.textContent = 'Please select department and visit purpose.';
-        if (visitorError) visitorError.style.display = 'flex';
-        return;
-    }
-    
+    // Validate all ratings are selected
     if (!overallRating || !processingTime || !staffAssistance || !clarity || !facility) {
-        if (visitorErrorText) visitorErrorText.textContent = 'Please rate all service aspects.';
-        if (visitorError) visitorError.style.display = 'flex';
+        showVisitorFeedbackError('Please rate all service aspects before submitting.');
         return;
     }
     
-    const comments = visitorCommentsTextarea.value.trim();
+    const comments = document.getElementById('visitorComments').value.trim();
     
+    // Filter comments
     if (comments && !isCommentAppropriate(comments)) {
-        if (visitorErrorText) visitorErrorText.textContent = 'Your comment contains inappropriate language.';
-        if (visitorError) visitorError.style.display = 'flex';
+        showVisitorFeedbackError('Your comment contains inappropriate language. Please revise and try again.');
         return;
     }
     
+    // Prepare form data
     const formData = {
-        visitor_name: visitorName,
-        visitor_email: visitorEmail || null,
-        visitor_phone: visitorPhone || null,
-        visit_purpose: visitPurpose,
-        department: department,
+        visitor_name: document.getElementById('visitorName').value.trim(),
+        visitor_email: document.getElementById('visitorEmail').value.trim() || null,
+        visitor_phone: document.getElementById('visitorPhone').value.trim() || null,
+        department_id: parseInt(document.getElementById('visitorDepartment').value),
+        service_type: document.getElementById('serviceType').value,
+        visit_date: document.getElementById('visitDate').value,
         overall_rating: parseInt(overallRating.value),
         processing_time: parseInt(processingTime.value),
         staff_assistance: parseInt(staffAssistance.value),
         clarity: parseInt(clarity.value),
         facility: parseInt(facility.value),
-        comments: comments || null,
-        feedback_type: 'visitor'
+        comments: comments || null
     };
     
     console.log('📤 Submitting visitor feedback:', formData);
@@ -347,42 +296,41 @@ async function handleVisitorFeedbackSubmission(e) {
         console.log('📊 Visitor submission result:', result);
         
         if (response.ok && result.success) {
-            console.log('✅ Visitor feedback submitted!');
-            showVisitorSuccessMessage(result.feedback_id);
+            console.log('✅ Visitor feedback submitted successfully!');
+            showSuccessMessage(result.feedback_id);
+            
+            // Hide visitor form, show success
+            document.getElementById('visitorTab').style.display = 'none';
+            document.querySelector('.feedback-tabs').style.display = 'none';
         } else {
-            if (visitorErrorText) visitorErrorText.textContent = result.message || 'Failed to submit feedback.';
-            if (visitorError) visitorError.style.display = 'flex';
+            showVisitorFeedbackError(result.message || 'Failed to submit feedback. Please try again.');
         }
     } catch (error) {
         console.error('❌ Visitor submission error:', error);
-        if (visitorErrorText) visitorErrorText.textContent = 'An error occurred. Please try again.';
-        if (visitorError) visitorError.style.display = 'flex';
+        showVisitorFeedbackError('An error occurred while submitting feedback. Please try again.');
     } finally {
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
     }
 }
 
-function showVisitorSuccessMessage(feedbackId) {
-    visitorForm.style.display = 'none';
-    successStep.style.display = 'block';
-    
-    document.getElementById('feedbackReference').textContent = feedbackId;
-    document.getElementById('submissionTime').textContent = new Date().toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-    
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+function showVisitorFeedbackError(message) {
+    visitorFeedbackErrorText.textContent = message;
+    visitorFeedbackError.style.display = 'flex';
+    window.scrollTo({ top: visitorFeedbackError.offsetTop - 100, behavior: 'smooth' });
 }
 
-// ============ SUCCESS MESSAGE ============
+// ============================================
+// SHARED FUNCTIONS
+// ============================================
 
 function showSuccessMessage(feedbackId) {
-    feedbackStep.style.display = 'none';
+    // Hide all tabs and forms
+    document.getElementById('studentTab').style.display = 'none';
+    document.getElementById('visitorTab').style.display = 'none';
+    document.querySelector('.feedback-tabs').style.display = 'none';
+    
+    // Show success
     successStep.style.display = 'block';
     
     document.getElementById('feedbackReference').textContent = feedbackId;
@@ -396,63 +344,11 @@ function showSuccessMessage(feedbackId) {
     
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-
-// ============ CHAR COUNT ============
-
-function updateCharCount() {
-    const count = commentsTextarea.value.length;
-    charCount.textContent = count;
-    charCount.style.color = count >= 450 ? '#c62828' : '#888';
-}
-
-function updateVisitorCharCount() {
-    const count = visitorCommentsTextarea.value.length;
-    visitorCharCount.textContent = count;
-    visitorCharCount.style.color = count >= 450 ? '#c62828' : '#888';
-}
-
-// ============ RATING TEXT ============
-
-function updateRatingText() {
-    const rating = document.querySelector('input[name="overall_rating"]:checked');
-    if (rating) {
-        const ratingValue = parseInt(rating.value);
-        const ratingLabels = {
-            5: 'Excellent',
-            4: 'Good',
-            3: 'Average',
-            2: 'Poor',
-            1: 'Very Poor'
-        };
-        ratingText.textContent = ratingLabels[ratingValue];
-        ratingText.style.color = ratingValue >= 4 ? '#4caf50' : ratingValue === 3 ? '#ff9800' : '#c62828';
-    }
-}
-
-function updateVisitorRatingText() {
-    const rating = document.querySelector('input[name="visitor_overall_rating"]:checked');
-    const visitorRatingText = document.getElementById('visitorRatingText');
-    
-    if (rating && visitorRatingText) {
-        const ratingValue = parseInt(rating.value);
-        const ratingLabels = {
-            5: 'Excellent',
-            4: 'Good',
-            3: 'Average',
-            2: 'Poor',
-            1: 'Very Poor'
-        };
-        visitorRatingText.textContent = ratingLabels[ratingValue];
-        visitorRatingText.style.color = ratingValue >= 4 ? '#4caf50' : ratingValue === 3 ? '#ff9800' : '#c62828';
-    }
-}
-
-// ============ PROFANITY FILTER ============
 
 function isCommentAppropriate(text) {
     const profanityList = [
         'badword1', 'badword2', 'badword3'
-        // Add actual profanity words as needed
+        // Add more profanity words as needed
     ];
     
     const lowerText = text.toLowerCase();
