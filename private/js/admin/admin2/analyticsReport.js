@@ -440,7 +440,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 ${report.hasInterpretation ? 'data-has-interpretation="true"' : ''}
               >
                 <i class="bi bi-robot"></i>
-                ${report.hasInterpretation ? 'Regenerate AI Analysis' : 'Generate AI Analysis'}
+                ${report.hasInterpretation ? 'Regenerate Analysis' : 'Generate Analysis'}
               </button>
             </div>
             <div class="right-actions">
@@ -699,7 +699,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
           const generateBtn = card.querySelector(".generate-interpretation-btn");
           if (generateBtn) {
-            generateBtn.innerHTML = '<i class="bi bi-robot"></i> Generate AI Analysis';
+            generateBtn.innerHTML = '<i class="bi bi-robot"></i> Generate Analysis';
             generateBtn.removeAttribute('data-has-interpretation');
           }
 
@@ -850,7 +850,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         } finally {
           btn.disabled = false;
           if (!report.hasInterpretation) {
-            btn.innerHTML = '<i class="bi bi-robot"></i> Generate AI Analysis';
+            btn.innerHTML = '<i class="bi bi-robot"></i> Generate Analysis';
           }
         }
       });
@@ -994,7 +994,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       <div class="insight">
         <strong>🔍 Analysis Summary via Gemini AI</strong>
         <div class="interpretation-text">
-          ${report.interpretation || 'No AI interpretation available yet. Click "Generate AI Analysis" to create one.'}
+          ${report.interpretation || 'No AI interpretation available yet. Click "Generate Analysis" to create one.'}
         </div>
         ${report.hasInterpretation && report.analyzedColumn ? `
           <hr style="border: none; border-top: 1px solid rgba(0,0,0,0.1); margin: 15px 0;" />

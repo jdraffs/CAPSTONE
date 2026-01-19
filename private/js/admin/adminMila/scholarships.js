@@ -241,7 +241,7 @@ submitBtn.addEventListener('click', async (e) => {
   formData.append('application_process', applicationProcess.value.trim());
   formData.append('external_links', externalLinks.value.trim());
   formData.append('contact_info', contactInfo.value.trim());
-  formData.append('eligible_courses', eligibleCoursesInput.value.trim());
+  formData.append('eligible_courses', eligibleCoursesInput.value.trim());  // ← ADD THIS LINE
   formData.append('adminid', 'adminmila');
 
   selectedFiles.forEach(file => {
