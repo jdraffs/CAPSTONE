@@ -394,8 +394,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div style="padding: 20px;">
           <h4 style="margin: 0 0 20px 0; color: #2d3748;">Last 6 Months Performance</h4>
           ${data.trends.map(trend => `
-            <div style="display: flex; justify-content: space-between; padding: 10px; background: #f7fafc; margin-bottom: 8px; border-radius: 6px;">
-              <span style="font-weight: 600; color: #4a5568;">${formatMonth(trend.month)}</span>
+            <div style="display: flex; padding: 10px; background: #f7fafc; gap: 10px; border-radius: 6px;">
+              <span style="font-weight: 600; color: #4a5568; margin-top: 4px;">${formatMonth(trend.month)}</span>
               <span style="color: #667eea; font-weight: 700;">${trend.avg_rating} ★ (${trend.feedback_count} feedback)</span>
             </div>
           `).join('')}

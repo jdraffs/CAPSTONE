@@ -32,8 +32,9 @@ h2 {
 .contact-support-wrapper strong {
   color: #1f2937;
 }
-
-
+.logo-text {
+  color: #94a3b8;
+}
 /* Base layout styles */
 .contact-support-wrapper {
   max-width: 1200px;

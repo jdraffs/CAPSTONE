@@ -20,18 +20,33 @@ router.post('/', async (req, res) => {
 
   try {
     const result = await pool.query(
-      'SELECT * FROM admin_accounts WHERE adminid = $1 AND password = $2',
+      `
+      SELECT id, adminid, role_id, status
+      FROM admin_accounts
+      WHERE adminid = $1
+        AND password = crypt($2, password)
+      `,
       [adminid, password]
     );
 
-    if (result.rows.length > 0) {
-      res.json({ success: true, adminid: result.rows[0].adminid });
-    } else {
-      res.status(401).json({ success: false, message: 'Invalid admin ID or password' });
+    if (result.rows.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid admin ID or password'
+      });
     }
+
+    res.json({
+      success: true,
+      adminid: result.rows[0].adminid
+    });
+
   } catch (error) {
-    console.error('Error logging in:', error);
-    res.status(500).json({ success: false, message: 'Server error, please try again.' });
+    console.error('Login error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
   }
 });
 
