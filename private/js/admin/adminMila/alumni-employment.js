@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadResponses();
     loadStatistics();
     setupEventListeners();
+    initializeProfileDropdown();
 });
 
 // Setup Event Listeners
