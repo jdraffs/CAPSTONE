@@ -4,7 +4,6 @@ const API_URL = 'http://localhost:3000/api';
 
 // State management
 let validatedTransaction = null;
-let currentUserType = 'student'; // 'student' or 'visitor'
 
 // DOM Elements - Student
 const validationStep = document.getElementById('validationStep');
@@ -30,7 +29,6 @@ const visitorFeedbackErrorText = document.getElementById('visitorFeedbackErrorTe
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
-    setupTabSwitching();
 });
 
 // Setup Event Listeners
@@ -127,7 +125,7 @@ function showFeedbackForm() {
 function goBackToValidation() {
     feedbackStep.style.display = 'none';
     validationStep.style.display = 'block';
-    feedbackFormEl.reset();
+    feedbackForm.reset();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -196,7 +194,7 @@ async function handleFeedbackSubmission(e) {
     
     console.log('📤 Submitting student feedback:', formData);
     
-    const submitBtn = feedbackFormEl.querySelector('button[type="submit"]');
+    const submitBtn = feedbackForm.querySelector('button[type="submit"]');
     const originalText = submitBtn.innerHTML;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
     submitBtn.disabled = true;
