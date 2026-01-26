@@ -552,27 +552,6 @@
   color: #1a5928;
 }
 
-.refresh-btn {
-  background: white;
-  border: 2px solid #e2e8f0;
-  color: #718096;
-  border-radius: 8px;
-  padding: 8px 10px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-}
-
-.refresh-btn:hover {
-  background: #f7fafc;
-  color: #2d3748;
-  border-color: #cbd5e0;
-}
-
 /* Add these styles to analyticsReport.css */
 
 /* ============================================
@@ -710,28 +689,6 @@
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(245, 101, 101, 0.4);
 }
-
-.trash-btn {
-  background: white;
-  border: 2px solid #fc8181;
-  color: #fc8181;
-  border-radius: 8px;
-  padding: 8px 10px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-}
-
-.trash-btn:hover {
-  background: #fc8181;
-  color: white;
-  transform: translateY(-2px);
-}
-
 /* ============================================
    EMPTY TRASH BUTTON
    ============================================ */
@@ -1307,5 +1264,341 @@
 
   .modal-content {
     width: 95%;
+  }
+}
+/* ============================================
+   DROPDOWN ACTION MENU (Three Dots Menu)
+   ============================================ */
+
+.action-menu-container {
+  position: relative;
+}
+
+.menu-toggle-btn {
+  background: white;
+  border: 2px solid #e2e8f0;
+  color: #718096;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  width: 40px;
+  font-size: 1.1rem;
+}
+
+.menu-toggle-btn:hover {
+  background: #f7fafc;
+  color: #2d3748;
+  border-color: #cbd5e0;
+  transform: translateY(-2px);
+}
+
+.menu-toggle-btn:active {
+  transform: translateY(0);
+}
+
+.action-menu {
+  position: absolute;
+  top: 45px;
+  right: 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  padding: 8px;
+  min-width: 180px;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  border: 2px solid #e2e8f0;
+}
+
+.action-menu.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.action-menu-item {
+  width: 100%;
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #2d3748;
+  text-align: left;
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Fix refresh button specifically */
+.action-menu-item.refresh-data {
+  width: 100%;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #2d3748;
+  text-align: left;
+}
+
+.action-menu-item.refresh-data span {
+  display: inline;
+}
+
+.action-menu {
+  z-index: 9999;
+}
+
+.action-menu.active {
+  display: block;
+}
+
+.action-menu-item i {
+  font-size: 1rem;
+  width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-menu-item:hover {
+  background: #f7fafc;
+  color: #667eea;
+}
+
+.action-menu-item.update-file-btn:hover {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+  color: #667eea;
+}
+
+.action-menu-item.refresh-data:hover {
+  background: linear-gradient(135deg, rgba(79, 172, 254, 0.1), rgba(0, 242, 254, 0.1));
+  color: #4facfe;
+}
+
+.action-menu-item.trash-btn:hover {
+  background: linear-gradient(135deg, rgba(252, 129, 129, 0.1), rgba(245, 101, 101, 0.1));
+  color: #fc8181;
+}
+
+.menu-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 6px 0;
+}
+
+/* Update animation for menu items */
+@keyframes slideInMenu {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.action-menu.active .action-menu-item {
+  animation: slideInMenu 0.2s ease forwards;
+}
+
+.action-menu.active .action-menu-item:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.action-menu.active .action-menu-item:nth-child(2) {
+  animation-delay: 0.05s;
+}
+
+.action-menu.active .action-menu-item:nth-child(3) {
+  animation-delay: 0.1s;
+}
+
+.action-menu.active .action-menu-item:nth-child(4) {
+  animation-delay: 0.15s;
+}
+
+/* ============================================
+   UPDATE FILE LOADING STATE
+   ============================================ */
+
+.updating-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  z-index: 100;
+}
+
+.updating-overlay i {
+  font-size: 2.5rem;
+  color: #667eea;
+  margin-bottom: 15px;
+  animation: spin 1s linear infinite;
+}
+
+.updating-overlay p {
+  color: #2d3748;
+  font-weight: 600;
+  font-size: 1rem;
+  margin: 5px 0;
+}
+
+.updating-overlay p.update-subtitle {
+  color: #718096;
+  font-weight: 400;
+  font-size: 0.85rem;
+}
+
+/* ============================================
+   RESPONSIVE UPDATES FOR DROPDOWN MENU
+   ============================================ */
+
+@media (max-width: 768px) {
+  .action-menu {
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%) translateY(-10px);
+    min-width: 200px;
+  }
+
+  .action-menu.active {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .menu-toggle-btn {
+    width: 45px;
+    height: 45px;
+  }
+
+  .action-menu-item {
+    padding: 12px 16px;
+    font-size: 0.95rem;
+  }
+
+  .action-menu-item i {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .action-menu {
+    position: fixed;
+    top: auto;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    transform: translateY(20px);
+    min-width: auto;
+  }
+
+  .action-menu.active {
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   UPDATE BADGE (Optional - Shows when file needs AI regeneration)
+   ============================================ */
+
+.needs-regeneration-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #fed7d7 0%, #fbb6ce 100%);
+  color: #c53030;
+  margin: 10px 0;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.needs-regeneration-badge i {
+  font-size: 0.85rem;
+}
+
+/* ============================================
+   IMPROVED RIGHT ACTIONS LAYOUT
+   ============================================ */
+
+.right-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Remove old refresh and trash button styles since they're now in dropdown */
+.report-actions .right-actions .refresh-data,
+.report-actions .right-actions .trash-btn {
+  display: none; /* Hide old standalone buttons */
+}
+
+/* Keep the menu toggle button visible */
+.report-actions .right-actions .menu-toggle-btn {
+  display: flex;
+}
+
+/* ============================================
+   UPDATED REPORT ACTIONS LAYOUT
+   ============================================ */
+
+.report-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 2px solid #e2e8f0;
+  gap: 10px;
+  position: relative;
+}
+
+.left-actions {
+  display: flex;
+  gap: 10px;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .left-actions {
+    flex-direction: column;
+  }
+
+  .view-btn,
+  .generate-interpretation-btn {
+    width: 100%;
   }
 }
