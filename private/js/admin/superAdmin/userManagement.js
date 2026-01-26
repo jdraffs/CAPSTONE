@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   if (currentAdminId !== 'adminSalao') {
     alert('Access Denied: Super Admin only.');
-    window.location.href = '/private/html/adminPages/adminSalao/superAdmin.html';
+    window.location.href = '/private/html/adminPages/superAdmin/superAdmin.html';
     return;
   }
   
@@ -183,7 +183,7 @@ function attachEvents() {
   
   document.getElementById('btnCreate').onclick = openCreateModal;
   document.getElementById('btnRoles').onclick = () => {
-    window.location.href = '/private/html/adminPages/adminSalao/roleManagement.html';
+    window.location.href = '/private/html/adminPages/superAdmin/roleManagement.html';
   };
   
   document.getElementById('searchInput').oninput = (e) => {

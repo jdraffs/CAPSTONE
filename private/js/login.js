@@ -79,7 +79,7 @@ document.getElementById('admin-login-form').addEventListener('submit', async (e)
       } else if (data.adminid === 'adminEnierga') {
         window.location.href = '/private/html/adminPages/adminEnierga/admin2.html';
       } else if (data.adminid === 'adminSalao') {
-        window.location.href = '/private/html/adminPages/adminSalao/superAdmin.html';
+        window.location.href = '/private/html/adminPages/superAdmin/superAdmin.html';
       } else if (data.adminid === 'adminMila') {
         window.location.href = '/private/html/adminPages/adminMila/adminMila.html';
       } else if (data.adminid === 'adminLlave') {
@@ -188,7 +188,7 @@ window.addEventListener('DOMContentLoaded', () => {
     } else if (adminid === 'adminEnierga') {
       window.location.href = '/private/html/adminPages/adminEnierga/admin2.html';
     } else if (adminid === 'adminSalao') {
-      window.location.href = '/private/html/adminPages/adminSalao/superAdmin.html';
+      window.location.href = '/private/html/adminPages/superAdmin/superAdmin.html';
     } else if (adminid === 'adminMila') {
       window.location.href = '/private/html/adminPages/adminMila/adminMila.html';
     } else if (adminid === 'adminLlave') {
