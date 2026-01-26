@@ -42,6 +42,8 @@ async function initialize() {
   }
 }
 
+
+// Di pa updated sa actual roles
 async function loadRoles() {
   try {
     const res = await fetch(`${API_BASE}/roles`);
@@ -51,11 +53,12 @@ async function loadRoles() {
   } catch (error) {
     console.error('❌ Roles error:', error);
     roles = [
-      { id: 1, name: 'Super Administrator' },
-      { id: 2, name: 'Data Manager' },
-      { id: 3, name: 'Content Manager' },
-      { id: 4, name: 'Student Services Manager' },
-      { id: 5, name: 'Accreditation Manager' }
+      { id: 1, name: 'Super Administrator', hierarchy_level: 100 },
+      { id: 7, name: 'Assistant Super Administrator', hierarchy_level: 90 },
+      { id: 3, name: 'Data Manager', hierarchy_level: 50 },
+      { id: 4, name: 'Content Manager', hierarchy_level: 50 },
+      { id: 5, name: 'Student Services Manager', hierarchy_level: 50 },
+      { id: 6, name: 'Accreditation Manager', hierarchy_level: 50 }
     ];
   }
 }
