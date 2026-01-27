@@ -1,4 +1,4 @@
-/* alumni-employment.css - Admin Dashboard */
+/* alumni-employment.css - Admin Dashboard - REDESIGNED to match other tabs */
 
 * {
     box-sizing: border-box;
@@ -7,7 +7,7 @@
 }
 
 .fa-bell, .fa-user {
-    color: #822020;
+    color: #800000;
 }
 
 /* Main Content Layout */
@@ -18,14 +18,14 @@
     margin: 0 auto;
 }
 
-/* Survey Link Card */
+/* Survey Link Card - Updated to match maroon theme */
 .survey-link-card {
-    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-    border-left: 5px solid #1976d2;
+    background: linear-gradient(135deg, #fff9e6 0%, #fff4d4 100%);
+    border-left: 5px solid #ffa500;
     padding: 25px;
     border-radius: 10px;
     margin-bottom: 25px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .link-card-header {
@@ -37,21 +37,22 @@
 
 .link-card-header i {
     font-size: 24px;
-    color: #1976d2;
+    color: #ff8c00;
 }
 
 .link-card-header h3 {
     font-size: 1.3rem;
-    color: #1565c0;
+    color: #5a3e00;
     font-family: 'Inter', sans-serif;
     font-weight: 600;
 }
 
 .link-description {
     font-size: 14px;
-    color: #424242;
+    color: #5a3e00;
     margin-bottom: 15px;
     font-family: 'Inter', sans-serif;
+    line-height: 1.6;
 }
 
 .link-container {
@@ -63,7 +64,7 @@
 .survey-link-input {
     flex: 1;
     padding: 12px 15px;
-    border: 2px solid #90caf9;
+    border: 2px solid #ffd180;
     border-radius: 6px;
     font-size: 14px;
     font-family: 'Inter', sans-serif;
@@ -71,9 +72,14 @@
     color: #333;
 }
 
+.survey-link-input:focus {
+    outline: none;
+    border-color: #ffa500;
+}
+
 .copy-btn {
     padding: 12px 20px;
-    background: #1976d2;
+    background: #800000;
     color: white;
     border: none;
     border-radius: 6px;
@@ -88,14 +94,14 @@
 }
 
 .copy-btn:hover {
-    background: #1565c0;
+    background: #5a0000;
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(25, 118, 210, 0.3);
+    box-shadow: 0 4px 8px rgba(128, 0, 0, 0.3);
 }
 
 .link-note {
     font-size: 13px;
-    color: #616161;
+    color: #5a3e00;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -103,10 +109,10 @@
 }
 
 .link-note i {
-    color: #1976d2;
+    color: #ff8c00;
 }
 
-/* Statistics Cards */
+/* Statistics Cards - Updated colors */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -118,16 +124,18 @@
     background: white;
     padding: 20px;
     border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     display: flex;
     align-items: center;
     gap: 15px;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 2px solid transparent;
 }
 
 .stat-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 16px rgba(128, 0, 0, 0.15);
+    border-color: #800000;
 }
 
 .stat-icon {
@@ -144,10 +152,43 @@
     font-size: 28px;
 }
 
+/* Icon color variations */
+.stat-card:nth-child(1) .stat-icon {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+}
+
+.stat-card:nth-child(1) .stat-icon i {
+    color: #155724;
+}
+
+.stat-card:nth-child(2) .stat-icon {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+}
+
+.stat-card:nth-child(2) .stat-icon i {
+    color: #856404;
+}
+
+.stat-card:nth-child(3) .stat-icon {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+}
+
+.stat-card:nth-child(3) .stat-icon i {
+    color: #721c24;
+}
+
+.stat-card:nth-child(4) .stat-icon {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+}
+
+.stat-card:nth-child(4) .stat-icon i {
+    color: #1565c0;
+}
+
 .stat-info h3 {
     font-size: 2rem;
     font-weight: 700;
-    color: #333;
+    color: #800000;
     font-family: 'Inter', sans-serif;
     margin-bottom: 5px;
 }
@@ -163,14 +204,14 @@
     background: white;
     padding: 25px;
     border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     margin-bottom: 25px;
 }
 
 .card-title {
     font-size: 1.2rem;
     font-weight: 600;
-    color: #333;
+    color: #800000;
     margin-bottom: 20px;
     display: flex;
     align-items: center;
@@ -179,7 +220,7 @@
 }
 
 .card-title i {
-    color: #822020;
+    color: #800000;
 }
 
 .timeline-grid {
@@ -193,16 +234,21 @@
     border-radius: 8px;
     text-align: center;
     transition: transform 0.3s ease;
+    border: 2px solid #f0f0f0;
+    background: #fafafa;
 }
 
 .timeline-item:hover {
     transform: translateY(-3px);
+    border-color: #800000;
+    background: white;
+    box-shadow: 0 4px 12px rgba(128, 0, 0, 0.1);
 }
 
 .timeline-item h4 {
     font-size: 2rem;
     font-weight: 700;
-    color: #333;
+    color: #800000;
     margin-bottom: 8px;
     font-family: 'Inter', sans-serif;
 }
@@ -218,7 +264,7 @@
     background: white;
     padding: 25px;
     border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     margin-bottom: 25px;
 }
 
@@ -236,7 +282,7 @@
 }
 
 .filters-title i {
-    color: #822020;
+    color: #800000;
     font-size: 20px;
 }
 
@@ -301,7 +347,7 @@
 
 .filter-group select:focus {
     outline: none;
-    border-color: #822020;
+    border-color: #800000;
 }
 
 .clear-filter-btn {
@@ -324,7 +370,8 @@
 
 .clear-filter-btn:hover {
     background: #e0e0e0;
-    border-color: #bbb;
+    border-color: #800000;
+    color: #800000;
 }
 
 /* Responses Table Card */
@@ -332,7 +379,7 @@
     background: white;
     padding: 25px;
     border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .table-container {
@@ -347,16 +394,16 @@
 }
 
 .responses-table thead {
-    background: #f5f5f5;
-    border-bottom: 2px solid #ddd;
+    background: linear-gradient(135deg, #800000 0%, #5a0000 100%);
+    border-bottom: 2px solid #800000;
 }
 
 .responses-table th {
-    padding: 12px 15px;
+    padding: 14px 15px;
     text-align: left;
     font-size: 13px;
     font-weight: 600;
-    color: #333;
+    color: white;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -367,7 +414,7 @@
 }
 
 .responses-table tbody tr:hover {
-    background: #f9f9f9;
+    background: #fff9f0;
 }
 
 .responses-table td {
@@ -387,16 +434,19 @@
 .status-badge.employed {
     background: #d4edda;
     color: #155724;
+    border: 1px solid #c3e6cb;
 }
 
 .status-badge.self-employed {
-    background: #d1ecf1;
-    color: #0c5460;
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
 }
 
 .status-badge.unemployed {
     background: #f8d7da;
     color: #721c24;
+    border: 1px solid #f5c6cb;
 }
 
 .delete-btn {
