@@ -8,6 +8,8 @@ let currentSearchTerm = '';
 let currentStatusFilter = 'all'; // all, active, suspended
 
 document.addEventListener('DOMContentLoaded', async () => {
+  initializeProfileDropdown();
+  
   if (!currentAdminId) {
     alert('You must be logged in.');
     window.location.href = '/private/html/AdminLogin/login.html';

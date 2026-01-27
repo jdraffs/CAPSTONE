@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     myActions: []
   };
 
+  initializeProfileDropdown();
   await initializeDashboard();
 
   async function verifyBackupSuperAdmin() {
@@ -28,7 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
-      // Check if user has Backup Campus System Administrator role
+      // Check if user has Assistant Super Administrator role
       if (currentUser.role_name !== 'Assistant Super Administrator') {
         alert('Access Denied: This page is for Assistant Super Administrator only.');
         window.location.href = '/private/html/AdminLogin/login.html';
