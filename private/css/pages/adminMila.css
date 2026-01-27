@@ -1,4 +1,4 @@
-/* adminMila Dashboard - Enhanced Styling */
+/* adminMila Dashboard - Enhanced Styling with Audit Trail Modal */
 .dashboard-content {
     margin: 30px;
 }
@@ -375,9 +375,31 @@
     font-weight: 500;
 }
 
-/* Activity Feed */
+/* Recent Activity Feed */
 .recent-activity-section {
     margin-top: 30px;
+}
+
+.view-all-btn {
+    padding: 10px 20px;
+    background: #800000;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.view-all-btn:hover {
+    background: #5a0000;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(128, 0, 0, 0.3);
 }
 
 .activity-feed {
@@ -477,6 +499,191 @@
 .activity-time {
     font-size: 0.8rem;
     color: #a0aec0;
+}
+
+/* Audit Trail Modal */
+.audit-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.audit-modal.show {
+    display: flex;
+}
+
+.audit-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    cursor: pointer;
+}
+
+.audit-modal-content {
+    position: relative;
+    background: white;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 900px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    z-index: 10000;
+}
+
+.audit-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 25px 30px;
+    border-bottom: 2px solid #f0f0f0;
+    background: linear-gradient(135deg, #800000 0%, #a00000 100%);
+    border-radius: 16px 16px 0 0;
+}
+
+.audit-modal-header h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+}
+
+.audit-modal-close {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+}
+
+.audit-modal-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg);
+}
+
+.audit-modal-body {
+    padding: 25px 30px;
+    overflow-y: auto;
+    max-height: calc(85vh - 90px);
+}
+
+.audit-modal-body::-webkit-scrollbar {
+    width: 10px;
+}
+
+.audit-modal-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 5px;
+}
+
+.audit-modal-body::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 5px;
+}
+
+.audit-modal-body::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+}
+
+.audit-item {
+    display: flex;
+    gap: 15px;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    border: 2px solid #f0f0f0;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.audit-item:hover {
+    border-color: #800000;
+    background: #fff9f0;
+    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(128, 0, 0, 0.1);
+}
+
+.audit-number {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #cbd5e0;
+}
+
+.audit-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.audit-item.scholarship .audit-icon {
+    background: linear-gradient(135deg, #48bb78, #38a169);
+}
+
+.audit-item.career .audit-icon {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.audit-item.certificate .audit-icon {
+    background: linear-gradient(135deg, #ed8936, #dd6b20);
+}
+
+.audit-content {
+    flex: 1;
+}
+
+.audit-title {
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 8px;
+    font-size: 1.05rem;
+}
+
+.audit-description {
+    font-size: 0.95rem;
+    color: #718096;
+    margin-bottom: 10px;
+}
+
+.audit-timestamp {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: #a0aec0;
+}
+
+.audit-timestamp i {
+    color: #800000;
 }
 
 /* Empty State */
@@ -641,6 +848,18 @@
     .toast {
         min-width: auto;
     }
+    
+    .audit-modal-content {
+        max-width: 95%;
+    }
+    
+    .audit-modal-header {
+        padding: 20px;
+    }
+    
+    .audit-modal-body {
+        padding: 20px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -661,6 +880,10 @@
     }
 
     .activity-feed {
+        padding: 15px;
+    }
+    
+    .audit-item {
         padding: 15px;
     }
 }

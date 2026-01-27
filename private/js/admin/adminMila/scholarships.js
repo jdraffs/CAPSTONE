@@ -1,4 +1,4 @@
-// scholarships.js - Admin Scholarship Management (UPDATED)
+// scholarships.js - Admin Scholarship Management (FIXED VALIDATION)
 const openBtn = document.getElementById('openPostModal');
 const modal = document.getElementById('postModal');
 const cancelBtn = document.getElementById('cancelPost');
@@ -91,6 +91,14 @@ openBtn.addEventListener('click', () => {
   selectedFiles = [];
   existingFiles = [];
   updateFileList();
+  
+  // Reset to "All Programs" by default
+  allProgramsCheckbox.checked = true;
+  programCheckboxes.forEach(cb => {
+    cb.checked = false;
+    cb.disabled = true;
+  });
+  updateEligibleCourses(); // ← IMPORTANT: Update the hidden input
 });
 
 cancelBtn.addEventListener('click', () => {
@@ -212,17 +220,33 @@ function formatFileSize(bytes) {
   return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
 }
 
-// Submit scholarship
+// Submit scholarship - FIXED VALIDATION FOR BOTH CREATE AND UPDATE
 submitBtn.addEventListener('click', async (e) => {
   e.preventDefault();
   
-  // Validation
+  // FIXED: Check if either "All Programs" is selected OR at least one specific program is selected
+  const hasAllPrograms = allProgramsCheckbox.checked;
+  const hasSpecificPrograms = Array.from(programCheckboxes).some(cb => cb.checked);
+  const hasEligibleCourses = hasAllPrograms || hasSpecificPrograms;
+  
+  // Debug logging
+  console.log('Validation Check:');
+  console.log('- All Programs checked:', hasAllPrograms);
+  console.log('- Specific programs checked:', hasSpecificPrograms);
+  console.log('- Eligible courses input value:', eligibleCoursesInput.value);
+  console.log('- Has eligible courses:', hasEligibleCourses);
+  
+  // Basic field validation - REMOVED requiredDocuments and applicationProcess from required fields
   if (!scholarshipTitle.value.trim() || !provider.value.trim() || !amount.value.trim() ||
       !openDate.value || !deadline.value || !description.value.trim() || 
-      !eligibility.value.trim() || !benefits.value.trim() ||
-      !requiredDocuments.value.trim() || !applicationProcess.value.trim() ||
-      !eligibleCoursesInput.value.trim()) {
-    alert('Please fill in all required fields and select at least one eligible program.');
+      !eligibility.value.trim() || !benefits.value.trim()) {
+    alert('Please fill in all required fields.');
+    return;
+  }
+  
+  // Separate validation for eligible courses with better error message
+  if (!hasEligibleCourses) {
+    alert('Please select at least one eligible program or choose "All Programs".');
     return;
   }
 
@@ -237,11 +261,11 @@ submitBtn.addEventListener('click', async (e) => {
   formData.append('description', description.value.trim());
   formData.append('eligibility', eligibility.value.trim());
   formData.append('benefits', benefits.value.trim());
-  formData.append('required_documents', requiredDocuments.value.trim());
-  formData.append('application_process', applicationProcess.value.trim());
+  formData.append('required_documents', requiredDocuments.value.trim() || '');
+  formData.append('application_process', applicationProcess.value.trim() || '');
   formData.append('external_links', externalLinks.value.trim());
   formData.append('contact_info', contactInfo.value.trim());
-  formData.append('eligible_courses', eligibleCoursesInput.value.trim());  // ← ADD THIS LINE
+  formData.append('eligible_courses', eligibleCoursesInput.value.trim());
   formData.append('adminid', 'adminmila');
 
   selectedFiles.forEach(file => {
@@ -296,8 +320,35 @@ async function loadScholarships() {
     if (data.success && data.scholarships.length > 0) {
       let filteredScholarships = data.scholarships;
       
+      // Auto-update status based on deadline
+      const now = new Date();
+      now.setHours(0, 0, 0, 0); // Set to start of day for fair comparison
+      
+      for (const scholarship of filteredScholarships) {
+        const deadline = new Date(scholarship.deadline);
+        deadline.setHours(0, 0, 0, 0);
+        
+        // If deadline has passed and status is not already closed, update it
+        if (deadline < now && scholarship.status !== 'closed') {
+          try {
+            await fetch(`http://localhost:3000/api/scholarships/update-status/${scholarship.id}`, {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                status: 'closed'
+              })
+            });
+            scholarship.status = 'closed'; // Update locally
+          } catch (err) {
+            console.error(`Error auto-updating scholarship ${scholarship.id}:`, err);
+          }
+        }
+      }
+      
       if (currentFilter !== 'all') {
-        filteredScholarships = data.scholarships.filter(s => s.status === currentFilter);
+        filteredScholarships = filteredScholarships.filter(s => s.status === currentFilter);
       }
 
       if (filteredScholarships.length === 0) {

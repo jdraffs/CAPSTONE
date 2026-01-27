@@ -1,4 +1,4 @@
-/* careers.css - Career Directory Styling (Information Dissemination Only) */
+/* careers.css - Career Directory Styling (Information Dissemination Only) - FIXED */
 
 * {
   box-sizing: border-box;
@@ -138,6 +138,7 @@
   position: absolute;
   top: 15px;
   right: 15px;
+  z-index: 10;
 }
 
 .menu-btn {
@@ -204,13 +205,15 @@
   color: #d32f2f;
 }
 
-/* Status Row */
+/* Status Row - FIXED to prevent overlap */
 .org-status-row {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+  margin-right: 45px; /* ← ADDED: Space for 3-dot menu */
+  padding-right: 5px;
 }
 
 .org-status {
@@ -575,6 +578,11 @@
 
   .org-card {
     padding: 20px;
+  }
+  
+  /* Adjust status row margin on mobile */
+  .org-status-row {
+    margin-right: 40px;
   }
 
   .action-btn {

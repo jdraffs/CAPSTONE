@@ -1,4 +1,4 @@
-// adminMila.js - Enhanced Dashboard with Full Functionality
+// adminMila.js - Enhanced Dashboard with Optimized Loading & Audit Trail
 
 const ADMIN_ID = 1; // Replace with actual admin ID from session
 const ADMIN_NAME = 'AdminMila'; // Replace with actual admin name from session
@@ -8,7 +8,8 @@ let dashboardData = {
   scholarships: [],
   careers: [],
   certificates: [],
-  recentActivity: []
+  recentActivity: [],
+  allActivity: [] // Store all activity for audit trail
 };
 
 // Initialize Dashboard
@@ -16,21 +17,27 @@ document.addEventListener('DOMContentLoaded', () => {
   initializeDashboard();
   updateDateTime();
   setInterval(updateDateTime, 1000);
-  setInterval(loadRecentActivity, 60000); // Refresh every minute
+  setInterval(() => {
+    updateDateTime();
+    loadRecentActivity(); // Refresh activity feed
+  }, 60000); // Refresh every minute
   initializeProfileDropdown();
 });
 
-// Main initialization
+// Main initialization - OPTIMIZED
 async function initializeDashboard() {
   showLoading();
   
   try {
-    await Promise.all([
+    // Load all data in parallel for faster loading
+    const [scholarships, careers, certificates] = await Promise.all([
       loadScholarshipStats(),
       loadCareerStats(),
-      loadCertificateStats(),
-      loadRecentActivity()
+      loadCertificateStats()
     ]);
+    
+    // Load recent activity after data is loaded
+    await loadRecentActivity();
     
     updateAllMetrics();
     hideLoading();
@@ -67,9 +74,12 @@ async function loadScholarshipStats() {
       
       // Calculate and display trends
       calculateScholarshipTrends(data.scholarships);
+      
+      return data.scholarships;
     }
   } catch (err) {
     console.error('Error loading scholarship stats:', err);
+    return [];
   }
 }
 
@@ -116,9 +126,12 @@ async function loadCareerStats() {
       
       // Category breakdown
       calculateCareerBreakdown(data.organizations);
+      
+      return data.organizations;
     }
   } catch (err) {
     console.error('Error loading career stats:', err);
+    return [];
   }
 }
 
@@ -164,69 +177,93 @@ async function loadCertificateStats() {
       const processingRate = ((completed / total) * 100).toFixed(1);
       
       updateElementText('certificateProcessingRate', `${processingRate}%`);
+      
+      return stats;
     }
   } catch (err) {
     console.error('Error loading certificate stats:', err);
+    return {};
   }
 }
 
 // ============================================
-// RECENT ACTIVITY FEED
+// RECENT ACTIVITY FEED - OPTIMIZED
 // ============================================
 
 async function loadRecentActivity() {
   try {
+    const allActivities = [];
+    
     // Load recent scholarships
-    const recentScholarships = dashboardData.scholarships
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-      .slice(0, 5)
-      .map(s => ({
-        type: 'scholarship',
-        title: `New Scholarship: ${s.title}`,
-        description: `${s.provider} - ${s.amount}`,
-        timestamp: s.created_at,
-        icon: 'fa-graduation-cap'
-      }));
-    
-    // Load recent career organizations
-    const recentCareers = dashboardData.careers
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-      .slice(0, 5)
-      .map(c => ({
-        type: 'career',
-        title: `New Partner: ${c.name}`,
-        description: `${c.category} organization added`,
-        timestamp: c.created_at,
-        icon: 'fa-building'
-      }));
-    
-    // Load recent certificates
-    const certRes = await fetch('http://localhost:3000/api/certificate-requests/admin/recent');
-    let recentCertificates = [];
-    
-    if (certRes.ok) {
-      const certData = await certRes.json();
-      if (certData.success && certData.requests) {
-        recentCertificates = certData.requests.slice(0, 5).map(r => ({
-          type: 'certificate',
-          title: `Certificate Request: ${r.request_number}`,
-          description: `${r.full_name} - ${r.certificate_type === 'no_id' ? 'No ID Certificate' : 'ID Fill-Out'}`,
-          timestamp: r.created_at,
-          icon: 'fa-certificate'
+    if (dashboardData.scholarships.length > 0) {
+      const recentScholarships = dashboardData.scholarships
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .slice(0, 10)
+        .map(s => ({
+          type: 'scholarship',
+          title: `New Scholarship: ${s.title}`,
+          description: `${s.provider} - ${s.amount}`,
+          timestamp: s.created_at,
+          icon: 'fa-graduation-cap'
         }));
-      }
+      
+      allActivities.push(...recentScholarships);
     }
     
-    // Combine and sort all activities
-    const allActivities = [...recentScholarships, ...recentCareers, ...recentCertificates]
-      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-      .slice(0, 10);
+    // Load recent career organizations
+    if (dashboardData.careers.length > 0) {
+      const recentCareers = dashboardData.careers
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .slice(0, 10)
+        .map(c => ({
+          type: 'career',
+          title: `New Partner: ${c.name}`,
+          description: `${c.category} organization added`,
+          timestamp: c.created_at,
+          icon: 'fa-building'
+        }));
+      
+      allActivities.push(...recentCareers);
+    }
     
-    dashboardData.recentActivity = allActivities;
-    renderActivityFeed(allActivities);
+    // Load recent certificates - with error handling
+    try {
+      const certRes = await fetch('http://localhost:3000/api/certificate-requests/admin/recent');
+      
+      if (certRes.ok) {
+        const certData = await certRes.json();
+        if (certData.success && certData.requests && certData.requests.length > 0) {
+          const recentCertificates = certData.requests.slice(0, 10).map(r => ({
+            type: 'certificate',
+            title: `Certificate Request: ${r.request_number}`,
+            description: `${r.full_name} - ${r.certificate_type === 'no_id' ? 'No ID Certificate' : 'ID Fill-Out'}`,
+            timestamp: r.created_at,
+            icon: 'fa-certificate'
+          }));
+          
+          allActivities.push(...recentCertificates);
+        }
+      }
+    } catch (certErr) {
+      console.warn('Certificate data not available:', certErr);
+    }
+    
+    // Sort all activities by timestamp
+    const sortedActivities = allActivities
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+    // Store all activities for audit trail
+    dashboardData.allActivity = sortedActivities;
+    
+    // Display only recent 10
+    const recentActivities = sortedActivities.slice(0, 10);
+    dashboardData.recentActivity = recentActivities;
+    
+    renderActivityFeed(recentActivities);
     
   } catch (err) {
     console.error('Error loading recent activity:', err);
+    renderActivityFeed([]);
   }
 }
 
@@ -258,6 +295,65 @@ function renderActivityFeed(activities) {
     </div>
   `).join('');
 }
+
+// ============================================
+// AUDIT TRAIL MODAL
+// ============================================
+
+function openAuditTrailModal() {
+  const modal = document.getElementById('auditTrailModal');
+  const modalBody = document.getElementById('auditTrailBody');
+  
+  if (!modal || !modalBody) return;
+  
+  // Render all activities in the modal
+  if (dashboardData.allActivity.length === 0) {
+    modalBody.innerHTML = `
+      <div class="empty-state">
+        <i class="fa-solid fa-clock"></i>
+        <p>No activity recorded yet</p>
+      </div>
+    `;
+  } else {
+    modalBody.innerHTML = dashboardData.allActivity.map((activity, index) => `
+      <div class="audit-item ${activity.type}">
+        <div class="audit-number">#${index + 1}</div>
+        <div class="audit-icon">
+          <i class="fa-solid ${activity.icon}"></i>
+        </div>
+        <div class="audit-content">
+          <div class="audit-title">${activity.title}</div>
+          <div class="audit-description">${activity.description}</div>
+          <div class="audit-timestamp">
+            <i class="far fa-clock"></i>
+            ${new Date(activity.timestamp).toLocaleString('en-US', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+  
+  modal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeAuditTrailModal() {
+  const modal = document.getElementById('auditTrailModal');
+  if (modal) {
+    modal.classList.remove('show');
+    document.body.style.overflow = '';
+  }
+}
+
+// Export functions for HTML use
+window.openAuditTrailModal = openAuditTrailModal;
+window.closeAuditTrailModal = closeAuditTrailModal;
 
 // ============================================
 // UPDATE ALL METRICS

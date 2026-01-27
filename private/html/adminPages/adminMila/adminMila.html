@@ -312,6 +312,10 @@
                         <i class="fas fa-history"></i>
                         Recent Activity
                     </h2>
+                    <button class="view-all-btn" onclick="openAuditTrailModal()">
+                        <i class="fas fa-list"></i>
+                        View All
+                    </button>
                 </div>
                 <div class="activity-feed" id="activityFeed">
                     <div class="skeleton-loader"></div>
@@ -319,6 +323,25 @@
             </section>
         </div>
     </main>
+
+    <!-- Audit Trail Modal -->
+    <div class="audit-modal" id="auditTrailModal">
+        <div class="audit-modal-overlay" onclick="closeAuditTrailModal()"></div>
+        <div class="audit-modal-content">
+            <div class="audit-modal-header">
+                <h2>
+                    <i class="fas fa-clipboard-list"></i>
+                    Activity Audit Trail
+                </h2>
+                <button class="audit-modal-close" onclick="closeAuditTrailModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="audit-modal-body" id="auditTrailBody">
+                <div class="skeleton-loader"></div>
+            </div>
+        </div>
+    </div>
 
     <!-- Toast Container -->
     <div id="toastContainer" class="toast-container"></div>

@@ -1,67 +1,87 @@
-// feedback.js - Transaction-Based Feedback System - FIXED VERSION
+// feedback.js - Student & Visitor Feedback System
 
 const API_URL = 'http://localhost:3000/api';
 
-// state management
 let validatedTransaction = null;
+let currentUserType = 'student'; // 'student' or 'visitor'
 
-// DOM Elements
-const validationStep = document.getElementById('validationStep');
-const feedbackStep = document.getElementById('feedbackStep');
-const successStep = document.getElementById('successStep');
-
-const validationForm = document.getElementById('validationForm');
-const feedbackForm = document.getElementById('feedbackForm');
-
-const validationError = document.getElementById('validationError');
-const validationErrorText = document.getElementById('validationErrorText');
-const feedbackError = document.getElementById('feedbackError');
-const feedbackErrorText = document.getElementById('feedbackErrorText');
-
-const backBtn = document.getElementById('backBtn');
-const commentsTextarea = document.getElementById('comments');
-const charCount = document.getElementById('charCount');
-
-// Star rating elements
-const overallRatingInputs = document.querySelectorAll('input[name="overall_rating"]');
-const ratingText = document.getElementById('ratingText');
-
-// initialize
+// Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    setupEventListeners();
+    setupTabSwitching();
+    setupStudentForm();
+    setupVisitorForm();
 });
 
-// Setup Event Listeners
-function setupEventListeners() {
-    validationForm.addEventListener('submit', handleValidation);
-    feedbackForm.addEventListener('submit', handleFeedbackSubmission);
-    backBtn.addEventListener('click', goBackToValidation);
-    commentsTextarea.addEventListener('input', updateCharCount);
+// ============ TAB SWITCHING ============
+
+function setupTabSwitching() {
+    const tabButtons = document.querySelectorAll('.tab-button');
     
-    overallRatingInputs.forEach(input => {
-        input.addEventListener('change', updateRatingText);
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const tabName = button.getAttribute('data-tab');
+            switchTab(tabName);
+        });
     });
 }
 
-// Handle Transaction Validation
-async function handleValidation(e) {
+function switchTab(tabName) {
+    // Update buttons
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+    
+    // Update content
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    document.getElementById(`${tabName}Tab`).classList.add('active');
+    
+    // Update current user type
+    currentUserType = tabName;
+    
+    // Hide success step when switching tabs
+    document.getElementById('successStep').style.display = 'none';
+}
+
+// ============ STUDENT FORM ============
+
+function setupStudentForm() {
+    const validationForm = document.getElementById('studentValidationForm');
+    const feedbackForm = document.getElementById('studentFeedbackForm');
+    const backBtn = document.getElementById('studentBackBtn');
+    const commentsTextarea = document.getElementById('studentComments');
+    const charCount = document.getElementById('studentCharCount');
+    const ratingInputs = document.querySelectorAll('input[name="student_overall_rating"]');
+    
+    validationForm.addEventListener('submit', handleStudentValidation);
+    feedbackForm.addEventListener('submit', handleStudentFeedbackSubmission);
+    backBtn.addEventListener('click', goBackToStudentValidation);
+    commentsTextarea.addEventListener('input', () => updateCharCount(commentsTextarea, charCount));
+    
+    ratingInputs.forEach(input => {
+        input.addEventListener('change', () => updateRatingText('student'));
+    });
+}
+
+async function handleStudentValidation(e) {
     e.preventDefault();
     
-    const transactionId = document.getElementById('transactionId').value.trim();
+    const transactionId = document.getElementById('studentTransactionId').value.trim();
     const studentNumber = document.getElementById('studentNumber').value.trim();
-    const department = document.getElementById('department').value;
+    const department = document.getElementById('studentDepartment').value;
     
-    validationError.style.display = 'none';
+    hideError('studentValidationError');
     
-    const submitBtn = validationForm.querySelector('button[type="submit"]');
+    const submitBtn = e.target.querySelector('button[type="submit"]');
     const originalText = submitBtn.innerHTML;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
     submitBtn.disabled = true;
     
     try {
-        console.log('🔍 Validating transaction:', { transactionId, studentNumber, department });
+        console.log('🔍 Validating student transaction');
         
-        // Call actual API
         const response = await fetch(`${API_URL}/feedback/validate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -73,37 +93,29 @@ async function handleValidation(e) {
         });
         
         const result = await response.json();
-        console.log('📊 Validation result:', result);
         
         if (response.ok && result.success) {
             validatedTransaction = result.transaction;
-            showFeedbackForm();
+            showStudentFeedbackForm();
         } else {
-            showValidationError(result.message || 'Transaction not found or not eligible for feedback.');
+            showError('studentValidationError', result.message || 'Transaction not found or not eligible for feedback.');
         }
     } catch (error) {
         console.error('❌ Validation error:', error);
-        showValidationError('An error occurred during validation. Please try again.');
+        showError('studentValidationError', 'An error occurred during validation. Please try again.');
     } finally {
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
     }
 }
 
-// Show validation error
-function showValidationError(message) {
-    validationErrorText.textContent = message;
-    validationError.style.display = 'flex';
-}
-
-// Show feedback form step
-function showFeedbackForm() {
-    validationStep.style.display = 'none';
-    feedbackStep.style.display = 'block';
+function showStudentFeedbackForm() {
+    document.getElementById('studentValidationStep').style.display = 'none';
+    document.getElementById('studentFeedbackStep').style.display = 'block';
     
-    document.getElementById('displayTransactionId').textContent = validatedTransaction.transaction_id;
-    document.getElementById('displayDepartment').textContent = validatedTransaction.department_name;
-    document.getElementById('displayDate').textContent = new Date(validatedTransaction.transaction_date).toLocaleString('en-US', {
+    document.getElementById('studentDisplayTransactionId').textContent = validatedTransaction.transaction_id;
+    document.getElementById('studentDisplayDepartment').textContent = validatedTransaction.department_name;
+    document.getElementById('studentDisplayDate').textContent = new Date(validatedTransaction.transaction_date).toLocaleString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
@@ -114,29 +126,180 @@ function showFeedbackForm() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Go back to validation step
-function goBackToValidation() {
-    feedbackStep.style.display = 'none';
-    validationStep.style.display = 'block';
-    feedbackForm.reset();
+function goBackToStudentValidation() {
+    document.getElementById('studentFeedbackStep').style.display = 'none';
+    document.getElementById('studentValidationStep').style.display = 'block';
+    document.getElementById('studentFeedbackForm').reset();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Update character count
-function updateCharCount() {
-    const count = commentsTextarea.value.length;
-    charCount.textContent = count;
+async function handleStudentFeedbackSubmission(e) {
+    e.preventDefault();
     
-    if (count >= 450) {
-        charCount.style.color = '#c62828';
-    } else {
-        charCount.style.color = '#888';
+    hideError('studentFeedbackError');
+    
+    const overallRating = document.querySelector('input[name="student_overall_rating"]:checked');
+    const processingTime = document.querySelector('input[name="student_processing_time"]:checked');
+    const staffAssistance = document.querySelector('input[name="student_staff_assistance"]:checked');
+    const clarity = document.querySelector('input[name="student_clarity"]:checked');
+    const facility = document.querySelector('input[name="student_facility"]:checked');
+    
+    if (!overallRating || !processingTime || !staffAssistance || !clarity || !facility) {
+        showError('studentFeedbackError', 'Please rate all service aspects before submitting.');
+        return;
+    }
+    
+    const comments = document.getElementById('studentComments').value.trim();
+    
+    if (comments && !isCommentAppropriate(comments)) {
+        showError('studentFeedbackError', 'Your comment contains inappropriate language. Please revise and try again.');
+        return;
+    }
+    
+    const formData = {
+        transaction_id: validatedTransaction.transaction_id,
+        student_number: validatedTransaction.student_number,
+        department_id: validatedTransaction.department_id,
+        overall_rating: parseInt(overallRating.value),
+        processing_time: parseInt(processingTime.value),
+        staff_assistance: parseInt(staffAssistance.value),
+        clarity: parseInt(clarity.value),
+        facility: parseInt(facility.value),
+        comments: comments || null,
+        is_anonymous: document.getElementById('studentAnonymousToggle').checked
+    };
+    
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+    submitBtn.disabled = true;
+    
+    try {
+        const response = await fetch(`${API_URL}/feedback`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            console.log('✅ Student feedback submitted successfully!');
+            showSuccessMessage(result.feedback_id, 'student');
+        } else {
+            showError('studentFeedbackError', result.message || 'Failed to submit feedback. Please try again.');
+        }
+    } catch (error) {
+        console.error('❌ Submission error:', error);
+        showError('studentFeedbackError', 'An error occurred while submitting feedback. Please try again.');
+    } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
     }
 }
 
-// Update rating text
-function updateRatingText() {
-    const rating = document.querySelector('input[name="overall_rating"]:checked');
+// ============ VISITOR FORM ============
+
+function setupVisitorForm() {
+    const feedbackForm = document.getElementById('visitorFeedbackForm');
+    const commentsTextarea = document.getElementById('visitorComments');
+    const charCount = document.getElementById('visitorCharCount');
+    const ratingInputs = document.querySelectorAll('input[name="visitor_overall_rating"]');
+    
+    // Set max date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('visitDate').setAttribute('max', today);
+    
+    feedbackForm.addEventListener('submit', handleVisitorFeedbackSubmission);
+    commentsTextarea.addEventListener('input', () => updateCharCount(commentsTextarea, charCount));
+    
+    ratingInputs.forEach(input => {
+        input.addEventListener('change', () => updateRatingText('visitor'));
+    });
+}
+
+async function handleVisitorFeedbackSubmission(e) {
+    e.preventDefault();
+    
+    hideError('visitorFeedbackError');
+    
+    const overallRating = document.querySelector('input[name="visitor_overall_rating"]:checked');
+    const processingTime = document.querySelector('input[name="visitor_processing_time"]:checked');
+    const staffAssistance = document.querySelector('input[name="visitor_staff_assistance"]:checked');
+    const clarity = document.querySelector('input[name="visitor_clarity"]:checked');
+    const facility = document.querySelector('input[name="visitor_facility"]:checked');
+    
+    if (!overallRating || !processingTime || !staffAssistance || !clarity || !facility) {
+        showError('visitorFeedbackError', 'Please rate all service aspects before submitting.');
+        return;
+    }
+    
+    const comments = document.getElementById('visitorComments').value.trim();
+    
+    if (comments && !isCommentAppropriate(comments)) {
+        showError('visitorFeedbackError', 'Your comment contains inappropriate language. Please revise and try again.');
+        return;
+    }
+    
+    const formData = {
+        visitor_name: document.getElementById('visitorName').value.trim(),
+        visitor_email: document.getElementById('visitorEmail').value.trim() || null,
+        visitor_phone: document.getElementById('visitorPhone').value.trim() || null,
+        department_id: parseInt(document.getElementById('visitorDepartment').value),
+        service_type: document.getElementById('serviceType').value,
+        visit_date: document.getElementById('visitDate').value,
+        overall_rating: parseInt(overallRating.value),
+        processing_time: parseInt(processingTime.value),
+        staff_assistance: parseInt(staffAssistance.value),
+        clarity: parseInt(clarity.value),
+        facility: parseInt(facility.value),
+        comments: comments || null
+    };
+    
+    console.log('📤 Submitting visitor feedback:', formData);
+    
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+    submitBtn.disabled = true;
+    
+    try {
+        const response = await fetch(`${API_URL}/feedback/visitor`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+        
+        const result = await response.json();
+        console.log('📊 Visitor submission result:', result);
+        
+        if (response.ok && result.success) {
+            console.log('✅ Visitor feedback submitted successfully!');
+            showSuccessMessage(result.feedback_id, 'visitor');
+        } else {
+            showError('visitorFeedbackError', result.message || 'Failed to submit feedback. Please try again.');
+        }
+    } catch (error) {
+        console.error('❌ Submission error:', error);
+        showError('visitorFeedbackError', 'An error occurred while submitting feedback. Please try again.');
+    } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+}
+
+// ============ SHARED FUNCTIONS ============
+
+function updateCharCount(textarea, countElement) {
+    const count = textarea.value.length;
+    countElement.textContent = count;
+    countElement.style.color = count >= 450 ? '#c62828' : '#888';
+}
+
+function updateRatingText(type) {
+    const rating = document.querySelector(`input[name="${type}_overall_rating"]:checked`);
+    const ratingText = document.getElementById(`${type}RatingText`);
+    
     if (rating) {
         const ratingValue = parseInt(rating.value);
         const ratingLabels = {
@@ -151,90 +314,28 @@ function updateRatingText() {
     }
 }
 
-// Handle feedback submission
-async function handleFeedbackSubmission(e) {
-    e.preventDefault();
-    
-    feedbackError.style.display = 'none';
-    
-    // Get all ratings
-    const overallRating = document.querySelector('input[name="overall_rating"]:checked');
-    const processingTime = document.querySelector('input[name="processing_time"]:checked');
-    const staffAssistance = document.querySelector('input[name="staff_assistance"]:checked');
-    const clarity = document.querySelector('input[name="clarity"]:checked');
-    const facility = document.querySelector('input[name="facility"]:checked');
-    
-    // Validate all ratings are selected
-    if (!overallRating || !processingTime || !staffAssistance || !clarity || !facility) {
-        showFeedbackError('Please rate all service aspects before submitting.');
-        return;
-    }
-    
-    const comments = document.getElementById('comments').value.trim();
-    
-    // Filter comments (basic profanity check)
-    if (comments && !isCommentAppropriate(comments)) {
-        showFeedbackError('Your comment contains inappropriate language. Please revise and try again.');
-        return;
-    }
-    
-    // Prepare form data
-    const formData = {
-        transaction_id: validatedTransaction.transaction_id,
-        student_number: validatedTransaction.student_number,
-        department_id: validatedTransaction.department_id,
-        overall_rating: parseInt(overallRating.value),
-        processing_time: parseInt(processingTime.value),
-        staff_assistance: parseInt(staffAssistance.value),
-        clarity: parseInt(clarity.value),
-        facility: parseInt(facility.value),
-        comments: comments || null,
-        is_anonymous: document.getElementById('anonymousToggle').checked
-    };
-    
-    console.log('📤 Submitting feedback:', formData);
-    
-    const submitBtn = feedbackForm.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
-    submitBtn.disabled = true;
-    
-    try {
-        // ACTUAL API CALL
-        const response = await fetch(`${API_URL}/feedback`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData)
-        });
-        
-        const result = await response.json();
-        console.log('📊 Submission result:', result);
-        
-        if (response.ok && result.success) {
-            console.log('✅ Feedback submitted successfully!');
-            showSuccessMessage(result.feedback_id);
-        } else {
-            showFeedbackError(result.message || 'Failed to submit feedback. Please try again.');
-        }
-    } catch (error) {
-        console.error('❌ Submission error:', error);
-        showFeedbackError('An error occurred while submitting feedback. Please try again.');
-    } finally {
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
-    }
+function showError(errorId, message) {
+    const errorElement = document.getElementById(errorId);
+    const errorTextElement = document.getElementById(errorId + 'Text');
+    errorTextElement.textContent = message;
+    errorElement.style.display = 'flex';
+    errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-// Show feedback error
-function showFeedbackError(message) {
-    feedbackErrorText.textContent = message;
-    feedbackError.style.display = 'flex';
-    window.scrollTo({ top: feedbackError.offsetTop - 100, behavior: 'smooth' });
+function hideError(errorId) {
+    document.getElementById(errorId).style.display = 'none';
 }
 
-// Show success message
-function showSuccessMessage(feedbackId) {
-    feedbackStep.style.display = 'none';
+function showSuccessMessage(feedbackId, userType) {
+    // Hide all form steps
+    if (userType === 'student') {
+        document.getElementById('studentFeedbackStep').style.display = 'none';
+    } else {
+        document.getElementById('visitorFeedbackStep').style.display = 'none';
+    }
+    
+    // Show success step
+    const successStep = document.getElementById('successStep');
     successStep.style.display = 'block';
     
     document.getElementById('feedbackReference').textContent = feedbackId;
@@ -249,12 +350,8 @@ function showSuccessMessage(feedbackId) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Basic profanity filter
 function isCommentAppropriate(text) {
-    const profanityList = [
-        'badword1', 'badword2', 'badword3'
-    ];
-    
+    const profanityList = ['badword1', 'badword2', 'badword3'];
     const lowerText = text.toLowerCase();
     return !profanityList.some(word => lowerText.includes(word));
 }

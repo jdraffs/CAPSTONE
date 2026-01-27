@@ -1,4 +1,4 @@
-// scholarships.js - Public Side Connected to Database (COMPLETE VERSION)
+// scholarships.js - Public Side Connected to Database (COMPLETE VERSION - FIXED)
 
 // State Management
 let allScholarships = [];
@@ -161,13 +161,29 @@ function renderScholarships() {
     });
 }
 
-// Create scholarship card element
+// Create scholarship card element - FIXED
 function createScholarshipCard(scholarship) {
     const card = document.createElement('div');
     card.className = 'scholarship-card';
     card.onclick = () => openScholarshipModal(scholarship);
     
     const statusClass = scholarship.status.toLowerCase();
+    
+    // Create course badges HTML - FIXED to show "All Programs"
+    let courseBadgesHTML = '';
+    if (scholarship.eligibleCourses) {
+        if (scholarship.eligibleCourses === 'All Programs') {
+            // Show "All Programs" as a single badge with special styling
+            courseBadgesHTML = `<span class="badge badge-courses badge-all-programs">
+                <i class="fas fa-graduation-cap"></i> All Programs
+            </span>`;
+        } else {
+            // Show specific programs
+            courseBadgesHTML = `<span class="badge badge-courses">
+                <i class="fas fa-user-graduate"></i> ${scholarship.eligibleCourses}
+            </span>`;
+        }
+    }
     
     card.innerHTML = `
         <div class="card-header">
@@ -185,11 +201,7 @@ function createScholarshipCard(scholarship) {
                 <span class="badge badge-campus">
                     <i class="fas fa-map-marker-alt"></i> PUP Parañaque
                 </span>
-                ${scholarship.eligibleCourses && scholarship.eligibleCourses !== 'All Programs' ? 
-                    `<span class="badge badge-courses">
-                        <i class="fas fa-user-graduate"></i> ${scholarship.eligibleCourses}
-                    </span>` : 
-                    ''}
+                ${courseBadgesHTML}
             </div>
             
             <div class="card-info">
@@ -239,6 +251,20 @@ function isImageFile(mimeType) {
 // Open scholarship detail modal
 function openScholarshipModal(scholarship) {
     const statusClass = scholarship.status.toLowerCase();
+    
+    // Build course badges for modal - FIXED to show "All Programs"
+    let courseBadgesHTML = '';
+    if (scholarship.eligibleCourses) {
+        if (scholarship.eligibleCourses === 'All Programs') {
+            courseBadgesHTML = `<span class="badge badge-courses badge-all-programs">
+                <i class="fas fa-graduation-cap"></i> All Programs
+            </span>`;
+        } else {
+            courseBadgesHTML = `<span class="badge badge-courses">
+                <i class="fas fa-user-graduate"></i> ${scholarship.eligibleCourses}
+            </span>`;
+        }
+    }
     
     // Build attached files section
     let filesSection = '';
@@ -297,6 +323,38 @@ function openScholarshipModal(scholarship) {
         `;
     }
     
+    // Build eligible programs section - FIXED to show "All Programs" properly
+    let eligibleProgramsSection = '';
+    if (scholarship.eligibleCourses) {
+        if (scholarship.eligibleCourses === 'All Programs') {
+            eligibleProgramsSection = `
+                <div class="modal-section">
+                    <h3 class="modal-section-title">
+                        <i class="fas fa-user-graduate"></i> Eligible Programs
+                    </h3>
+                    <div class="course-badges-container">
+                        <span class="course-badge-public course-badge-all-programs">
+                            <i class="fas fa-graduation-cap"></i> All Programs
+                        </span>
+                    </div>
+                </div>
+            `;
+        } else {
+            eligibleProgramsSection = `
+                <div class="modal-section">
+                    <h3 class="modal-section-title">
+                        <i class="fas fa-user-graduate"></i> Eligible Programs
+                    </h3>
+                    <div class="course-badges-container">
+                        ${scholarship.eligibleCourses.split(',').map(course => 
+                            `<span class="course-badge-public">${course.trim()}</span>`
+                        ).join('')}
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
     modalBody.innerHTML = `
         <div class="modal-header">
             <h2 class="modal-title">${scholarship.title}</h2>
@@ -310,11 +368,7 @@ function openScholarshipModal(scholarship) {
                 <span class="badge badge-campus">
                     <i class="fas fa-map-marker-alt"></i> For PUP Parañaque Students
                 </span>
-                ${scholarship.eligibleCourses && scholarship.eligibleCourses !== 'All Programs' ? 
-                `<span class="badge badge-courses">
-                    <i class="fas fa-user-graduate"></i> ${scholarship.eligibleCourses}
-                </span>` : 
-                ''}
+                ${courseBadgesHTML}
             </div>
         </div>
         
@@ -334,18 +388,7 @@ function openScholarshipModal(scholarship) {
             </ul>
         </div>
         
-        ${scholarship.eligibleCourses && scholarship.eligibleCourses !== 'All Programs' ? `
-        <div class="modal-section">
-            <h3 class="modal-section-title">
-                <i class="fas fa-user-graduate"></i> Eligible Programs
-            </h3>
-            <div class="course-badges-container">
-                ${scholarship.eligibleCourses.split(',').map(course => 
-                    `<span class="course-badge-public">${course.trim()}</span>`
-                ).join('')}
-            </div>
-        </div>
-        ` : ''}
+        ${eligibleProgramsSection}
         
         ${scholarship.benefits && scholarship.benefits.length > 0 ? `
         <div class="modal-section">
