@@ -57,7 +57,7 @@ fileUpload.addEventListener('change', (e) => {
   const totalFiles = selectedFiles.length + existingFiles.length + newFiles.length;
   
   if (totalFiles > 3) {
-    alert('You can only upload up to 3 files per post.');
+    alertSystem.warning('You can only upload up to 3 files per post.');
     fileUpload.value = '';
     return;
   }
@@ -226,7 +226,7 @@ submitBtn.addEventListener('click', async (e) => {
   const content = postText.innerHTML.trim();
   
   if (!title && !content && selectedFiles.length === 0 && existingFiles.length === 0) {
-    alert('Please add a title, content, or files before posting.');
+    alertSystem.warning('Please add a title, content, or files before posting.');
     return;
   }
 
@@ -268,11 +268,11 @@ submitBtn.addEventListener('click', async (e) => {
       modal.style.display = 'none';
       loadPosts();
     } else {
-      alert('Something went wrong while saving your OJT post.');
+      alertSystem.error('Something went wrong while saving your OJT post.');
     }
   } catch (err) {
     console.error('Error submitting OJT post:', err);
-    alert('Error submitting post. Please try again.');
+    alertSystem.error('Error submitting post. Please try again.');
   }
 });
 
@@ -396,11 +396,11 @@ async function loadPosts() {
               if (result.success) {
                 loadPosts(); // Reload the feed
               } else {
-                alert('Failed to move post to trash');
+                alertSystem.error('Failed to move post to trash');
               }
             } catch (err) {
               console.error('Error moving post to trash:', err);
-              alert('Error moving post to trash');
+              alertSystem.error('Error moving post to trash');
             }
           }
         });
@@ -544,15 +544,15 @@ async function restorePost(id) {
     const data = await res.json();
 
     if (data.success) {
-      alert('Post restored successfully');
+      alertSystem.success('Post restored successfully');
       await loadTrash();
       loadPosts(); // Reload main feed
     } else {
-      alert('Failed to restore post');
+      alertSystem.error('Failed to restore post');
     }
   } catch (err) {
     console.error('Error restoring post:', err);
-    alert('Error restoring post');
+    alertSystem.error('Error restoring post');
   }
 }
 
@@ -565,14 +565,14 @@ async function deletePermanently(id) {
     const data = await res.json();
 
     if (data.success) {
-      alert('Post permanently deleted');
+      alertSystem.success('Post permanently deleted');
       await loadTrash();
     } else {
-      alert('Failed to delete post');
+      alertSystem.error('Failed to delete post');
     }
   } catch (err) {
     console.error('Error deleting post:', err);
-    alert('Error deleting post');
+    alertSystem.error('Error deleting post');
   }
 }
 
@@ -586,14 +586,14 @@ emptyTrashBtn?.addEventListener('click', async () => {
       const data = await res.json();
 
       if (data.success) {
-        alert(data.message);
+        alertSystem.success(data.message);
         await loadTrash();
       } else {
-        alert('Failed to empty trash');
+        alertSystem.error('Failed to empty trash');
       }
     } catch (err) {
       console.error('Error emptying trash:', err);
-      alert('Error emptying trash');
+      alertSystem.error('Error emptying trash');
     }
   }
 });

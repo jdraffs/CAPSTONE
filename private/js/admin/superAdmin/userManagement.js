@@ -11,13 +11,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   initializeProfileDropdown();
   
   if (!currentAdminId) {
-    alert('You must be logged in.');
+    alertSystem.error('You must be logged in.');
     window.location.href = '/private/html/AdminLogin/login.html';
     return;
   }
   
   if (currentAdminId !== 'adminSalao') {
-    alert('Access Denied: Super Admin only.');
+    alertSystem.error('Access Denied: Super Admin only.');
     window.location.href = '/private/html/adminPages/superAdmin/superAdmin.html';
     return;
   }

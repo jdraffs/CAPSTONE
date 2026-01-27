@@ -628,7 +628,7 @@ function getTimeAgo(date) {
 }
 
 function viewComments(comments) {
-    alert(comments); // Simple implementation, can be enhanced with a modal
+    alertSystem.warning(comments); // Simple implementation, can be enhanced with a modal
 }
 
 function showToast(message, type = 'info') {

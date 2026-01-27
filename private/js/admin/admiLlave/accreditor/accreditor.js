@@ -595,7 +595,7 @@ async function submitReview() {
 }
 
 function viewComments(comments) {
-    alert('My Comments:\n\n' + comments);
+    alertSystem.warning('My Comments:\n\n' + comments);
 }
 
 // ============================================

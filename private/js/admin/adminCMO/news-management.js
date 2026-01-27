@@ -89,13 +89,13 @@ thumbnailInput.addEventListener('change', (e) => {
   
   const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
   if (!validTypes.includes(file.type)) {
-    alert('Please select a valid image file (JPG, PNG, WEBP, or GIF)');
+    alertSystem.warning('Please select a valid image file (JPG, PNG, WEBP, or GIF)');
     thumbnailInput.value = '';
     return;
   }
   
   if (file.size > 5 * 1024 * 1024) {
-    alert('Image size must be less than 5MB');
+    alertSystem.warning('Image size must be less than 5MB');
     thumbnailInput.value = '';
     return;
   }
@@ -181,12 +181,12 @@ submitBtn.addEventListener('click', async (e) => {
   const content = postText.innerHTML.trim();
   
   if (!title || !content) {
-    alert('Please add both a title and content for your news article.');
+    alertSystem.warning('Please add both a title and content for your news article.');
     return;
   }
   
   if (!thumbnailFile && !existingThumbnailId) {
-    alert('Please add a thumbnail image for your news article.');
+    alertSystem.warning('Please add a thumbnail image for your news article.');
     return;
   }
 
@@ -229,11 +229,11 @@ submitBtn.addEventListener('click', async (e) => {
       closeModal();
       loadPosts();
     } else {
-      alert(data.message || 'Something went wrong while saving your news article.');
+      alertSystem.warning(data.message || 'Something went wrong while saving your news article.');
     }
   } catch (err) {
     console.error('Error submitting news:', err);
-    alert('Error submitting news. Please try again.');
+    alertSystem.error('Error submitting news. Please try again.');
   } finally {
     submitBtn.disabled = false;
     submitBtn.textContent = editingPostId ? 'Update News' : 'Publish News';
@@ -446,11 +446,11 @@ async function loadPosts() {
               if (result.success) {
                 loadPosts();
               } else {
-                alert('Failed to delete news article');
+                alertSystem.warning('Failed to delete news article');
               }
             } catch (err) {
               console.error('Error deleting news:', err);
-              alert('Error deleting news article');
+              alertSystem.error('Error deleting news article');
             }
           }
         });
@@ -581,15 +581,15 @@ async function restorePost(id) {
     const data = await res.json();
 
     if (data.success) {
-      alert('News article restored successfully');
+      alertSystem.success('News article restored successfully');
       await loadTrash();
       loadPosts();
     } else {
-      alert('Failed to restore news article');
+      alertSystem.warning('Failed to restore news article');
     }
   } catch (err) {
     console.error('Error restoring news:', err);
-    alert('Error restoring news article');
+    alertSystem.error('Error restoring news article');
   }
 }
 
@@ -601,14 +601,14 @@ async function deletePermanently(id) {
     const data = await res.json();
 
     if (data.success) {
-      alert('News article permanently deleted');
+      alertSystem.success('News article permanently deleted');
       await loadTrash();
     } else {
-      alert('Failed to delete news article');
+      alertSystem.warning('Failed to delete news article');
     }
   } catch (err) {
     console.error('Error deleting news:', err);
-    alert('Error deleting news article');
+    alertSystem.error('Error deleting news article');
   }
 }
 
@@ -621,14 +621,14 @@ emptyTrashBtn?.addEventListener('click', async () => {
       const data = await res.json();
 
       if (data.success) {
-        alert(data.message);
+        alertSystem.success(data.message);
         await loadTrash();
       } else {
-        alert('Failed to empty trash');
+        alertSystem.warning('Failed to empty trash');
       }
     } catch (err) {
       console.error('Error emptying trash:', err);
-      alert('Error emptying trash');
+      alertSystem.error('Error emptying trash');
     }
   }
 });

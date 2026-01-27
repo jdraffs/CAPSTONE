@@ -94,15 +94,15 @@ document.getElementById('admin-login-form').addEventListener('submit', async (e)
       } else if (data.adminid === 'adminCMO') {
         window.location.href = '/private/html/adminPages/adminCMO/cmoDashboard.html';
       } else {
-        alert('Unknown admin role. Please contact support.');
+        alertSystem.error('Unknown admin role. Please contact support.');
       }
     } else {
-      alert(data.message || 'Invalid admin ID or password.');
+      alertSystem.error('Invalid admin ID or password.');
     }
 
   } catch (error) {
     console.error('Error:', error);
-    alert('Server error. Please try again later.');
+    alertSystem.error('Server error. Please try again later.');
   }
 });
 

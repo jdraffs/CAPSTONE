@@ -54,7 +54,7 @@ function copySurveyLink() {
             copyLinkBtn.style.background = '#1976d2';
         }, 2000);
     }).catch(err => {
-        alert('Failed to copy link. Please copy manually.');
+        alertSystem.warning('Failed to copy link. Please copy manually.');
         console.error('Copy failed:', err);
     });
 }
@@ -238,20 +238,20 @@ async function deleteResponse(id) {
             await loadResponses();
             await loadStatistics();
             
-            alert('Response deleted successfully');
+            alertSystem.success('Response deleted successfully');
         } else {
-            alert('Failed to delete response');
+            alertSystem.warning('Failed to delete response');
         }
     } catch (error) {
         console.error('Error deleting response:', error);
-        alert('Error deleting response. Please try again.');
+        alertSystem.error('Error deleting response. Please try again.');
     }
 }
 
 // Export to CSV
 function exportToCSV() {
     if (filteredResponses.length === 0) {
-        alert('No data to export');
+        alertSystem.warning('No data to export');
         return;
     }
     

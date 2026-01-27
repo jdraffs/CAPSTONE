@@ -82,7 +82,7 @@ submitOrgBtn.addEventListener('click', async (e) => {
   e.preventDefault();
   
   if (!orgName.value.trim() || !orgCategory.value || !orgDescription.value.trim() || !orgWebsite.value.trim()) {
-    alert('Please fill in all required fields.');
+    alertSystem.warning('Please fill in all required fields.');
     return;
   }
 
@@ -122,11 +122,11 @@ submitOrgBtn.addEventListener('click', async (e) => {
       clearOrgForm();
       loadOrganizations();
     } else {
-      alert(data.message || 'Failed to save organization.');
+      alertSystem.warning(data.message || 'Failed to save organization.');
     }
   } catch (err) {
     console.error('Error submitting organization:', err);
-    alert('Error submitting organization. Please try again.');
+    alertSystem.error('Error submitting organization. Please try again.');
   }
 });
 
@@ -287,7 +287,7 @@ function createOrgCard(org) {
         if (data.success) {
           loadOrganizations();
         } else {
-          alert(data.message);
+          alertSystem.warning(data.message);
         }
       } catch (err) {
         console.error('Error deleting organization:', err);
