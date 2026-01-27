@@ -1,4 +1,4 @@
-/* analyticsReport.css - PART 1 - Redesigned to Match SuperAdmin Dashboard */
+/* analyticsReport.css - FIXED VERSION - Menu Toggle at Top Right */
 
 .main-content {
   padding: 30px;
@@ -216,9 +216,10 @@
 .reports-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 1px;
+  gap: 20px; /* ✅ INCREASED GAP to prevent overlap */
 }
 
+/* ✅ FIXED: Report card positioning to prevent scrollbar */
 .report-card {
   background: white;
   border-radius: 12px;
@@ -227,6 +228,8 @@
   transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
+  position: relative;
+  overflow: visible; /* ✅ CHANGED: Allow dropdown to show outside */
 }
 
 .report-card:hover {
@@ -428,10 +431,6 @@
   color: #667eea;
 }
 
-/* Part 2... */
-
-/* analyticsReport.css - PART 2 - Actions, Modal, and Stats Styling */
-
 /* ============================================
    QUICK STATS (Mini Statistics)
    ============================================ */
@@ -483,6 +482,7 @@
   padding-top: 15px;
   border-top: 2px solid #e2e8f0;
   gap: 10px;
+  position: relative;
 }
 
 .left-actions {
@@ -551,29 +551,6 @@
   background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
   color: #1a5928;
 }
-
-.refresh-btn {
-  background: white;
-  border: 2px solid #e2e8f0;
-  color: #718096;
-  border-radius: 8px;
-  padding: 8px 10px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-}
-
-.refresh-btn:hover {
-  background: #f7fafc;
-  color: #2d3748;
-  border-color: #cbd5e0;
-}
-
-/* Add these styles to analyticsReport.css */
 
 /* ============================================
    VIEW TOGGLE (Active/Trash)
@@ -711,27 +688,6 @@
   box-shadow: 0 4px 12px rgba(245, 101, 101, 0.4);
 }
 
-.trash-btn {
-  background: white;
-  border: 2px solid #fc8181;
-  color: #fc8181;
-  border-radius: 8px;
-  padding: 8px 10px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-}
-
-.trash-btn:hover {
-  background: #fc8181;
-  color: white;
-  transform: translateY(-2px);
-}
-
 /* ============================================
    EMPTY TRASH BUTTON
    ============================================ */
@@ -772,52 +728,120 @@
 }
 
 /* ============================================
-   RESPONSIVE UPDATES
+   DROPDOWN ACTION MENU (Three Dots Menu) - FIXED POSITIONING
    ============================================ */
 
-@media (max-width: 768px) {
-  .view-toggle {
-    width: 100%;
-    margin-right: 0;
-    margin-bottom: 10px;
-  }
-
-  .view-toggle-btn {
-    flex: 1;
-    justify-content: center;
-  }
-
-  .trash-actions {
-    flex-direction: column;
-  }
-
-  .restore-btn,
-  .delete-permanent-btn {
-    width: 100%;
-  }
-
-  .empty-trash-container {
-    justify-content: center;
-  }
+/* ✅ FIXED: Position menu toggle at absolute top right corner */
+.action-menu-container {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  z-index: 100;
 }
 
-/* ============================================
-   ANIMATION FOR TRASHED ITEMS
-   ============================================ */
-
-@keyframes fadeInTrashed {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 0.95;
-    transform: translateY(0);
-  }
+/* ✅ FIXED: Menu button styling */
+.menu-toggle-btn {
+  background: white;
+  border: 2px solid #e2e8f0;
+  color: #718096;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  width: 36px;
+  font-size: 1.1rem;
 }
 
-.report-card.trashed {
-  animation: fadeInTrashed 0.3s ease;
+.menu-toggle-btn:hover {
+  background: #f7fafc;
+  color: #2d3748;
+  border-color: #cbd5e0;
+  transform: scale(1.05);
+}
+
+.menu-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+/* ✅ FIXED: Dropdown menu positioning */
+.action-menu {
+  position: absolute;
+  top: 42px; /* Just below the button */
+  right: 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  padding: 8px;
+  min-width: 180px;
+  z-index: 9999; /* ✅ VERY HIGH z-index to appear above everything */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  border: 2px solid #e2e8f0;
+}
+
+.action-menu.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.action-menu-item {
+  width: 100%;
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #2d3748;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.action-menu-item i {
+  font-size: 1rem;
+  width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.action-menu-item:hover {
+  background: #f7fafc;
+  color: #667eea;
+}
+
+.action-menu-item.update-file-btn:hover {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+  color: #667eea;
+}
+
+.action-menu-item.refresh-data:hover {
+  background: linear-gradient(135deg, rgba(79, 172, 254, 0.1), rgba(0, 242, 254, 0.1));
+  color: #4facfe;
+}
+
+.action-menu-item.trash-btn:hover {
+  background: linear-gradient(135deg, rgba(252, 129, 129, 0.1), rgba(245, 101, 101, 0.1));
+  color: #fc8181;
+}
+
+.menu-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 6px 0;
 }
 
 /* ============================================
@@ -1308,4 +1332,53 @@
   .modal-content {
     width: 95%;
   }
+
+  .view-toggle {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+
+  .view-toggle-btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .trash-actions {
+    flex-direction: column;
+  }
+
+  .restore-btn,
+  .delete-permanent-btn {
+    width: 100%;
+  }
+
+  .empty-trash-container {
+    justify-content: center;
+  }
+  
+  /* ✅ FIXED: Mobile dropdown positioning */
+  .action-menu {
+    right: -8px;
+    min-width: 160px;
+  }
+}
+
+/* ============================================
+   ANIMATION FOR TRASHED ITEMS
+   ============================================ */
+
+@keyframes fadeInTrashed {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 0.95;
+    transform: translateY(0);
+  }
+}
+
+.report-card.trashed {
+  animation: fadeInTrashed 0.3s ease;
 }

@@ -1,4 +1,4 @@
-//dataUploads.js
+//dataUploads.js - COMPLETE FIXED VERSION
 window.addEventListener("DOMContentLoaded", () => {
   // === Dynamic XLSX load ===
   if (typeof XLSX === "undefined") {
@@ -20,8 +20,9 @@ window.addEventListener("DOMContentLoaded", () => {
   let jsonData = [];
   let selectedFile = null;
   let uploadedFileId = null;
+  let fileDisplayName = "";
 
-  // === File Input Handler (Preview + Auto Visualization) ===
+  // === File Input Handler ===
   if (dataFileInput) {
     dataFileInput.addEventListener("change", async () => {
       const file = dataFileInput.files[0];
@@ -31,6 +32,7 @@ window.addEventListener("DOMContentLoaded", () => {
       }
 
       selectedFile = file;
+      fileDisplayName = file.name.replace(/\.(csv|xlsx|xls|json)$/i, '');
       const fileSizeKB = (file.size / 1024).toFixed(1);
       fileInfo.innerHTML = `
         <i class="fa fa-file"></i>
@@ -41,7 +43,6 @@ window.addEventListener("DOMContentLoaded", () => {
 
       const fileName = file.name.toLowerCase();
 
-      // Generate preview based on file type
       if (fileName.endsWith(".csv")) parseCSV(file);
       else if (fileName.endsWith(".xlsx") || fileName.endsWith(".xls")) parseExcel(file);
       else if (fileName.endsWith(".json")) parseJSON(file);
@@ -66,7 +67,7 @@ window.addEventListener("DOMContentLoaded", () => {
   if (uploadBtn) {
     uploadBtn.addEventListener("click", async () => {
       if (!selectedFile) {
-        toast.warning("Please choose a file first!");
+        showNotification("Please choose a file first!", "error");
         return;
       }
 
@@ -122,6 +123,7 @@ window.addEventListener("DOMContentLoaded", () => {
     selectedFile = null;
     jsonData = [];
     uploadedFileId = null;
+    fileDisplayName = "";
     fileInfo.textContent = "";
     tablePreview.innerHTML = '<p id="noFileMsg">No file selected yet.</p>';
     vizArea.innerHTML = '<p>No visualization yet.</p>';
@@ -170,14 +172,19 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     jsonData = data;
-    const headers = Object.keys(data[0]);
+    let headers = Object.keys(data[0]);
+    
+    const cleanedHeaders = headers.map(h => {
+      if (h.startsWith("__EMPTY")) return "";
+      return h.trim();
+    });
     
     const table = document.createElement("table");
     table.className = "preview-table";
 
     const thead = document.createElement("thead");
     const trHead = document.createElement("tr");
-    headers.forEach((h) => {
+    cleanedHeaders.forEach((h) => {
       const th = document.createElement("th");
       th.textContent = h;
       trHead.appendChild(th);
@@ -201,7 +208,6 @@ window.addEventListener("DOMContentLoaded", () => {
     tablePreview.innerHTML = "";
     tablePreview.appendChild(table);
     
-    // Add row count info
     if (data.length > 50) {
       const rowInfo = document.createElement("div");
       rowInfo.className = "row-info";
@@ -210,29 +216,93 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     uploadBtn.disabled = false;
-    
-    // Automatically generate visualization
     generateVisualization();
   }
 
-  // === GENERATE VISUALIZATION ===
+  // === GENERATE VISUALIZATION - FIXED ===
   function generateVisualization() {
     if (jsonData.length === 0) return;
 
-    const headers = Object.keys(jsonData[0]);
-    const numericCols = headers.filter((h) =>
-      jsonData.every((row) => !isNaN(parseFloat(row[h])) && row[h] !== "")
-    );
+    let headers = Object.keys(jsonData[0]);
+    
+    console.log("🔍 === VISUALIZATION DEBUG ===");
+    console.log("📋 All headers:", headers);
+    console.log("📊 First 3 rows:", jsonData.slice(0, 3));
+    
+    // Find where actual data starts
+    let dataStartIndex = 0;
+    for (let i = 0; i < Math.min(5, jsonData.length); i++) {
+      const firstCol = jsonData[i][headers[0]];
+      console.log(`📍 Row ${i}, first column value:`, firstCol);
+      
+      if (firstCol && firstCol.toString().match(/\d{4}/)) {
+        dataStartIndex = i;
+        console.log(`✅ Found data start at row: ${i}`);
+        break;
+      }
+    }
+    
+    const dataRows = jsonData.slice(dataStartIndex);
+    console.log(`📈 Data rows count: ${dataRows.length}`);
+    console.log("🔢 Sample data row:", dataRows[0]);
+    
+    if (dataRows.length === 0) {
+      vizArea.innerHTML = '<p class="error-msg">⚠️ No data rows found.</p>';
+      return;
+    }
+    
+    // Find numeric columns - CHECK ALL COLUMNS
+    const numericCols = [];
+    
+    for (let i = 0; i < headers.length; i++) {
+      const h = headers[i];
+      
+      if (i === 0) {
+        console.log(`⏭️ Skipping column ${i} "${h}" (label column)`);
+        continue;
+      }
+      
+      let numericCount = 0;
+      
+      for (const row of dataRows) {
+        const val = row[h];
+        const numVal = parseFloat(val);
+        
+        if (!isNaN(numVal) && val !== "" && val !== null) {
+          numericCount++;
+        }
+      }
+      
+      const percentage = ((numericCount / dataRows.length) * 100).toFixed(1);
+      console.log(`🔢 Column ${i} "${h}": ${numericCount}/${dataRows.length} numeric (${percentage}%)`);
+      
+      if (numericCount > dataRows.length * 0.3) {
+        numericCols.push(h);
+        console.log(`✅ Column "${h}" is NUMERIC`);
+      }
+    }
+
+    console.log("🎯 Final numeric columns:", numericCols);
 
     if (numericCols.length === 0) {
-      vizArea.innerHTML = '<p class="error-msg">⚠️ No numeric columns found for visualization.</p>';
+      vizArea.innerHTML = '<p class="error-msg">⚠️ No numeric columns found. Check browser console for details.</p>';
       return;
     }
 
     const valueCol = numericCols[0];
     const labelCol = headers[0];
-    const labels = jsonData.map((row) => row[labelCol]);
-    const values = jsonData.map((row) => parseFloat(row[valueCol]));
+    
+    console.log("📊 Using label column:", labelCol);
+    console.log("📊 Using value column:", valueCol);
+    
+    const labels = dataRows.map((row) => row[labelCol] || "");
+    const values = dataRows.map((row) => {
+      const val = parseFloat(row[valueCol]);
+      return isNaN(val) ? 0 : val;
+    });
+    
+    console.log("🏷️ Labels:", labels);
+    console.log("🔢 Values:", values);
 
     vizArea.innerHTML = '<canvas id="dataChart" style="height: 400px;"></canvas>';
     const ctx = document.getElementById("dataChart").getContext("2d");
@@ -243,14 +313,13 @@ window.addEventListener("DOMContentLoaded", () => {
 
     const chartType = chartTypeSelect?.value || "bar";
 
-    // Maroon color scheme to match your theme
     const maroonPalette = [
-      "rgba(139, 0, 0, 0.7)",    // Dark red
-      "rgba(178, 34, 34, 0.7)",  // Firebrick
-      "rgba(220, 20, 60, 0.7)",  // Crimson
-      "rgba(205, 92, 92, 0.7)",  // Indian red
-      "rgba(240, 128, 128, 0.7)", // Light coral
-      "rgba(233, 150, 122, 0.7)", // Dark salmon
+      "rgba(139, 0, 0, 0.7)",
+      "rgba(178, 34, 34, 0.7)",
+      "rgba(220, 20, 60, 0.7)",
+      "rgba(205, 92, 92, 0.7)",
+      "rgba(240, 128, 128, 0.7)",
+      "rgba(233, 150, 122, 0.7)",
     ];
 
     const gradient = ctx.createLinearGradient(0, 0, 0, 400);
@@ -271,6 +340,8 @@ window.addEventListener("DOMContentLoaded", () => {
       pointHoverRadius: 6,
     };
 
+    const chartTitle = fileDisplayName || valueCol;
+
     window.currentChart = new Chart(ctx, {
       type: chartType,
       data: { labels, datasets: [dataset] },
@@ -282,7 +353,7 @@ window.addEventListener("DOMContentLoaded", () => {
           legend: { display: false },
           title: {
             display: true,
-            text: `${valueCol} Visualization`,
+            text: chartTitle,
             color: "#1f2937",
             font: { size: 16, weight: "600", family: "'Inter', sans-serif" },
             padding: { bottom: 10 },
@@ -322,16 +393,12 @@ window.addEventListener("DOMContentLoaded", () => {
       dynamicTyping: false,
       complete: (results) => {
         let data = results.data;
-
         const allHeaders = new Set();
         data.forEach(row => {
-          Object.keys(row).forEach(key => {
-            allHeaders.add(key.trim());
-          });
+          Object.keys(row).forEach(key => allHeaders.add(key.trim()));
         });
 
         const headerArray = Array.from(allHeaders);
-
         const normalizedData = data.map(row => {
           const cleanRow = {};
           headerArray.forEach(h => {
@@ -394,7 +461,6 @@ window.addEventListener("DOMContentLoaded", () => {
         });
 
         const keyArray = Array.from(allKeys);
-
         const normalized = arr.map(obj => {
           const clean = {};
           keyArray.forEach(k => {

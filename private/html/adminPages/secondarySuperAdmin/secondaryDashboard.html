@@ -1,0 +1,417 @@
+<!-- secondaryDashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Administrator - Dashboard</title>
+    <link rel="icon" type="image" href="/public/assets/images/PUPLogo.webp">
+    <link rel="stylesheet" href="/private/css/pages/secondaryDashboard.css">
+    <link rel="stylesheet" href="/private/css/layout/dashboardsidebar.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!--SIDEBAR-->
+    <section class="sidebar">
+        <div class="logo">
+            <img class="logoimage" src="/public/assets/images/PUPLogo.webp" alt="PUP Logo">
+            <div class="logotitlewrap">
+                <h2 class="logotitle logotitle1">PUP</h2>
+                <h2 class="logotitle">Parañaque</h2>
+            </div>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <nav class="sidebar-nav">
+            <div class="sidebar-scroll">
+                <div class="nav-section">
+                    <h3 class="nav-title">Main</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item active">
+                            <a class="nav-link" href="/private/html/adminPages/secondarySuperAdmin/secondaryDashboard.html">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <h3 class="nav-title">Management</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/secondarySuperAdmin/secondaryAnalytics.html">
+                                <i class="fa-solid fa-chart-line"></i>
+                                <span>Analytics Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/secondarySuperAdmin/secondaryUserManagement.html">
+                                <i class="fa-solid fa-users"></i>
+                                <span>User Management</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/secondarySuperAdmin/secondaryRoleManagement.html">
+                                <i class="fa-solid fa-user-tag"></i>
+                                <span>Role Management</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/secondarySuperAdmin/secondaryFeedbackView.html">
+                                <i class="fa-solid fa-comments"></i>
+                                <span>Service Feedback</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/secondarySuperAdmin/secondaryActivityLogs.html">
+                                <i class="fa-solid fa-clipboard-list"></i>
+                                <span>My Action Logs</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar backup">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <div class="user-details">
+                        <span class="user-name" id="currentAdminName"></span>
+                        <span class="user-role"></span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </section>
+    
+    <!--MAIN CONTENT-->
+    <main class="main">
+        <header class="dashboard-header">
+            <div class="header-left">
+                <h1 class="page-title">Dashboard</h1>
+                <span class="access-badge">Limited Access Mode</span>
+            </div>
+            <div class="header-right">
+                <div class="notification-button">
+                    <a class="notif-link" href="#notifications">
+                        <i class="fa fa-bell"></i>
+                    </a>
+                </div>
+                <div class="profile-button">
+                    <a class="profile-link">
+                        <i class="fa fa-user"></i>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <div class="dashboard-content">
+            <!-- Welcome Section -->
+            <section class="welcome-section backup">
+                <div class="welcome-content">
+                    <h1 class="welcome-title">Welcome back, <span id="adminName">System Administrator</span>!</h1>
+                    <p class="welcome-subtitle">Here's what's happening with your limited access today</p>
+                    <div class="datetime-display">
+                        <i class="far fa-clock"></i>
+                        <span id="currentDateTime">Loading...</span>
+                    </div>
+                </div>
+                <div class="system-status">
+                    <div class="status-indicator" id="systemStatus">
+                        <div class="status-dot operational"></div>
+                        <div class="status-text">
+                            <span class="status-label">System Status</span>
+                            <span class="status-value">Operational</span>
+                        </div>
+                    </div>
+                    <div class="last-sync backup-sync">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Last sync: <span id="lastSync">Just now</span></span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quick Navigation -->
+            <section class="quick-actions-enhanced">
+                <h3 class="section-heading">
+                    <i class="fas fa-bolt"></i> Quick Navigation
+                </h3>
+                
+                <div class="quick-nav-grid">
+                    <a href="./analyticsView.html" class="quick-nav-card analytics">
+                        <div class="access-indicator read-only">READ ONLY</div>
+                        <div class="nav-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h4>Analytics</h4>
+                        <p>View reports & insights</p>
+                        <span class="nav-count" id="navAnalyticsCount">0</span>
+                    </a>
+
+                    <a href="./userManagementLimited.html" class="quick-nav-card users">
+                        <div class="access-indicator limited">LIMITED</div>
+                        <div class="nav-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h4>Users</h4>
+                        <p>Manage user accounts</p>
+                        <span class="nav-count" id="navUsersCount">0</span>
+                    </a>
+
+                    <a href="./roleManagementLimited.html" class="quick-nav-card roles">
+                        <div class="access-indicator limited">LIMITED</div>
+                        <div class="nav-icon">
+                            <i class="fas fa-user-tag"></i>
+                        </div>
+                        <h4>Roles</h4>
+                        <p>Configure permissions</p>
+                        <span class="nav-count" id="navRolesCount">0</span>
+                    </a>
+
+                    <a href="./feedbackView.html" class="quick-nav-card feedback">
+                        <div class="nav-icon">
+                            <i class="fas fa-comment-dots"></i>
+                        </div>
+                        <h4>Feedback</h4>
+                        <p>Review submissions</p>
+                        <span class="nav-count" id="navFeedbackCount">0</span>
+                    </a>
+                </div>
+            </section>
+
+            <!-- Key Metrics Cards -->
+            <section class="metrics-section">
+                <h3 class="section-heading">
+                    <i class="fas fa-chart-pie"></i> System Metrics
+                    <span class="read-only-badge">Read Only</span>
+                </h3>
+                <div class="metrics-grid">
+                    <!-- Total Users -->
+                    <div class="metric-card gradient-blue">
+                        <div class="metric-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="totalUsers">
+                                <div class="skeleton-loader"></div>
+                            </div>
+                            <div class="metric-label">Total Users</div>
+                            <div class="metric-subtext">All admin accounts</div>
+                        </div>
+                    </div>
+
+                    <!-- Active Users -->
+                    <div class="metric-card gradient-green">
+                        <div class="metric-icon">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="activeUsers">
+                                <div class="skeleton-loader"></div>
+                            </div>
+                            <div class="metric-label">Active Users</div>
+                            <div class="metric-subtext">Currently active</div>
+                        </div>
+                    </div>
+
+                    <!-- Total Roles -->
+                    <div class="metric-card gradient-purple">
+                        <div class="metric-icon">
+                            <i class="fas fa-user-tag"></i>
+                        </div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="totalRoles">
+                                <div class="skeleton-loader"></div>
+                            </div>
+                            <div class="metric-label">Total Roles</div>
+                            <div class="metric-subtext">Permission sets</div>
+                        </div>
+                    </div>
+
+                    <!-- Pending Feedback -->
+                    <div class="metric-card gradient-orange">
+                        <div class="metric-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="pendingFeedback">
+                                <div class="skeleton-loader"></div>
+                            </div>
+                            <div class="metric-label">Pending Feedback</div>
+                            <div class="metric-subtext">Needs attention</div>
+                        </div>
+                    </div>
+
+                    <!-- My Actions Today -->
+                    <div class="metric-card gradient-teal">
+                        <div class="metric-icon">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="myActionsToday">
+                                <div class="skeleton-loader"></div>
+                            </div>
+                            <div class="metric-label">My Actions Today</div>
+                            <div class="metric-subtext">Your activity</div>
+                        </div>
+                    </div>
+
+                    <!-- Last Action -->
+                    <div class="metric-card gradient-pink">
+                        <div class="metric-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="metric-content">
+                            <div class="metric-value small" id="lastActionTime">
+                                <div class="skeleton-loader"></div>
+                            </div>
+                            <div class="metric-label">Last Action</div>
+                            <div class="metric-subtext" id="lastActionName">No recent actions</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Access Level Information -->
+            <section class="access-summary">
+                <h3 class="section-heading">
+                    <i class="fas fa-key"></i> Your Access Level
+                </h3>
+                <div class="access-grid">
+                    <div class="access-card allowed">
+                        <div class="access-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <h4>What You CAN Do</h4>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Create/Edit Admin-level users</li>
+                            <li><i class="fas fa-check"></i> Assign non-superadmin roles</li>
+                            <li><i class="fas fa-check"></i> View full analytics dashboard</li>
+                            <li><i class="fas fa-check"></i> Manage service feedback</li>
+                            <li><i class="fas fa-check"></i> Create/edit non-critical roles</li>
+                            <li><i class="fas fa-check"></i> Reactivate disabled accounts</li>
+                        </ul>
+                    </div>
+
+                    <div class="access-card restricted">
+                        <div class="access-icon">
+                            <i class="fas fa-ban"></i>
+                        </div>
+                        <h4>What You CANNOT Do</h4>
+                        <ul>
+                            <li><i class="fas fa-times"></i> Edit/disable Campus Director</li>
+                            <li><i class="fas fa-times"></i> Create new superadmins</li>
+                            <li><i class="fas fa-times"></i> Modify superadmin permissions</li>
+                            <li><i class="fas fa-times"></i> Transfer system ownership</li>
+                            <li><i class="fas fa-times"></i> Upgrade your own role</li>
+                            <li><i class="fas fa-times"></i> Delete system-critical roles</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Two Column Layout -->
+            <div class="content-columns">
+                <!-- Left Column -->
+                <div class="left-column">
+                    <!-- My Recent Actions -->
+                    <section class="insights-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-history"></i> My Recent Actions</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="actions-list" id="recentActionsList">
+                                <div class="skeleton-activity">
+                                    <div class="skeleton-loader"></div>
+                                    <div class="skeleton-loader"></div>
+                                    <div class="skeleton-loader"></div>
+                                </div>
+                            </div>
+                            <a href="./actionLogs.html" class="view-all-link">
+                                View All My Actions <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </section>
+
+                    <!-- System Insights -->
+                    <section class="insights-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-brain"></i> System Insights</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="insight-message" id="systemInsight">
+                                <i class="fas fa-lightbulb"></i>
+                                <p>Loading system insights...</p>
+                            </div>
+                            <div class="system-health-indicators">
+                                <div class="health-item">
+                                    <div class="health-label">User Account Health</div>
+                                    <div class="health-bar">
+                                        <div class="health-fill" id="userHealthFill" style="width: 0%"></div>
+                                    </div>
+                                    <div class="health-value" id="userHealthValue">0%</div>
+                                </div>
+                                <div class="health-item">
+                                    <div class="health-label">Role Distribution</div>
+                                    <div class="health-bar">
+                                        <div class="health-fill" id="roleHealthFill" style="width: 0%"></div>
+                                    </div>
+                                    <div class="health-value" id="roleHealthValue">0%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Right Column -->
+                <div class="right-column">
+                    <!-- System Activity Feed -->
+                    <section class="activity-feed-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-rss"></i> System Activity</h3>
+                            <span class="read-only-badge-small">View Only</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="activity-list" id="systemActivityList">
+                                <div class="skeleton-activity">
+                                    <div class="skeleton-loader"></div>
+                                    <div class="skeleton-loader"></div>
+                                    <div class="skeleton-loader"></div>
+                                </div>
+                            </div>
+                            <div class="activity-auto-refresh">
+                                <i class="fas fa-sync-alt"></i>
+                                <span>Auto-refreshing every 60s</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- System Notifications -->
+                    <section class="notifications-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-bell"></i> System Alerts</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="notifications-list" id="notificationsList">
+                                <!-- Notifications will be loaded here -->
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="/private/js/admin/secondarySuperAdmin/secondaryDashboard.js"></script>
+    <script src="/private/js/admin/profileFunction.js"></script>
+</body>
+</html>

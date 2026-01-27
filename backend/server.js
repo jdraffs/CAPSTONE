@@ -36,6 +36,7 @@ import certificateRequestRoute from './routes/certificateRequestRoute.js';
 import newsRoute from './routes/newsRoute.js';
 import alumniEmploymentRoute from './routes/alumniEmploymentRoute.js';
 import searchRoute from './routes/searchRoute.js';
+import adminActivityLogsRoute from './routes/adminActivityLogsRoute.js';
 
 // initialize 
 dotenv.config();
@@ -76,6 +77,7 @@ app.use('/api/certificate-requests', certificateRequestRoute);
 app.use('/api/news', newsRoute);
 app.use('/api', alumniEmploymentRoute);
 app.use('/api', searchRoute);
+app.use('/api', adminActivityLogsRoute);
 
 // SINGLE /api/files/data endpoint with trash support
 app.get("/api/files/data", async (req, res) => {

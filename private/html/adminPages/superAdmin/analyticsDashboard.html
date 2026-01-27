@@ -1,0 +1,139 @@
+<!--analyticsDashboard.html - SuperAdmin Analytics Dashboard-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Admin - Analytics Dashboard</title>
+    <link rel="icon" type="image" href="/public/assets/images/PUPLogo.webp">
+            <!-- alert-->
+    <link rel="stylesheet" href="/private/css/layout/alert-system.css">
+    <link rel="stylesheet" href="/private/css/layout/post.css">
+    <link rel="stylesheet" href="/private/css/layout/dashboardsidebar.css">
+    <link rel="stylesheet" href="/private/css/pages/analyticsDashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!--SIDEBAR-->
+    <section class="sidebar">
+        <div class="logo">
+            <img class="logoimage" src="/public/assets/images/PUPLogo.webp" alt="PUP Logo">
+            <div class="logotitlewrap">
+                <h2 class="logotitle logotitle1">PUP</h2>
+                <h2 class="logotitle">Parañaque</h2>
+            </div>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <nav class="sidebar-nav">
+            <div class="sidebar-scroll">
+                <div class="nav-section">
+                    <h3 class="nav-title">Main</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/superAdmin/superAdmin.html">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <h3 class="nav-title">Management</h3>
+
+                    <ul class="nav-list">
+                        <li class="nav-item active">
+                            <a class="nav-link" href="/private/html/adminPages/superAdmin/analyticsDashboard.html">
+                                <i class="fa-solid fa-chart-line"></i>
+                                <span>Analytics Dashboard</span>
+                            </a>
+                        </li>
+                    </ul>
+
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/superAdmin/userManagement.html">
+                                <i class="fa-solid fa-copy"></i>
+                                <span>User Management</span>
+                            </a>
+                        </li>
+                    </ul>
+
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/superAdmin/roleManagement.html">
+                                <i class="fa-solid fa-box-archive"></i>
+                                <span>Role Management</span>
+                            </a>
+                        </li>
+                    </ul>
+
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/superAdmin/feedbackDashboard.html">
+                                <i class="fa-solid fa-comments"></i>
+                                <span>Service Feedback</span>
+                            </a>
+                        </li>
+                    </ul>
+
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/superAdmin/adminActivityLogs.html">
+                                <i class="fa-solid fa-clipboard-list"></i>
+                                <span>Admin Activity Logs</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div> <!-- End of sidebar-scroll -->
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-details">
+                        <span class="user-name">SuperAdmin</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </section>
+
+    <!--MAIN CONTENT-->
+    <main class="main">
+        <header class="dashboard-header">
+            <div class="header-left">
+                <h1 class="page-title" id="pageTitle">Analytics Dashboard</h1>
+            </div>
+            <div class="header-right">
+                <div class="notification-button">
+                    <a class="notif-link" href="#notifications" data-page="overview">
+                        <i class="fa fa-bell" aria-hidden="true"></i>
+                    </a>
+                </div>
+                <div class="profile-button">
+                    <a class="profile-link" href="#profile" data-page="profile">
+                        <i class="fa fa-user" aria-hidden="true"></i>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!--DASHBOARD CONTENT-->
+        <div class="main-content" id="mainContent">
+            <!-- Content will be dynamically loaded here -->
+        </div>
+    </main>
+
+<!-- SCRIPTS -->
+<script src="/private/js/alert-system.js"></script>
+<script src="/private/js/admin/superAdmin/analyticsDashboard.js"></script>
+<script src="/private/js/admin/superAdmin/superAdmin.js"></script>
+<script src="/private/js/admin/profileFunction.js"></script>
+</body>
+</html>
