@@ -1,5 +1,4 @@
-// secondaryActivityLogs.js - Action Logs for System Admin (PERSONAL HISTORY)
-// Shows ONLY the System Admin's own actions from the actual API
+// secondaryActivityLogs.js - Action Logs for System Admin
 
 document.addEventListener('DOMContentLoaded', async () => {
   const API_URL = 'http://localhost:3000/api';

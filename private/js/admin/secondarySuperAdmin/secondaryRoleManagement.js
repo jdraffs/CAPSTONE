@@ -1,4 +1,4 @@
-// roleManagementLimited.js - Secondary SuperAdmin Role Management (LIMITED)
+// secondaryRoleManagement.js - Secondary SuperAdmin Role Management (LIMITED)
 document.addEventListener('DOMContentLoaded', async () => {
   const API_URL = 'http://localhost:3000/api';
   

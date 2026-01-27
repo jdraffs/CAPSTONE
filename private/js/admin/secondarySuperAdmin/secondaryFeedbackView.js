@@ -1,5 +1,4 @@
 // secondaryFeedbackView.js - Service Feedback for System Admin (READ-ONLY)
-// Uses ACTUAL feedback data from the API (same as SuperAdmin)
 
 document.addEventListener('DOMContentLoaded', async () => {
   const API_URL = 'http://localhost:3000/api';

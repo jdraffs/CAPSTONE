@@ -1,4 +1,4 @@
-// analyticsView.js - Secondary SuperAdmin Analytics Dashboard (READ-ONLY)
+// secondaryAnalytics.js - Secondary SuperAdmin Analytics Dashboard (READ-ONLY)
 document.addEventListener('DOMContentLoaded', async () => {
   const mainContent = document.getElementById("mainContent");
   const PYTHON_API_URL = "http://localhost:5000/api";

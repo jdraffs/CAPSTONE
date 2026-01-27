@@ -1,4 +1,4 @@
-// userManagementLimited.js - PART 1: Secondary SuperAdmin User Management (LIMITED)
+// secondaryUserManagementLimited.js - PART 1: Secondary SuperAdmin User Management (LIMITED)
 const API_BASE = 'http://localhost:3000/api';
 let currentAdminId = localStorage.getItem('adminid');
 let allAdmins = [];
