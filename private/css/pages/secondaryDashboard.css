@@ -20,26 +20,6 @@
   margin: 30px;
 }
 
-/* Backup-specific user avatar */
-.user-avatar.backup {
-  background-color: var(--backup-primary) !important;
-}
-
-/* Notification Badge */
-.notification-badge {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  background: #e53e3e;
-  color: white;
-  border-radius: 10px;
-  padding: 2px 6px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  min-width: 18px;
-  text-align: center;
-}
-
 /* Welcome Section - Backup Style */
 .welcome-section.backup {
   background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
@@ -760,39 +740,7 @@ font-size: 2.5rem;
 margin-bottom: 10px;
 opacity: 0.5;
 }
-/* Access Notice in Sidebar */
-.access-notice {
-margin-top: auto;
-padding: 15px;
-}
-.notice-card {
-background: linear-gradient(135deg, #fff5e6 0%, #ffe9cc 100%);
-border: 2px solid #ed8936;
-border-radius: 12px;
-padding: 15px;
-text-align: center;
-}
-.notice-card i {
-font-size: 2rem;
-color: #ed8936;
-margin-bottom: 10px;
-}
-.notice-card h4 {
-margin: 0 0 5px 0;
-font-size: 0.9rem;
-color: #2d3748;
-font-weight: 700;
-}
-.notice-card p {
-margin: 0 0 5px 0;
-font-size: 0.85rem;
-color: #4a5568;
-font-weight: 600;
-}
-.notice-card small {
-font-size: 0.75rem;
-color: #718096;
-}
+
 /* Toast Notifications */
 .toast-container {
 position: fixed;

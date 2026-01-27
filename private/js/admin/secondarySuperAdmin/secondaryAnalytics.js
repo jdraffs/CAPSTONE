@@ -22,6 +22,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   function createRefreshButton() {
     const headerRight = document.querySelector('.header-right');
     
+    // Check if refresh button already exists
+    if (document.getElementById('refreshDashboard')) {
+      return;
+    }
+    
     const refreshBtn = document.createElement('div');
     refreshBtn.innerHTML = `
       <button class="refresh-btn" id="refreshDashboard" title="Refresh Dashboard">
@@ -78,16 +83,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, 3000);
   }
   
-  createRefreshButton();
-
   function getAdminDisplayName(adminId) {
     return ADMIN_NAMES[adminId] || `Admin ${adminId}`;
   }
 
+  // Initialize the dashboard
   await initializeDashboard();
 
   async function initializeDashboard() {
-    mainContent.innerHTML += '<div class="loading-state"><i class="fas fa-spinner fa-spin"></i> Loading analytics dashboard...</div>';
+    // Show loading state
+    mainContent.innerHTML = '<div class="loading-state"><i class="fas fa-spinner fa-spin"></i> Loading analytics dashboard...</div>';
+
+    // Create refresh button
+    createRefreshButton();
 
     try {
       const response = await fetch(`${NODE_API_URL}/files/data`);
@@ -189,11 +197,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function renderDashboard() {
     const adminActivityHtml = await renderAdminActivity();
     
-    // Remove existing loading state
-    const loadingState = mainContent.querySelector('.loading-state');
-    if (loadingState) loadingState.remove();
-    
-    mainContent.innerHTML += `
+    // REPLACE the entire content instead of appending
+    mainContent.innerHTML = `
       <!-- Executive Summary Cards -->
       <div class="executive-summary">
         ${renderExecutiveSummary()}
@@ -386,44 +391,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     `;
   }
 
-  window.processAllAnalytics = processAllAnalytics;
-  window.renderDashboard = renderDashboard;
-  window.getAdminDisplayName = getAdminDisplayName;
-  window.formatTimeAgo = formatTimeAgo;
-  window.getUniqueAdmins = getUniqueAdmins;
-  window.renderEmptyState = renderEmptyState;
-  window.reports = reports;
-  window.PYTHON_API_URL = PYTHON_API_URL;
-  window.NODE_API_URL = NODE_API_URL;
-
   function renderReportsGrid() {
-    if (window.reports.length === 0) {
+    if (reports.length === 0) {
       return '<p class="no-data">No reports available</p>';
     }
 
-    return window.reports.map(report => {
+    return reports.map(report => {
       // Interpretation status badge
       const interpretationBadge = report.hasInterpretation 
         ? `<span class="ai-status-badge success"><i class="fas fa-check-circle"></i> AI Analysis Available</span>`
         : `<span class="ai-status-badge pending"><i class="fas fa-robot"></i> No AI Analysis</span>`;
 
-      // Read-only notice
-      const readOnlyNotice = `
-        <div class="read-only-notice">
-          <i class="fas fa-eye"></i>
-          <span>View Only - Cannot modify or generate AI analysis</span>
-        </div>
-      `;
-
       return `
       <div class="analytics-report-card" data-report-id="${report.id}">
         <div class="report-card-header">
           <h3>${report.title}</h3>
-          <span class="admin-badge">${window.getAdminDisplayName(report.adminId)}</span>
+          <span class="admin-badge">${getAdminDisplayName(report.adminId)}</span>
         </div>
         
         ${interpretationBadge}
-        ${readOnlyNotice}
         
         <p class="current-column-display"><strong>Analyzing:</strong> ${report.currentColumn}</p>
         
@@ -509,7 +495,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   function applyFilters() {
     const timeFilter = document.getElementById('timeFilter').value;
     
-    let filteredReports = [...window.reports];
+    let filteredReports = [...reports];
 
     if (timeFilter !== 'all') {
       const now = new Date();
@@ -537,22 +523,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       ? `<span class="ai-status-badge success"><i class="fas fa-check-circle"></i> AI Analysis Available</span>`
       : `<span class="ai-status-badge pending"><i class="fas fa-robot"></i> No AI Analysis</span>`;
 
-    const readOnlyNotice = `
-      <div class="read-only-notice">
-        <i class="fas fa-eye"></i>
-        <span>View Only</span>
-      </div>
-    `;
-
     return `
       <div class="analytics-report-card" data-report-id="${report.id}">
         <div class="report-card-header">
           <h3>${report.title}</h3>
-          <span class="admin-badge">${window.getAdminDisplayName(report.adminId)}</span>
+          <span class="admin-badge">${getAdminDisplayName(report.adminId)}</span>
         </div>
         
         ${interpretationBadge}
-        ${readOnlyNotice}
         
         <p class="current-column-display"><strong>Analyzing:</strong> ${report.currentColumn}</p>
         
@@ -591,7 +569,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   window.viewReportDetails = function(reportId) {
-    const report = window.reports.find(r => r.id === reportId);
+    const report = reports.find(r => r.id === reportId);
     if (!report) return;
 
     const modal = document.getElementById('reportModal');
@@ -607,7 +585,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     detailsContainer.innerHTML = `
       <h2>${report.title}</h2>
       <div class="modal-admin-info">
-        <span class="admin-badge-large">Uploaded by ${window.getAdminDisplayName(report.adminId)}</span>
+        <span class="admin-badge-large">Uploaded by ${getAdminDisplayName(report.adminId)}</span>
         <span class="upload-date-large">${report.date}</span>
         ${report.hasInterpretation 
           ? '<span class="ai-status-badge success"><i class="fas fa-check-circle"></i> AI Analysis Available</span>'
@@ -663,7 +641,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function getUniqueAdmins() {
-    return [...new Set(window.reports.map(r => r.adminId))].filter(id => 
+    return [...new Set(reports.map(r => r.adminId))].filter(id => 
       id && id !== 'Unknown' && id !== 'SuperAdmin' && id !== 'superadmin'
     );
   }
@@ -698,11 +676,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     `;
   }
 
-  // Export functions to window for access
+  // Export functions to window for global access
+  window.reports = reports;
+  window.getAdminDisplayName = getAdminDisplayName;
+  window.formatTimeAgo = formatTimeAgo;
+  window.getUniqueAdmins = getUniqueAdmins;
+  window.renderEmptyState = renderEmptyState;
   window.renderReportsGrid = renderReportsGrid;
   window.generateExecutiveSummary = generateExecutiveSummary;
   window.attachEventListeners = attachEventListeners;
   window.applyFilters = applyFilters;
   window.closeModal = closeModal;
+  window.processAllAnalytics = processAllAnalytics;
+  window.renderDashboard = renderDashboard;
+  window.PYTHON_API_URL = PYTHON_API_URL;
+  window.NODE_API_URL = NODE_API_URL;
 
 });

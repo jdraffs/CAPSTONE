@@ -948,58 +948,16 @@
   }
 }
 
-/* Access Badge */
+/* Access Badges */
 .access-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 14px;
-  background: linear-gradient(135deg, #38b2ac 0%, #319795 100%);
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
   color: white;
   border-radius: 20px;
   font-size: 0.75rem;
   font-weight: 600;
   margin-left: 12px;
-  border: 2px solid #2c7a7b;
-}
-
-/* Backup Avatar */
-.user-avatar.backup {
-  background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%) !important;
-}
-
-/* Notice Card */
-.notice-card {
-  padding: 16px;
-  background: linear-gradient(135deg, #fffaf0 0%, #fef3c7 100%);
-  border-radius: 12px;
-  text-align: center;
-  border: 2px solid #f6e05e;
-}
-
-.notice-card i {
-  font-size: 2rem;
-  color: #ed8936;
-  margin-bottom: 12px;
-  display: block;
-}
-
-.notice-card h4 {
-  margin: 0 0 8px 0;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #2d3748;
-}
-
-.notice-card p {
-  margin: 0 0 8px 0;
-  font-size: 0.85rem;
-  color: #4a5568;
-}
-
-.notice-card small {
-  display: block;
-  font-size: 0.75rem;
-  color: #718096;
-  font-style: italic;
 }

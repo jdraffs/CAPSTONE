@@ -846,42 +846,6 @@
   line-height: 1.6;
 }
 
-/* Users List */
-.users-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 12px;
-}
-
-.user-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  background: #f7fafc;
-  border-radius: 10px;
-  border: 2px solid #e2e8f0;
-}
-
-.user-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 1.1rem;
-}
-
-.user-name {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #2d3748;
-}
-
 /* Permissions List */
 .permissions-list {
   display: grid;
@@ -1104,27 +1068,18 @@
   }
 }
 
-/* ============================================
-   ACCESS BADGE IN HEADER
-   ============================================ */
-
+/* Access Badges */
 .access-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 14px;
+  padding: 6px 12px;
   background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
   color: white;
   border-radius: 20px;
   font-size: 0.75rem;
   font-weight: 600;
   margin-left: 12px;
-  border: 2px solid #c05621;
-}
-
-/* Backup User Avatar */
-.user-avatar.backup {
-  background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%) !important;
 }
 
 /* Notice Card in Sidebar */
