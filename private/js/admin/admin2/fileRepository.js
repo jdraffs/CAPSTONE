@@ -1,12 +1,9 @@
-// fileRepository.js - UPDATED TO USE UNIFIED TRASH API
+// fileRepository.js - FIXED VERSION
 document.addEventListener("DOMContentLoaded", () => {
   const container = document.getElementById("mainContent");
   let currentFolderId = null;
   let currentFilter = "all";
   let favorites = new Set(JSON.parse(localStorage.getItem("favorites") || "[]"));
-  
-  // ✅ REMOVED: localStorage trash management
-  // let trash = new Set(JSON.parse(localStorage.getItem("trash") || "[]"));
   
   let selectedItems = new Set();
   let lastSelectedIndex = -1;
@@ -21,8 +18,6 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.setItem("favorites", JSON.stringify([...favorites]));
   }
 
-  // ✅ REMOVED: saveTrash() - no longer needed
-  
   // ===== FILE PREVIEW MODAL =====
   function createPreviewModal() {
     const modal = document.createElement("div");
@@ -289,7 +284,6 @@ document.addEventListener("DOMContentLoaded", () => {
     clearSelection();
   }
 
-  // ✅ UPDATED: Use unified trash API
   async function bulkMoveToTrash() {
     if (selectedItems.size === 0) return;
     
@@ -429,8 +423,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ✅ UPDATED: Use unified trash API
   async function emptyTrashAll() {
+    // ✅ FIX: Added confirmation dialog
+    if (!confirm('Permanently delete all items in trash? This action cannot be undone!')) {
+      return;
+    }
+
     try {
       const response = await fetch('http://localhost:3000/api/trash/empty', {
         method: "DELETE",
@@ -463,14 +461,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return favorites.has(`${type}-${id}`);
   }
 
-  // ✅ UPDATED: Check trash status from database
-  function isTrashed(id, type) {
-    // This will be determined by the is_trashed field from the database
-    // No longer using localStorage
-    return false; // Placeholder - actual status comes from DB
-  }
-
-  // ✅ UPDATED: Use unified trash API
   async function toggleTrash(id, type, fileName) {
     try {
       const response = await fetch(`http://localhost:3000/api/trash/move/${id}`, {
@@ -488,7 +478,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ✅ UPDATED: Use unified trash API
   async function restoreFromTrash(id, fileName) {
     try {
       const response = await fetch(`http://localhost:3000/api/trash/restore/${id}`, {
@@ -516,7 +505,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (["favorites", "recent", "trash"].includes(currentFilter) || needAllFolders) {
         [foldersRes, filesRes] = await Promise.all([
           fetch(`${API_BASE}/folders?all=true`),
-          // ✅ UPDATED: Fetch from trash endpoint when in trash view
           currentFilter === "trash" 
             ? fetch(`http://localhost:3000/api/trash`)
             : fetch(`${API_BASE}/files?all=true`)
@@ -532,8 +520,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const filesData = await filesRes.json();
 
       let folders = foldersData.folders || [];
-      
-      // ✅ UPDATED: Handle trash API response format
       let files = currentFilter === "trash" ? (filesData.files || []) : (filesData.files || []);
 
       folders.forEach(f => {
@@ -558,13 +544,12 @@ document.addEventListener("DOMContentLoaded", () => {
       case "files":
         return {
           folders: [],
-          // ✅ UPDATED: Filter by is_trashed field from database
           files: files.filter(f => !f.is_trashed)
         };
 
       case "recent":
         const recentFiles = [...files]
-          .filter(f => !f.is_trashed) // ✅ UPDATED
+          .filter(f => !f.is_trashed)
           .sort((a, b) => {
             const dateA = new Date(a.created_at || a.uploaded_at || 0);
             const dateB = new Date(b.created_at || b.uploaded_at || 0);
@@ -574,18 +559,18 @@ document.addEventListener("DOMContentLoaded", () => {
         return { folders: [], files: recentFiles };
 
       case "favorites":
-        const favFolders = folders.filter(f => isFavorite(f.id, "folder") && !f.is_trashed); // ✅ UPDATED
-        const favFiles = files.filter(f => isFavorite(f.id, "file") && !f.is_trashed); // ✅ UPDATED
+        const favFolders = folders.filter(f => isFavorite(f.id, "folder") && !f.is_trashed);
+        const favFiles = files.filter(f => isFavorite(f.id, "file") && !f.is_trashed);
         return { folders: favFolders, files: favFiles };
 
       case "trash":
-        // ✅ UPDATED: Files are already filtered by trash endpoint
+        // Files are already filtered by trash endpoint
         return { folders: [], files: files };
 
       default:
         return {
-          folders: folders.filter(f => !f.is_trashed), // ✅ UPDATED
-          files: files.filter(f => !f.is_trashed) // ✅ UPDATED
+          folders: folders.filter(f => !f.is_trashed),
+          files: files.filter(f => !f.is_trashed)
         };
     }
   }
@@ -649,21 +634,31 @@ document.addEventListener("DOMContentLoaded", () => {
     bulkActionsDiv.className = "bulk-actions";
     bulkActionsDiv.style.display = "none";
     
-    bulkActionsDiv.innerHTML = `
-      <span id="selectionCount" class="selection-count">0 items selected</span>
-      <button class="bulk-btn download-bulk-btn" onclick="window.bulkDownload()">
-        <i class="fa fa-download"></i> Download
-      </button>
-      <button class="bulk-btn trash-bulk-btn" onclick="window.bulkMoveToTrash()">
-        <i class="fa fa-trash"></i> Move to Trash
-      </button>
-      <button class="bulk-btn delete-bulk-btn" onclick="window.bulkDeletePermanently()">
-        <i class="fa fa-trash-alt"></i> Delete Permanently
-      </button>
-      <button class="bulk-btn cancel-bulk-btn" onclick="window.clearSelection()">
-        <i class="fa fa-times"></i>
-      </button>
-    `;
+    // ✅ FIX: Show correct bulk actions based on current view
+    if (currentFilter === 'trash') {
+      bulkActionsDiv.innerHTML = `
+        <span id="selectionCount" class="selection-count">0 items selected</span>
+        <button class="bulk-btn delete-bulk-btn" onclick="window.bulkDeletePermanently()">
+          <i class="fa fa-trash-alt"></i> Delete Permanently
+        </button>
+        <button class="bulk-btn cancel-bulk-btn" onclick="window.clearSelection()">
+          <i class="fa fa-times"></i>
+        </button>
+      `;
+    } else {
+      bulkActionsDiv.innerHTML = `
+        <span id="selectionCount" class="selection-count">0 items selected</span>
+        <button class="bulk-btn download-bulk-btn" onclick="window.bulkDownload()">
+          <i class="fa fa-download"></i> Download
+        </button>
+        <button class="bulk-btn trash-bulk-btn" onclick="window.bulkMoveToTrash()">
+          <i class="fa fa-trash"></i> Move to Trash
+        </button>
+        <button class="bulk-btn cancel-bulk-btn" onclick="window.clearSelection()">
+          <i class="fa fa-times"></i>
+        </button>
+      `;
+    }
     
     leftControls.appendChild(bulkActionsDiv);
 
@@ -789,14 +784,16 @@ document.addEventListener("DOMContentLoaded", () => {
     
     if (type === "file") {
       itemDiv.dataset.filePath = item.file_path;
-      itemDiv.dataset.fileName = item.file_name;
+      // ✅ FIX: Use correct property name
+      itemDiv.dataset.fileName = item.file_name || item.filename;
     }
 
     const icon = document.createElement("i");
     icon.className = type === "folder" ? "fa fa-folder" : "fa fa-file";
     itemDiv.appendChild(icon);
 
-    const name = type === "folder" ? item.name : item.file_name;
+    // ✅ FIX: Use correct property name for file name
+    const name = type === "folder" ? item.name : (item.file_name || item.filename);
     const nameSpan = document.createElement("span");
     nameSpan.className = "item-label";
     nameSpan.textContent = name;
@@ -877,39 +874,30 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     menu.appendChild(favoriteBtn);
 
-    if (currentFilter === "trash") {
-    const restoreBtn = document.createElement("button");
-    restoreBtn.className = "restore-btn";
-    restoreBtn.type = "button";
-    restoreBtn.textContent = "Restore";
-    restoreBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      trash.delete(`${type}-${item.id}`);
-      saveTrash();
-      menu.classList.add("hidden");
-      fetchFoldersAndFiles();
-      
-      toast.success(`"${name}" has been restored.`, 'Restored');
-    });
-    menu.appendChild(restoreBtn);
+    // ✅ FIX: Show correct actions based on trash status
+    if (currentFilter === "trash" || item.is_trashed) {
+      const restoreBtn = document.createElement("button");
+      restoreBtn.className = "restore-btn";
+      restoreBtn.type = "button";
+      restoreBtn.textContent = "Restore";
+      restoreBtn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        await restoreFromTrash(item.id, name);
+        menu.classList.add("hidden");
+      });
+      menu.appendChild(restoreBtn);
 
       const permDeleteBtn = document.createElement("button");
       permDeleteBtn.className = "delete-perm-btn";
       permDeleteBtn.type = "button";
-      permDeleteBtn.textContent = "Delete";
+      permDeleteBtn.textContent = "Delete Permanently";
       permDeleteBtn.addEventListener("click", async (e) => {
         e.stopPropagation();
         e.preventDefault();
         
-      permDeleteBtn.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        
-        // Keep confirm for delete confirmation (critical action)
         if (!confirm(`Permanently delete "${name}"? This cannot be undone.`)) return;
 
-        // Show loading state
         permDeleteBtn.disabled = true;
         permDeleteBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
 
@@ -922,18 +910,7 @@ document.addEventListener("DOMContentLoaded", () => {
         menu.classList.add("hidden");
         await fetchFoldersAndFiles();
         
-        // Show success toast after deletion
-        toast.success(`"${name}" has been permanently deleted.`, 'Deleted');
-      });
-
-        if (type === "file") {
-          await deleteFilePermanent(item.id);
-        } else {
-          await deleteFolderPermanent(item.id);
-        }
-        
-        menu.classList.add("hidden");
-        await fetchFoldersAndFiles();
+        toast.success(`"${name}" has been permanently deleted.`);
       });
       menu.appendChild(permDeleteBtn);
     } else {
@@ -941,41 +918,36 @@ document.addEventListener("DOMContentLoaded", () => {
       moveTrashBtn.className = "move-trash-btn";
       moveTrashBtn.type = "button";
       moveTrashBtn.textContent = "Move to Trash";
-      moveTrashBtn.addEventListener("click", (e) => {
+      moveTrashBtn.addEventListener("click", async (e) => {
         e.stopPropagation();
         e.preventDefault();
-        toggleTrash(item.id, type);
+        await toggleTrash(item.id, type, name);
         menu.classList.add("hidden");
-        
-        // ✅ ADD THIS:
-        toast.info(`"${name}" moved to trash.`, 'Moved to Trash');
       });
       menu.appendChild(moveTrashBtn);
     }
 
     if (type === "file") {
-const downloadBtn = document.createElement("button");
-downloadBtn.className = "download-btn";
-downloadBtn.type = "button";
-downloadBtn.textContent = "Download";
-downloadBtn.addEventListener("click", (e) => {
-  e.stopPropagation();
-  e.preventDefault();
+      const downloadBtn = document.createElement("button");
+      downloadBtn.className = "download-btn";
+      downloadBtn.type = "button";
+      downloadBtn.textContent = "Download";
+      downloadBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        e.preventDefault();
 
-  const link = document.createElement("a");
-  link.href = item.file_path;
-  link.download = item.file_name;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+        const link = document.createElement("a");
+        link.href = item.file_path;
+        link.download = name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
 
-  menu.classList.add("hidden");
-  
-  // ✅ ADD THIS:
-  toast.success(`"${item.file_name}" is being downloaded.`, 'Download Started');
-});
-
-menu.appendChild(downloadBtn);
+        menu.classList.add("hidden");
+        
+        toast.success(`"${name}" is being downloaded.`);
+      });
+      menu.appendChild(downloadBtn);
     }
 
     dots.addEventListener("click", (e) => {
