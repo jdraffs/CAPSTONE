@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     ).length;
     animateValue(document.getElementById('recentActions'), 0, recentActions, 1000);
 
-    // Backup Admin Actions
+    // System Admin Actions
     const backupAdminActions = allLogs.filter(log => {
       const admin = admins.find(a => a.adminid === log.adminid);
       return admin && admin.role_name === 'Backup Campus System Administrator';
@@ -421,7 +421,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               <div>
                 <span class="${isBackupAdmin ? 'backup-admin-badge' : 'admin-badge'}">
                   ${action.adminid}
-                  ${isBackupAdmin ? ' (Backup Admin)' : ''}
+                  ${isBackupAdmin ? ' (System Admin)' : ''}
                 </span>
               </div>
             </div>

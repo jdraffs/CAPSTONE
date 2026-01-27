@@ -1,4 +1,4 @@
-// secondaryFeedbackView.js - Service Feedback for Backup Admin (READ-ONLY)
+// secondaryFeedbackView.js - Service Feedback for System Admin (READ-ONLY)
 // Uses ACTUAL feedback data from the API (same as SuperAdmin)
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -15,7 +15,45 @@ document.addEventListener('DOMContentLoaded', async () => {
     userType: ''
   };
 
+  const currentAdminId = localStorage.getItem('adminid');
+
+  // Set the actual admin name in the sidebar
+  async function setCurrentAdminName() {
+    try {
+      const response = await fetch(`${API_URL}/admin-accounts`);
+      const data = await response.json();
+      
+      const currentUser = data.admins.find(a => a.adminid === currentAdminId);
+      
+      if (currentUser) {
+        // Update admin name
+        const nameElements = document.querySelectorAll('#currentAdminName');
+        nameElements.forEach(el => {
+          if (el) el.textContent = currentUser.adminid || currentAdminId;
+        });
+        
+        // Update role subtitle to "System Administrator"
+        const roleElements = document.querySelectorAll('.user-role');
+        roleElements.forEach(el => {
+          if (el) el.textContent = 'System Administrator';
+        });
+        
+        console.log('✅ Admin name set:', currentUser.adminid);
+      }
+    } catch (error) {
+      console.error('Error fetching admin name:', error);
+      // Fallback to stored admin ID
+      const nameElements = document.querySelectorAll('#currentAdminName');
+      nameElements.forEach(el => {
+        if (el) el.textContent = currentAdminId;
+      });
+    }
+  }
+
+// Call this function early in your initialization
+await setCurrentAdminName();
   // Initialize
+  initializeProfileDropdown();
   await initializeFeedbackView();
 
   async function initializeFeedbackView() {

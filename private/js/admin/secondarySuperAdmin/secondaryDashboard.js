@@ -41,6 +41,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       nameElements.forEach(el => {
         if (el) el.textContent = currentAdminId;
       });
+        
+      // Update role subtitle
+      const roleElements = document.querySelectorAll('.user-role');
+      roleElements.forEach(el => {
+        if (el) el.textContent = 'System Administrator';
+      });
 
       console.log('✅ Backup SuperAdmin verified:', currentAdminId);
       

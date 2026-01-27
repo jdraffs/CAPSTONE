@@ -1,5 +1,5 @@
-// secondaryActivityLogs.js - Action Logs for Backup Admin (PERSONAL HISTORY)
-// Shows ONLY the backup admin's own actions from the actual API
+// secondaryActivityLogs.js - Action Logs for System Admin (PERSONAL HISTORY)
+// Shows ONLY the System Admin's own actions from the actual API
 
 document.addEventListener('DOMContentLoaded', async () => {
   const API_URL = 'http://localhost:3000/api';
@@ -12,12 +12,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   const logsPerPage = 20;
 
   // Set admin name in sidebar
-  const adminNameEl = document.getElementById('currentAdminName');
-  if (adminNameEl && currentAdminId) {
-    adminNameEl.textContent = currentAdminId;
-  }
+    // Update UI with admin name
+    const nameElements = document.querySelectorAll('#adminName, #currentAdminName');
+    nameElements.forEach(el => {
+      if (el) el.textContent = currentAdminId;
+    });
+        
+    // Update role subtitle
+    const roleElements = document.querySelectorAll('.user-role');
+    roleElements.forEach(el => {
+      if (el) el.textContent = 'System Administrator';
+    });
 
   // Initialize
+  initializeProfileDropdown();
   await initializeActionLogs();
 
   async function initializeActionLogs() {

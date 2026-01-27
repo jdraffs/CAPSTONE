@@ -9,6 +9,38 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const CURRENT_ADMIN_ID = localStorage.getItem('adminid') || 'backupAdmin';
 
+  // Set the actual admin name in the sidebar
+  await setCurrentAdminName();
+
+  async function setCurrentAdminName() {
+    try {
+      const response = await fetch(`${NODE_API_URL}/admin-accounts`);
+      const data = await response.json();
+      
+      const currentUser = data.admins.find(a => a.adminid === CURRENT_ADMIN_ID);
+      
+      if (currentUser) {
+        const nameElements = document.querySelectorAll('#currentAdminName');
+        nameElements.forEach(el => {
+          if (el) el.textContent = currentUser.adminid || CURRENT_ADMIN_ID;
+        });
+        
+        // Update role subtitle
+        const roleElements = document.querySelectorAll('.user-role');
+        roleElements.forEach(el => {
+          if (el) el.textContent = 'System Administrator';
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching admin name:', error);
+      // Fallback to stored admin ID
+      const nameElements = document.querySelectorAll('#currentAdminName');
+      nameElements.forEach(el => {
+        if (el) el.textContent = CURRENT_ADMIN_ID;
+      });
+    }
+  }
+
   // Admin name mapping
   const ADMIN_NAMES = {
     '1': 'adminEnierga',
@@ -88,6 +120,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Initialize the dashboard
+  initializeProfileDropdown();
   await initializeDashboard();
 
   async function initializeDashboard() {

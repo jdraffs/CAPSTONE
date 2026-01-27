@@ -7,21 +7,62 @@ let roles = [];
 let currentSearchTerm = '';
 let currentStatusFilter = 'all';
 
-// Restricted admin IDs that backup admin cannot edit
+// Restricted admin IDs that System Admin cannot edit
 const PROTECTED_ADMINS = ['adminSalao'];
 const PROTECTED_ROLE_IDS = [1]; // Super Administrator role ID
-const MAX_HIERARCHY_LEVEL = 90; // Backup admin hierarchy level
+const MAX_HIERARCHY_LEVEL = 90; // System Admin hierarchy level
 
 document.addEventListener('DOMContentLoaded', async () => {
   initializeProfileDropdown();
-  
+
   if (!currentAdminId) {
     alert('You must be logged in.');
     window.location.href = '/private/html/AdminLogin/login.html';
     return;
   }
+
+  async function setCurrentAdminName() {
+    try {
+      const response = await fetch(`${API_URL}/admin-accounts`);
+      const data = await response.json();
+      
+      const currentUser = data.admins.find(a => a.adminid === currentAdminId);
+      
+      if (currentUser) {
+        // Update admin name
+        const nameElements = document.querySelectorAll('#currentAdminName');
+        nameElements.forEach(el => {
+          if (el) el.textContent = currentUser.adminid || currentAdminId;
+        });
+        
+        // Update role subtitle to "System Administrator"
+        const roleElements = document.querySelectorAll('.user-role');
+        roleElements.forEach(el => {
+          if (el) el.textContent = 'System Administrator';
+        });
+        
+        console.log('✅ Admin name set:', currentUser.adminid);
+      }
+    } catch (error) {
+      console.error('Error fetching admin name:', error);
+      // Fallback to stored admin ID
+      // Update UI with admin name
+      const nameElements = document.querySelectorAll('#adminName, #currentAdminName');
+      nameElements.forEach(el => {
+        if (el) el.textContent = currentAdminId;
+      });  
+      // Update role subtitle
+      const roleElements = document.querySelectorAll('.user-role');
+      roleElements.forEach(el => {
+        if (el) el.textContent = 'System Administrator';
+      });
+    }
+  }
+
+// Call this function early in your initialization
+await setCurrentAdminName();
   
-  // Check if user has backup admin role
+  // Check if user has System Admin role
   const isAssistantAdmin = await checkAssistantAdminRole();
   if (!isAssistantAdmin) {
     alert('Access Denied: Secondary System Administrator only.');

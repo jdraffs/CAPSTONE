@@ -9,11 +9,47 @@ document.addEventListener('DOMContentLoaded', async () => {
   let currentEditingRoleId = null;
   let currentAdminId = localStorage.getItem('adminid');
 
-  // Protected roles that backup admin cannot modify
+  // Set the actual admin name in the sidebar
+  async function setCurrentAdminName() {
+    try {
+      const response = await fetch(`${API_URL}/admin-accounts`);
+      const data = await response.json();
+      
+      const currentUser = data.admins.find(a => a.adminid === currentAdminId);
+      
+      if (currentUser) {
+        // Update admin name
+        const nameElements = document.querySelectorAll('#currentAdminName');
+        nameElements.forEach(el => {
+          if (el) el.textContent = currentUser.adminid || currentAdminId;
+        });
+        
+        // Update role subtitle to "System Administrator"
+        const roleElements = document.querySelectorAll('.user-role');
+        roleElements.forEach(el => {
+          if (el) el.textContent = 'System Administrator';
+        });
+        
+        console.log('✅ Admin name set:', currentUser.adminid);
+      }
+    } catch (error) {
+      console.error('Error fetching admin name:', error);
+      // Fallback to stored admin ID
+      const nameElements = document.querySelectorAll('#currentAdminName');
+      nameElements.forEach(el => {
+        if (el) el.textContent = currentAdminId;
+      });
+    }
+  }
+
+  // Protected roles that System Admin cannot modify
   const PROTECTED_ROLE_IDS = [1, 7]; // Super Administrator, Assistant Super Administrator
   const SYSTEM_CRITICAL_PERMISSION_IDS = [14, 15]; // System Configuration permissions
 
+  
   // Initialize
+  initializeProfileDropdown();
+  await setCurrentAdminName();
   await initializeRoleManagement();
 
   async function initializeRoleManagement() {
