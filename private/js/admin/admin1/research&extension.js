@@ -87,13 +87,13 @@ thumbnailInput.addEventListener('change', (e) => {
   
   const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
   if (!validTypes.includes(file.type)) {
-    alert('Please select a valid image file (JPG, PNG, WEBP, or GIF)');
+    alertSystem.warning('Please select a valid image file (JPG, PNG, WEBP, or GIF)');
     thumbnailInput.value = '';
     return;
   }
   
   if (file.size > 5 * 1024 * 1024) {
-    alert('Image size must be less than 5MB');
+    alertSystem.warning('Image size must be less than 5MB');
     thumbnailInput.value = '';
     return;
   }
@@ -179,12 +179,12 @@ submitBtn.addEventListener('click', async (e) => {
   const content = postText.innerHTML.trim();
   
   if (!title || !content) {
-    alert('Please add both a title and content for your article.');
+    alertSystem.warning('Please add both a title and content for your article.');
     return;
   }
   
   if (!thumbnailFile && !existingThumbnailId) {
-    alert('Please add a thumbnail image for your article.');
+    alertSystem.warning('Please add a thumbnail image for your article.');
     return;
   }
 
@@ -227,11 +227,11 @@ submitBtn.addEventListener('click', async (e) => {
       closeModal();
       loadPosts();
     } else {
-      alert(data.message || 'Something went wrong while saving your article.');
+      alertSystem.error(data.message || 'Something went wrong while saving your article.');
     }
   } catch (err) {
     console.error('Error submitting article:', err);
-    alert('Error submitting article. Please try again.');
+    alertSystem.error('Error submitting article. Please try again.');
   } finally {
     submitBtn.disabled = false;
     submitBtn.textContent = editingPostId ? 'Update Article' : 'Publish Article';
@@ -433,11 +433,17 @@ async function loadPosts() {
         });
 
         // Trash handler
-        postElem.querySelector('.post-delete').addEventListener('click', async (e) => {
+postElem.querySelector('.post-delete').addEventListener('click', async (e) => {
           e.stopPropagation();
           dropdown.style.display = 'none';
           
-          if (confirm('Move this article to trash?')) {
+          // ✅ NEW: Beautiful confirm dialog
+          const shouldDelete = await alertSystem.confirm(
+            'Are you sure you want to move this article to trash?',
+            'Move to Trash'
+          );
+          
+          if (shouldDelete) {
             try {
               const response = await fetch(`http://localhost:3000/api/researchextension/trash/${post.id}`, { 
                 method: 'PUT' 
@@ -445,13 +451,14 @@ async function loadPosts() {
               const result = await response.json();
               
               if (result.success) {
+                alertSystem.success('Article moved to trash successfully!');
                 loadPosts();
               } else {
-                alert('Failed to delete article');
+                alertSystem.error('Failed to move article to trash', 'Error');
               }
             } catch (err) {
               console.error('Error deleting article:', err);
-              alert('Error deleting article');
+              alertSystem.error('Error moving article to trash. Please try again.', 'Network Error');
             }
           }
         });
@@ -593,15 +600,15 @@ async function restorePost(id) {
     const data = await res.json();
 
     if (data.success) {
-      alert('Article restored successfully');
+      alertSystem.success('Article restored successfully');
       await loadTrash();
       loadPosts();
     } else {
-      alert('Failed to restore article');
+      alertSystem.error('Failed to restore article');
     }
   } catch (err) {
     console.error('Error restoring article:', err);
-    alert('Error restoring article');
+    alertSystem.error('Error restoring article');
   }
 }
 
@@ -614,14 +621,14 @@ async function deletePermanently(id) {
     const data = await res.json();
 
     if (data.success) {
-      alert('Article permanently deleted');
+      alertSystem.success('Article permanently deleted');
       await loadTrash();
     } else {
-      alert('Failed to delete article');
+      alertSystem.error('Failed to delete article');
     }
   } catch (err) {
     console.error('Error deleting article:', err);
-    alert('Error deleting article');
+    alertSystem.error('Error deleting article');
   }
 }
 
@@ -635,14 +642,14 @@ emptyTrashBtn?.addEventListener('click', async () => {
       const data = await res.json();
 
       if (data.success) {
-        alert(data.message);
+        alertSystem.success(data.message);
         await loadTrash();
       } else {
-        alert('Failed to empty trash');
+        alertSystem.error('Failed to empty trash');
       }
     } catch (err) {
       console.error('Error emptying trash:', err);
-      alert('Error emptying trash');
+      alertSystem.error('Error emptying trash');
     }
   }
 });

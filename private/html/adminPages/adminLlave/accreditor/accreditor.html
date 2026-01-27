@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Accreditor Dashboard - PUP Parañaque</title>
     <link rel="icon" type="image" href="/public/assets/images/PUPLogo.webp">
+    <link rel="stylesheet" href="/private/css/layout/alert-system.css">
     <link rel="stylesheet" href="/private/css/layout/post.css">
     <link rel="stylesheet" href="/private/css/layout/dashboardsidebar.css">
     <link rel="stylesheet" href="/private/css/pages/accreditor.css">
@@ -115,11 +116,12 @@
     </main>
 
     <!-- SCRIPTS -->  
+    <script src="/private/js/alert-system.js"></script>
     <script src="/private/js/admin/profileFunction.js"></script>
     <script src="/private/js/admin/admiLlave/accreditor/accreditor.js"></script>
     <script>
         function showComingSoon() {
-            alert('This feature is coming soon!');
+            alertSystem.warning('This feature is coming soon!');
         }
 
     </script>

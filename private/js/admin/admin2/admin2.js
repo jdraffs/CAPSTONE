@@ -702,7 +702,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           }, 1000);
           setTimeout(() => {
             closeModal(uploadModal);
-            alert('File uploaded successfully!');
+            alertSystem.success('File uploaded successfully!');
             window.location.reload();
           }, 1500);
 

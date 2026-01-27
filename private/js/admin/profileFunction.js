@@ -68,14 +68,14 @@ function initializeProfileDropdown() {
   // View Profile action
   document.getElementById('viewProfile')?.addEventListener('click', (e) => {
     e.preventDefault();
-    alert('View Profile - To be implemented');
+    alertSystem.warning('View Profile - To be implemented');
     dropdown.classList.remove('show');
   });
 
   // Settings action
   document.getElementById('settings')?.addEventListener('click', (e) => {
     e.preventDefault();
-    alert('Settings - To be implemented');
+    alertSystem.warning('Settings - To be implemented');
     dropdown.classList.remove('show');
   });
 

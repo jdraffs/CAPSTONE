@@ -9,13 +9,13 @@ let currentStatusFilter = 'all'; // all, active, suspended
 
 document.addEventListener('DOMContentLoaded', async () => {
   if (!currentAdminId) {
-    alert('You must be logged in.');
+    alertSystem.error('You must be logged in.');
     window.location.href = '/private/html/AdminLogin/login.html';
     return;
   }
   
   if (currentAdminId !== 'adminSalao') {
-    alert('Access Denied: Super Admin only.');
+    alertSystem.error('Access Denied: Super Admin only.');
     window.location.href = '/private/html/adminPages/adminSalao/superAdmin.html';
     return;
   }

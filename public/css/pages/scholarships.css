@@ -1,4 +1,4 @@
-/*scholarships.css*/
+/*scholarships.css - FIXED with card alignment and All Programs badge*/
 * {
     margin: 0;
     padding: 0;
@@ -202,7 +202,7 @@ body {
     margin: 0 auto;
 }
 
-/* Scholarship Card */
+/* Scholarship Card - FIXED FOR CONSISTENT ALIGNMENT */
 .scholarship-card {
     background: white;
     border-radius: 12px;
@@ -211,6 +211,9 @@ body {
     transition: all 0.3s ease;
     cursor: pointer;
     border: 2px solid transparent;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .scholarship-card:hover {
@@ -243,6 +246,9 @@ body {
 
 .card-body {
     padding: 20px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
 }
 
 .card-badges {
@@ -250,10 +256,14 @@ body {
     flex-wrap: wrap;
     gap: 8px;
     margin-bottom: 15px;
+    min-height: 60px; /* Fixed minimum height for consistency */
+    align-content: flex-start;
 }
 
 .badge {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
     padding: 5px 12px;
     border-radius: 20px;
     font-size: 0.85rem;
@@ -290,6 +300,19 @@ body {
     color: #880e4f;
 }
 
+.badge-courses {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+/* Special styling for "All Programs" badge */
+.badge-all-programs {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: 600;
+    border: none;
+}
+
 .card-info {
     display: flex;
     flex-direction: column;
@@ -320,6 +343,7 @@ body {
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    flex: 1;
 }
 
 .card-footer {
@@ -328,6 +352,8 @@ body {
     align-items: center;
     padding-top: 15px;
     border-top: 1px solid #eee;
+    margin-top: auto;
+    gap: 10px;
 }
 
 .deadline-info {
@@ -336,6 +362,7 @@ body {
     gap: 8px;
     font-size: 0.9rem;
     color: #666;
+    flex: 1;
 }
 
 .deadline-icon {
@@ -352,6 +379,7 @@ body {
     cursor: pointer;
     transition: background-color 0.3s ease;
     font-family: 'Georgia', serif;
+    flex-shrink: 0;
 }
 
 .view-details-btn:hover {
@@ -577,6 +605,150 @@ body {
     line-height: 1.6;
 }
 
+/* Modal Files Section */
+.modal-files {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.file-image-preview {
+  border: 1px solid #e1e4e8;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f8f9fa;
+}
+
+.file-image-preview img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.image-download-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #800000;
+  color: white;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.2s ease;
+}
+
+.image-download-btn:hover {
+  background: #5a0000;
+}
+
+.file-download-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border: 1px solid #e1e4e8;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #333;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.file-download-link:hover {
+  background: #e9ecef;
+  border-color: #dee2e6;
+  transform: translateX(5px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.file-download-link i {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.file-download-link i.fa-file-pdf {
+  color: #dc3545;
+}
+
+.file-download-link i.fa-file-word {
+  color: #2b579a;
+}
+
+.file-download-link:hover i {
+  transform: scale(1.1);
+}
+
+.modal-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.external-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #e3f2fd;
+  border: 1px solid #90caf9;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #1565c0;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  word-break: break-all;
+}
+
+.external-link:hover {
+  background: #bbdefb;
+  border-color: #64b5f6;
+  transform: translateX(5px);
+  box-shadow: 0 2px 8px rgba(21, 101, 192, 0.2);
+}
+
+.external-link i {
+  color: #1976d2;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* Course badges in modal */
+.course-badges-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.course-badge-public {
+  display: inline-block;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  color: #1565c0;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 2px solid #90caf9;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Special styling for "All Programs" in modal */
+.course-badge-all-programs {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: 2px solid #5a67d8;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 /* Responsive Design */
 @media screen and (max-width: 768px) {
     .hero-title {
@@ -662,226 +834,4 @@ body {
     .card-title {
         font-size: 1.2rem;
     }
-}
-
-/* Add this to your existing scholarship page CSS */
-
-/* Modal Files Section */
-.modal-files {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.file-download-link {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: #f8f9fa;
-  border: 1px solid #e1e4e8;
-  border-radius: 8px;
-  text-decoration: none;
-  color: #333;
-  transition: all 0.2s ease;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.file-download-link:hover {
-  background: #e9ecef;
-  border-color: #dee2e6;
-  transform: translateX(5px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.file-download-link i {
-  color: #dc3545;
-  font-size: 20px;
-}
-
-.file-download-link:hover i {
-  color: #c82333;
-}
-
-/* Add this to your existing scholarships.css */
-
-/* Modal Files Section */
-.modal-files {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  margin-top: 10px;
-}
-
-/* Image Preview */
-.file-image-preview {
-  border: 1px solid #e1e4e8;
-  border-radius: 8px;
-  overflow: hidden;
-  background: #f8f9fa;
-}
-
-.file-image-preview img {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
-.image-download-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 16px;
-  background: #800000;
-  color: white;
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 500;
-  transition: background 0.2s ease;
-}
-
-.image-download-btn:hover {
-  background: #5a0000;
-}
-
-/* Document Download Link */
-.file-download-link {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: #f8f9fa;
-  border: 1px solid #e1e4e8;
-  border-radius: 8px;
-  text-decoration: none;
-  color: #333;
-  transition: all 0.2s ease;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.file-download-link:hover {
-  background: #e9ecef;
-  border-color: #dee2e6;
-  transform: translateX(5px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.file-download-link i {
-  font-size: 20px;
-  flex-shrink: 0;
-}
-
-.file-download-link i.fa-file-pdf {
-  color: #dc3545;
-}
-
-.file-download-link i.fa-file-word {
-  color: #2b579a;
-}
-
-.file-download-link i.fa-file-excel {
-  color: #217346;
-}
-
-.file-download-link i.fa-file-powerpoint {
-  color: #d24726;
-}
-
-.file-download-link i.fa-image {
-  color: #28a745;
-}
-
-.file-download-link i.fa-file {
-  color: #6c757d;
-}
-
-.file-download-link:hover i {
-  transform: scale(1.1);
-}
-
-/* External Links Section */
-.modal-links {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.external-link {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: #e3f2fd;
-  border: 1px solid #90caf9;
-  border-radius: 8px;
-  text-decoration: none;
-  color: #1565c0;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  word-break: break-all;
-}
-
-.external-link:hover {
-  background: #bbdefb;
-  border-color: #64b5f6;
-  transform: translateX(5px);
-  box-shadow: 0 2px 8px rgba(21, 101, 192, 0.2);
-}
-
-.external-link i {
-  color: #1976d2;
-  font-size: 16px;
-  flex-shrink: 0;
-}
-
-/* Responsive adjustments */
-@media screen and (max-width: 768px) {
-  .file-image-preview img {
-    max-height: 300px;
-    object-fit: contain;
-  }
-  
-  .file-download-link,
-  .external-link {
-    font-size: 13px;
-    padding: 10px 14px;
-  }
-}
-
-/* ========================================
-   COURSE/PROGRAM BADGES FOR PUBLIC VIEW
-   Add this section at the end of your CSS
-   ======================================== */
-
-/* Course badge on scholarship cards */
-.badge-courses {
-  background-color: #e8f5e9;
-  color: #2e7d32;
-  font-size: 0.8rem;
-}
-
-/* Course badges in modal */
-.course-badges-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.course-badge-public {
-  display: inline-block;
-  padding: 8px 16px;
-  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-  color: #1565c0;
-  border-radius: 25px;
-  font-size: 14px;
-  font-weight: 600;
-  border: 2px solid #90caf9;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }

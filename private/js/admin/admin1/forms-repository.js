@@ -320,7 +320,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const fileItems = Array.from(selectedItems).filter(item => item.startsWith('file-'));
     
     if (fileItems.length === 0) {
-      alert("No files selected for download. Please select files only.");
+      alertSystem.warning("No files selected for download. Please select files only.");
       return;
     }
 
@@ -345,7 +345,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
     
-    alert(`${fileItems.length} file(s) downloaded successfully!`);
+    alertSystem.success(`${fileItems.length} file(s) downloaded successfully!`);
     clearSelection();
   }
 
@@ -358,7 +358,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     
     if (hasBuiltInFolders) {
-      alert("Built-in folders (OJT, Research & Extension, NSTP) cannot be deleted.");
+      alertSystem.error("Built-in folders (OJT, Research & Extension, NSTP) cannot be deleted.");
       return;
     }
     
@@ -372,7 +372,7 @@ document.addEventListener("DOMContentLoaded", () => {
     saveTrash();
     clearSelection();
     fetchFoldersAndFiles();
-    alert(`${count} item(s) moved to trash.`);
+    alertSystem.warning(`${count} item(s) moved to trash.`);
   }
 
   async function bulkDeletePermanently() {
@@ -384,7 +384,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     
     if (hasBuiltInFolders) {
-      alert("Built-in folders (OJT, Research & Extension, NSTP) cannot be deleted.");
+      alertSystem.error("Built-in folders (OJT, Research & Extension, NSTP) cannot be deleted.");
       return;
     }
     
@@ -412,7 +412,7 @@ document.addEventListener("DOMContentLoaded", () => {
     
     clearSelection();
     await fetchFoldersAndFiles();
-    alert(`${successCount} of ${count} item(s) deleted permanently.`);
+    alertSystem.success(`${successCount} of ${count} item(s) deleted permanently.`);
   }
 
   async function deleteFilePermanent(id) {
@@ -435,7 +435,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function deleteFolderPermanent(folderId) {
     if (isBuiltInFolder(folderId)) {
-      alert("Built-in folders cannot be deleted.");
+      alertSystem.error("Built-in folders cannot be deleted.");
       return false;
     }
 
@@ -502,7 +502,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function emptyTrashAll() {
     if (trash.size === 0) {
-      alert("Trash is already empty.");
+      alertSystem.warning("Trash is already empty.");
       return;
     }
 
@@ -521,7 +521,7 @@ document.addEventListener("DOMContentLoaded", () => {
     
     saveTrash();
     await fetchFoldersAndFiles();
-    alert("Trash emptied.");
+    alertSystem.success("Trash emptied.");
   }
 
   function toggleFavorite(id, type) {
@@ -538,7 +538,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function toggleTrash(id, type) {
     if (type === 'folder' && isBuiltInFolder(id)) {
-      alert("Built-in folders cannot be deleted.");
+      alertSystem.error("Built-in folders cannot be deleted.");
       return;
     }
     
@@ -898,7 +898,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (isDoubleClick) {
         if (type === "folder") {
           if (currentFilter === "favorites") {
-            alert("Please switch to 'All' view to navigate into folders");
+            alertSystem.warning("Please switch to 'All' view to navigate into folders");
             return;
           }
           currentFolderId = item.id;

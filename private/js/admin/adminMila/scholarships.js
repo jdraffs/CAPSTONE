@@ -150,7 +150,7 @@ fileUpload.addEventListener('change', (e) => {
   const totalFiles = selectedFiles.length + existingFiles.length + newFiles.length;
   
   if (totalFiles > 3) {
-    alert('You can only upload up to 3 files per scholarship.');
+    alertSystem.warning('You can only upload up to 3 files per scholarship.');
     fileUpload.value = '';
     return;
   }
@@ -240,13 +240,13 @@ submitBtn.addEventListener('click', async (e) => {
   if (!scholarshipTitle.value.trim() || !provider.value.trim() || !amount.value.trim() ||
       !openDate.value || !deadline.value || !description.value.trim() || 
       !eligibility.value.trim() || !benefits.value.trim()) {
-    alert('Please fill in all required fields.');
+    alertSystem.error('Please fill in all required fields.');
     return;
   }
   
   // Separate validation for eligible courses with better error message
   if (!hasEligibleCourses) {
-    alert('Please select at least one eligible program or choose "All Programs".');
+    alertSystem.error('Please select at least one eligible program or choose "All Programs".');
     return;
   }
 
@@ -301,11 +301,11 @@ submitBtn.addEventListener('click', async (e) => {
       modal.style.display = 'none';
       loadScholarships();
     } else {
-      alert('Something went wrong while saving the scholarship.');
+      alertSystem.error('Something went wrong while saving the scholarship.');
     }
   } catch (err) {
     console.error('Error submitting scholarship:', err);
-    alert('Error submitting scholarship. Please try again.');
+    alertSystem.error('Error submitting scholarship. Please try again.');
   }
 });
 
@@ -589,11 +589,11 @@ async function loadScholarships() {
               if (result.success) {
                 loadScholarships();
               } else {
-                alert('Failed to delete scholarship');
+                alertSystem.error('Failed to delete scholarship');
               }
             } catch (err) {
               console.error('Error deleting scholarship:', err);
-              alert('Error deleting scholarship');
+              alertSystem.error('Error deleting scholarship');
             }
           }
         });

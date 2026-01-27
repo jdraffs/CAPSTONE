@@ -616,7 +616,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     } catch (error) {
       console.error('Error loading column data:', error);
       chartContainer.innerHTML = originalContent;
-      alert('Failed to load data for selected column. Please try again.');
+      alertSystem.warning('Failed to load data for selected column. Please try again.');
     }
   }
 
