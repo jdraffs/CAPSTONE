@@ -1,0 +1,299 @@
+<!-- secondaryActivityLogs.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Action Logs - System Admin</title>
+    <link rel="icon" type="image" href="/public/assets/images/PUPLogo.webp">
+    <link rel="stylesheet" href="/private/css/layout/post.css">
+    <link rel="stylesheet" href="/private/css/layout/dashboardsidebar.css">
+    <link rel="stylesheet" href="/private/css/pages/secondaryActivityLogs.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!--SIDEBAR-->
+    <section class="sidebar">
+        <div class="logo">
+            <img class="logoimage" src="/public/assets/images/PUPLogo.webp" alt="PUP Logo">
+            <div class="logotitlewrap">
+                <h2 class="logotitle logotitle1">PUP</h2>
+                <h2 class="logotitle">Parañaque</h2>
+            </div>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <nav class="sidebar-nav">
+            <div class="sidebar-scroll">
+                <div class="nav-section">
+                    <h3 class="nav-title">Main</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/secondarySuperAdmin/secondaryDashboard.html">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <h3 class="nav-title">Management</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/secondarySuperAdmin/secondaryAnalytics.html">
+                                <i class="fa-solid fa-chart-line"></i>
+                                <span>Analytics Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/secondarySuperAdmin/secondaryUserManagement.html">
+                                <i class="fa-solid fa-users"></i>
+                                <span>User Management</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/secondarySuperAdmin/secondaryRoleManagement.html">
+                                <i class="fa-solid fa-user-tag"></i>
+                                <span>Role Management</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/secondarySuperAdmin/secondaryFeedbackView.html">
+                                <i class="fa-solid fa-comments"></i>
+                                <span>Service Feedback</span>
+                            </a>
+                        </li>
+                        <li class="nav-item active">
+                            <a class="nav-link" href="/private/html/adminPages/secondarySuperAdmin/secondaryActivityLogs.html">
+                                <i class="fa-solid fa-clipboard-list"></i>
+                                <span>My Action Logs</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar backup">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <div class="user-details">
+                        <span class="user-name" id="currentAdminName"></span>
+                        <span class="user-role"></span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </section>
+
+    <!--MAIN CONTENT-->
+    <main class="main">
+        <header class="dashboard-header">
+            <div class="header-left">
+                <h1 class="page-title">My Action Logs</h1>
+                <span class="access-badge">Action History</span>
+            </div>
+            <div class="header-right">
+                <div class="notification-button">
+                    <a class="notif-link" href="#notifications">
+                        <i class="fa fa-bell"></i>
+                    </a>
+                </div>
+                <div class="profile-button">
+                    <a class="profile-link">
+                        <i class="fa fa-user"></i>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!--DASHBOARD CONTENT-->
+        <div class="main-content" id="mainContent">
+            <!-- Info Banner -->
+            <div class="access-banner info">
+                <i class="fas fa-info-circle"></i>
+                <div>
+                    <strong>Your Activity History:</strong>
+                    <span>This page shows all actions you've performed in the system. You can only view your own logs.</span>
+                </div>
+            </div>
+
+            <!-- Logs Header -->
+            <div class="logs-header">
+                <div class="header-info">
+                    <h2>Activity Timeline</h2>
+                    <p class="header-subtitle">Track all your administrative actions</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-export" id="exportBtn">
+                        <i class="fas fa-download"></i>
+                        Export Logs
+                    </button>
+                    <button class="btn-refresh" id="refreshBtn">
+                        <i class="fas fa-sync-alt"></i>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Activity Statistics -->
+            <div class="activity-stats-grid">
+                <div class="stat-card gradient-blue">
+                    <div class="stat-icon">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="totalActions">0</h3>
+                        <p>Total Actions</p>
+                    </div>
+                </div>
+                <div class="stat-card gradient-green">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="todayActions">0</h3>
+                        <p>Today</p>
+                    </div>
+                </div>
+                <div class="stat-card gradient-purple">
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-week"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="weekActions">0</h3>
+                        <p>This Week</p>
+                    </div>
+                </div>
+                <div class="stat-card gradient-orange">
+                    <div class="stat-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="lastActionTime">-</h3>
+                        <p>Last Action</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Type Breakdown -->
+            <div class="breakdown-container">
+                <h3 class="breakdown-title">
+                    <i class="fas fa-chart-pie"></i>
+                    Action Breakdown
+                </h3>
+                <div class="action-breakdown" id="actionBreakdown">
+                    <!-- Breakdown will be rendered here -->
+                </div>
+            </div>
+
+            <!-- Filters & Search -->
+            <div class="logs-toolbar">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search logs..." class="search-input">
+                </div>
+                <div class="filter-controls">
+                    <select id="actionTypeFilter" class="filter-select">
+                        <option value="all">All Actions</option>
+                        <option value="User Created">User Created</option>
+                        <option value="User Updated">User Updated</option>
+                        <option value="User Deleted">User Deleted</option>
+                        <option value="Password Reset">Password Reset</option>
+                        <option value="Role Created">Role Created</option>
+                        <option value="Role Updated">Role Updated</option>
+                        <option value="Role Deleted">Role Deleted</option>
+                        <option value="Bulk Delete">Bulk Delete</option>
+                        <option value="Login">Login</option>
+                        <option value="Logout">Logout</option>
+                    </select>
+                    <select id="dateRangeFilter" class="filter-select">
+                        <option value="all">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="yesterday">Yesterday</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                    <div id="customDateRange" class="custom-date-range" style="display: none;">
+                        <input type="date" id="startDate" class="date-input">
+                        <span>to</span>
+                        <input type="date" id="endDate" class="date-input">
+                        <button class="btn-apply-date" id="applyDateBtn">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline View / Table View Toggle -->
+            <div class="view-toggle">
+                <button class="toggle-btn active" data-view="timeline" id="timelineViewBtn">
+                    <i class="fas fa-stream"></i>
+                    Timeline
+                </button>
+                <button class="toggle-btn" data-view="table" id="tableViewBtn">
+                    <i class="fas fa-table"></i>
+                    Table
+                </button>
+            </div>
+
+            <!-- Timeline View -->
+            <div class="timeline-container" id="timelineView">
+                <div class="timeline" id="timeline">
+                    <!-- Timeline items will be rendered here -->
+                </div>
+            </div>
+
+            <!-- Table View (Hidden by default) -->
+            <div class="table-container" id="tableView" style="display: none;">
+                <table class="logs-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Action Type</th>
+                            <th>Target</th>
+                            <th>Details</th>
+                            <th>IP Address</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Table rows will be rendered here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="pagination">
+                <!-- Pagination will be rendered here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Log Detail Modal -->
+    <div id="logModal" class="modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modalTitle">Log Details</h3>
+                <button class="modal-close" id="closeModalBtn">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Log details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+<!-- SCRIPTS -->
+<script src="/private/js/admin/secondarySuperAdmin/secondaryActivityLogs.js"></script>
+<script src="/private/js/admin/profileFunction.js"></script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-//analyticsReport.js - UPDATED TO USE UNIFIED TRASH API
+//analyticsReport.js - FIXED VERSION - Complete File
 document.addEventListener("DOMContentLoaded", async () => {
   const reportsGrid = document.querySelector(".reports-grid");
   const searchInput = document.querySelector(".search-input");
@@ -8,9 +8,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   const NODE_API_URL = "http://localhost:3000/api";
 
   let uploadedFiles = [];
-  let reports = [];
+  let reports = []; // MOVED TO TOP SCOPE - CRITICAL FIX
   let filteredReports = [];
-  let currentView = "active"; // "active" or "trash"
+  let currentView = "active";
 
   function getCurrentAdminId() {
     return localStorage.getItem('currentAdminId') || sessionStorage.getItem('adminId') || '2';
@@ -45,7 +45,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // Add view toggle buttons to header
   function createViewToggle() {
     const reportsHeader = document.querySelector(".reports-header");
     if (!reportsHeader) return;
@@ -85,9 +84,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       reportsGrid.innerHTML = "<p>Loading analytics...</p>";
 
-      // UPDATED: Use unified trash endpoint
       const endpoint = currentView === "trash" 
-        ? `${NODE_API_URL}/trash`  // Changed from /files/trash
+        ? `${NODE_API_URL}/trash`
         : `${NODE_API_URL}/files/data`;
       
       const response = await fetch(endpoint);
@@ -109,9 +107,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       for (let index = 0; index < uploadedFiles.length; index++) {
         const file = uploadedFiles[index];
         
-        const actualFilename = file.filename || file.originalName || file.displayName;
-        const displayName = file.displayName || file.originalName || file.filename;
+        // ✅ FIXED: Handle both stored filename (with timestamp) and display name
+        const storedFileName = file.filename || file.file_name; // Actual filename on disk
+        const displayName = file.displayName || file.display_name || extractDisplayName(storedFileName);
         const chartType = localStorage.getItem(`chartType_${displayName}`) || file.chart_type || "bar";
+        
+        console.log(`📄 Processing file:`, {
+          storedFileName,
+          displayName,
+          originalName: file.originalName
+        });
         
         try {
           let savedInterpretation = null;
@@ -130,11 +135,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
           }
 
+          // ✅ Use stored filename for API calls (this matches what's on disk)
           const response = await fetch(`${PYTHON_API_URL}/analytics/process`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              filename: actualFilename,
+              filename: storedFileName, // Use the actual stored filename
               chart_type: chartType,
               generate_interpretation: false
             })
@@ -147,8 +153,9 @@ document.addEventListener("DOMContentLoaded", async () => {
           reports.push({
             id: index + 1,
             file_id: file.id,
-            title: displayName || `Report ${index + 1}`,
-            actualFilename: actualFilename,
+            title: displayName, // Show display name to users
+            actualFilename: storedFileName, // Keep stored filename for API calls
+            displayName: displayName, // Explicitly store display name
             metric: file.type || "Uploaded Dataset",
             date: new Date(file.uploaded_at).toLocaleDateString(),
             uploadedAt: new Date(file.uploaded_at),
@@ -166,18 +173,19 @@ document.addEventListener("DOMContentLoaded", async () => {
             availableColumns: analyticsData.file_info?.available_columns || [],
             columnDescriptions: analyticsData.file_info?.column_descriptions || {},
             currentColumn: analyticsData.file_info?.analyzed_column || "Default Column",
-            fileExtension: actualFilename.split('.').pop().toUpperCase(),
+            fileExtension: displayName.split('.').pop().toUpperCase(),
             isTrashed: currentView === "trash"
           });
 
         } catch (error) {
-          console.error(`Error processing ${file.filename}:`, error);
+          console.error(`Error processing ${displayName}:`, error);
           
           reports.push({
             id: index + 1,
             file_id: file.id,
-            title: displayName || `Report ${index + 1}`,
-            actualFilename: actualFilename,
+            title: displayName,
+            actualFilename: storedFileName,
+            displayName: displayName,
             metric: "Error Processing",
             date: new Date(file.uploaded_at).toLocaleDateString(),
             uploadedAt: new Date(file.uploaded_at),
@@ -185,7 +193,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             recordsProcessed: 0,
             chartType: chartType,
             error: error.message,
-            fileExtension: actualFilename.split('.').pop().toUpperCase(),
+            fileExtension: displayName.split('.').pop().toUpperCase(),
             isTrashed: currentView === "trash"
           });
         }
@@ -199,6 +207,24 @@ document.addEventListener("DOMContentLoaded", async () => {
       console.error("Error loading reports:", err);
       reportsGrid.innerHTML = "<p>Error loading reports. Please try again.</p>";
     }
+  }
+
+  // ✅ Helper function to extract display name from timestamped filename
+  function extractDisplayName(filename) {
+    if (!filename) return 'Unknown File';
+    
+    // If filename has timestamp prefix (1769426274995-EnroleesData.xlsx)
+    // Extract the part after the dash
+    if (filename.includes('-')) {
+      const parts = filename.split('-');
+      // Check if first part is a timestamp (all numbers)
+      if (/^\d+$/.test(parts[0])) {
+        return parts.slice(1).join('-'); // Return everything after first dash
+      }
+    }
+    
+    // Otherwise return as-is
+    return filename;
   }
 
   searchInput.addEventListener("input", (e) => {
@@ -334,6 +360,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     reportsList.forEach(report => {
       const card = document.createElement("div");
       card.className = `report-card ${report.isTrashed ? 'trashed' : ''}`;
+      card.dataset.reportId = report.id; // ADD DATA ATTRIBUTE FOR EASY FINDING
 
       if (report.error) {
         card.innerHTML = `
@@ -373,6 +400,29 @@ document.addEventListener("DOMContentLoaded", async () => {
         : '';
 
       card.innerHTML = `
+        ${!report.isTrashed ? `
+          <div class="action-menu-container">
+            <button class="menu-toggle-btn" title="More options">
+              <i class="bi bi-three-dots-vertical"></i>
+            </button>
+            <div class="action-menu">
+              <button class="action-menu-item update-file-btn" data-file-id="${report.file_id}" data-title="${report.title}" data-report-id="${report.id}">
+                <i class="bi bi-arrow-repeat"></i>
+                <span>Update File</span>
+              </button>
+              <button class="action-menu-item refresh-data" data-id="${report.id}" data-filename="${report.actualFilename || report.title}">
+                <i class="fas fa-sync-alt"></i>
+                <span>Refresh Data</span>
+              </button>
+              <div class="menu-divider"></div>
+              <button class="action-menu-item trash-btn" data-file-id="${report.file_id}" data-title="${report.title}">
+                <i class="bi bi-trash"></i>
+                <span>Move to Trash</span>
+              </button>
+            </div>
+          </div>
+        ` : ''}
+        
         <div class="report-header">
           <div>
             <h3>${report.title}</h3>
@@ -382,7 +432,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             ${!report.isTrashed ? interpretationStatus : ''}
           </div>
         </div>
+        
         ${!report.isTrashed ? columnSelector : ''}
+        
         ${!report.isTrashed ? `
         <div class="chart-selector">
           <label for="chartType-${report.id}">Chart Type:</label>
@@ -395,14 +447,17 @@ document.addEventListener("DOMContentLoaded", async () => {
           </select>
         </div>
         ` : ''}
+        
         <div class="chart-container">
           <img src="${report.chartImage}" alt="Chart" class="chart-preview-img" />
         </div>
+        
         <div class="report-meta">
           <span><i class="bi bi-calendar"></i> ${report.date}</span>
           <span><i class="bi bi-database"></i> ${report.recordsProcessed} records</span>
           ${report.summary?.outliers_detected ? `<span><i class="bi bi-exclamation-triangle"></i> ${report.summary.outliers_detected} outliers</span>` : ''}
         </div>
+        
         <div class="quick-stats">
           <div class="stat-mini">
             <span class="stat-label">Mean</span>
@@ -417,6 +472,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             <span class="stat-value">${report.statistics.std.toFixed(2)}</span>
           </div>
         </div>
+        
         <div class="report-actions">
           ${report.isTrashed ? `
             <div class="trash-actions">
@@ -440,19 +496,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 ${report.hasInterpretation ? 'data-has-interpretation="true"' : ''}
               >
                 <i class="bi bi-robot"></i>
-                ${report.hasInterpretation ? 'Regenerate Analysis' : 'Generate Analysis'}
-              </button>
-            </div>
-            <div class="right-actions">
-              <button
-                class="refresh-btn"
-                data-id="${report.id}"
-                data-filename="${report.actualFilename || report.title}"
-              >
-                <i class="fas fa-sync-alt"></i>
-              </button>
-              <button class="trash-btn" data-file-id="${report.file_id}" data-title="${report.title}">
-                <i class="bi bi-trash"></i>
+                ${report.hasInterpretation ? 'Regenerate AI Analysis' : 'Generate AI Analysis'}
               </button>
             </div>
           `}
@@ -465,10 +509,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     attachCardEventListeners();
   }
 
-  // UPDATED: TRASH ACTION FUNCTIONS NOW USE UNIFIED API
+  // TRASH FUNCTIONS
   async function moveToTrash(fileId, fileName) {
     try {
-      // CHANGED: Use unified trash endpoint
       const response = await fetch(`${NODE_API_URL}/trash/move/${fileId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" }
@@ -498,7 +541,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   async function restoreFromTrash(fileId, fileName) {
     try {
-      // CHANGED: Use unified trash endpoint
       const response = await fetch(`${NODE_API_URL}/trash/restore/${fileId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" }
@@ -532,7 +574,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     
     try {
-      // CHANGED: Use unified trash endpoint
       const response = await fetch(`${NODE_API_URL}/trash/permanent/${fileId}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" }
@@ -560,6 +601,47 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
+  async function updateFile(fileId, newFile, reportTitle) {
+    try {
+      const adminId = getCurrentAdminId();
+      
+      const formData = new FormData();
+      formData.append("file", newFile);
+      formData.append("fileId", fileId);
+      formData.append("adminId", adminId);
+
+      const response = await fetch(`${NODE_API_URL}/files/update/${fileId}`, {
+        method: "PUT",
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update file');
+      }
+
+      const result = await response.json();
+
+      await logAdminActivity('update', `Updated analytics file: ${reportTitle}`, {
+        fileId: fileId,
+        newFileName: newFile.name,
+        action: 'file_updated'
+      });
+
+      return result;
+
+    } catch (error) {
+      console.error('Error updating file:', error);
+      
+      await logAdminActivity('error', `Failed to update file: ${reportTitle}`, {
+        fileId: fileId,
+        error: error.message
+      });
+      
+      throw error;
+    }
+  }
+
   async function emptyTrash() {
     const trashedCount = reports.length;
     
@@ -573,7 +655,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     
     try {
-      // CHANGED: Use unified trash endpoint
       const response = await fetch(`${NODE_API_URL}/trash/empty`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" }
@@ -604,14 +685,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  //Part 2
-  // analyticsReport.js - PART 2 (Continuation)
-// This continues from the previous part - append to the end of Part 3
-
   function attachCardEventListeners() {
-    // Trash button (move to trash)
+    // Trash button
     document.querySelectorAll(".trash-btn").forEach(btn => {
       btn.addEventListener("click", async (e) => {
+        const menu = e.currentTarget.closest(".action-menu");
+        if (menu) menu.classList.remove("active");
         const fileId = e.currentTarget.dataset.fileId;
         const fileName = e.currentTarget.dataset.title;
         await moveToTrash(fileId, fileName);
@@ -636,7 +715,106 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
     });
 
-    // Column selection changes
+    // Dropdown menu toggle
+    document.querySelectorAll(".menu-toggle-btn").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const menu = e.currentTarget.nextElementSibling;
+        
+        document.querySelectorAll(".action-menu.active").forEach(m => {
+          if (m !== menu) m.classList.remove("active");
+        });
+        
+        menu.classList.toggle("active");
+      });
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".menu-toggle-btn") && !e.target.closest(".action-menu")) {
+        document.querySelectorAll(".action-menu.active").forEach(menu => {
+          menu.classList.remove("active");
+        });
+      }
+    });
+
+    // UPDATE FILE BUTTON - FIXED WITH PROPER REPORT FINDING
+    document.querySelectorAll(".update-file-btn").forEach(btn => {
+      btn.addEventListener("click", async (e) => {
+        const fileId = e.currentTarget.dataset.fileId;
+        const fileName = e.currentTarget.dataset.title;
+        const reportId = e.currentTarget.dataset.reportId;
+        
+        // FIXED: Find report from the global reports array
+        const report = reports.find(r => r.id == reportId);
+        
+        if (!report) {
+          toast.error("Report not found!");
+          console.error("Could not find report with ID:", reportId, "in reports:", reports);
+          return;
+        }
+
+        const menu = e.currentTarget.closest(".action-menu");
+        if (menu) menu.classList.remove("active");
+        
+        const fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.accept = ".csv,.xlsx,.xls";
+        fileInput.style.display = "none";
+        
+        fileInput.onchange = async (event) => {
+          const file = event.target.files[0];
+          if (!file) return;
+
+          const validExtensions = ['.csv', '.xlsx', '.xls'];
+          const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+          
+          if (!validExtensions.includes(fileExtension)) {
+            toast.error("Please upload a valid file (CSV, XLSX, or XLS)");
+            return;
+          }
+
+          if (!confirm(`Replace "${fileName}" with "${file.name}"?\n\nNote: The AI analysis will not be updated automatically. You'll need to regenerate it after updating.`)) {
+            return;
+          }
+
+          // FIXED: Find card using data attribute instead of DOM traversal
+          const card = document.querySelector(`.report-card[data-report-id="${reportId}"]`);
+
+          if (!card) {
+            toast.error("Could not find report card!");
+            console.error("Could not find card with report ID:", reportId);
+            return;
+          }
+
+          const originalContent = card.innerHTML;
+          
+          card.innerHTML = `
+            <div style="padding: 40px; text-align: center;">
+              <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #667eea; margin-bottom: 15px;"></i>
+              <p style="color: #4a5568; font-weight: 600;">Updating file...</p>
+              <p style="color: #718096; font-size: 0.9rem;">Please wait while we replace the file</p>
+            </div>
+          `;
+
+          try {
+            await updateFile(fileId, file, fileName);
+            toast.success(`"${fileName}" updated successfully! Regenerate AI analysis to reflect changes.`);
+            await loadReports();
+          } catch (error) {
+            console.error("Error updating file:", error);
+            card.innerHTML = originalContent;
+            toast.error("Failed to update file. Please try again.");
+          }
+        };
+        
+        document.body.appendChild(fileInput);
+        fileInput.click();
+        document.body.removeChild(fileInput);
+      });
+    });
+
+    // Column selection
     document.querySelectorAll(".column-select-dropdown").forEach(select => {
       select.addEventListener("change", async (e) => {
         const reportId = e.target.id.split("-")[1];
@@ -714,11 +892,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           console.error('Error loading column data:', error);
           chartContainer.innerHTML = originalContent;
           toast.error('Failed to load data for selected column. Please try again.');
-          
-          await logAdminActivity('error', `Failed to change column for ${report.title}`, {
-            reportId: report.id,
-            error: error.message
-          });
         }
       });
     });
@@ -775,16 +948,11 @@ document.addEventListener("DOMContentLoaded", async () => {
           console.error('Error regenerating chart:', error);
           chartContainer.innerHTML = originalContent;
           toast.error('Failed to regenerate chart. Please try again.');
-          
-          await logAdminActivity('error', `Failed to change chart type for ${report.title}`, {
-            reportId: report.id,
-            error: error.message
-          });
         }
       });
     });
 
-    // Generate Interpretation Button
+    // Generate Interpretation
     document.querySelectorAll(".generate-interpretation-btn").forEach(btn => {
       btn.addEventListener("click", async (e) => {
         const reportId = e.currentTarget.dataset.id;
@@ -842,11 +1010,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         } catch (error) {
           console.error('Error generating interpretation:', error);
           toast.error('Failed to generate AI interpretation. Please try again.');
-          
-          await logAdminActivity('error', `Failed to generate interpretation for ${report.title}`, {
-            reportId: report.id,
-            error: error.message
-          });
         } finally {
           btn.disabled = false;
           if (!report.hasInterpretation) {
@@ -857,8 +1020,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     // Refresh button
-    document.querySelectorAll(".refresh-btn").forEach(btn => {
+    document.querySelectorAll(".refresh-data").forEach(btn => {
       btn.addEventListener("click", async (e) => {
+        const menu = e.currentTarget.closest(".action-menu");
+        if (menu) menu.classList.remove("active");
+        
         const reportId = e.currentTarget.dataset.id;
         const filename = e.currentTarget.dataset.filename;
         const report = reports.find(r => r.id == reportId);
@@ -866,9 +1032,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (!report) return;
 
         btn.disabled = true;
-        btn.innerHTML = '<div class="loading-state"><i class="fas fa-spinner fa-spin"></i></div>';
+        const originalBtnContent = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Refreshing...</span>';
 
-        const card = btn.closest(".report-card");
+        const card = document.querySelector(`.report-card[data-report-id="${reportId}"]`);
+
+        if (!card) {
+          btn.disabled = false;
+          btn.innerHTML = originalBtnContent;
+          return;
+        }
+
         const columnSelector = card.querySelector(".column-select-dropdown");
         const selectedColumn = columnSelector ? columnSelector.value : null;
 
@@ -920,12 +1094,12 @@ document.addEventListener("DOMContentLoaded", async () => {
           toast.error('Failed to refresh analytics. Please try again.');
         } finally {
           btn.disabled = false;
-          btn.innerHTML = '<i class="fas fa-sync-alt"></i>';
+          btn.innerHTML = originalBtnContent;
         }
       });
     });
 
-    // VIEW REPORT button
+    // View Report
     document.querySelectorAll(".view-btn").forEach(btn => {
       btn.addEventListener("click", (e) => {
         const reportId = e.currentTarget.dataset.id;
@@ -935,11 +1109,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // MODAL AND EXPORT FUNCTIONS
+  // MODAL FUNCTIONS
   function openReportDetails(report) {
     const modal = document.getElementById("reportModal");
     if (!modal) {
-      toast.error("Modal not found! Make sure #reportModal exists in your HTML.");
+      toast.error("Modal not found!");
       return;
     }
 
@@ -1227,7 +1401,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     toast.success('Opening print dialog for PDF export...');
   }
 
-  // Close modal
+  // Close modal handlers
   document.body.addEventListener("click", (e) => {
     if (e.target.classList.contains("modal-overlay") || e.target.classList.contains("close-modal")) {
       const modal = document.getElementById("reportModal");
@@ -1247,19 +1421,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // Initialize view toggle
+  // Initialize
   createViewToggle();
-  
-  // Initial load
   await loadReports();
 
-  // Export global functions
+  // Export functions globally
   window.moveToTrash = moveToTrash;
   window.restoreFromTrash = restoreFromTrash;
   window.deletePermanently = deletePermanently;
   window.emptyTrash = emptyTrash;
+  window.updateFile = updateFile;
   window.openReportDetails = openReportDetails;
-  window.addExportListeners = addExportListeners;
   window.exportReportAsCSV = exportReportAsCSV;
   window.exportReportAsPDF = exportReportAsPDF;
 });

@@ -54,6 +54,8 @@ function togglePassword(inputId) {
 // ADMIN LOGIN
 // ============================================
 
+// /private/js/login.js - UPDATE ADMIN LOGIN SECTION
+
 document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
   e.preventDefault();
 
@@ -70,16 +72,21 @@ document.getElementById('admin-login-form').addEventListener('submit', async (e)
     const data = await response.json();
 
     if (data.success) {
-      // Store admin info globally for later access
+      // Store admin info
       localStorage.setItem("adminid", data.adminid);
+      localStorage.setItem("role_name", data.role_name);
+      localStorage.setItem("role_id", data.role_id);
+      localStorage.setItem("hierarchy_level", data.hierarchy_level);
 
-      // Redirect based on admin ID
-      if (data.adminid === 'adminave') {
+      // Redirect based on role
+      if (data.role_name === 'Assistant Super Administrator') {
+        window.location.href = '/private/html/adminPages/secondarySuperAdmin/secondaryDashboard.html';
+      } else if (data.adminid === 'adminSalao') {
+        window.location.href = '/private/html/adminPages/superAdmin/superAdmin.html';
+      } else if (data.adminid === 'adminave') {
         window.location.href = '/private/html/adminPages/adminAve/admin1.html';
       } else if (data.adminid === 'adminEnierga') {
         window.location.href = '/private/html/adminPages/adminEnierga/admin2.html';
-      } else if (data.adminid === 'adminSalao') {
-        window.location.href = '/private/html/adminPages/adminSalao/superAdmin.html';
       } else if (data.adminid === 'adminMila') {
         window.location.href = '/private/html/adminPages/adminMila/adminMila.html';
       } else if (data.adminid === 'adminLlave') {
@@ -87,10 +94,10 @@ document.getElementById('admin-login-form').addEventListener('submit', async (e)
       } else if (data.adminid === 'adminCMO') {
         window.location.href = '/private/html/adminPages/adminCMO/cmoDashboard.html';
       } else {
-        alert('Unknown admin ID.');
+        alert('Unknown admin role. Please contact support.');
       }
     } else {
-      alert('Invalid admin ID or password.');
+      alert(data.message || 'Invalid admin ID or password.');
     }
 
   } catch (error) {
@@ -188,7 +195,7 @@ window.addEventListener('DOMContentLoaded', () => {
     } else if (adminid === 'adminEnierga') {
       window.location.href = '/private/html/adminPages/adminEnierga/admin2.html';
     } else if (adminid === 'adminSalao') {
-      window.location.href = '/private/html/adminPages/adminSalao/superAdmin.html';
+      window.location.href = '/private/html/adminPages/superAdmin/superAdmin.html';
     } else if (adminid === 'adminMila') {
       window.location.href = '/private/html/adminPages/adminMila/adminMila.html';
     } else if (adminid === 'adminLlave') {

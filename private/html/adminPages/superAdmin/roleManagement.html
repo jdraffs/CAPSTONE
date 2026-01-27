@@ -1,0 +1,276 @@
+<!--roleManagement.html - SuperAdmin Role Management-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Admin - Role Management</title>
+    <link rel="icon" type="image" href="/public/assets/images/PUPLogo.webp">
+    <link rel="stylesheet" href="/private/css/layout/post.css">
+    <link rel="stylesheet" href="/private/css/layout/dashboardsidebar.css">
+    <link rel="stylesheet" href="/private/css/pages/roleManagement.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!--SIDEBAR-->
+    <section class="sidebar">
+        <div class="logo">
+            <img class="logoimage" src="/public/assets/images/PUPLogo.webp" alt="PUP Logo">
+            <div class="logotitlewrap">
+                <h2 class="logotitle logotitle1">PUP</h2>
+                <h2 class="logotitle">Parañaque</h2>
+            </div>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <nav class="sidebar-nav">
+            <div class="sidebar-scroll">
+                <div class="nav-section">
+                    <h3 class="nav-title">Main</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/superAdmin/superAdmin.html">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <h3 class="nav-title">Management</h3>
+
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/superAdmin/analyticsDashboard.html">
+                                <i class="fa-solid fa-chart-line"></i>
+                                <span>Analytics Dashboard</span>
+                            </a>
+                        </li>
+                    </ul>
+
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/superAdmin/userManagement.html">
+                                <i class="fa-solid fa-copy"></i>
+                                <span>User Management</span>
+                            </a>
+                        </li>
+                    </ul>
+
+                    <ul class="nav-list">
+                        <li class="nav-item active">
+                            <a class="nav-link" href="/private/html/adminPages/superAdmin/roleManagement.html">
+                                <i class="fa-solid fa-box-archive"></i>
+                                <span>Role Management</span>
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/superAdmin/feedbackDashboard.html">
+                                <i class="fa-solid fa-comments"></i>
+                                <span>Service Feedback</span>
+                            </a>
+                        </li>
+                    </ul>
+
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/private/html/adminPages/superAdmin/adminActivityLogs.html">
+                                <i class="fa-solid fa-clipboard-list"></i>
+                                <span>Admin Activity Logs</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-details">
+                        <span class="user-name">SuperAdmin</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </section>
+
+    <!--MAIN CONTENT-->
+    <main class="main">
+        <header class="dashboard-header">
+            <div class="header-left">
+                <h1 class="page-title" id="pageTitle">Role Management</h1>
+            </div>
+            <div class="header-right">
+                <div class="notification-button">
+                    <a class="notif-link" href="#notifications" data-page="overview">
+                        <i class="fa fa-bell" aria-hidden="true"></i>
+                    </a>
+                </div>
+                <div class="profile-button">
+                    <a class="profile-link" href="#profile" data-page="profile">
+                        <i class="fa fa-user" aria-hidden="true"></i>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!--DASHBOARD CONTENT-->
+        <div class="main-content" id="mainContent">
+            <!-- Header Section -->
+            <div class="roles-header">
+                <div class="header-info">
+                    <h2>Manage System Roles</h2>
+                    <p class="header-subtitle">Create, edit, and assign permissions to user roles</p>
+                </div>
+                <button class="btn-create-role" id="createRoleBtn">
+                    <i class="fas fa-plus"></i>
+                    Create New Role
+                </button>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="role-summary-cards">
+                <div class="summary-card gradient-blue">
+                    <div class="summary-icon"><i class="fas fa-user-tag"></i></div>
+                    <div class="summary-content">
+                        <h3 id="totalRolesCount">0</h3>
+                        <p>Total Roles</p>
+                    </div>
+                </div>
+                <div class="summary-card gradient-green">
+                    <div class="summary-icon"><i class="fas fa-users"></i></div>
+                    <div class="summary-content">
+                        <h3 id="totalUsersCount">0</h3>
+                        <p>Total Users</p>
+                    </div>
+                </div>
+                <div class="summary-card gradient-purple">
+                    <div class="summary-icon"><i class="fas fa-shield-alt"></i></div>
+                    <div class="summary-content">
+                        <h3 id="totalPermissionsCount">0</h3>
+                        <p>Permissions</p>
+                    </div>
+                </div>
+                <div class="summary-card gradient-orange">
+                    <div class="summary-icon"><i class="fas fa-history"></i></div>
+                    <div class="summary-content">
+                        <h3 id="recentChangesCount">0</h3>
+                        <p>Recent Changes</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter and Search -->
+            <div class="roles-toolbar">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="roleSearchInput" placeholder="Search roles..." class="search-input">
+                </div>
+                <div class="filter-controls">
+                    <select id="sortRoles" class="filter-select">
+                        <option value="name-asc">Name (A-Z)</option>
+                        <option value="name-desc">Name (Z-A)</option>
+                        <option value="users-desc">Most Users</option>
+                        <option value="users-asc">Least Users</option>
+                        <option value="recent">Recently Modified</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Roles Grid -->
+            <div class="roles-grid" id="rolesGrid">
+                <!-- Roles will be dynamically loaded here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Create/Edit Role Modal -->
+    <div id="roleModal" class="modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modalTitle">Create New Role</h3>
+                <button class="modal-close" id="closeModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="roleForm">
+                    <input type="hidden" id="roleId">
+                    
+                    <div class="form-group">
+                        <label for="roleName">Role Name <span class="required">*</span></label>
+                        <input type="text" id="roleName" required placeholder="e.g., Content Manager">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="roleDescription">Description</label>
+                        <textarea id="roleDescription" rows="3" placeholder="Brief description of this role's responsibilities"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Permissions</label>
+                        <div class="permissions-container" id="permissionsContainer">
+                            <!-- Permissions will be loaded dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" id="cancelRoleBtn">Cancel</button>
+                        <button type="submit" class="btn-primary" id="saveRoleBtn">
+                            <i class="fas fa-save"></i>
+                            Save Role
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Role Details Modal -->
+    <div id="roleDetailsModal" class="modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-container large">
+            <div class="modal-header">
+                <h3 id="detailsModalTitle">Role Details</h3>
+                <button class="modal-close" id="closeDetailsModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="role-details-content" id="roleDetailsContent">
+                    <!-- Details will be loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div id="historyModal" class="modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3><i class="fas fa-history"></i> Role History</h3>
+                <button class="modal-close" id="closeHistoryModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="history-content" id="historyContent">
+                    <!-- History will be loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+<!-- SCRIPTS -->
+<script src="/private/js/admin/superAdmin/roleManagement.js"></script>
+<script src="/private/js/admin/superAdmin/superAdmin.js"></script>
+<script src="/private/js/admin/profileFunction.js"></script>
+</body>
+</html>

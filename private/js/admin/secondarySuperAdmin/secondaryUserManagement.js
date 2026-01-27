@@ -1,32 +1,94 @@
-// userManagement.js - ENHANCED WITH ROLE & STATUS MANAGEMENT
+// secondaryUserManagementLimited.js - PART 1: Secondary SuperAdmin User Management (LIMITED)
 const API_BASE = 'http://localhost:3000/api';
 let currentAdminId = localStorage.getItem('adminid');
 let allAdmins = [];
 let filteredAdmins = [];
 let roles = [];
 let currentSearchTerm = '';
-let currentStatusFilter = 'all'; // all, active, suspended
+let currentStatusFilter = 'all';
+
+// Restricted admin IDs that System Admin cannot edit
+const PROTECTED_ADMINS = ['adminSalao'];
+const PROTECTED_ROLE_IDS = [1]; // Super Administrator role ID
+const MAX_HIERARCHY_LEVEL = 90; // System Admin hierarchy level
 
 document.addEventListener('DOMContentLoaded', async () => {
   initializeProfileDropdown();
-  
+
   if (!currentAdminId) {
     alert('You must be logged in.');
     window.location.href = '/private/html/AdminLogin/login.html';
     return;
   }
+
+  async function setCurrentAdminName() {
+    try {
+      const response = await fetch(`${API_URL}/admin-accounts`);
+      const data = await response.json();
+      
+      const currentUser = data.admins.find(a => a.adminid === currentAdminId);
+      
+      if (currentUser) {
+        // Update admin name
+        const nameElements = document.querySelectorAll('#currentAdminName');
+        nameElements.forEach(el => {
+          if (el) el.textContent = currentUser.adminid || currentAdminId;
+        });
+        
+        // Update role subtitle to "System Administrator"
+        const roleElements = document.querySelectorAll('.user-role');
+        roleElements.forEach(el => {
+          if (el) el.textContent = 'System Administrator';
+        });
+        
+        console.log('✅ Admin name set:', currentUser.adminid);
+      }
+    } catch (error) {
+      console.error('Error fetching admin name:', error);
+      // Fallback to stored admin ID
+      // Update UI with admin name
+      const nameElements = document.querySelectorAll('#adminName, #currentAdminName');
+      nameElements.forEach(el => {
+        if (el) el.textContent = currentAdminId;
+      });  
+      // Update role subtitle
+      const roleElements = document.querySelectorAll('.user-role');
+      roleElements.forEach(el => {
+        if (el) el.textContent = 'System Administrator';
+      });
+    }
+  }
+
+// Call this function early in your initialization
+await setCurrentAdminName();
   
-  if (currentAdminId !== 'adminSalao') {
-    alert('Access Denied: Super Admin only.');
-    window.location.href = '/private/html/adminPages/superAdmin/superAdmin.html';
+  // Check if user has System Admin role
+  const isAssistantAdmin = await checkAssistantAdminRole();
+  if (!isAssistantAdmin) {
+    alert('Access Denied: Secondary System Administrator only.');
+    window.location.href = '/private/html/adminPages/secondarySuperAdmin/secondaryDashboard.html';
     return;
   }
   
   await initialize();
 });
 
+async function checkAssistantAdminRole() {
+  try {
+    const res = await fetch(`${API_BASE}/admin-accounts`);
+    if (!res.ok) return false;
+    
+    const data = await res.json();
+    const currentUser = data.admins.find(a => a.adminid === currentAdminId);
+    
+    return currentUser && currentUser.role_name === 'Assistant Super Administrator';
+  } catch (error) {
+    console.error('❌ Role check error:', error);
+    return false;
+  }
+}
+
 async function initialize() {
-  showLoading();
   
   try {
     await loadRoles();
@@ -37,25 +99,27 @@ async function initialize() {
     updateStats();
     displayAdmins();
     
-    console.log('✅ User Management loaded');
+    console.log('✅ Limited User Management loaded');
   } catch (error) {
     console.error('❌ Init error:', error);
     showError('Failed to initialize');
   }
 }
 
-
-// Di pa updated sa actual roles
 async function loadRoles() {
   try {
     const res = await fetch(`${API_BASE}/roles`);
     if (!res.ok) throw new Error('Failed to load roles');
     roles = await res.json();
-    console.log('✅ Roles:', roles.length);
+    
+    // Filter out protected roles (Super Administrator)
+    roles = roles.filter(r => !PROTECTED_ROLE_IDS.includes(r.id));
+    
+    console.log('✅ Roles loaded (filtered):', roles.length);
   } catch (error) {
     console.error('❌ Roles error:', error);
+    // Fallback roles excluding Super Administrator
     roles = [
-      { id: 1, name: 'Super Administrator', hierarchy_level: 100 },
       { id: 7, name: 'Assistant Super Administrator', hierarchy_level: 90 },
       { id: 3, name: 'Data Manager', hierarchy_level: 50 },
       { id: 4, name: 'Content Manager', hierarchy_level: 50 },
@@ -92,7 +156,13 @@ async function loadAdmins() {
 function renderUI() {
   const main = document.getElementById('mainContent');
   
-  main.innerHTML = `
+  // Remove existing access banner if present
+  const existingBanner = main.querySelector('.access-banner');
+  if (existingBanner) {
+    existingBanner.remove();
+  }
+  
+  main.innerHTML += `
     <div class="user-management-container">
       <div class="um-header">
         <div class="um-header-right">
@@ -105,6 +175,40 @@ function renderUI() {
           <button class="btn-primary" id="btnRefresh">
             <i class="fas fa-sync-alt"></i> Refresh
           </button>
+        </div>
+      </div>
+
+      <!-- Limitation Notice -->
+      <div class="limitation-notice">
+        <div class="notice-header">
+          <i class="fas fa-shield-alt"></i>
+          <h4>Your Access Limitations</h4>
+        </div>
+        <div class="limitation-grid">
+          <div class="limitation-item allowed">
+            <i class="fas fa-check"></i>
+            <span>Create admin-level users</span>
+          </div>
+          <div class="limitation-item allowed">
+            <i class="fas fa-check"></i>
+            <span>Assign non-superadmin roles</span>
+          </div>
+          <div class="limitation-item allowed">
+            <i class="fas fa-check"></i>
+            <span>Reactivate disabled accounts</span>
+          </div>
+          <div class="limitation-item restricted">
+            <i class="fas fa-times"></i>
+            <span>Cannot edit Campus Director</span>
+          </div>
+          <div class="limitation-item restricted">
+            <i class="fas fa-times"></i>
+            <span>Cannot create superadmins</span>
+          </div>
+          <div class="limitation-item restricted">
+            <i class="fas fa-times"></i>
+            <span>Cannot modify superadmin permissions</span>
+          </div>
         </div>
       </div>
 
@@ -134,6 +238,15 @@ function renderUI() {
           <div class="stat-content">
             <h3 id="statSuspended">0</h3>
             <p>Suspended</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon purple">
+            <i class="fas fa-user-shield"></i>
+          </div>
+          <div class="stat-content">
+            <h3 id="statManageable">0</h3>
+            <p>Manageable Users</p>
           </div>
         </div>
       </div>
@@ -188,7 +301,7 @@ function attachEvents() {
   
   document.getElementById('btnCreate').onclick = openCreateModal;
   document.getElementById('btnRoles').onclick = () => {
-    window.location.href = '/private/html/adminPages/superAdmin/roleManagement.html';
+    window.location.href = '/private/html/adminPages/secondarySuperAdmin/roleManagementLimited.html';
   };
   
   document.getElementById('searchInput').oninput = (e) => {
@@ -214,20 +327,22 @@ function updateStats() {
   const active = allAdmins.filter(a => a.status === 'active').length;
   const suspended = allAdmins.filter(a => a.status === 'suspended').length;
   
+  // Count manageable users (exclude protected admins)
+  const manageable = allAdmins.filter(a => !PROTECTED_ADMINS.includes(a.adminid)).length;
+  
   document.getElementById('statTotal').textContent = total;
   document.getElementById('statActive').textContent = active;
   document.getElementById('statSuspended').textContent = suspended;
+  document.getElementById('statManageable').textContent = manageable;
 }
 
 function filterAdmins() {
   filteredAdmins = allAdmins;
 
-  // Filter by status
   if (currentStatusFilter !== 'all') {
     filteredAdmins = filteredAdmins.filter(a => a.status === currentStatusFilter);
   }
 
-  // Filter by search
   if (currentSearchTerm) {
     filteredAdmins = filteredAdmins.filter(a => 
       a.adminid.toLowerCase().includes(currentSearchTerm) ||
@@ -250,15 +365,22 @@ function displayAdmins() {
     return;
   }
 
-  tbody.innerHTML = filteredAdmins.map(a => `
-    <tr>
+  tbody.innerHTML = filteredAdmins.map(a => {
+    const isProtected = PROTECTED_ADMINS.includes(a.adminid);
+    const protectedBadge = isProtected ? '<span class="protected-badge"><i class="fas fa-shield-alt"></i> Protected</span>' : '';
+    
+    return `
+    <tr ${isProtected ? 'class="protected-row"' : ''}>
       <td>
         <input type="checkbox" class="cb" data-id="${a.id}" 
-          ${a.adminid === 'adminSalao' ? 'disabled' : ''}>
+          ${isProtected ? 'disabled' : ''}>
       </td>
       <td class="user-id">
         <div class="user-avatar"><i class="fas fa-user-shield"></i></div>
-        <strong>${a.adminid}</strong>
+        <div>
+          <strong>${a.adminid}</strong>
+          ${protectedBadge}
+        </div>
       </td>
       <td>
         <span class="role-badge role-${a.role_id || 'default'}">
@@ -275,7 +397,7 @@ function displayAdmins() {
         <button class="btn-action btn-view" onclick="viewAdmin(${a.id})" title="View">
           <i class="fas fa-eye"></i>
         </button>
-        ${a.adminid !== 'adminSalao' ? `
+        ${!isProtected ? `
           <button class="btn-action btn-edit" onclick="editAdmin(${a.id})" title="Edit">
             <i class="fas fa-edit"></i>
           </button>
@@ -285,10 +407,14 @@ function displayAdmins() {
           <button class="btn-action btn-delete" onclick="deleteAdmin(${a.id})" title="Delete">
             <i class="fas fa-trash"></i>
           </button>
-        ` : ''}
+        ` : `
+          <span class="no-action-badge">
+            <i class="fas fa-lock"></i> No Actions
+          </span>
+        `}
       </td>
     </tr>
-  `).join('');
+  `}).join('');
 
   document.querySelectorAll('.cb').forEach(cb => {
     cb.onchange = updateBulkBar;
@@ -327,8 +453,15 @@ function getSelectedIds() {
     .map(cb => parseInt(cb.dataset.id));
 }
 
+window.viewAdmin = viewAdmin;
+window.editAdmin = editAdmin;
+window.resetPass = resetPass;
+window.deleteAdmin = deleteAdmin;
+
+// userManagementLimited.js - PART 2: Modal Functions and CRUD Operations
+
 // ============================================
-// CREATE MODAL
+// CREATE MODAL (with role restrictions)
 // ============================================
 function openCreateModal() {
   const modal = document.getElementById('modalRoot');
@@ -339,6 +472,11 @@ function openCreateModal() {
         <div class="modal-header">
           <h3><i class="fas fa-user-plus"></i> Create Admin</h3>
           <button class="modal-close" onclick="closeModal()">×</button>
+        </div>
+        
+        <div class="access-restriction-notice">
+          <i class="fas fa-info-circle"></i>
+          <p>You can only assign non-superadmin roles. Super Administrator role is restricted.</p>
         </div>
         
         <form id="formCreate" class="modal-body">
@@ -352,6 +490,7 @@ function openCreateModal() {
               <option value="">Select...</option>
               ${roles.map(r => `<option value="${r.id}">${r.name}</option>`).join('')}
             </select>
+            <small class="form-help">Super Administrator role not available</small>
           </div>
           <div class="form-group">
             <label>Password *</label>
@@ -391,7 +530,7 @@ async function handleCreate(e) {
   e.preventDefault();
   
   const adminid = document.getElementById('inpAdminId').value.trim();
-  const role_id = document.getElementById('inpRole').value;
+  const role_id = parseInt(document.getElementById('inpRole').value);
   const password = document.getElementById('inpPass').value;
   const confirm = document.getElementById('inpConfirm').value;
   
@@ -405,16 +544,25 @@ async function handleCreate(e) {
     return;
   }
   
+  // Check if trying to create a protected role
+  if (PROTECTED_ROLE_IDS.includes(role_id)) {
+    toast('Cannot create superadmin accounts - Access Denied', 'error');
+    return;
+  }
+  
   try {
     const res = await fetch(`${API_BASE}/admin-accounts`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ adminid, password, role_id: parseInt(role_id) })
+      body: JSON.stringify({ adminid, password, role_id })
     });
     
     const data = await res.json();
     
     if (!res.ok) throw new Error(data.error || 'Failed');
+    
+    // Log the action
+    await logAction('User Created', adminid, `Created admin account with role ID ${role_id}`);
     
     toast(`Created ${adminid}`, 'success');
     closeModal();
@@ -429,11 +577,17 @@ async function handleCreate(e) {
 }
 
 // ============================================
-// EDIT ADMIN (Role & Status)
+// EDIT ADMIN (with protection checks)
 // ============================================
 function editAdmin(id) {
   const admin = allAdmins.find(a => a.id === id);
   if (!admin) return;
+  
+  // Check if admin is protected
+  if (PROTECTED_ADMINS.includes(admin.adminid)) {
+    toast('Cannot edit Campus Director - Access Denied', 'error');
+    return;
+  }
   
   const modal = document.getElementById('modalRoot');
   
@@ -443,6 +597,11 @@ function editAdmin(id) {
         <div class="modal-header">
           <h3><i class="fas fa-edit"></i> Edit Admin: ${admin.adminid}</h3>
           <button class="modal-close" onclick="closeModal()">×</button>
+        </div>
+        
+        <div class="access-restriction-notice">
+          <i class="fas fa-info-circle"></i>
+          <p>You can only assign non-superadmin roles. Current role restrictions apply.</p>
         </div>
         
         <form id="formEdit" class="modal-body">
@@ -459,6 +618,7 @@ function editAdmin(id) {
                 </option>
               `).join('')}
             </select>
+            <small class="form-help">Cannot assign Super Administrator role</small>
           </div>
           <div class="form-group">
             <label>Status *</label>
@@ -477,25 +637,34 @@ function editAdmin(id) {
   `;
   
   modal.style.display = 'block';
-  document.getElementById('formEdit').onsubmit = (e) => handleEdit(e, id);
+  document.getElementById('formEdit').onsubmit = (e) => handleEdit(e, id, admin.adminid);
 }
 
-async function handleEdit(e, id) {
+async function handleEdit(e, id, adminid) {
   e.preventDefault();
   
-  const role_id = document.getElementById('editRole').value;
+  const role_id = parseInt(document.getElementById('editRole').value);
   const status = document.getElementById('editStatus').value;
+  
+  // Check if trying to assign a protected role
+  if (PROTECTED_ROLE_IDS.includes(role_id)) {
+    toast('Cannot assign Super Administrator role - Access Denied', 'error');
+    return;
+  }
   
   try {
     const res = await fetch(`${API_BASE}/admin-accounts/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role_id: parseInt(role_id), status })
+      body: JSON.stringify({ role_id, status })
     });
     
     const data = await res.json();
     
     if (!res.ok) throw new Error(data.error || 'Failed');
+    
+    // Log the action
+    await logAction('User Updated', adminid, `Updated role to ${role_id} and status to ${status}`);
     
     toast('Updated successfully', 'success');
     closeModal();
@@ -515,6 +684,8 @@ async function handleEdit(e, id) {
 function viewAdmin(id) {
   const admin = allAdmins.find(a => a.id === id);
   if (!admin) return;
+  
+  const isProtected = PROTECTED_ADMINS.includes(admin.adminid);
   
   const modal = document.getElementById('modalRoot');
   
@@ -538,6 +709,7 @@ function viewAdmin(id) {
                 <span class="status-badge status-${admin.status || 'active'}">
                   ${(admin.status || 'active').charAt(0).toUpperCase() + (admin.status || 'active').slice(1)}
                 </span>
+                ${isProtected ? '<span class="protected-badge large"><i class="fas fa-shield-alt"></i> Protected Account</span>' : ''}
               </div>
             </div>
             
@@ -567,15 +739,28 @@ function viewAdmin(id) {
                 </div>
               </div>
             </div>
+            
+            ${isProtected ? `
+              <div class="protection-notice">
+                <i class="fas fa-shield-alt"></i>
+                <div>
+                  <strong>Protected Account</strong>
+                  <p>This is the Campus Director account. You cannot edit, reset password, or delete this account.</p>
+                </div>
+              </div>
+            ` : ''}
           </div>
           
-          ${admin.adminid !== 'adminSalao' ? `
+          ${!isProtected ? `
             <div class="details-actions">
               <button class="btn-secondary" onclick="closeModal(); editAdmin(${id})">
                 <i class="fas fa-edit"></i> Edit Role/Status
               </button>
               <button class="btn-secondary" onclick="closeModal(); resetPass(${id})">
                 <i class="fas fa-key"></i> Reset Password
+              </button>
+              <button class="btn-danger" onclick="closeModal(); deleteAdmin(${id})">
+                <i class="fas fa-trash"></i> Delete Admin
               </button>
             </div>
           ` : ''}
@@ -588,11 +773,16 @@ function viewAdmin(id) {
 }
 
 // ============================================
-// RESET PASSWORD
+// RESET PASSWORD (with protection check)
 // ============================================
 function resetPass(id) {
   const admin = allAdmins.find(a => a.id === id);
   if (!admin) return;
+  
+  if (PROTECTED_ADMINS.includes(admin.adminid)) {
+    toast('Cannot reset Campus Director password - Access Denied', 'error');
+    return;
+  }
   
   const modal = document.getElementById('modalRoot');
   
@@ -609,7 +799,7 @@ function resetPass(id) {
         </div>
         <div class="modal-footer">
           <button class="btn-secondary" onclick="closeModal()">Cancel</button>
-          <button class="btn-primary" onclick="execReset(${id})">Reset</button>
+          <button class="btn-primary" onclick="execReset(${id}, '${admin.adminid}')">Reset</button>
         </div>
       </div>
     </div>
@@ -618,7 +808,7 @@ function resetPass(id) {
   modal.style.display = 'block';
 }
 
-async function execReset(id) {
+async function execReset(id, adminid) {
   try {
     const res = await fetch(`${API_BASE}/admin-accounts/${id}/reset-password`, {
       method: 'POST'
@@ -627,6 +817,9 @@ async function execReset(id) {
     const data = await res.json();
     
     if (!res.ok) throw new Error(data.error || 'Failed');
+    
+    // Log the action
+    await logAction('Password Reset', adminid, 'Generated temporary password');
     
     showTempPass(data.adminid, data.tempPassword);
     
@@ -674,24 +867,29 @@ function copyPass() {
   });
 }
 
+window.execReset = execReset;
+window.copyPass = copyPass;
+
+// userManagementLimited.js - PART 3: Delete, Logging, and Utility Functions
+
 // ============================================
-// DELETE
+// DELETE (with protection check)
 // ============================================
 function deleteAdmin(id) {
   const admin = allAdmins.find(a => a.id === id);
   if (!admin) return;
   
-  if (admin.adminid === 'adminSalao') {
-    toast('Cannot delete Super Admin', 'error');
+  if (PROTECTED_ADMINS.includes(admin.adminid)) {
+    toast('Cannot delete Campus Director - Access Denied', 'error');
     return;
   }
   
-  if (!confirm(`Delete "${admin.adminid}"?`)) return;
+  if (!confirm(`Delete "${admin.adminid}"? This action cannot be undone.`)) return;
   
-  execDelete(id);
+  execDelete(id, admin.adminid);
 }
 
-async function execDelete(id) {
+async function execDelete(id, adminid) {
   try {
     const res = await fetch(`${API_BASE}/admin-accounts/${id}`, {
       method: 'DELETE'
@@ -700,6 +898,9 @@ async function execDelete(id) {
     const data = await res.json();
     
     if (!res.ok) throw new Error(data.error || 'Failed');
+    
+    // Log the action
+    await logAction('User Deleted', adminid, `Deleted admin account`);
     
     toast('Deleted', 'success');
     await loadAdmins();
@@ -719,7 +920,16 @@ async function bulkDelete() {
     return;
   }
   
-  if (!confirm(`Delete ${ids.length} admin(s)?`)) return;
+  // Check if any selected IDs are protected
+  const selectedAdmins = allAdmins.filter(a => ids.includes(a.id));
+  const protectedInSelection = selectedAdmins.filter(a => PROTECTED_ADMINS.includes(a.adminid));
+  
+  if (protectedInSelection.length > 0) {
+    toast('Cannot delete protected accounts (Campus Director)', 'error');
+    return;
+  }
+  
+  if (!confirm(`Delete ${ids.length} admin(s)? This cannot be undone.`)) return;
   
   try {
     const res = await fetch(`${API_BASE}/admin-accounts/bulk-delete`, {
@@ -732,6 +942,9 @@ async function bulkDelete() {
     
     if (!res.ok) throw new Error(data.error || 'Failed');
     
+    // Log the action
+    await logAction('Bulk Delete', '', `Deleted ${data.count} admin accounts`);
+    
     toast(`Deleted ${data.count}`, 'success');
     await loadAdmins();
     updateStats();
@@ -743,6 +956,41 @@ async function bulkDelete() {
   } catch (error) {
     console.error('❌ Bulk delete error:', error);
     toast('Bulk delete failed', 'error');
+  }
+}
+
+// ============================================
+// ACTION LOGGING
+// ============================================
+async function logAction(actionType, targetUser, details) {
+  try {
+    const res = await fetch(`${API_BASE}/superadmin-actions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        adminid: currentAdminId,
+        action_type: actionType,
+        target_user: targetUser,
+        details: details,
+        ip_address: await getClientIP()
+      })
+    });
+    
+    if (!res.ok) {
+      console.warn('Failed to log action');
+    }
+  } catch (error) {
+    console.error('Error logging action:', error);
+  }
+}
+
+async function getClientIP() {
+  try {
+    const response = await fetch('https://api.ipify.org?format=json');
+    const data = await response.json();
+    return data.ip;
+  } catch {
+    return 'Unknown';
   }
 }
 
@@ -780,15 +1028,6 @@ function closeModal() {
   document.getElementById('modalRoot').innerHTML = '';
 }
 
-function showLoading() {
-  document.getElementById('mainContent').innerHTML = `
-    <div class="loading-state">
-      <i class="fas fa-spinner fa-spin fa-3x"></i>
-      <p>Loading...</p>
-    </div>
-  `;
-}
-
 function showError(msg) {
   document.getElementById('mainContent').innerHTML = `
     <div class="error-state">
@@ -819,15 +1058,9 @@ function toast(msg, type = 'info') {
   }, 3000);
 }
 
-// Global functions
-window.viewAdmin = viewAdmin;
-window.editAdmin = editAdmin;
-window.resetPass = resetPass;
-window.execReset = execReset;
-window.deleteAdmin = deleteAdmin;
-window.copyPass = copyPass;
+// Global function exports
 window.togglePass = togglePass;
 window.genPass = genPass;
 window.closeModal = closeModal;
 
-console.log('✅ User Management loaded');
+console.log('✅ Limited User Management loaded');

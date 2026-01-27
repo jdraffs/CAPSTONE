@@ -95,7 +95,7 @@ async function logFileDeletion(adminId, fileName, fileId) {
 }
 // ==================== END ACTIVITY LOGGING ====================
 
-// UPLOAD A FILE WITH LOGGING
+// UPLOAD A FILE WITH PROPER FILE NAME HANDLING
 router.post("/upload", upload.single("file"), async (req, res) => {
   try {
     const { folder_id, adminid } = req.body;
@@ -105,16 +105,22 @@ router.post("/upload", upload.single("file"), async (req, res) => {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    // extract file info
-    const storedFileName = file.filename; // includes timestamp
-    const originalFileName = file.originalname;
+    // Extract file info
+    const storedFileName = file.filename; // includes timestamp: "1769426274995-EnroleesData.xlsx"
+    const originalFileName = file.originalname; // original name: "EnroleesData.xlsx"
     const fileType = file.mimetype;
     const fileSize = file.size;
     
-    //FIX: updated file path to match fileRepository structure
+    // File path uses the stored filename with timestamp
     const filePath = `/uploads/fileRepository/${storedFileName}`;
 
-    //first step: Insert into file_repository_files
+    console.log(`✅ File stored as: ${storedFileName}`);
+    console.log(`📝 Original filename: ${originalFileName}`);
+    console.log(`📁 File path: ${filePath}`);
+
+    // Insert into file_repository_files
+    // Store the timestamped filename in file_name (this is what's actually on disk)
+    // But we can add a display_name column for showing to users
     const result = await pool.query(
       `INSERT INTO file_repository_files 
         (folder_id, file_name, file_path, file_type, file_size, adminid)
@@ -125,19 +131,21 @@ router.post("/upload", upload.single("file"), async (req, res) => {
 
     const fileId = result.rows[0].id;
 
-    // 2nd step: insert dashboard event
+    // Insert dashboard event
     await pool.query(
       `INSERT INTO dashboard_events (event_type, title, details, file_id, meta)
        VALUES ($1,$2,$3,$4,$5)`,
       [
         "file_upload",
         "New dataset uploaded",
-        originalFileName,
+        originalFileName, // Show original name to users
         fileId,
         JSON.stringify({
           adminid: adminid || '2',
           icon: "upload",
           file_type: fileType,
+          stored_name: storedFileName,
+          original_name: originalFileName
         }),
       ]
     );
@@ -145,7 +153,7 @@ router.post("/upload", upload.single("file"), async (req, res) => {
     // LOG THE UPLOAD ACTIVITY
     await logFileUpload(
       adminid || '2',
-      originalFileName,
+      originalFileName, // Show original name in logs
       fileType,
       fileSize,
       fileId
@@ -154,13 +162,218 @@ router.post("/upload", upload.single("file"), async (req, res) => {
     res.status(200).json({
       success: true,
       message: "File uploaded successfully",
-      file: result.rows[0],
+      file: {
+        ...result.rows[0],
+        displayName: originalFileName, // Add display name for frontend
+        storedName: storedFileName
+      },
       id: fileId
     });
 
   } catch (error) {
     console.error("Error uploading file:", error);
     res.status(500).json({ error: "File upload failed" });
+  }
+});
+
+
+// UPDATE/REPLACE FILE 
+router.put("/files/update/:id", upload.single("file"), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { adminId } = req.body;
+    const newFile = req.file;
+
+    if (!newFile) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    if (!id) {
+      return res.status(400).json({ error: "File ID is required" });
+    }
+
+    // Get the old file info from database
+    const oldFileResult = await pool.query(
+      "SELECT file_name, file_path, file_type, file_size FROM file_repository_files WHERE id = $1",
+      [id]
+    );
+
+    if (oldFileResult.rows.length === 0) {
+      return res.status(404).json({ error: "File not found" });
+    }
+
+    const oldFile = oldFileResult.rows[0];
+    
+    // ✅ FIXED: Extract the actual stored filename from file_path
+    // file_path format: "/uploads/fileRepository/1769426274995-EnroleesData.xlsx"
+    const oldStoredFileName = oldFile.file_path.split('/').pop();
+    const oldFilePath = path.join(__dirname, "../public/uploads/fileRepository", oldStoredFileName);
+
+    console.log(`🗑️ Attempting to delete old file: ${oldFilePath}`);
+
+    // Delete the old physical file if it exists
+    if (fs.existsSync(oldFilePath)) {
+      fs.unlinkSync(oldFilePath);
+      console.log(`✅ Deleted old file: ${oldStoredFileName}`);
+    } else {
+      console.log(`⚠️ Old file not found at: ${oldFilePath}`);
+      console.log(`📋 Old file_name from DB: ${oldFile.file_name}`);
+      console.log(`📋 Old file_path from DB: ${oldFile.file_path}`);
+      console.log(`📋 Extracted stored filename: ${oldStoredFileName}`);
+    }
+
+    // Get new file info
+    const storedFileName = newFile.filename; // includes timestamp: "1769426274995-EnroleesData.xlsx"
+    const originalFileName = newFile.originalname; // original name: "EnroleesData.xlsx"
+    const fileType = newFile.mimetype;
+    const fileSize = newFile.size;
+    const filePath = `/uploads/fileRepository/${storedFileName}`;
+
+    console.log(`✅ New file stored as: ${storedFileName}`);
+    console.log(`📝 Original filename: ${originalFileName}`);
+
+    // ✅ FIXED: Check if updated_at column exists, if not, don't include it
+    let updateQuery;
+    let queryParams;
+    
+    try {
+      // Try to update with updated_at column
+      updateQuery = `UPDATE file_repository_files 
+         SET file_name = $1, 
+             file_path = $2, 
+             file_type = $3, 
+             file_size = $4,
+             updated_at = NOW()
+         WHERE id = $5
+         RETURNING *`;
+      queryParams = [storedFileName, filePath, fileType, fileSize, id];
+      
+      const updateResult = await pool.query(updateQuery, queryParams);
+
+      // Log the update event
+      await pool.query(
+        `INSERT INTO dashboard_events (event_type, title, details, file_id, meta)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [
+          "file_updated",
+          "Analytics file updated",
+          `File replaced: ${originalFileName}`,
+          id,
+          JSON.stringify({
+            adminid: adminId || '2',
+            icon: "sync",
+            old_file: originalFileName,
+            new_file: originalFileName,
+            old_stored_name: oldStoredFileName,
+            new_stored_name: storedFileName,
+            old_size: oldFile.file_size,
+            new_size: fileSize
+          })
+        ]
+      );
+
+      // Log activity
+      await pool.query(
+        `INSERT INTO activity_logs (type, message, adminid, timestamp, details)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [
+          'update',
+          `Updated analytics file: ${originalFileName}`,
+          adminId || '2',
+          new Date().toISOString(),
+          JSON.stringify({
+            fileId: id,
+            oldFileName: originalFileName,
+            newFileName: originalFileName,
+            oldStoredName: oldStoredFileName,
+            newStoredName: storedFileName,
+            action: 'file_updated'
+          })
+        ]
+      );
+
+      res.status(200).json({
+        success: true,
+        message: "File updated successfully",
+        file: updateResult.rows[0],
+        note: "AI interpretation preserved. Regenerate if needed for updated data."
+      });
+
+    } catch (updateError) {
+      // If updated_at column doesn't exist, fallback to update without it
+      if (updateError.code === '42703') {
+        console.log("⚠️ updated_at column doesn't exist, updating without it");
+        
+        updateQuery = `UPDATE file_repository_files 
+           SET file_name = $1, 
+               file_path = $2, 
+               file_type = $3, 
+               file_size = $4
+           WHERE id = $5
+           RETURNING *`;
+        queryParams = [storedFileName, filePath, fileType, fileSize, id];
+        
+        const updateResult = await pool.query(updateQuery, queryParams);
+
+        // Log the update event
+        await pool.query(
+          `INSERT INTO dashboard_events (event_type, title, details, file_id, meta)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [
+            "file_updated",
+            "Analytics file updated",
+            `File replaced: ${originalFileName}`,
+            id,
+            JSON.stringify({
+              adminid: adminId || '2',
+              icon: "sync",
+              old_file: originalFileName,
+              new_file: originalFileName,
+              old_stored_name: oldStoredFileName,
+              new_stored_name: storedFileName,
+              old_size: oldFile.file_size,
+              new_size: fileSize
+            })
+          ]
+        );
+
+        // Log activity
+        await pool.query(
+          `INSERT INTO activity_logs (type, message, adminid, timestamp, details)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [
+            'update',
+            `Updated analytics file: ${originalFileName}`,
+            adminId || '2',
+            new Date().toISOString(),
+            JSON.stringify({
+              fileId: id,
+              oldFileName: originalFileName,
+              newFileName: originalFileName,
+              oldStoredName: oldStoredFileName,
+              newStoredName: storedFileName,
+              action: 'file_updated'
+            })
+          ]
+        );
+
+        res.status(200).json({
+          success: true,
+          message: "File updated successfully",
+          file: updateResult.rows[0],
+          note: "AI interpretation preserved. Regenerate if needed for updated data."
+        });
+      } else {
+        throw updateError;
+      }
+    }
+
+  } catch (error) {
+    console.error("Error updating file:", error);
+    res.status(500).json({ 
+      error: "File update failed", 
+      details: error.message 
+    });
   }
 });
 
