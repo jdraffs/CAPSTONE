@@ -22,7 +22,7 @@
   background: white;
   width: 100%;
   max-width: 900px;
-  height: 90vh; /* Fixed height */
+  height: 90vh;
   max-height: 900px;
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
@@ -50,7 +50,7 @@
   justify-content: space-between;
   align-items: center;
   background: #fafafa;
-  flex-shrink: 0; /* Don't shrink */
+  flex-shrink: 0;
 }
 
 .post-modal-header h2 {
@@ -84,14 +84,13 @@
 .post-modal-body {
   flex: 1;
   overflow-y: auto;
-  overflow-x: hidden; /* ✅ FIX */
+  overflow-x: hidden;
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 15px;
 }
 
-/* Custom scrollbar */
 .post-modal-body::-webkit-scrollbar {
   width: 8px;
 }
@@ -439,7 +438,7 @@
   justify-content: flex-end;
   gap: 12px;
   background: #fafafa;
-  flex-shrink: 0; /* Don't shrink */
+  flex-shrink: 0;
 }
 
 .btn-cancel,
@@ -482,22 +481,22 @@
 }
 
 /* ========================================
-   FLOATING POST BUTTON
+   FLOATING POST BUTTON (Consistent positioning)
    ======================================== */
 
 .post-btn {
   position: fixed;
-  margin-left: 10px;
   bottom: 32px;
-  width: 60px;
-  height: 60px;
+  right: 52px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
   background: #e64343;
   color: white;
   border: none;
   font-size: 24px;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(26, 137, 23, 0.4);
+  box-shadow: 0 4px 16px rgba(230, 67, 67, 0.4);
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
@@ -507,7 +506,39 @@
 
 .post-btn:hover {
   transform: scale(1.1);
-  box-shadow: 0 6px 24px rgba(26, 137, 23, 0.5);
+  box-shadow: 0 6px 24px rgba(230, 67, 67, 0.5);
+  background: #d93636;
+}
+
+/* ========================================
+   TRASH BUTTON (Consistent positioning)
+   ======================================== */
+
+.trash-btn {
+  position: fixed;
+  bottom: 110px;
+  right: 52px;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #6c757d;
+  color: white;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  margin-bottom: 20px;
+}
+
+.trash-btn:hover {
+  transform: scale(1.1);
+  background: #5a6268;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
 }
 
 /* ========================================
@@ -543,11 +574,13 @@
     font-size: 16px;
   }
 
-  .post-btn {
-    bottom: 20px;
+  .post-btn,
+  .trash-btn {
     right: 20px;
-    width: 56px;
-    height: 56px;
+  }
+
+  .trash-btn {
+    bottom: 100px;
   }
 }
 
@@ -1052,13 +1085,13 @@
   line-height: 1.58;
   font-family: 'Inter', 'Georgia', serif;
   color: #242424;
-  white-space: pre-wrap; /* Preserve whitespace and line breaks */
-  word-wrap: break-word; /* Prevent overflow */
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .article-full-body p {
   margin-bottom: 1.5em;
-  white-space: pre-wrap; /* Preserve formatting in paragraphs */
+  white-space: pre-wrap;
 }
 
 .article-full-body h1,
@@ -1068,7 +1101,7 @@
   font-weight: 700;
   margin-top: 1.5em;
   margin-bottom: 0.5em;
-  white-space: pre-wrap; /* Preserve formatting in headings */
+  white-space: pre-wrap;
 }
 
 .article-full-body h1 { font-size: 34px; }
@@ -1078,7 +1111,6 @@
 .article-full-body strong { font-weight: 700; }
 .article-full-body em { font-style: italic; }
 
-/* Preserve formatting for lists and other elements */
 .article-full-body ul,
 .article-full-body ol {
   margin-bottom: 1.5em;
@@ -1099,7 +1131,6 @@
   white-space: pre-wrap;
 }
 
-/* Update dropdown to remove view button styling */
 .post-menu-dropdown .post-edit {
   border-bottom: 1px solid #f0f0f0;
 }
@@ -1114,7 +1145,6 @@
   font-size: 16px;
 }
 
-/* Make post cards clickable */
 .researchextension-post {
   cursor: pointer;
   transition: all 0.3s ease;
@@ -1125,7 +1155,6 @@
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
 }
 
-/* Responsive Design for Article View */
 @media (max-width: 768px) {
   .article-view-modal-content {
     margin: 20px;
@@ -1144,31 +1173,6 @@
     padding: 24px;
     font-size: 18px;
   }
-}
-.trash-btn {
-  position: fixed;
-  bottom: 110px; /* Position above the post button */
-  margin-left: 10px;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: #6c757d;
-  color: white;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
-}
-
-.trash-btn:hover {
-  transform: scale(1.1);
-  background: #5a6268;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
 }
 
 /* Trash Modal */

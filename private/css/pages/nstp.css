@@ -8,6 +8,219 @@
   color: #822020;
 }
 
+/* ========================================
+   POST MODAL STYLES
+   ======================================== */
+
+.post-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.post-modal-content {
+  background: #fafafa;;
+  width: 100%;
+  max-width: 900px;
+  max-height: 600px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  animation: modalFadeIn 0.3s ease;
+  overflow: hidden;
+  padding: 10px 30px;
+  overflow: auto;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.post-modal-content h2 {
+  padding: 20px 30px;
+  margin: 0;
+  border-bottom: 2px solid #e8e8e8;
+  font-size: 2rem;
+  font-weight: 600;
+  color: #292929;
+  background: #fafafa;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.post-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.post-modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.post-modal-body::-webkit-scrollbar-track {
+  background: #f5f5f5;
+}
+
+.post-modal-body::-webkit-scrollbar-thumb {
+  background: #c4c4c4;
+  border-radius: 4px;
+}
+
+.post-modal-actions {
+  padding: 16px 30px;
+  border-top: 2px solid #e8e8e8;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  background: #fafafa;
+  flex-shrink: 0;
+}
+
+.post-title {
+  padding: 12px;
+  margin-top: 10px;
+  border: 2px solid #e8e8e8;
+  border-radius: 8px;
+  outline: none;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  transition: border-color 0.2s ease;
+}
+
+.post-title:focus {
+  border-color: #822020;
+}
+
+.post-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 8px;
+  background: #fafafa;
+  flex-wrap: wrap;
+}
+
+.post-toolbar button {
+  background: white;
+  border: 1px solid #e8e8e8;
+  padding: 6px 10px;
+  cursor: pointer;
+  color: #6b6b6b;
+  font-size: 14px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.post-toolbar button:hover {
+  background: #e8e8e8;
+  color: #292929;
+}
+
+.post-toolbar select {
+  padding: 6px 10px;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  background: white;
+  color: #292929;
+  font-size: 14px;
+  cursor: pointer;
+  outline: none;
+  font-family: 'Inter', sans-serif;
+}
+
+.post-editor {
+  min-height: 200px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 16px;
+  font-size: 15px;
+  line-height: 1.6;
+  font-family: 'Inter', sans-serif;
+  color: #242424;
+  outline: none;
+  border: 2px solid #e8e8e8;
+  border-radius: 8px;
+  background: white;
+  transition: border-color 0.2s ease;
+}
+
+.post-editor:focus {
+  border-color: #822020;
+}
+
+.post-editor::-webkit-scrollbar {
+  width: 6px;
+}
+
+.post-editor::-webkit-scrollbar-track {
+  background: #f5f5f5;
+}
+
+.post-editor::-webkit-scrollbar-thumb {
+  background: #c4c4c4;
+  border-radius: 3px;
+}
+
+.post-editor:empty:before {
+  content: attr(placeholder);
+  color: #b3b3b3;
+  cursor: text;
+}
+
+.post-modal-actions button {
+  padding: 10px 24px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+#cancelPost {
+  background: white;
+  color: #292929;
+  border: 2px solid #e8e8e8;
+}
+
+#cancelPost:hover {
+  background: #f5f5f5;
+  border-color: #c4c4c4;
+}
+
+#submitPost {
+  background: #822020;
+  color: white;
+}
+
+#submitPost:hover {
+  background: #6a1a1a;
+  box-shadow: 0 4px 12px rgba(130, 32, 32, 0.3);
+}
+
 /* POST ITEM */
 .nstp-post {
   background: #ffffff;
@@ -168,22 +381,24 @@
     from { opacity: 0; transform: translateY(-5px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
 /* ========================================
-   FLOATING POST BUTTON
+   FLOATING POST BUTTON (Consistent positioning)
    ======================================== */
 
 .post-btn {
   position: fixed;
   bottom: 32px;
-  width: 60px;
-  height: 60px;
+  right: 52px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
   background: #e64343;
   color: white;
   border: none;
-  font-size: 30px;
+  font-size: 24px;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(26, 137, 23, 0.4);
+  box-shadow: 0 4px 16px rgba(230, 67, 67, 0.4);
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
@@ -193,7 +408,57 @@
 
 .post-btn:hover {
   transform: scale(1.1);
-  box-shadow: 0 6px 24px rgba(26, 137, 23, 0.5);
+  box-shadow: 0 6px 24px rgba(230, 67, 67, 0.5);
+  background: #d93636;
+}
+
+/* ========================================
+   TRASH BUTTON (Consistent positioning)
+   ======================================== */
+
+.trash-btn {
+  position: fixed;
+  bottom: 110px;
+  right: 52px;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #6c757d;
+  color: white;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  margin-bottom: 20px;
+}
+
+.trash-btn:hover {
+  transform: scale(1.1);
+  background: #5a6268;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* ========================================
+   POST FEED & CONTAINER
+   ======================================== */
+
+.post-container {
+  width: 100%;
+  min-height: calc(100vh - 100px);
+  background: #fafafa;
+  padding: 40px 20px;
+}
+
+.post-feed {
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
 }
 
 /* ========================================
@@ -455,42 +720,6 @@
   color: #1b4b75;
 }
 
-@media (max-width: 768px) {
-    .post-file-item.image {
-        width: 150px;
-        height: 150px;
-    }
-    
-    .post-file-item.document {
-        padding: 10px 12px;
-    }
-}
-.trash-btn {
-  position: fixed;
-  bottom: 110px; /* Position above the post button */
-  margin-left: 10px;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: #6c757d;
-  color: white;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
-}
-
-.trash-btn:hover {
-  transform: scale(1.1);
-  background: #5a6268;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
-}
-
 /* Trash Modal */
 .trash-modal {
   position: fixed;
@@ -714,30 +943,54 @@
   font-size: 14px;
 }
 
+/* Responsive adjustments */
 @media (max-width: 768px) {
-  .trash-modal-content {
-    width: 95%;
-    max-height: 95vh;
-  }
-  
-  .trash-actions {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-  
-  .trash-item {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .trash-item-actions {
-    width: 100%;
-    margin-top: 12px;
-  }
-  
-  .restore-btn,
-  .delete-permanent-btn {
-    flex: 1;
-  }
+    .post-file-item.image {
+        width: 150px;
+        height: 150px;
+    }
+    
+    .post-file-item.document {
+        padding: 10px 12px;
+    }
+    
+    .post-modal-content {
+      width: 95%;
+      max-height: 95vh;
+    }
+    
+    .post-btn,
+    .trash-btn {
+      right: 20px;
+    }
+    
+    .trash-btn {
+      bottom: 100px;
+    }
+    
+    .trash-modal-content {
+      width: 95%;
+      max-height: 95vh;
+    }
+    
+    .trash-actions {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    
+    .trash-item {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .trash-item-actions {
+      width: 100%;
+      margin-top: 12px;
+    }
+    
+    .restore-btn,
+    .delete-permanent-btn {
+      flex: 1;
+    }
 }
