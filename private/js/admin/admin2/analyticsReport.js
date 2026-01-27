@@ -400,6 +400,29 @@ document.addEventListener("DOMContentLoaded", async () => {
         : '';
 
       card.innerHTML = `
+        ${!report.isTrashed ? `
+          <div class="action-menu-container">
+            <button class="menu-toggle-btn" title="More options">
+              <i class="bi bi-three-dots-vertical"></i>
+            </button>
+            <div class="action-menu">
+              <button class="action-menu-item update-file-btn" data-file-id="${report.file_id}" data-title="${report.title}" data-report-id="${report.id}">
+                <i class="bi bi-arrow-repeat"></i>
+                <span>Update File</span>
+              </button>
+              <button class="action-menu-item refresh-data" data-id="${report.id}" data-filename="${report.actualFilename || report.title}">
+                <i class="fas fa-sync-alt"></i>
+                <span>Refresh Data</span>
+              </button>
+              <div class="menu-divider"></div>
+              <button class="action-menu-item trash-btn" data-file-id="${report.file_id}" data-title="${report.title}">
+                <i class="bi bi-trash"></i>
+                <span>Move to Trash</span>
+              </button>
+            </div>
+          </div>
+        ` : ''}
+        
         <div class="report-header">
           <div>
             <h3>${report.title}</h3>
@@ -409,7 +432,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             ${!report.isTrashed ? interpretationStatus : ''}
           </div>
         </div>
+        
         ${!report.isTrashed ? columnSelector : ''}
+        
         ${!report.isTrashed ? `
         <div class="chart-selector">
           <label for="chartType-${report.id}">Chart Type:</label>
@@ -422,14 +447,17 @@ document.addEventListener("DOMContentLoaded", async () => {
           </select>
         </div>
         ` : ''}
+        
         <div class="chart-container">
           <img src="${report.chartImage}" alt="Chart" class="chart-preview-img" />
         </div>
+        
         <div class="report-meta">
           <span><i class="bi bi-calendar"></i> ${report.date}</span>
           <span><i class="bi bi-database"></i> ${report.recordsProcessed} records</span>
           ${report.summary?.outliers_detected ? `<span><i class="bi bi-exclamation-triangle"></i> ${report.summary.outliers_detected} outliers</span>` : ''}
         </div>
+        
         <div class="quick-stats">
           <div class="stat-mini">
             <span class="stat-label">Mean</span>
@@ -444,6 +472,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             <span class="stat-value">${report.statistics.std.toFixed(2)}</span>
           </div>
         </div>
+        
         <div class="report-actions">
           ${report.isTrashed ? `
             <div class="trash-actions">
@@ -454,7 +483,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <i class="bi bi-trash3"></i> Delete Permanently
               </button>
             </div>
-            ` : `
+          ` : `
             <div class="left-actions">
               <button class="view-btn" data-id="${report.id}">
                 <i class="bi bi-eye"></i> View Report
@@ -467,30 +496,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 ${report.hasInterpretation ? 'data-has-interpretation="true"' : ''}
               >
                 <i class="bi bi-robot"></i>
-                ${report.hasInterpretation ? 'Regenerate Analysis' : 'Generate Analysis'}
+                ${report.hasInterpretation ? 'Regenerate AI Analysis' : 'Generate AI Analysis'}
               </button>
-            </div>
-            <div class="right-actions">
-              <div class="action-menu-container">
-                <button class="menu-toggle-btn" title="More options">
-                  <i class="bi bi-three-dots-vertical"></i>
-                </button>
-                <div class="action-menu">
-                  <button class="action-menu-item update-file-btn" data-file-id="${report.file_id}" data-title="${report.title}" data-report-id="${report.id}">
-                    <i class="bi bi-arrow-repeat"></i>
-                    <span>Update File</span>
-                  </button>
-                  <button class="action-menu-item refresh-data" data-id="${report.id}" data-filename="${report.actualFilename || report.title}">
-                    <i class="fas fa-sync-alt"></i>
-                    <span>Refresh Data</span>
-                  </button>
-                  <div class="menu-divider"></div>
-                  <button class="action-menu-item trash-btn" data-file-id="${report.file_id}" data-title="${report.title}">
-                    <i class="bi bi-trash"></i>
-                    <span>Move to Trash</span>
-                  </button>
-                </div>
-              </div>
             </div>
           `}
         </div>
