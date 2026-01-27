@@ -1,4 +1,6 @@
 // adminActivityLogs.js - Admin Activity Logs Dashboard for SuperAdmin
+// UPDATED: Removed mock data fallback, now uses actual API data only
+
 document.addEventListener('DOMContentLoaded', async () => {
   const API_URL = 'http://localhost:3000/api';
   
@@ -38,8 +40,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function fetchActivityLogs() {
     try {
+      console.log('🔄 Fetching all activity logs from API...');
+      
       const response = await fetch(`${API_URL}/superadmin-actions?limit=500`);
-      if (!response.ok) throw new Error('Failed to fetch logs');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
       
       const data = await response.json();
       allLogs = data.actions || [];
@@ -47,23 +54,32 @@ document.addEventListener('DOMContentLoaded', async () => {
       
       console.log(`✅ Loaded ${allLogs.length} activity logs`);
     } catch (error) {
-      console.error('Error fetching logs:', error);
-      allLogs = getMockLogs();
-      filteredLogs = [...allLogs];
+      console.error('❌ Error fetching logs:', error);
+      showToast('Failed to load logs from server', 'error');
+      
+      // Don't use mock data - show empty state
+      allLogs = [];
+      filteredLogs = [];
     }
   }
 
   async function fetchAdmins() {
     try {
+      console.log('🔄 Fetching admin accounts...');
+      
       const response = await fetch(`${API_URL}/admin-accounts`);
-      if (!response.ok) throw new Error('Failed to fetch admins');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
       
       const data = await response.json();
       admins = data.admins || [];
       
       console.log(`✅ Loaded ${admins.length} admins`);
     } catch (error) {
-      console.error('Error fetching admins:', error);
+      console.error('❌ Error fetching admins:', error);
+      showToast('Failed to load admin accounts', 'error');
       admins = [];
     }
   }
@@ -146,7 +162,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div class="empty-state">
           <i class="fas fa-inbox"></i>
           <h3>No Activity Logs</h3>
-          <p>No logs match the current filters</p>
+          <p>${allLogs.length === 0 ? 'No activity logs recorded yet' : 'No logs match the current filters'}</p>
         </div>
       `;
       return;
@@ -224,7 +240,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <tr>
           <td colspan="6" class="empty-table">
             <i class="fas fa-inbox"></i>
-            <p>No activity logs found</p>
+            <p>${allLogs.length === 0 ? 'No activity logs recorded yet' : 'No logs match the current filters'}</p>
           </td>
         </tr>
       `;
@@ -261,7 +277,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     ).slice(0, 10);
 
     const criticalCount = document.getElementById('criticalCount');
-    criticalCount.textContent = criticalActions.length;
+    if (criticalCount) {
+      criticalCount.textContent = criticalActions.length;
+    }
 
     if (criticalActions.length === 0) {
       criticalList.innerHTML = `
@@ -307,7 +325,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       .slice(0, 10);
 
     if (sortedAdmins.length === 0) {
-      container.innerHTML = '<p style="text-align: center; color: #a0aec0;">No data available</p>';
+      container.innerHTML = '<p style="text-align: center; color: #a0aec0; padding: 20px;">No data available</p>';
       return;
     }
 
@@ -349,7 +367,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       .sort((a, b) => b[1] - a[1]);
 
     if (sortedTypes.length === 0) {
-      container.innerHTML = '<p style="text-align: center; color: #a0aec0;">No data available</p>';
+      container.innerHTML = '<p style="text-align: center; color: #a0aec0; padding: 20px;">No data available</p>';
       return;
     }
 
@@ -485,6 +503,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       try {
         await fetchActivityLogs();
+        await fetchAdmins();
+        populateAdminFilter();
         applyFilters();
         showToast('Logs refreshed successfully', 'success');
       } catch (error) {
@@ -668,35 +688,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, 4000);
   }
 
-  function getMockLogs() {
-    return [
-      {
-        id: 1,
-        adminid: 'adminBackup',
-        action_type: 'User Created',
-        target_user: 'testUser1',
-        details: 'Created new admin account with Data Manager role',
-        ip_address: '192.168.1.100',
-        created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: 2,
-        adminid: 'adminSalao',
-        action_type: 'Role Updated',
-        target_user: 'adminBackup',
-        details: 'Assigned Backup Campus System Administrator role',
-        ip_address: '192.168.1.1',
-        created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: 3,
-        adminid: 'adminBackup',
-        action_type: 'Password Reset',
-        target_user: 'adminEnierga',
-        details: 'Generated temporary password for user',
-        ip_address: '192.168.1.100',
-        created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-      }
-    ];
-  }
+  console.log('✅ SuperAdmin Activity Logs Dashboard initialized');
 });

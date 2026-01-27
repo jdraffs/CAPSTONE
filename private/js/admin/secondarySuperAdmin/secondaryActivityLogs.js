@@ -1,4 +1,5 @@
-// actionLogs.js - Secondary SuperAdmin Action Logs (PERSONAL HISTORY)
+// secondaryActivityLogs.js - Action Logs for Backup Admin (PERSONAL HISTORY)
+// Shows ONLY the backup admin's own actions from the actual API
 
 document.addEventListener('DOMContentLoaded', async () => {
   const API_URL = 'http://localhost:3000/api';
@@ -9,6 +10,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   let currentView = 'timeline';
   let currentPage = 1;
   const logsPerPage = 20;
+
+  // Set admin name in sidebar
+  const adminNameEl = document.getElementById('currentAdminName');
+  if (adminNameEl && currentAdminId) {
+    adminNameEl.textContent = currentAdminId;
+  }
 
   // Initialize
   await initializeActionLogs();
@@ -21,6 +28,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       renderActionBreakdown();
       renderLogs();
       attachEventListeners();
+      
+      console.log('✅ Action Logs initialized for:', currentAdminId);
     } catch (error) {
       console.error('Error initializing action logs:', error);
       showToast('Failed to load action logs', 'error');
@@ -31,19 +40,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   async function fetchActionLogs() {
     try {
-      const response = await fetch(`${API_URL}/superadmin-actions?adminid=${currentAdminId}`);
-      if (!response.ok) throw new Error('Failed to fetch logs');
+      console.log('🔄 Fetching action logs for:', currentAdminId);
+      
+      // Fetch logs filtered by current admin ID
+      const response = await fetch(`${API_URL}/superadmin-actions?adminid=${currentAdminId}&limit=500`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
       
       const data = await response.json();
       allLogs = data.actions || [];
       filteredLogs = [...allLogs];
       
-      console.log('✅ Action logs loaded:', allLogs.length);
+      console.log(`✅ Loaded ${allLogs.length} action logs for ${currentAdminId}`);
+      
     } catch (error) {
-      console.error('Error fetching logs:', error);
-      // Use mock data if API fails
-      allLogs = getMockLogs();
-      filteredLogs = [...allLogs];
+      console.error('❌ Error fetching logs:', error);
+      showToast('Failed to load logs from server', 'error');
+      
+      // Don't use mock data - show empty state
+      allLogs = [];
+      filteredLogs = [];
     }
   }
 
@@ -55,20 +73,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Count today's actions
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const todayCount = allLogs.filter(log => 
-      new Date(log.timestamp) >= today
-    ).length;
+    const todayCount = allLogs.filter(log => {
+      const logDate = new Date(log.created_at || log.timestamp);
+      return logDate >= today;
+    }).length;
     
     // Count this week's actions
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
-    const weekCount = allLogs.filter(log => 
-      new Date(log.timestamp) >= weekAgo
-    ).length;
+    const weekCount = allLogs.filter(log => {
+      const logDate = new Date(log.created_at || log.timestamp);
+      return logDate >= weekAgo;
+    }).length;
     
     // Get last action time
     const lastActionTime = allLogs.length > 0 
-      ? formatTimeAgo(new Date(allLogs[0].timestamp))
+      ? formatTimeAgo(new Date(allLogs[0].created_at || allLogs[0].timestamp))
       : 'No activity';
     
     // Update UI
@@ -90,6 +110,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     const total = allLogs.length || 1;
     const container = document.getElementById('actionBreakdown');
+    
+    if (allLogs.length === 0) {
+      container.innerHTML = `
+        <div style="text-align: center; padding: 40px; color: #a0aec0;">
+          <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 15px; display: block;"></i>
+          <p>No actions recorded yet</p>
+        </div>
+      `;
+      return;
+    }
     
     // Get top 5 action types
     const sortedTypes = Object.entries(breakdown)
@@ -143,7 +173,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div class="empty-state">
           <i class="fas fa-inbox"></i>
           <h3>No Logs Found</h3>
-          <p>No activity logs match your current filters</p>
+          <p>${allLogs.length === 0 ? 'You haven\'t performed any actions yet' : 'No logs match your current filters'}</p>
         </div>
       `;
       return;
@@ -152,7 +182,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Group by date
     const groupedLogs = {};
     pageLogs.forEach(log => {
-      const date = new Date(log.timestamp).toDateString();
+      const date = new Date(log.created_at || log.timestamp).toDateString();
       if (!groupedLogs[date]) groupedLogs[date] = [];
       groupedLogs[date].push(log);
     });
@@ -171,6 +201,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   function renderTimelineItem(log) {
     const icon = getActionIcon(log.action_type);
     const color = getActionColor(log.action_type);
+    const timestamp = log.created_at || log.timestamp;
     
     return `
       <div class="timeline-item" onclick="viewLogDetails(${log.id})">
@@ -180,7 +211,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div class="timeline-content">
           <div class="timeline-header">
             <h4>${log.action_type}</h4>
-            <span class="timeline-time">${formatTime(log.timestamp)}</span>
+            <span class="timeline-time">${formatTime(timestamp)}</span>
           </div>
           <div class="timeline-body">
             ${log.target_user ? `
@@ -221,33 +252,36 @@ document.addEventListener('DOMContentLoaded', async () => {
         <tr>
           <td colspan="6" class="empty-cell">
             <i class="fas fa-inbox"></i>
-            <p>No logs found</p>
+            <p>${allLogs.length === 0 ? 'No actions recorded yet' : 'No logs found'}</p>
           </td>
         </tr>
       `;
       return;
     }
     
-    tbody.innerHTML = pageLogs.map(log => `
-      <tr onclick="viewLogDetails(${log.id})">
-        <td>${formatFullDateTime(log.timestamp)}</td>
-        <td>
-          <span class="action-type-badge" style="background: ${getActionColor(log.action_type)}20; color: ${getActionColor(log.action_type)}">
-            <i class="${getActionIcon(log.action_type)}"></i>
-            ${log.action_type}
-          </span>
-        </td>
-        <td>${log.target_user || '-'}</td>
-        <td class="details-cell">${log.details || 'No details'}</td>
-        <td>${log.ip_address || 'Unknown'}</td>
-        <td>
-          <span class="status-badge success">
-            <i class="fas fa-check-circle"></i>
-            Completed
-          </span>
-        </td>
-      </tr>
-    `).join('');
+    tbody.innerHTML = pageLogs.map(log => {
+      const timestamp = log.created_at || log.timestamp;
+      return `
+        <tr onclick="viewLogDetails(${log.id})">
+          <td>${formatFullDateTime(timestamp)}</td>
+          <td>
+            <span class="action-type-badge" style="background: ${getActionColor(log.action_type)}20; color: ${getActionColor(log.action_type)}">
+              <i class="${getActionIcon(log.action_type)}"></i>
+              ${log.action_type}
+            </span>
+          </td>
+          <td>${log.target_user || '-'}</td>
+          <td class="details-cell">${log.details || 'No details'}</td>
+          <td>${log.ip_address || 'Unknown'}</td>
+          <td>
+            <span class="status-badge success">
+              <i class="fas fa-check-circle"></i>
+              Completed
+            </span>
+          </td>
+        </tr>
+      `;
+    }).join('');
   }
 
   // ============ PAGINATION ============
@@ -328,6 +362,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const dateRange = document.getElementById('dateRangeFilter').value;
     
     filteredLogs = allLogs.filter(log => {
+      const timestamp = log.created_at || log.timestamp;
+      
       // Search filter
       const matchesSearch = !searchTerm || 
         (log.action_type && log.action_type.toLowerCase().includes(searchTerm)) ||
@@ -341,7 +377,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Date range filter
       let matchesDate = true;
       if (dateRange !== 'all') {
-        const logDate = new Date(log.timestamp);
+        const logDate = new Date(timestamp);
         const now = new Date();
         
         if (dateRange === 'today') {
@@ -381,6 +417,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderLogs();
   }
 
+  // Continue to Part 2...
   // ============ LOG DETAILS MODAL ============
   
   window.viewLogDetails = function(logId) {
@@ -390,6 +427,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const modalBody = document.getElementById('modalBody');
     const icon = getActionIcon(log.action_type);
     const color = getActionColor(log.action_type);
+    const timestamp = log.created_at || log.timestamp;
     
     modalBody.innerHTML = `
       <div class="log-details">
@@ -397,7 +435,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           <i class="${icon}" style="color: ${color}; font-size: 2rem;"></i>
           <div>
             <h3>${log.action_type}</h3>
-            <p>${formatFullDateTime(log.timestamp)}</p>
+            <p>${formatFullDateTime(timestamp)}</p>
           </div>
         </div>
         
@@ -410,7 +448,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
             <div class="detail-item">
               <label>Timestamp</label>
-              <p>${formatFullDateTime(log.timestamp)}</p>
+              <p>${formatFullDateTime(timestamp)}</p>
             </div>
             <div class="detail-item">
               <label>IP Address</label>
@@ -468,7 +506,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `action_logs_${currentAdminId}_${new Date().toISOString().split('T')[0]}.csv`;
+      a.download = `my_action_logs_${currentAdminId}_${new Date().toISOString().split('T')[0]}.csv`;
       a.click();
       window.URL.revokeObjectURL(url);
       
@@ -481,13 +519,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function convertToCSV(logs) {
     const headers = ['Timestamp', 'Action Type', 'Target User', 'Details', 'IP Address'];
-    const rows = logs.map(log => [
-      formatFullDateTime(log.timestamp),
-      log.action_type,
-      log.target_user || '',
-      log.details || '',
-      log.ip_address || ''
-    ]);
+    const rows = logs.map(log => {
+      const timestamp = log.created_at || log.timestamp;
+      return [
+        formatFullDateTime(timestamp),
+        log.action_type,
+        log.target_user || '',
+        log.details || '',
+        log.ip_address || ''
+      ];
+    });
     
     const csvContent = [
       headers.join(','),
@@ -496,11 +537,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     return csvContent;
   }
-
-  // Continue in next comment...
-  window.viewLogDetails = viewLogDetails;
-  window.changePage = changePage;
-  // actionLogs.js - PART 2: Event Listeners and Utility Functions
 
   // ============ EVENT LISTENERS ============
   
@@ -683,7 +719,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('timeline').innerHTML = `
         <div class="loading-state">
           <i class="fas fa-spinner fa-spin"></i>
-          <p>Loading logs...</p>
+          <h3>Loading Logs</h3>
+          <p>Fetching your activity history...</p>
         </div>
       `;
     } else {
@@ -726,70 +763,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, 4000);
   }
 
-  function getMockLogs() {
-    const now = new Date();
-    const actions = [
-      'User Created',
-      'User Updated',
-      'User Deleted',
-      'Password Reset',
-      'Role Created',
-      'Role Updated',
-      'Login',
-      'Logout'
-    ];
-    
-    const mockLogs = [];
-    
-    for (let i = 0; i < 50; i++) {
-      const daysAgo = Math.floor(Math.random() * 30);
-      const hoursAgo = Math.floor(Math.random() * 24);
-      const minutesAgo = Math.floor(Math.random() * 60);
-      
-      const timestamp = new Date(now);
-      timestamp.setDate(timestamp.getDate() - daysAgo);
-      timestamp.setHours(timestamp.getHours() - hoursAgo);
-      timestamp.setMinutes(timestamp.getMinutes() - minutesAgo);
-      
-      const actionType = actions[Math.floor(Math.random() * actions.length)];
-      
-      mockLogs.push({
-        id: i + 1,
-        adminid: currentAdminId,
-        action_type: actionType,
-        target_user: actionType.includes('User') || actionType.includes('Password') 
-          ? `user${Math.floor(Math.random() * 100)}` 
-          : actionType.includes('Role') 
-          ? `Role ${Math.floor(Math.random() * 10)}` 
-          : null,
-        details: getActionDetails(actionType),
-        ip_address: `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
-        timestamp: timestamp.toISOString()
-      });
-    }
-    
-    // Sort by timestamp descending
-    mockLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-    
-    return mockLogs;
-  }
-
-  function getActionDetails(actionType) {
-    const details = {
-      'User Created': 'Created new admin account with assigned role',
-      'User Updated': 'Updated user role and status',
-      'User Deleted': 'Removed admin account from system',
-      'Password Reset': 'Generated temporary password for account',
-      'Role Created': 'Created new role with permissions',
-      'Role Updated': 'Modified role permissions',
-      'Role Deleted': 'Removed role from system',
-      'Bulk Delete': 'Deleted multiple accounts',
-      'Login': 'Logged into the system',
-      'Logout': 'Logged out from the system'
-    };
-    
-    return details[actionType] || 'Performed administrative action';
-  }
-
-  console.log('✅ Action Logs initialized');
+  console.log('✅ Secondary Activity Logs initialized');
 });
