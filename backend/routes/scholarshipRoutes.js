@@ -1,4 +1,4 @@
-// scholarshipRoutes.js - Updated with new fields
+// scholarshipRoutes.js - FIXED VERSION with eligible_courses
 import express from 'express';
 import multer from 'multer';
 import pkg from 'pg';
@@ -50,7 +50,7 @@ const upload = multer({
   }
 });
 
-// CREATE scholarship
+// CREATE scholarship - FIXED
 router.post('/create', upload.array('files', 3), async (req, res) => {
   const client = await pool.connect();
   
@@ -59,22 +59,26 @@ router.post('/create', upload.array('files', 3), async (req, res) => {
 
     const { title, provider, amount, slots, open_date, deadline, status, 
             description, eligibility, benefits, contact_info, 
-            required_documents, application_process, external_links, adminid } = req.body;
+            required_documents, application_process, external_links, 
+            eligible_courses, adminid } = req.body;  // ← ADDED eligible_courses
 
+    // ← UPDATED QUERY - Added eligible_courses column
     const scholarshipQuery = `
       INSERT INTO scholarships 
       (title, provider, amount, slots, open_date, deadline, status, 
        description, eligibility, benefits, contact_info, 
-       required_documents, application_process, external_links, adminid)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+       required_documents, application_process, external_links, 
+       eligible_courses, adminid)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
       RETURNING *;
     `;
     
+    // ← UPDATED VALUES - Added eligible_courses value
     const values = [
       title, provider, amount, slots || null, open_date, deadline, status,
       description, eligibility, benefits, contact_info || null,
       required_documents || null, application_process || null, 
-      external_links || null, adminid
+      external_links || null, eligible_courses || 'All Programs', adminid
     ];
     
     const scholarshipResult = await client.query(scholarshipQuery, values);
@@ -176,7 +180,27 @@ router.get('/public', async (req, res) => {
   }
 });
 
-// UPDATE scholarship
+// UPDATE scholarship status only (for auto-updates)
+router.patch('/update-status/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    
+    const query = 'UPDATE scholarships SET status = $1 WHERE id = $2 RETURNING *';
+    const result = await pool.query(query, [status, id]);
+    
+    if (result.rows.length > 0) {
+      res.json({ success: true, scholarship: result.rows[0] });
+    } else {
+      res.status(404).json({ success: false, message: 'Scholarship not found' });
+    }
+  } catch (err) {
+    console.error('Error updating scholarship status:', err);
+    res.status(500).json({ success: false, message: 'Failed to update status' });
+  }
+});
+
+// UPDATE scholarship - FIXED
 router.put('/update/:id', upload.array('files', 3), async (req, res) => {
   const client = await pool.connect();
   
@@ -186,7 +210,8 @@ router.put('/update/:id', upload.array('files', 3), async (req, res) => {
     const { id } = req.params;
     const { title, provider, amount, slots, open_date, deadline, status,
             description, eligibility, benefits, contact_info,
-            required_documents, application_process, external_links, keepFiles } = req.body;
+            required_documents, application_process, external_links, 
+            eligible_courses, keepFiles } = req.body;
 
     // Parse keepFiles
     let filesToKeep = [];
@@ -199,23 +224,25 @@ router.put('/update/:id', upload.array('files', 3), async (req, res) => {
       }
     }
 
-    // Update scholarship details
+    // ← UPDATED QUERY - Added eligible_courses column
     const updateQuery = `
       UPDATE scholarships
       SET title = $1, provider = $2, amount = $3, slots = $4,
           open_date = $5, deadline = $6, status = $7,
           description = $8, eligibility = $9, benefits = $10,
           contact_info = $11, required_documents = $12,
-          application_process = $13, external_links = $14
-      WHERE id = $15
+          application_process = $13, external_links = $14,
+          eligible_courses = $15
+      WHERE id = $16
       RETURNING *;
     `;
     
+    // ← UPDATED VALUES - Added eligible_courses value
     const values = [
       title, provider, amount, slots || null, open_date, deadline, status,
       description, eligibility, benefits, contact_info || null,
       required_documents || null, application_process || null,
-      external_links || null, id
+      external_links || null, eligible_courses || 'All Programs', id
     ];
     
     const result = await client.query(updateQuery, values);
