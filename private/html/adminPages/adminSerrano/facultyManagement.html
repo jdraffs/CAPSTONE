@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Management - Academic Affairs</title>
+    <link rel="icon" type="image" href="/public/assets/images/PUPLogo.webp">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="/private/css/layout/alert-system.css">
+    <link rel="stylesheet" href="/private/css/pages/admin2.css">
+    <link rel="stylesheet" href="/private/css/pages/facultyManagement.css">
+    <link rel="stylesheet" href="/private/css/layout/dashboardsidebar.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- SIDEBAR -->
+    <section class="sidebar">
+        <div class="logo">
+            <img class="logoimage" src="/public/assets/images/PUPLogo.webp" alt="PUP Logo">
+            <div class="logotitlewrap">
+                <h2 class="logotitle logotitle1">PUP</h2>
+                <h2 class="logotitle">Parañaque</h2>
+            </div>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <nav class="sidebar-nav">
+            <div class="sidebar-scroll">
+                <div class="nav-section">
+                    <h3 class="nav-title">Main</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="adminSerrano.html">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <h3 class="nav-title">Faculty Management</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item active">
+                            <a class="nav-link" href="facultyManagement.html">
+                                <i class="fas fa-users"></i>
+                                <span>Faculty Management</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <h3 class="nav-title">Analytics & Reports</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="facultyAnalyticsReport.html">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Analytics & AI Insights</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-details">
+                        <span class="user-name">Admin Serrano</span>
+                        <span class="user-role">Academic Affairs</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </section>
+    
+    <!-- MAIN CONTENT -->
+    <main class="main">
+        <!-- TOP HEADER -->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <h1 class="page-title">Faculty Management</h1>
+            </div>
+            <div class="header-right">
+                <div class="notification-button">
+                    <a class="notif-link" href="#notifications">
+                        <i class="fa fa-bell" aria-hidden="true"></i>
+                    </a>
+                </div>
+                <div class="profile-button">
+                    <a class="profile-link">
+                        <i class="fa fa-user" aria-hidden="true"></i>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- TAB NAVIGATION -->
+        <div class="tab-navigation">
+            <button class="tab-btn active" data-tab="directory">
+                <i class="fas fa-list"></i> Faculty Directory
+            </button>
+            <button class="tab-btn" data-tab="add">
+                <i class="fas fa-user-plus"></i> Add Faculty
+            </button>
+            <button class="tab-btn" data-tab="deactivated">
+                <i class="fas fa-user-slash"></i> Deactivated Faculty
+            </button>
+        </div>
+
+        <!-- DASHBOARD CONTENT -->
+        <div class="dashboard-content">
+            
+            <!-- FACULTY DIRECTORY TAB -->
+            <div class="tab-content active" id="directory-tab">
+                <div class="faculty-header">
+                    <h2><i class="fas fa-users"></i> Faculty Directory</h2>
+                    <button class="btn-primary" id="switchToAddTab">
+                        <i class="fas fa-user-plus"></i> Add New Faculty
+                    </button>
+                </div>
+
+                <!-- Filters -->
+                <div class="faculty-filters">
+                    <div class="filter-group">
+                        <label>Search:</label>
+                        <input type="text" id="facultySearch" placeholder="Search by name...">
+                    </div>
+                    <div class="filter-group">
+                        <label>Program:</label>
+                        <select id="filterProgram">
+                            <option value="">All Programs</option>
+                            <option value="BSIT">BSIT</option>
+                            <option value="BSCpE">BSCpE</option>
+                            <option value="BSHM">BSHM</option>
+                            <option value="BSOA">BSOA</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Employment:</label>
+                        <select id="filterEmployment">
+                            <option value="">All Types</option>
+                            <option value="Regular">Regular</option>
+                            <option value="Part-Time">Part-Time</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Degree:</label>
+                        <select id="filterDegree">
+                            <option value="">All Degrees</option>
+                            <option value="Bachelor">Bachelor</option>
+                            <option value="Master">Master</option>
+                            <option value="Doctorate">Doctorate</option>
+                        </select>
+                    </div>
+                    <button class="btn-secondary" id="clearFilters">
+                        <i class="fas fa-redo"></i> Clear Filters
+                    </button>
+                </div>
+
+                <!-- Faculty Grid -->
+                <div class="faculty-grid" id="facultyGrid">
+                    <!-- Faculty cards will be dynamically inserted here -->
+                </div>
+            </div>
+
+            <!-- ADD FACULTY TAB -->
+            <div class="tab-content" id="add-tab">
+                <h2><i class="fas fa-user-plus"></i> Add New Faculty</h2>
+                <form id="addFacultyForm" class="faculty-form">
+                    
+                    <!-- Basic Information Section -->
+                    <div class="form-section">
+                        <h3 class="section-title"><i class="fas fa-user"></i> Basic Information</h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group full-width">
+                                <label>Faculty Image *</label>
+                                <div class="image-upload-container">
+                                    <input type="file" id="facultyImage" accept="image/*" required>
+                                    <div class="image-preview" id="imagePreview">
+                                        <i class="fas fa-user-circle"></i>
+                                        <p>Upload Photo</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Full Name *</label>
+                                <input type="text" id="facultyName" required placeholder="Enter full name">
+                            </div>
+                            <div class="form-group">
+                                <label>Birthdate *</label>
+                                <input type="date" id="facultyBirthdate" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Contact Number *</label>
+                                <input type="tel" id="facultyContact" required placeholder="+63-XXX-XXX-XXXX">
+                            </div>
+                            <div class="form-group">
+                                <label>Email Address *</label>
+                                <input type="email" id="facultyEmail" required placeholder="name@pup.edu.ph">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Employment Information Section -->
+                    <div class="form-section">
+                        <h3 class="section-title"><i class="fas fa-briefcase"></i> Employment Information</h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Program *</label>
+                                <select id="facultyProgram" required>
+                                    <option value="">Select Program</option>
+                                    <option value="BSIT">BSIT</option>
+                                    <option value="BSCpE">BSCpE</option>
+                                    <option value="BSHM">BSHM</option>
+                                    <option value="BSOA">BSOA</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Employment Type *</label>
+                                <select id="employmentType" required>
+                                    <option value="">Select Type</option>
+                                    <option value="Regular">Regular</option>
+                                    <option value="Part-Time">Part-Time</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Highest Degree *</label>
+                                <select id="highestDegree" required>
+                                    <option value="">Select Degree</option>
+                                    <option value="Bachelor">Bachelor</option>
+                                    <option value="Master">Master</option>
+                                    <option value="Doctorate">Doctorate (PhD)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Last PDS Update</label>
+                                <input type="date" id="lastPdsUpdate">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Educational Background Section -->
+                    <div class="form-section">
+                        <h3 class="section-title"><i class="fas fa-graduation-cap"></i> Educational Background</h3>
+                        
+                        <!-- Undergraduate -->
+                        <div class="education-subsection">
+                            <h4><i class="fas fa-certificate"></i> Undergraduate Degree</h4>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Degree Title *</label>
+                                    <input type="text" id="undergradTitle" placeholder="e.g., Bachelor of Science in IT" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>School/University *</label>
+                                    <input type="text" id="undergradSchool" placeholder="Name of institution" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Year Graduated *</label>
+                                    <input type="number" id="undergradYear" min="1950" max="2030" placeholder="YYYY" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Field of Study</label>
+                                    <input type="text" id="undergradField" placeholder="e.g., Information Technology">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Master's Degree -->
+                        <div class="education-subsection">
+                            <div class="subsection-header">
+                                <h4><i class="fas fa-user-graduate"></i> Master's Degree</h4>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="hasMasters">
+                                    <span>Faculty has Master's Degree</span>
+                                </label>
+                            </div>
+                            <div id="mastersSection" class="conditional-section" style="display: none;">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Degree Title</label>
+                                        <input type="text" id="mastersTitle" placeholder="e.g., Master of Science in IT">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>School/University</label>
+                                        <input type="text" id="mastersSchool" placeholder="Name of institution">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Year Graduated</label>
+                                        <input type="number" id="mastersYear" min="1950" max="2030" placeholder="YYYY">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Field of Study</label>
+                                        <input type="text" id="mastersField" placeholder="e.g., Educational Technology">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Doctorate Degree -->
+                        <div class="education-subsection">
+                            <div class="subsection-header">
+                                <h4><i class="fas fa-medal"></i> Doctorate Degree</h4>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="hasDoctorate">
+                                    <span>Faculty has Doctorate Degree</span>
+                                </label>
+                            </div>
+                            <div id="doctorateSection" class="conditional-section" style="display: none;">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Degree Title</label>
+                                        <input type="text" id="doctorateTitle" placeholder="e.g., Doctor of Philosophy in CS">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>School/University</label>
+                                        <input type="text" id="doctorateSchool" placeholder="Name of institution">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Year Graduated</label>
+                                        <input type="number" id="doctorateYear" min="1950" max="2030" placeholder="YYYY">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Field of Study</label>
+                                        <input type="text" id="doctorateField" placeholder="e.g., Computer Science">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Government Agencies / Certifications Section -->
+                    <div class="form-section">
+                        <h3 class="section-title"><i class="fas fa-id-badge"></i> Government Agencies & Certifications</h3>
+                        
+                        <div id="certificationsContainer">
+                            <!-- Certifications will be added dynamically -->
+                        </div>
+                        
+                        <button type="button" class="btn-secondary" id="addCertificationBtn">
+                            <i class="fas fa-plus"></i> Add Certification
+                        </button>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" id="cancelAddFaculty">Cancel</button>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i> Save Faculty
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- DEACTIVATED FACULTY TAB -->
+            <div class="tab-content" id="deactivated-tab">
+                <h2><i class="fas fa-user-slash"></i> Deactivated Faculty</h2>
+                <p class="info-text">Faculty members who have been deactivated are listed below. You can restore them to active status.</p>
+                
+                <div class="faculty-grid" id="deactivatedFacultyGrid">
+                    <!-- Deactivated faculty cards will be dynamically inserted here -->
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- EDIT FACULTY MODAL -->
+    <div id="editFacultyModal" class="modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit"></i> Edit Faculty Information</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editFacultyForm">
+                    <input type="hidden" id="editFacultyId">
+                    
+                    <!-- Same structure as add form but with edit- prefix for IDs -->
+                    <!-- Will be populated dynamically by JavaScript -->
+                    <div id="editFormContent">
+                        <!-- Content will be injected by JavaScript -->
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary modal-close">Cancel</button>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW FACULTY MODAL -->
+    <div id="viewFacultyModal" class="modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3><i class="fas fa-user"></i> Faculty Profile</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="viewFacultyContent">
+                    <!-- Content will be injected by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- SCRIPTS -->
+    <script src="/private/js/toast.js"></script>
+    <script src="/private/js/admin/adminSerrano/facultyManagement.js"></script>
+    <script src="/private/js/admin/profileFunction.js"></script>
+</body>
+</html>

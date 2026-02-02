@@ -1,4 +1,7 @@
 /* adminSerrano.css - Academic Affairs Manager Dashboard Styles */
+.main-content {
+  margin: 30px;
+}
 
 /* ============================================
    FACULTY MANAGEMENT SPECIFIC STYLES

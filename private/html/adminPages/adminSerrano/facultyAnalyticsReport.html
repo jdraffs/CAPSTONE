@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Analytics & AI Reports - Academic Affairs</title>
+    <link rel="icon" type="image" href="/public/assets/images/PUPLogo.webp">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="/private/css/layout/alert-system.css">
+    <link rel="stylesheet" href="/private/css/pages/admin2.css">
+    <link rel="stylesheet" href="/private/css/pages/facultyAnalyticsReport.css">
+    <link rel="stylesheet" href="/private/css/layout/dashboardsidebar.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- SIDEBAR -->
+    <section class="sidebar">
+        <div class="logo">
+            <img class="logoimage" src="/public/assets/images/PUPLogo.webp" alt="PUP Logo">
+            <div class="logotitlewrap">
+                <h2 class="logotitle logotitle1">PUP</h2>
+                <h2 class="logotitle">Parañaque</h2>
+            </div>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <nav class="sidebar-nav">
+            <div class="sidebar-scroll">
+                <div class="nav-section">
+                    <h3 class="nav-title">Main</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="adminSerrano.html">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <h3 class="nav-title">Faculty Management</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a class="nav-link" href="facultyManagement.html">
+                                <i class="fas fa-users"></i>
+                                <span>Faculty Management</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <h3 class="nav-title">Analytics & Reports</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item active">
+                            <a class="nav-link" href="facultyAnalyticsReport.html">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Analytics & AI Insights</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-details">
+                        <span class="user-name">Admin Serrano</span>
+                        <span class="user-role">Academic Affairs</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </section>
+    
+    <!-- MAIN CONTENT -->
+    <main class="main">
+        <!-- TOP HEADER -->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <h1 class="page-title">Analytics & AI Insights</h1>
+            </div>
+            <div class="header-right">
+                <div class="notification-button">
+                    <a class="notif-link" href="#notifications">
+                        <i class="fa fa-bell" aria-hidden="true"></i>
+                    </a>
+                </div>
+                <div class="profile-button">
+                    <a class="profile-link">
+                        <i class="fa fa-user" aria-hidden="true"></i>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- TAB NAVIGATION -->
+        <div class="tab-navigation">
+            <button class="tab-btn active" data-tab="analytics">
+                <i class="fas fa-chart-bar"></i> Faculty Analytics
+            </button>
+            <button class="tab-btn" data-tab="ai-report">
+                <i class="fas fa-robot"></i> AI Insights Report
+            </button>
+        </div>
+
+        <!-- DASHBOARD CONTENT -->
+        <div class="dashboard-content">
+            
+            <!-- ANALYTICS TAB -->
+            <div class="tab-content active" id="analytics-tab">
+                <h2><i class="fas fa-chart-bar"></i> Faculty Analytics</h2>
+                
+                <!-- Analytics Charts -->
+                <div class="analytics-grid">
+                    <div class="chart-card">
+                        <h3>Employment Distribution</h3>
+                        <canvas id="employmentChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Degree Distribution</h3>
+                        <canvas id="degreeChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Faculty by Program</h3>
+                        <canvas id="programChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Qualifications Overview</h3>
+                        <canvas id="qualificationsChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Age Distribution</h3>
+                        <canvas id="ageChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>PDS Update Status</h3>
+                        <canvas id="pdsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI REPORT TAB -->
+            <div class="tab-content" id="ai-report-tab">
+                <div class="report-header">
+                    <h2><i class="fas fa-robot"></i> AI Faculty Insights Report</h2>
+                    <button class="btn-primary" id="generateReportBtn">
+                        <i class="fas fa-sync-alt"></i> Regenerate Report
+                    </button>
+                </div>
+                
+                <div class="report-container" id="reportContainer">
+                    <div class="report-loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Click "Regenerate Report" to generate AI insights...</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- SCRIPTS -->
+    <script src="/private/js/toast.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/private/js/admin/adminSerrano/facultyAnalyticsReport.js"></script>
+    <script src="/private/js/admin/profileFunction.js"></script>
+</body>
+</html>
