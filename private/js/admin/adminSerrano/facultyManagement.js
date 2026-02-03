@@ -1,4 +1,4 @@
-// facultyManagement.js - FIXED VERSION with proper API integration
+// facultyManagement.js - COMPLETE VERSION with full profile view and view modes
 // Combined Directory, Add, and Deactivated Faculty Tabs
 
 // ============================================
@@ -13,7 +13,8 @@ const STATE = {
   certificationCount: 0,
   agencyCount: 0,
   nextCertId: 1,
-  nextAgencyId: 1
+  nextAgencyId: 1,
+  viewMode: 'grid' // 'grid' or 'list'
 };
 
 const API_BASE = 'http://localhost:3000/api';
@@ -25,35 +26,62 @@ const API_BASE = 'http://localhost:3000/api';
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('🎓 Faculty Management Page Loading...');
   
-  // Check authentication
   const adminid = localStorage.getItem('adminid');
   if (!adminid) {
     window.location.href = '/private/html/AdminLogin/login.html';
     return;
   }
   
-  // Initialize profile dropdown
   if (typeof initializeProfileDropdown === 'function') {
     initializeProfileDropdown();
   }
   
-  // Setup tabs
   initializeTabs();
-  
-  // Setup form listeners
   setupFormListeners();
-  
-  // Setup filter listeners
   setupFilterListeners();
+  setupViewModeToggle();
   
-  // Load faculty data from API
   await loadFacultyData();
-  
-  // Check for URL parameters (program filter)
   checkURLParameters();
   
   console.log('✅ Faculty Management initialized successfully');
 });
+
+// ============================================
+// VIEW MODE TOGGLE
+// ============================================
+
+function setupViewModeToggle() {
+  const viewModeButtons = document.querySelectorAll('.view-mode-btn');
+  
+  viewModeButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.dataset.mode;
+      setViewMode(mode);
+    });
+  });
+}
+
+function setViewMode(mode) {
+  STATE.viewMode = mode;
+  
+  // Update button states
+  document.querySelectorAll('.view-mode-btn').forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.dataset.mode === mode) {
+      btn.classList.add('active');
+    }
+  });
+  
+  // Update grid class
+  const grid = document.getElementById('facultyGrid');
+  if (grid) {
+    grid.className = mode === 'list' ? 'faculty-list' : 'faculty-grid';
+  }
+  
+  // Re-render
+  renderFacultyDirectory();
+}
 
 // ============================================
 // TAB NAVIGATION
@@ -103,7 +131,7 @@ function switchTab(tabName) {
 }
 
 // ============================================
-// FACULTY DATA MANAGEMENT - FIXED API CALLS
+// FACULTY DATA MANAGEMENT
 // ============================================
 
 async function loadFacultyData() {
@@ -125,7 +153,6 @@ async function loadFacultyData() {
     
     console.log(`✅ Loaded ${STATE.facultyData.length} faculty records from API`);
     
-    // Render the directory
     if (STATE.currentTab === 'directory') {
       renderFacultyDirectory();
     }
@@ -149,10 +176,6 @@ function getDeactivatedFaculty() {
 function getFacultyById(id) {
   return STATE.facultyData.find(f => f.id === id);
 }
-
-// ============================================
-// HELPER: BUILD FULL NAME
-// ============================================
 
 function buildFullName(firstName, middleInitial, lastName) {
   if (middleInitial && middleInitial.trim()) {
@@ -211,6 +234,9 @@ function renderFacultyDirectory() {
   const grid = document.getElementById('facultyGrid');
   if (!grid) return;
   
+  // Update grid class based on view mode
+  grid.className = STATE.viewMode === 'list' ? 'faculty-list' : 'faculty-grid';
+  
   if (STATE.filteredFaculty.length === 0) {
     grid.innerHTML = `
       <div class="empty-state">
@@ -234,6 +260,40 @@ function createFacultyCard(faculty) {
   const age = faculty.birthdate ? calculateAge(faculty.birthdate) : 'N/A';
   const fullName = faculty.full_name || buildFullName(faculty.first_name, faculty.middle_initial, faculty.last_name);
   
+  if (STATE.viewMode === 'list') {
+    return `
+      <div class="faculty-card-list" data-id="${faculty.id}">
+        <div class="faculty-list-image">
+          <img src="${imageSrc}" alt="${fullName}" onerror="this.src='/public/assets/images/default-avatar.png'">
+        </div>
+        <div class="faculty-list-info">
+          <h3 class="faculty-name">${fullName}</h3>
+          <div class="faculty-badges">
+            <span class="faculty-badge badge-program">${faculty.program}</span>
+            <span class="faculty-badge badge-employment">${faculty.employment_type}</span>
+            <span class="faculty-badge badge-degree">${faculty.highest_degree}</span>
+          </div>
+          <div class="faculty-details">
+            ${faculty.contact_number ? `<p><i class="fas fa-phone"></i> ${faculty.contact_number}</p>` : ''}
+            ${faculty.birthdate ? `<p><i class="fas fa-birthday-cake"></i> Age: ${age}</p>` : ''}
+          </div>
+        </div>
+        <div class="faculty-list-actions">
+          <button class="btn-view" data-id="${faculty.id}">
+            <i class="fas fa-eye"></i> View Profile
+          </button>
+          <button class="btn-edit" data-id="${faculty.id}">
+            <i class="fas fa-edit"></i> Edit
+          </button>
+          <button class="btn-deactivate" data-id="${faculty.id}">
+            <i class="fas fa-user-slash"></i> Deactivate
+          </button>
+        </div>
+      </div>
+    `;
+  }
+  
+  // Grid view (default)
   return `
     <div class="faculty-card" data-id="${faculty.id}">
       <div class="faculty-image-container">
@@ -519,9 +579,9 @@ function renumberAgencies() {
   STATE.nextAgencyId = agencyItems.length + 1;
 }
 
-// ============================================
-// HANDLE ADD FACULTY - FIXED WITH PROPER API CALL
-// ============================================
+// UPDATED handleAddFaculty function for facultyManagement.js
+// This version sends education, certifications, and agencies as FormData fields
+// Replace the existing handleAddFaculty function with this one
 
 async function handleAddFaculty(e) {
   e.preventDefault();
@@ -529,10 +589,9 @@ async function handleAddFaculty(e) {
   try {
     console.log('📝 Starting faculty creation...');
     
-    // Create FormData for multipart/form-data submission
     const formData = new FormData();
     
-    // Add basic information
+    // Basic information
     formData.append('last_name', document.getElementById('facultyLastName').value.trim());
     formData.append('first_name', document.getElementById('facultyFirstName').value.trim());
     formData.append('middle_initial', document.getElementById('facultyMiddleInitial').value.trim() || '');
@@ -549,19 +608,115 @@ async function handleAddFaculty(e) {
     
     formData.append('created_by', localStorage.getItem('adminid') || 'adminSerrano');
     
-    // Add image file if selected
+    // Image
     const imageFile = document.getElementById('facultyImage').files[0];
     if (imageFile) {
       formData.append('image', imageFile);
     }
     
-    console.log('📡 Sending faculty data to API...');
+    // ============================================
+    // EDUCATION DATA
+    // ============================================
+    
+    // Undergraduate (always required)
+    const undergradTitle = document.getElementById('undergradTitle').value.trim();
+    const undergradSchool = document.getElementById('undergradSchool').value.trim();
+    const undergradYear = document.getElementById('undergradYear').value;
+    const undergradField = document.getElementById('undergradField').value.trim();
+    
+    if (undergradTitle && undergradSchool && undergradYear) {
+      formData.append('undergradTitle', undergradTitle);
+      formData.append('undergradSchool', undergradSchool);
+      formData.append('undergradYear', undergradYear);
+      if (undergradField) formData.append('undergradField', undergradField);
+    }
+    
+    // Master's (if checked)
+    if (document.getElementById('hasMasters')?.checked) {
+      const mastersTitle = document.getElementById('mastersTitle').value.trim();
+      const mastersSchool = document.getElementById('mastersSchool').value.trim();
+      const mastersYear = document.getElementById('mastersYear').value;
+      const mastersField = document.getElementById('mastersField').value.trim();
+      
+      if (mastersTitle && mastersSchool && mastersYear) {
+        formData.append('mastersTitle', mastersTitle);
+        formData.append('mastersSchool', mastersSchool);
+        formData.append('mastersYear', mastersYear);
+        if (mastersField) formData.append('mastersField', mastersField);
+      }
+    }
+    
+    // Doctorate (if checked)
+    if (document.getElementById('hasDoctorate')?.checked) {
+      const doctorateTitle = document.getElementById('doctorateTitle').value.trim();
+      const doctorateSchool = document.getElementById('doctorateSchool').value.trim();
+      const doctorateYear = document.getElementById('doctorateYear').value;
+      const doctorateField = document.getElementById('doctorateField').value.trim();
+      
+      if (doctorateTitle && doctorateSchool && doctorateYear) {
+        formData.append('doctorateTitle', doctorateTitle);
+        formData.append('doctorateSchool', doctorateSchool);
+        formData.append('doctorateYear', doctorateYear);
+        if (doctorateField) formData.append('doctorateField', doctorateField);
+      }
+    }
+    
+    // ============================================
+    // CERTIFICATIONS DATA
+    // ============================================
+    
+    const certItems = document.querySelectorAll('.certification-item');
+    certItems.forEach((item, index) => {
+      const certNum = index + 1;
+      const id = item.id.split('-')[1];
+      
+      const name = document.querySelector(`[name="cert_name_${id}"]`)?.value;
+      const org = document.querySelector(`[name="cert_org_${id}"]`)?.value;
+      const number = document.querySelector(`[name="cert_number_${id}"]`)?.value;
+      const issue = document.querySelector(`[name="cert_issue_${id}"]`)?.value;
+      const expiry = document.querySelector(`[name="cert_expiry_${id}"]`)?.value;
+      
+      if (name && org) {
+        formData.append(`cert_name_${certNum}`, name);
+        formData.append(`cert_org_${certNum}`, org);
+        if (number) formData.append(`cert_number_${certNum}`, number);
+        if (issue) formData.append(`cert_issue_${certNum}`, issue);
+        if (expiry) formData.append(`cert_expiry_${certNum}`, expiry);
+      }
+    });
+    
+    // ============================================
+    // GOVERNMENT AGENCIES/COMPANIES DATA
+    // ============================================
+    
+    const agencyItems = document.querySelectorAll('.agency-item');
+    agencyItems.forEach((item, index) => {
+      const agencyNum = index + 1;
+      const id = item.id.split('-')[1];
+      
+      const type = document.querySelector(`[name="agency_type_${id}"]`)?.value;
+      const name = document.querySelector(`[name="agency_name_${id}"]`)?.value;
+      const position = document.querySelector(`[name="agency_position_${id}"]`)?.value;
+      const status = document.querySelector(`[name="agency_status_${id}"]`)?.value;
+      const start = document.querySelector(`[name="agency_start_${id}"]`)?.value;
+      const end = document.querySelector(`[name="agency_end_${id}"]`)?.value;
+      
+      if (type && name) {
+        formData.append(`agency_type_${agencyNum}`, type);
+        formData.append(`agency_name_${agencyNum}`, name);
+        if (position) formData.append(`agency_position_${agencyNum}`, position);
+        if (status) formData.append(`agency_status_${agencyNum}`, status);
+        if (start) formData.append(`agency_start_${agencyNum}`, start);
+        if (end) formData.append(`agency_end_${agencyNum}`, end);
+      }
+    });
+    
+    console.log('📡 Sending complete faculty data to API...');
     
     // Send to API
     const response = await fetch(`${API_BASE}/faculty`, {
       method: 'POST',
       body: formData
-      // Don't set Content-Type header - browser will set it automatically with boundary
     });
     
     if (!response.ok) {
@@ -572,14 +727,13 @@ async function handleAddFaculty(e) {
     const result = await response.json();
     console.log('✅ Faculty created:', result);
     
-    // Show success message
     const fullName = buildFullName(
       document.getElementById('facultyFirstName').value.trim(),
       document.getElementById('facultyMiddleInitial').value.trim(),
       document.getElementById('facultyLastName').value.trim()
     );
     
-    showToast(`Faculty "${fullName}" added successfully!`, 'success');
+    showToast(`Faculty "${fullName}" added successfully with all information!`, 'success');
     
     // Reset form
     document.getElementById('addFacultyForm').reset();
@@ -592,14 +746,11 @@ async function handleAddFaculty(e) {
     document.getElementById('certificationsContainer').innerHTML = '';
     document.getElementById('agenciesContainer').innerHTML = '';
     
-    // Reset counters
     STATE.nextCertId = 1;
     STATE.nextAgencyId = 1;
     
-    // Reload faculty data from API
+    // Reload faculty data
     await loadFacultyData();
-    
-    // Switch to directory tab
     switchTab('directory');
     
   } catch (error) {
@@ -609,12 +760,12 @@ async function handleAddFaculty(e) {
 }
 
 // ============================================
-// VIEW FACULTY PROFILE
+// VIEW FACULTY PROFILE - COMPLETE VERSION
 // ============================================
 
 async function viewFacultyProfile(id) {
   try {
-    console.log(`📡 Fetching faculty profile for ID: ${id}`);
+    console.log(`📡 Fetching complete faculty profile for ID: ${id}`);
     
     const response = await fetch(`${API_BASE}/faculty/${id}`);
     if (!response.ok) {
@@ -627,36 +778,45 @@ async function viewFacultyProfile(id) {
     const pdsStatus = checkPDSStatus(faculty.last_pds_update);
     const fullName = faculty.full_name || buildFullName(faculty.first_name, faculty.middle_initial, faculty.last_name);
     
+    // Build education HTML
     let educationHTML = '';
     if (faculty.education && faculty.education.length > 0) {
       educationHTML = faculty.education.map(edu => `
         <div class="education-item">
-          <h4>${edu.degree_level} Degree</h4>
-          <p class="degree-title">${edu.degree_title}</p>
-          <p class="school">${edu.school_name}</p>
-          <p class="year">Graduated: ${edu.year_graduated}</p>
-          ${edu.field_of_study ? `<p class="field">Field: ${edu.field_of_study}</p>` : ''}
+          <div class="education-header">
+            <h4><i class="fas fa-graduation-cap"></i> ${edu.degree_level} Degree</h4>
+          </div>
+          <p class="degree-title"><strong>${edu.degree_title}</strong></p>
+          <p class="school"><i class="fas fa-university"></i> ${edu.school_name}</p>
+          <p class="year"><i class="fas fa-calendar"></i> Year Graduated: ${edu.year_graduated}</p>
+          ${edu.field_of_study ? `<p class="field"><i class="fas fa-book"></i> Field: ${edu.field_of_study}</p>` : ''}
         </div>
       `).join('');
+    } else {
+      educationHTML = '<p class="no-data">No education records available</p>';
     }
     
+    // Build certifications HTML
     let certificationsHTML = '';
     if (faculty.certifications && faculty.certifications.length > 0) {
       certificationsHTML = faculty.certifications.map(cert => `
         <div class="certification-card">
           <h4><i class="fas fa-certificate"></i> ${cert.certification_name}</h4>
-          <p class="cert-org">Issued by: ${cert.issuing_organization}</p>
-          ${cert.license_number ? `<p class="cert-number">License/Certificate #: ${cert.license_number}</p>` : ''}
+          <p class="cert-org"><i class="fas fa-building"></i> Issued by: ${cert.issuing_organization}</p>
+          ${cert.license_number ? `<p class="cert-number"><i class="fas fa-id-card"></i> License/Certificate #: ${cert.license_number}</p>` : ''}
           ${cert.issue_date || cert.expiry_date ? `
             <p class="cert-dates">
-              ${cert.issue_date ? `Issued: ${new Date(cert.issue_date).toLocaleDateString()}` : ''}
-              ${cert.expiry_date ? ` | Expires: ${new Date(cert.expiry_date).toLocaleDateString()}` : ''}
+              ${cert.issue_date ? `<i class="fas fa-calendar-check"></i> Issued: ${new Date(cert.issue_date).toLocaleDateString()}` : ''}
+              ${cert.expiry_date ? ` <i class="fas fa-calendar-times"></i> Expires: ${new Date(cert.expiry_date).toLocaleDateString()}` : ''}
             </p>
           ` : ''}
         </div>
       `).join('');
+    } else {
+      certificationsHTML = '<p class="no-data">No certifications available</p>';
     }
     
+    // Build government agencies HTML
     let agenciesHTML = '';
     if (faculty.government_agencies && faculty.government_agencies.length > 0) {
       agenciesHTML = faculty.government_agencies.map(agency => `
@@ -668,7 +828,7 @@ async function viewFacultyProfile(id) {
             </span>
           </div>
           <p class="agency-type"><i class="fas fa-tag"></i> ${agency.agency_type}</p>
-          ${agency.position ? `<p class="agency-position"><i class="fas fa-briefcase"></i> ${agency.position}</p>` : ''}
+          ${agency.position ? `<p class="agency-position"><i class="fas fa-briefcase"></i> Position: ${agency.position}</p>` : ''}
           ${agency.start_date || agency.end_date ? `
             <p class="agency-dates">
               <i class="fas fa-calendar"></i>
@@ -678,6 +838,8 @@ async function viewFacultyProfile(id) {
           ` : ''}
         </div>
       `).join('');
+    } else {
+      agenciesHTML = '<p class="no-data">No government agencies/companies listed</p>';
     }
     
     const content = `
@@ -702,26 +864,20 @@ async function viewFacultyProfile(id) {
           </div>
         </div>
         
-        ${educationHTML ? `
-          <div class="faculty-profile-section">
-            <h3><i class="fas fa-graduation-cap"></i> Educational Background</h3>
-            <div class="education-list">${educationHTML}</div>
-          </div>
-        ` : ''}
+        <div class="faculty-profile-section">
+          <h3><i class="fas fa-graduation-cap"></i> Educational Background</h3>
+          <div class="education-list">${educationHTML}</div>
+        </div>
         
-        ${certificationsHTML ? `
-          <div class="faculty-profile-section">
-            <h3><i class="fas fa-certificate"></i> Professional Certifications</h3>
-            <div class="certification-list">${certificationsHTML}</div>
-          </div>
-        ` : ''}
+        <div class="faculty-profile-section">
+          <h3><i class="fas fa-certificate"></i> Professional Certifications</h3>
+          <div class="certification-list">${certificationsHTML}</div>
+        </div>
         
-        ${agenciesHTML ? `
-          <div class="faculty-profile-section">
-            <h3><i class="fas fa-building"></i> Government Agencies & Other Companies</h3>
-            <div class="agency-list">${agenciesHTML}</div>
-          </div>
-        ` : ''}
+        <div class="faculty-profile-section">
+          <h3><i class="fas fa-building"></i> Government Agencies & Other Companies</h3>
+          <div class="agency-list">${agenciesHTML}</div>
+        </div>
       </div>
     `;
     
@@ -742,17 +898,13 @@ async function viewFacultyProfile(id) {
 }
 
 // ============================================
-// EDIT FACULTY
+// EDIT, DEACTIVATE & RESTORE
 // ============================================
 
 function openEditModal(id) {
   viewFacultyProfile(id);
   showToast('Edit functionality: Use View to see details', 'info');
 }
-
-// ============================================
-// DEACTIVATE & RESTORE
-// ============================================
 
 async function confirmDeactivate(id) {
   const faculty = getFacultyById(id);
@@ -836,43 +988,31 @@ async function renderDeactivatedFaculty() {
 }
 
 window.restoreFaculty = async function(id) {
-  const faculty = getFacultyById(id);
-  if (!faculty) {
-    // Try to get from API
-    try {
-      const response = await fetch(`${API_BASE}/faculty/${id}`);
-      if (!response.ok) throw new Error('Faculty not found');
-      const facultyData = await response.json();
-      var fullName = facultyData.full_name || buildFullName(facultyData.first_name, facultyData.middle_initial, facultyData.last_name);
-    } catch (error) {
-      showToast('Faculty not found', 'error');
-      return;
-    }
-  } else {
-    var fullName = faculty.full_name || buildFullName(faculty.first_name, faculty.middle_initial, faculty.last_name);
-  }
-  
-  if (confirm(`Restore "${fullName}" to active status?`)) {
-    try {
-      const response = await fetch(`${API_BASE}/faculty/${id}/restore`, {
+  try {
+    const response = await fetch(`${API_BASE}/faculty/${id}`);
+    if (!response.ok) throw new Error('Faculty not found');
+    const facultyData = await response.json();
+    const fullName = facultyData.full_name || buildFullName(facultyData.first_name, facultyData.middle_initial, facultyData.last_name);
+    
+    if (confirm(`Restore "${fullName}" to active status?`)) {
+      const restoreResponse = await fetch(`${API_BASE}/faculty/${id}/restore`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         }
       });
       
-      if (!response.ok) {
+      if (!restoreResponse.ok) {
         throw new Error('Failed to restore faculty');
       }
       
       showToast(`Faculty "${fullName}" has been restored`, 'success');
       await loadFacultyData();
       renderDeactivatedFaculty();
-      
-    } catch (error) {
-      console.error('❌ Error restoring faculty:', error);
-      showToast('Failed to restore faculty', 'error');
     }
+  } catch (error) {
+    console.error('❌ Error restoring faculty:', error);
+    showToast('Failed to restore faculty', 'error');
   }
 };
 
@@ -937,4 +1077,4 @@ function showToast(message, type = 'info') {
   console.log(`[${type.toUpperCase()}] ${message}`);
 }
 
-console.log('✅ facultyManagement.js (FIXED) loaded successfully');
+console.log('✅ facultyManagement.js (COMPLETE) loaded successfully');
