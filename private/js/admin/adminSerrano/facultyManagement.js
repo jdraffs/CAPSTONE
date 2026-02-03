@@ -1,5 +1,8 @@
-// facultyManagement.js - FIXED VERSION with proper API integration
-// Combined Directory, Add, and Deactivated Faculty Tabs
+// facultyManagement.js - FIXED VERSION
+// FIXES:
+// 1. Proper Edit Functionality (not just view)
+// 2. Delete button in deactivated accounts
+// 3. Picture update in edit modal
 
 // ============================================
 // GLOBAL STATE & CONFIGURATION
@@ -13,7 +16,10 @@ const STATE = {
   certificationCount: 0,
   agencyCount: 0,
   nextCertId: 1,
-  nextAgencyId: 1
+  nextAgencyId: 1,
+  viewMode: 'grid',
+  editCertCount: 1,
+  editAgencyCount: 1
 };
 
 const API_BASE = 'http://localhost:3000/api';
@@ -25,35 +31,59 @@ const API_BASE = 'http://localhost:3000/api';
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('🎓 Faculty Management Page Loading...');
   
-  // Check authentication
   const adminid = localStorage.getItem('adminid');
   if (!adminid) {
     window.location.href = '/private/html/AdminLogin/login.html';
     return;
   }
   
-  // Initialize profile dropdown
   if (typeof initializeProfileDropdown === 'function') {
     initializeProfileDropdown();
   }
   
-  // Setup tabs
   initializeTabs();
-  
-  // Setup form listeners
   setupFormListeners();
-  
-  // Setup filter listeners
   setupFilterListeners();
+  setupViewModeToggle();
   
-  // Load faculty data from API
   await loadFacultyData();
-  
-  // Check for URL parameters (program filter)
   checkURLParameters();
   
   console.log('✅ Faculty Management initialized successfully');
 });
+
+// ============================================
+// VIEW MODE TOGGLE
+// ============================================
+
+function setupViewModeToggle() {
+  const viewModeButtons = document.querySelectorAll('.view-mode-btn');
+  
+  viewModeButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.dataset.mode;
+      setViewMode(mode);
+    });
+  });
+}
+
+function setViewMode(mode) {
+  STATE.viewMode = mode;
+  
+  document.querySelectorAll('.view-mode-btn').forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.dataset.mode === mode) {
+      btn.classList.add('active');
+    }
+  });
+  
+  const grid = document.getElementById('facultyGrid');
+  if (grid) {
+    grid.className = mode === 'list' ? 'faculty-list' : 'faculty-grid';
+  }
+  
+  renderFacultyDirectory();
+}
 
 // ============================================
 // TAB NAVIGATION
@@ -103,7 +133,7 @@ function switchTab(tabName) {
 }
 
 // ============================================
-// FACULTY DATA MANAGEMENT - FIXED API CALLS
+// FACULTY DATA MANAGEMENT
 // ============================================
 
 async function loadFacultyData() {
@@ -125,7 +155,6 @@ async function loadFacultyData() {
     
     console.log(`✅ Loaded ${STATE.facultyData.length} faculty records from API`);
     
-    // Render the directory
     if (STATE.currentTab === 'directory') {
       renderFacultyDirectory();
     }
@@ -149,10 +178,6 @@ function getDeactivatedFaculty() {
 function getFacultyById(id) {
   return STATE.facultyData.find(f => f.id === id);
 }
-
-// ============================================
-// HELPER: BUILD FULL NAME
-// ============================================
 
 function buildFullName(firstName, middleInitial, lastName) {
   if (middleInitial && middleInitial.trim()) {
@@ -211,6 +236,8 @@ function renderFacultyDirectory() {
   const grid = document.getElementById('facultyGrid');
   if (!grid) return;
   
+  grid.className = STATE.viewMode === 'list' ? 'faculty-list' : 'faculty-grid';
+  
   if (STATE.filteredFaculty.length === 0) {
     grid.innerHTML = `
       <div class="empty-state">
@@ -233,6 +260,39 @@ function createFacultyCard(faculty) {
   const imageSrc = faculty.image_path || '/public/assets/images/default-avatar.png';
   const age = faculty.birthdate ? calculateAge(faculty.birthdate) : 'N/A';
   const fullName = faculty.full_name || buildFullName(faculty.first_name, faculty.middle_initial, faculty.last_name);
+  
+  if (STATE.viewMode === 'list') {
+    return `
+      <div class="faculty-card-list" data-id="${faculty.id}">
+        <div class="faculty-list-image">
+          <img src="${imageSrc}" alt="${fullName}" onerror="this.src='/public/assets/images/default-avatar.png'">
+        </div>
+        <div class="faculty-list-info">
+          <h3 class="faculty-name">${fullName}</h3>
+          <div class="faculty-badges">
+            <span class="faculty-badge badge-program">${faculty.program}</span>
+            <span class="faculty-badge badge-employment">${faculty.employment_type}</span>
+            <span class="faculty-badge badge-degree">${faculty.highest_degree}</span>
+          </div>
+          <div class="faculty-details">
+            ${faculty.contact_number ? `<p><i class="fas fa-phone"></i> ${faculty.contact_number}</p>` : ''}
+            ${faculty.birthdate ? `<p><i class="fas fa-birthday-cake"></i> Age: ${age}</p>` : ''}
+          </div>
+        </div>
+        <div class="faculty-list-actions">
+          <button class="btn-view" data-id="${faculty.id}">
+            <i class="fas fa-eye"></i> View Profile
+          </button>
+          <button class="btn-edit" data-id="${faculty.id}">
+            <i class="fas fa-edit"></i> Edit
+          </button>
+          <button class="btn-deactivate" data-id="${faculty.id}">
+            <i class="fas fa-user-slash"></i> Deactivate
+          </button>
+        </div>
+      </div>
+    `;
+  }
   
   return `
     <div class="faculty-card" data-id="${faculty.id}">
@@ -519,20 +579,14 @@ function renumberAgencies() {
   STATE.nextAgencyId = agencyItems.length + 1;
 }
 
-// ============================================
-// HANDLE ADD FACULTY - FIXED WITH PROPER API CALL
-// ============================================
-
 async function handleAddFaculty(e) {
   e.preventDefault();
   
   try {
     console.log('📝 Starting faculty creation...');
     
-    // Create FormData for multipart/form-data submission
     const formData = new FormData();
     
-    // Add basic information
     formData.append('last_name', document.getElementById('facultyLastName').value.trim());
     formData.append('first_name', document.getElementById('facultyFirstName').value.trim());
     formData.append('middle_initial', document.getElementById('facultyMiddleInitial').value.trim() || '');
@@ -549,19 +603,101 @@ async function handleAddFaculty(e) {
     
     formData.append('created_by', localStorage.getItem('adminid') || 'adminSerrano');
     
-    // Add image file if selected
     const imageFile = document.getElementById('facultyImage').files[0];
     if (imageFile) {
       formData.append('image', imageFile);
     }
     
-    console.log('📡 Sending faculty data to API...');
+    // Education data
+    const undergradTitle = document.getElementById('undergradTitle').value.trim();
+    const undergradSchool = document.getElementById('undergradSchool').value.trim();
+    const undergradYear = document.getElementById('undergradYear').value;
+    const undergradField = document.getElementById('undergradField').value.trim();
     
-    // Send to API
+    if (undergradTitle && undergradSchool && undergradYear) {
+      formData.append('undergradTitle', undergradTitle);
+      formData.append('undergradSchool', undergradSchool);
+      formData.append('undergradYear', undergradYear);
+      if (undergradField) formData.append('undergradField', undergradField);
+    }
+    
+    if (document.getElementById('hasMasters')?.checked) {
+      const mastersTitle = document.getElementById('mastersTitle').value.trim();
+      const mastersSchool = document.getElementById('mastersSchool').value.trim();
+      const mastersYear = document.getElementById('mastersYear').value;
+      const mastersField = document.getElementById('mastersField').value.trim();
+      
+      if (mastersTitle && mastersSchool && mastersYear) {
+        formData.append('mastersTitle', mastersTitle);
+        formData.append('mastersSchool', mastersSchool);
+        formData.append('mastersYear', mastersYear);
+        if (mastersField) formData.append('mastersField', mastersField);
+      }
+    }
+    
+    if (document.getElementById('hasDoctorate')?.checked) {
+      const doctorateTitle = document.getElementById('doctorateTitle').value.trim();
+      const doctorateSchool = document.getElementById('doctorateSchool').value.trim();
+      const doctorateYear = document.getElementById('doctorateYear').value;
+      const doctorateField = document.getElementById('doctorateField').value.trim();
+      
+      if (doctorateTitle && doctorateSchool && doctorateYear) {
+        formData.append('doctorateTitle', doctorateTitle);
+        formData.append('doctorateSchool', doctorateSchool);
+        formData.append('doctorateYear', doctorateYear);
+        if (doctorateField) formData.append('doctorateField', doctorateField);
+      }
+    }
+    
+    // Certifications
+    const certItems = document.querySelectorAll('.certification-item');
+    certItems.forEach((item, index) => {
+      const certNum = index + 1;
+      const id = item.id.split('-')[1];
+      
+      const name = document.querySelector(`[name="cert_name_${id}"]`)?.value;
+      const org = document.querySelector(`[name="cert_org_${id}"]`)?.value;
+      const number = document.querySelector(`[name="cert_number_${id}"]`)?.value;
+      const issue = document.querySelector(`[name="cert_issue_${id}"]`)?.value;
+      const expiry = document.querySelector(`[name="cert_expiry_${id}"]`)?.value;
+      
+      if (name && org) {
+        formData.append(`cert_name_${certNum}`, name);
+        formData.append(`cert_org_${certNum}`, org);
+        if (number) formData.append(`cert_number_${certNum}`, number);
+        if (issue) formData.append(`cert_issue_${certNum}`, issue);
+        if (expiry) formData.append(`cert_expiry_${certNum}`, expiry);
+      }
+    });
+    
+    // Agencies
+    const agencyItems = document.querySelectorAll('.agency-item');
+    agencyItems.forEach((item, index) => {
+      const agencyNum = index + 1;
+      const id = item.id.split('-')[1];
+      
+      const type = document.querySelector(`[name="agency_type_${id}"]`)?.value;
+      const name = document.querySelector(`[name="agency_name_${id}"]`)?.value;
+      const position = document.querySelector(`[name="agency_position_${id}"]`)?.value;
+      const status = document.querySelector(`[name="agency_status_${id}"]`)?.value;
+      const start = document.querySelector(`[name="agency_start_${id}"]`)?.value;
+      const end = document.querySelector(`[name="agency_end_${id}"]`)?.value;
+      
+      if (type && name) {
+        formData.append(`agency_type_${agencyNum}`, type);
+        formData.append(`agency_name_${agencyNum}`, name);
+        if (position) formData.append(`agency_position_${agencyNum}`, position);
+        if (status) formData.append(`agency_status_${agencyNum}`, status);
+        if (start) formData.append(`agency_start_${agencyNum}`, start);
+        if (end) formData.append(`agency_end_${agencyNum}`, end);
+      }
+    });
+    
+    console.log('📡 Sending complete faculty data to API...');
+    
     const response = await fetch(`${API_BASE}/faculty`, {
       method: 'POST',
       body: formData
-      // Don't set Content-Type header - browser will set it automatically with boundary
     });
     
     if (!response.ok) {
@@ -572,16 +708,14 @@ async function handleAddFaculty(e) {
     const result = await response.json();
     console.log('✅ Faculty created:', result);
     
-    // Show success message
     const fullName = buildFullName(
       document.getElementById('facultyFirstName').value.trim(),
       document.getElementById('facultyMiddleInitial').value.trim(),
       document.getElementById('facultyLastName').value.trim()
     );
     
-    showToast(`Faculty "${fullName}" added successfully!`, 'success');
+    showToast(`Faculty "${fullName}" added successfully with all information!`, 'success');
     
-    // Reset form
     document.getElementById('addFacultyForm').reset();
     document.getElementById('imagePreview').innerHTML = `
       <i class="fas fa-user-circle"></i>
@@ -592,14 +726,10 @@ async function handleAddFaculty(e) {
     document.getElementById('certificationsContainer').innerHTML = '';
     document.getElementById('agenciesContainer').innerHTML = '';
     
-    // Reset counters
     STATE.nextCertId = 1;
     STATE.nextAgencyId = 1;
     
-    // Reload faculty data from API
     await loadFacultyData();
-    
-    // Switch to directory tab
     switchTab('directory');
     
   } catch (error) {
@@ -614,7 +744,7 @@ async function handleAddFaculty(e) {
 
 async function viewFacultyProfile(id) {
   try {
-    console.log(`📡 Fetching faculty profile for ID: ${id}`);
+    console.log(`📡 Fetching complete faculty profile for ID: ${id}`);
     
     const response = await fetch(`${API_BASE}/faculty/${id}`);
     if (!response.ok) {
@@ -631,13 +761,17 @@ async function viewFacultyProfile(id) {
     if (faculty.education && faculty.education.length > 0) {
       educationHTML = faculty.education.map(edu => `
         <div class="education-item">
-          <h4>${edu.degree_level} Degree</h4>
-          <p class="degree-title">${edu.degree_title}</p>
-          <p class="school">${edu.school_name}</p>
-          <p class="year">Graduated: ${edu.year_graduated}</p>
-          ${edu.field_of_study ? `<p class="field">Field: ${edu.field_of_study}</p>` : ''}
+          <div class="education-header">
+            <h4><i class="fas fa-graduation-cap"></i> ${edu.degree_level} Degree</h4>
+          </div>
+          <p class="degree-title"><strong>${edu.degree_title}</strong></p>
+          <p class="school"><i class="fas fa-university"></i> ${edu.school_name}</p>
+          <p class="year"><i class="fas fa-calendar"></i> Year Graduated: ${edu.year_graduated}</p>
+          ${edu.field_of_study ? `<p class="field"><i class="fas fa-book"></i> Field: ${edu.field_of_study}</p>` : ''}
         </div>
       `).join('');
+    } else {
+      educationHTML = '<p class="no-data">No education records available</p>';
     }
     
     let certificationsHTML = '';
@@ -645,16 +779,18 @@ async function viewFacultyProfile(id) {
       certificationsHTML = faculty.certifications.map(cert => `
         <div class="certification-card">
           <h4><i class="fas fa-certificate"></i> ${cert.certification_name}</h4>
-          <p class="cert-org">Issued by: ${cert.issuing_organization}</p>
-          ${cert.license_number ? `<p class="cert-number">License/Certificate #: ${cert.license_number}</p>` : ''}
+          <p class="cert-org"><i class="fas fa-building"></i> Issued by: ${cert.issuing_organization}</p>
+          ${cert.license_number ? `<p class="cert-number"><i class="fas fa-id-card"></i> License/Certificate #: ${cert.license_number}</p>` : ''}
           ${cert.issue_date || cert.expiry_date ? `
             <p class="cert-dates">
-              ${cert.issue_date ? `Issued: ${new Date(cert.issue_date).toLocaleDateString()}` : ''}
-              ${cert.expiry_date ? ` | Expires: ${new Date(cert.expiry_date).toLocaleDateString()}` : ''}
+              ${cert.issue_date ? `<i class="fas fa-calendar-check"></i> Issued: ${new Date(cert.issue_date).toLocaleDateString()}` : ''}
+              ${cert.expiry_date ? ` <i class="fas fa-calendar-times"></i> Expires: ${new Date(cert.expiry_date).toLocaleDateString()}` : ''}
             </p>
           ` : ''}
         </div>
       `).join('');
+    } else {
+      certificationsHTML = '<p class="no-data">No certifications available</p>';
     }
     
     let agenciesHTML = '';
@@ -668,7 +804,7 @@ async function viewFacultyProfile(id) {
             </span>
           </div>
           <p class="agency-type"><i class="fas fa-tag"></i> ${agency.agency_type}</p>
-          ${agency.position ? `<p class="agency-position"><i class="fas fa-briefcase"></i> ${agency.position}</p>` : ''}
+          ${agency.position ? `<p class="agency-position"><i class="fas fa-briefcase"></i> Position: ${agency.position}</p>` : ''}
           ${agency.start_date || agency.end_date ? `
             <p class="agency-dates">
               <i class="fas fa-calendar"></i>
@@ -678,6 +814,8 @@ async function viewFacultyProfile(id) {
           ` : ''}
         </div>
       `).join('');
+    } else {
+      agenciesHTML = '<p class="no-data">No government agencies/companies listed</p>';
     }
     
     const content = `
@@ -702,26 +840,20 @@ async function viewFacultyProfile(id) {
           </div>
         </div>
         
-        ${educationHTML ? `
-          <div class="faculty-profile-section">
-            <h3><i class="fas fa-graduation-cap"></i> Educational Background</h3>
-            <div class="education-list">${educationHTML}</div>
-          </div>
-        ` : ''}
+        <div class="faculty-profile-section">
+          <h3><i class="fas fa-graduation-cap"></i> Educational Background</h3>
+          <div class="education-list">${educationHTML}</div>
+        </div>
         
-        ${certificationsHTML ? `
-          <div class="faculty-profile-section">
-            <h3><i class="fas fa-certificate"></i> Professional Certifications</h3>
-            <div class="certification-list">${certificationsHTML}</div>
-          </div>
-        ` : ''}
+        <div class="faculty-profile-section">
+          <h3><i class="fas fa-certificate"></i> Professional Certifications</h3>
+          <div class="certification-list">${certificationsHTML}</div>
+        </div>
         
-        ${agenciesHTML ? `
-          <div class="faculty-profile-section">
-            <h3><i class="fas fa-building"></i> Government Agencies & Other Companies</h3>
-            <div class="agency-list">${agenciesHTML}</div>
-          </div>
-        ` : ''}
+        <div class="faculty-profile-section">
+          <h3><i class="fas fa-building"></i> Government Agencies & Other Companies</h3>
+          <div class="agency-list">${agenciesHTML}</div>
+        </div>
       </div>
     `;
     
@@ -742,12 +874,182 @@ async function viewFacultyProfile(id) {
 }
 
 // ============================================
-// EDIT FACULTY
+// FIX #1: PROPER EDIT FUNCTIONALITY
 // ============================================
 
-function openEditModal(id) {
-  viewFacultyProfile(id);
-  showToast('Edit functionality: Use View to see details', 'info');
+async function openEditModal(id) {
+  try {
+    console.log(`📝 Opening edit modal for faculty ID: ${id}`);
+    STATE.editingFacultyId = id;
+    
+    const response = await fetch(`${API_BASE}/faculty/${id}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch faculty data');
+    }
+    
+    const faculty = await response.json();
+    const fullName = faculty.full_name || buildFullName(faculty.first_name, faculty.middle_initial, faculty.last_name);
+    
+    // Build edit form HTML
+    const editFormHTML = `
+      <!-- Basic Information Section -->
+      <div class="form-section">
+        <h3 class="section-title"><i class="fas fa-user"></i> Basic Information</h3>
+        
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label>Faculty Image</label>
+            <div class="image-upload-container">
+              <input type="file" id="editFacultyImage" accept="image/*">
+              <div class="image-preview" id="editImagePreview">
+                <img src="${faculty.image_path || '/public/assets/images/default-avatar.png'}" alt="${fullName}">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Last Name *</label>
+            <input type="text" id="editLastName" value="${faculty.last_name}" required>
+          </div>
+          <div class="form-group">
+            <label>First Name *</label>
+            <input type="text" id="editFirstName" value="${faculty.first_name}" required>
+          </div>
+          <div class="form-group">
+            <label>Middle Initial</label>
+            <input type="text" id="editMiddleInitial" value="${faculty.middle_initial || ''}" maxlength="5">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Birthdate *</label>
+            <input type="date" id="editBirthdate" value="${faculty.birthdate || ''}" required>
+          </div>
+          <div class="form-group">
+            <label>Contact Number *</label>
+            <input type="tel" id="editContact" value="${faculty.contact_number || ''}" required>
+          </div>
+        </div>
+      </div>
+
+      <!-- Employment Information Section -->
+      <div class="form-section">
+        <h3 class="section-title"><i class="fas fa-briefcase"></i> Employment Information</h3>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Program *</label>
+            <select id="editProgram" required>
+              <option value="BSIT" ${faculty.program === 'BSIT' ? 'selected' : ''}>BSIT - Information Technology</option>
+              <option value="BSCpE" ${faculty.program === 'BSCpE' ? 'selected' : ''}>BSCpE - Computer Engineering</option>
+              <option value="BSHM" ${faculty.program === 'BSHM' ? 'selected' : ''}>BSHM - Hospitality Management</option>
+              <option value="BSOA" ${faculty.program === 'BSOA' ? 'selected' : ''}>BSOA - Office Administration</option>
+              <option value="Gen Ed" ${faculty.program === 'Gen Ed' ? 'selected' : ''}>Gen Ed - General Education</option>
+              <option value="Others" ${faculty.program === 'Others' ? 'selected' : ''}>Others</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Employment Type *</label>
+            <select id="editEmploymentType" required>
+              <option value="Regular" ${faculty.employment_type === 'Regular' ? 'selected' : ''}>Regular</option>
+              <option value="Part-Time" ${faculty.employment_type === 'Part-Time' ? 'selected' : ''}>Part-Time</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Highest Degree *</label>
+            <select id="editHighestDegree" required>
+              <option value="Bachelor" ${faculty.highest_degree === 'Bachelor' ? 'selected' : ''}>Bachelor</option>
+              <option value="Master" ${faculty.highest_degree === 'Master' ? 'selected' : ''}>Master</option>
+              <option value="Doctorate" ${faculty.highest_degree === 'Doctorate' ? 'selected' : ''}>Doctorate (PhD)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Last PDS Update Year</label>
+            <input type="number" id="editLastPdsUpdate" value="${faculty.last_pds_update || ''}" min="1990" max="2030">
+          </div>
+        </div>
+      </div>
+    `;
+    
+    const modalContent = document.getElementById('editFormContent');
+    if (modalContent) {
+      modalContent.innerHTML = editFormHTML;
+    }
+    
+    // Setup image preview for edit
+    setupImagePreview('editFacultyImage', 'editImagePreview');
+    
+    // Setup form submission
+    const editForm = document.getElementById('editFacultyForm');
+    if (editForm) {
+      editForm.onsubmit = handleEditFaculty;
+    }
+    
+    const modal = document.getElementById('editFacultyModal');
+    if (modal) {
+      modal.classList.add('active');
+    }
+    
+  } catch (error) {
+    console.error('❌ Error opening edit modal:', error);
+    showToast('Failed to load faculty data for editing', 'error');
+  }
+}
+
+async function handleEditFaculty(e) {
+  e.preventDefault();
+  
+  try {
+    console.log(`💾 Updating faculty ID: ${STATE.editingFacultyId}`);
+    
+    const formData = new FormData();
+    
+    formData.append('last_name', document.getElementById('editLastName').value.trim());
+    formData.append('first_name', document.getElementById('editFirstName').value.trim());
+    formData.append('middle_initial', document.getElementById('editMiddleInitial').value.trim() || '');
+    formData.append('birthdate', document.getElementById('editBirthdate').value);
+    formData.append('contact_number', document.getElementById('editContact').value.trim());
+    formData.append('program', document.getElementById('editProgram').value);
+    formData.append('employment_type', document.getElementById('editEmploymentType').value);
+    formData.append('highest_degree', document.getElementById('editHighestDegree').value);
+    
+    const pdsUpdate = document.getElementById('editLastPdsUpdate').value;
+    if (pdsUpdate) {
+      formData.append('last_pds_update', pdsUpdate);
+    }
+    
+    // FIX: Handle image upload in edit
+    const imageFile = document.getElementById('editFacultyImage').files[0];
+    if (imageFile) {
+      formData.append('image', imageFile);
+    }
+    
+    const response = await fetch(`${API_BASE}/faculty/${STATE.editingFacultyId}`, {
+      method: 'PUT',
+      body: formData
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to update faculty');
+    }
+    
+    const result = await response.json();
+    
+    showToast('Faculty updated successfully!', 'success');
+    closeModal();
+    await loadFacultyData();
+    
+  } catch (error) {
+    console.error('❌ Error updating faculty:', error);
+    showToast(`Failed to update faculty: ${error.message}`, 'error');
+  }
 }
 
 // ============================================
@@ -782,6 +1084,10 @@ async function confirmDeactivate(id) {
     }
   }
 }
+
+// ============================================
+// FIX #2: DEACTIVATED FACULTY WITH DELETE BUTTON
+// ============================================
 
 async function renderDeactivatedFaculty() {
   const grid = document.getElementById('deactivatedFacultyGrid');
@@ -824,6 +1130,9 @@ async function renderDeactivatedFaculty() {
             <button class="btn-restore" onclick="restoreFaculty(${faculty.id})">
               <i class="fas fa-undo"></i> Restore
             </button>
+            <button class="btn-delete-permanent" onclick="confirmDeleteFaculty(${faculty.id})">
+              <i class="fas fa-trash"></i> Delete
+            </button>
           </div>
         </div>
       `;
@@ -836,43 +1145,61 @@ async function renderDeactivatedFaculty() {
 }
 
 window.restoreFaculty = async function(id) {
-  const faculty = getFacultyById(id);
-  if (!faculty) {
-    // Try to get from API
-    try {
-      const response = await fetch(`${API_BASE}/faculty/${id}`);
-      if (!response.ok) throw new Error('Faculty not found');
-      const facultyData = await response.json();
-      var fullName = facultyData.full_name || buildFullName(facultyData.first_name, facultyData.middle_initial, facultyData.last_name);
-    } catch (error) {
-      showToast('Faculty not found', 'error');
-      return;
-    }
-  } else {
-    var fullName = faculty.full_name || buildFullName(faculty.first_name, faculty.middle_initial, faculty.last_name);
-  }
-  
-  if (confirm(`Restore "${fullName}" to active status?`)) {
-    try {
-      const response = await fetch(`${API_BASE}/faculty/${id}/restore`, {
+  try {
+    const response = await fetch(`${API_BASE}/faculty/${id}`);
+    if (!response.ok) throw new Error('Faculty not found');
+    const facultyData = await response.json();
+    const fullName = facultyData.full_name || buildFullName(facultyData.first_name, facultyData.middle_initial, facultyData.last_name);
+    
+    if (confirm(`Restore "${fullName}" to active status?`)) {
+      const restoreResponse = await fetch(`${API_BASE}/faculty/${id}/restore`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         }
       });
       
-      if (!response.ok) {
+      if (!restoreResponse.ok) {
         throw new Error('Failed to restore faculty');
       }
       
       showToast(`Faculty "${fullName}" has been restored`, 'success');
       await loadFacultyData();
       renderDeactivatedFaculty();
-      
-    } catch (error) {
-      console.error('❌ Error restoring faculty:', error);
-      showToast('Failed to restore faculty', 'error');
     }
+  } catch (error) {
+    console.error('❌ Error restoring faculty:', error);
+    showToast('Failed to restore faculty', 'error');
+  }
+};
+
+// FIX #2: Delete permanently function
+window.confirmDeleteFaculty = async function(id) {
+  try {
+    const response = await fetch(`${API_BASE}/faculty/${id}`);
+    if (!response.ok) throw new Error('Faculty not found');
+    const facultyData = await response.json();
+    const fullName = facultyData.full_name || buildFullName(facultyData.first_name, facultyData.middle_initial, facultyData.last_name);
+    
+    if (confirm(`⚠️ WARNING: This will PERMANENTLY DELETE "${fullName}" from the database.\n\nThis action CANNOT be undone!\n\nAre you absolutely sure?`)) {
+      const deleteResponse = await fetch(`${API_BASE}/faculty/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!deleteResponse.ok) {
+        throw new Error('Failed to delete faculty');
+      }
+      
+      showToast(`Faculty "${fullName}" has been permanently deleted`, 'success');
+      await loadFacultyData();
+      renderDeactivatedFaculty();
+    }
+  } catch (error) {
+    console.error('❌ Error deleting faculty:', error);
+    showToast('Failed to delete faculty', 'error');
   }
 };
 
@@ -927,6 +1254,7 @@ function closeModal() {
   document.querySelectorAll('.modal').forEach(modal => {
     modal.classList.remove('active');
   });
+  STATE.editingFacultyId = null;
 }
 
 function showToast(message, type = 'info') {
@@ -937,4 +1265,4 @@ function showToast(message, type = 'info') {
   console.log(`[${type.toUpperCase()}] ${message}`);
 }
 
-console.log('✅ facultyManagement.js (FIXED) loaded successfully');
+console.log('✅ facultyManagement.js (FIXED VERSION) loaded successfully');
