@@ -1,17 +1,21 @@
+import express from "express";
+
 // certificateRequestRoute.js
-import express from 'express';
-import pkg from 'pg';
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+import { Pool } from "pg";   // ✅ ADD THIS
 
 const router = express.Router();
-const { Pool } = pkg;
 
 const pool = new Pool({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'capstone_db',
-  password: 'Kisses123',
-  port: 5432
+  user: "postgres",
+  host: "localhost",
+  database: "capstone_db",
+  password: "Kisses123",
+  port: 5432,
 });
+
 
 // ========================
 // PUBLIC ENDPOINTS
@@ -488,6 +492,223 @@ router.get('/admin/stats', async (req, res) => {
       success: false, 
       message: 'Failed to fetch statistics' 
     });
+  }
+});
+
+// Configure multer for signature uploads
+const signatureStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = './public/uploads/signatures';
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = `admin_signature_${Date.now()}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
+  }
+});
+
+const uploadSignature = multer({
+  storage: signatureStorage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files (JPEG, PNG, GIF, WEBP) are allowed'));
+    }
+  }
+});
+
+// ==============================
+// E-SIGNATURE ENDPOINTS
+// ==============================
+
+// Upload or update admin e-signature
+router.post('/admin/signature/upload', uploadSignature.single('signature'), async (req, res) => {
+  const client = await pool.connect();
+  
+  try {
+    await client.query('BEGIN');
+
+    const { adminId, signatureName, signatureTitle } = req.body;
+    
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No signature image uploaded'
+      });
+    }
+
+    const signaturePath = `/uploads/signatures/${req.file.filename}`;
+
+    // Check if admin already has a signature
+    const existingSignature = await client.query(
+      'SELECT id, signature_image_path FROM admin_signatures WHERE admin_id = $1',
+      [adminId]
+    );
+
+    if (existingSignature.rows.length > 0) {
+      // Delete old signature file
+      const oldPath = path.join('./public', existingSignature.rows[0].signature_image_path);
+      if (fs.existsSync(oldPath)) {
+        fs.unlinkSync(oldPath);
+      }
+
+      // Update existing signature
+      const updateQuery = `
+        UPDATE admin_signatures
+        SET signature_image_path = $1,
+            signature_name = $2,
+            signature_title = $3,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE admin_id = $4
+        RETURNING *
+      `;
+      
+      const result = await client.query(updateQuery, [
+        signaturePath,
+        signatureName || 'MILA JOY J. MARTINEZ',
+        signatureTitle || 'Head, Student Affairs and Services',
+        adminId
+      ]);
+
+      await client.query('COMMIT');
+
+      return res.json({
+        success: true,
+        message: 'Signature updated successfully',
+        signature: result.rows[0]
+      });
+    } else {
+      // Insert new signature
+      const insertQuery = `
+        INSERT INTO admin_signatures (admin_id, signature_image_path, signature_name, signature_title)
+        VALUES ($1, $2, $3, $4)
+        RETURNING *
+      `;
+      
+      const result = await client.query(insertQuery, [
+        adminId,
+        signaturePath,
+        signatureName || 'MILA JOY J. MARTINEZ',
+        signatureTitle || 'Head, Student Affairs and Services'
+      ]);
+
+      await client.query('COMMIT');
+
+      return res.json({
+        success: true,
+        message: 'Signature uploaded successfully',
+        signature: result.rows[0]
+      });
+    }
+
+  } catch (err) {
+    await client.query('ROLLBACK');
+    
+    // Delete uploaded file if database operation failed
+    if (req.file) {
+      const filePath = path.join('./public/uploads/signatures', req.file.filename);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+
+    console.error('Error uploading signature:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to upload signature'
+    });
+  } finally {
+    client.release();
+  }
+});
+
+// Get admin e-signature
+router.get('/admin/signature/:adminId', async (req, res) => {
+  try {
+    const { adminId } = req.params;
+
+    const query = `
+      SELECT * FROM admin_signatures
+      WHERE admin_id = $1
+    `;
+
+    const result = await pool.query(query, [adminId]);
+
+    if (result.rows.length === 0) {
+      return res.json({
+        success: true,
+        signature: null // No signature uploaded yet
+      });
+    }
+
+    res.json({
+      success: true,
+      signature: result.rows[0]
+    });
+
+  } catch (err) {
+    console.error('Error fetching signature:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch signature'
+    });
+  }
+});
+
+// Delete admin e-signature
+router.delete('/admin/signature/:adminId', async (req, res) => {
+  const client = await pool.connect();
+  
+  try {
+    await client.query('BEGIN');
+
+    const { adminId } = req.params;
+
+    // Get signature info
+    const signature = await client.query(
+      'SELECT signature_image_path FROM admin_signatures WHERE admin_id = $1',
+      [adminId]
+    );
+
+    if (signature.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({
+        success: false,
+        message: 'Signature not found'
+      });
+    }
+
+    // Delete file
+    const filePath = path.join('./public', signature.rows[0].signature_image_path);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    // Delete from database
+    await client.query('DELETE FROM admin_signatures WHERE admin_id = $1', [adminId]);
+
+    await client.query('COMMIT');
+
+    res.json({
+      success: true,
+      message: 'Signature deleted successfully'
+    });
+
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Error deleting signature:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete signature'
+    });
+  } finally {
+    client.release();
   }
 });
 
