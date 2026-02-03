@@ -91,6 +91,8 @@ document.getElementById('admin-login-form').addEventListener('submit', async (e)
         window.location.href = '/private/html/adminPages/adminMila/adminMila.html';
       } else if (data.adminid === 'adminLlave') {
         window.location.href = '/private/html/adminPages/adminLlave/adminLlave.html';
+      } else if (data.adminid === 'adminSerrano') {
+        window.location.href = '/private/html/adminPages/adminSerrano/adminSerrano.html';
       } else if (data.adminid === 'adminCMO') {
         window.location.href = '/private/html/adminPages/adminCMO/cmoDashboard.html';
       } else {
@@ -200,6 +202,10 @@ window.addEventListener('DOMContentLoaded', () => {
       window.location.href = '/private/html/adminPages/adminMila/adminMila.html';
     } else if (adminid === 'adminLlave') {
       window.location.href = '/private/html/adminPages/adminLlave/adminLlave.html';
+    } else if (adminid === 'adminCMO') {
+      window.location.href = '/private/html/adminPages/adminCMO/cmoDashboard.html';
+    } else if (adminid === 'adminSerrano') {
+      window.location.href = '/private/html/adminPages/adminSerrano/adminSerrano.html';
     }
   }
 
