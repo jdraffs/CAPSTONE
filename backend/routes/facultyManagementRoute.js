@@ -1,10 +1,13 @@
-// facultyManagementRoute.js - COMPLETE VERSION
-// Now saves education, certifications, and agencies when creating faculty
+// facultyManagementRoute.js - UPDATED WITH EDIT & DELETE
+// NEW ENDPOINTS:
+// 1. PUT /faculty/:id - Update faculty with image upload support
+// 2. DELETE /faculty/:id - Permanently delete faculty
 
 import express from 'express';
 import pool from '../db.js';
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
 
 const router = express.Router();
 
@@ -137,7 +140,6 @@ router.get('/faculty/:id', async (req, res) => {
     
     console.log(`📚 Fetching faculty member with ID: ${id}`);
     
-    // Get basic faculty info
     const facultyQuery = `
       SELECT 
         id, last_name, first_name, middle_initial, birthdate, contact_number,
@@ -159,7 +161,6 @@ router.get('/faculty/:id', async (req, res) => {
     const faculty = facultyResult.rows[0];
     faculty.full_name = buildFullName(faculty.first_name, faculty.middle_initial, faculty.last_name);
     
-    // Get education
     const educationQuery = `
       SELECT degree_level, degree_title, school_name, year_graduated, field_of_study
       FROM faculty_education
@@ -172,7 +173,6 @@ router.get('/faculty/:id', async (req, res) => {
     `;
     const educationResult = await pool.query(educationQuery, [id]);
     
-    // Get certifications
     const certsQuery = `
       SELECT certification_name, issuing_organization, license_number, 
              issue_date, expiry_date, is_active
@@ -182,7 +182,6 @@ router.get('/faculty/:id', async (req, res) => {
     `;
     const certsResult = await pool.query(certsQuery, [id]);
     
-    // Get government agencies
     const agenciesQuery = `
       SELECT agency_type, agency_name, position, employment_status,
              start_date, end_date, is_active
@@ -214,7 +213,7 @@ router.get('/faculty/:id', async (req, res) => {
 });
 
 // ============================================
-// CREATE NEW FACULTY - UPDATED TO SAVE EVERYTHING
+// CREATE NEW FACULTY
 // ============================================
 
 router.post('/faculty', upload.single('image'), async (req, res) => {
@@ -227,7 +226,6 @@ router.post('/faculty', upload.single('image'), async (req, res) => {
     } = req.body;
     const created_by = req.body.created_by || 'adminSerrano';
     
-    // Validation
     if (!last_name || !first_name || !program || !employment_type || !highest_degree) {
       return res.status(400).json({
         success: false,
@@ -243,7 +241,6 @@ router.post('/faculty', upload.single('image'), async (req, res) => {
     const fullName = buildFullName(first_name, middle_initial, last_name);
     console.log(`📝 Creating new faculty: ${fullName}`);
     
-    // Insert faculty
     const insertQuery = `
       INSERT INTO faculty (
         last_name, first_name, middle_initial, birthdate, contact_number,
@@ -264,18 +261,9 @@ router.post('/faculty', upload.single('image'), async (req, res) => {
     
     console.log(`✅ Faculty created with ID: ${facultyId}`);
     
-    // ============================================
-    // INSERT EDUCATION DATA
-    // ============================================
-    
+    // Insert education data
     const educationData = [];
     
-    // Parse education from request body
-    // The form sends: undergradTitle, undergradSchool, undergradYear, undergradField
-    // mastersTitle, mastersSchool, mastersYear, mastersField (if hasMasters checkbox)
-    // doctorateTitle, doctorateSchool, doctorateYear, doctorateField (if hasDoctorate checkbox)
-    
-    // Undergraduate (always required)
     if (req.body.undergradTitle && req.body.undergradSchool && req.body.undergradYear) {
       educationData.push({
         degree_level: 'Undergraduate',
@@ -286,7 +274,6 @@ router.post('/faculty', upload.single('image'), async (req, res) => {
       });
     }
     
-    // Masters (if provided)
     if (req.body.mastersTitle && req.body.mastersSchool && req.body.mastersYear) {
       educationData.push({
         degree_level: 'Masters',
@@ -297,7 +284,6 @@ router.post('/faculty', upload.single('image'), async (req, res) => {
       });
     }
     
-    // Doctorate (if provided)
     if (req.body.doctorateTitle && req.body.doctorateSchool && req.body.doctorateYear) {
       educationData.push({
         degree_level: 'Doctorate',
@@ -308,7 +294,6 @@ router.post('/faculty', upload.single('image'), async (req, res) => {
       });
     }
     
-    // Insert education records
     for (const edu of educationData) {
       await client.query(`
         INSERT INTO faculty_education (faculty_id, degree_level, degree_title, school_name, year_graduated, field_of_study)
@@ -318,12 +303,7 @@ router.post('/faculty', upload.single('image'), async (req, res) => {
       console.log(`✅ Added ${edu.degree_level} education`);
     }
     
-    // ============================================
-    // INSERT CERTIFICATIONS
-    // ============================================
-    
-    // Parse certifications from form data
-    // Format: cert_name_1, cert_org_1, cert_number_1, cert_issue_1, cert_expiry_1
+    // Insert certifications
     const certifications = [];
     let certIndex = 1;
     
@@ -347,12 +327,7 @@ router.post('/faculty', upload.single('image'), async (req, res) => {
       console.log(`✅ Added certification: ${cert.name}`);
     }
     
-    // ============================================
-    // INSERT GOVERNMENT AGENCIES/COMPANIES
-    // ============================================
-    
-    // Parse agencies from form data
-    // Format: agency_type_1, agency_name_1, agency_position_1, agency_status_1, agency_start_1, agency_end_1
+    // Insert agencies
     const agencies = [];
     let agencyIndex = 1;
     
@@ -395,6 +370,116 @@ router.post('/faculty', upload.single('image'), async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to create faculty member',
+      message: error.message
+    });
+  } finally {
+    client.release();
+  }
+});
+
+// ============================================
+// NEW: UPDATE FACULTY (FIX #1 & #3)
+// ============================================
+
+router.put('/faculty/:id', upload.single('image'), async (req, res) => {
+  const client = await pool.connect();
+  
+  try {
+    const { id } = req.params;
+    const { 
+      last_name, first_name, middle_initial, birthdate, contact_number,
+      program, employment_type, highest_degree, last_pds_update 
+    } = req.body;
+    
+    console.log(`📝 Updating faculty ID: ${id}`);
+    
+    // Check if faculty exists
+    const checkQuery = 'SELECT * FROM faculty WHERE id = $1';
+    const checkResult = await client.query(checkQuery, [id]);
+    
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Faculty member not found'
+      });
+    }
+    
+    const oldFaculty = checkResult.rows[0];
+    
+    await client.query('BEGIN');
+    
+    // Handle image update
+    let image_path = oldFaculty.image_path;
+    
+    if (req.file) {
+      // Delete old image if exists
+      if (oldFaculty.image_path && oldFaculty.image_path.startsWith('/uploads/faculty/')) {
+        const oldImagePath = path.join('public', oldFaculty.image_path);
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+          console.log(`🗑️ Deleted old image: ${oldImagePath}`);
+        }
+      }
+      
+      image_path = `/uploads/faculty/${req.file.filename}`;
+      console.log(`📸 New image uploaded: ${image_path}`);
+    }
+    
+    const pds_year = last_pds_update ? parseInt(last_pds_update) : null;
+    
+    // Update faculty record
+    const updateQuery = `
+      UPDATE faculty
+      SET 
+        last_name = $1,
+        first_name = $2,
+        middle_initial = $3,
+        birthdate = $4,
+        contact_number = $5,
+        program = $6,
+        employment_type = $7,
+        highest_degree = $8,
+        last_pds_update = $9,
+        image_path = $10,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = $11
+      RETURNING *
+    `;
+    
+    const result = await client.query(updateQuery, [
+      last_name,
+      first_name,
+      middle_initial || null,
+      birthdate,
+      contact_number,
+      program,
+      employment_type,
+      highest_degree,
+      pds_year,
+      image_path,
+      id
+    ]);
+    
+    const updatedFaculty = result.rows[0];
+    
+    await client.query('COMMIT');
+    
+    updatedFaculty.full_name = buildFullName(updatedFaculty.first_name, updatedFaculty.middle_initial, updatedFaculty.last_name);
+    
+    console.log(`✅ Faculty updated successfully: ${updatedFaculty.full_name}`);
+    
+    res.json({
+      success: true,
+      message: 'Faculty updated successfully',
+      faculty: updatedFaculty
+    });
+    
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('❌ Error updating faculty:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update faculty member',
       message: error.message
     });
   } finally {
@@ -527,6 +612,82 @@ router.post('/faculty/:id/restore', async (req, res) => {
 });
 
 // ============================================
+// NEW: DELETE FACULTY PERMANENTLY (FIX #2)
+// ============================================
+
+router.delete('/faculty/:id', async (req, res) => {
+  const client = await pool.connect();
+  
+  try {
+    const { id } = req.params;
+    
+    console.log(`🗑️ Permanently deleting faculty ID: ${id}`);
+    
+    // Check if faculty exists
+    const checkQuery = 'SELECT * FROM faculty WHERE id = $1';
+    const checkResult = await client.query(checkQuery, [id]);
+    
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Faculty member not found'
+      });
+    }
+    
+    const faculty = checkResult.rows[0];
+    const fullName = buildFullName(faculty.first_name, faculty.middle_initial, faculty.last_name);
+    
+    // Check if faculty is deactivated (safety check)
+    if (faculty.is_active) {
+      return res.status(400).json({
+        success: false,
+        error: 'Cannot delete active faculty. Please deactivate first.'
+      });
+    }
+    
+    await client.query('BEGIN');
+    
+    // Delete image file if exists
+    if (faculty.image_path && faculty.image_path.startsWith('/uploads/faculty/')) {
+      const imagePath = path.join('public', faculty.image_path);
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+        console.log(`🗑️ Deleted image: ${imagePath}`);
+      }
+    }
+    
+    // Delete related records (cascade should handle this, but being explicit)
+    await client.query('DELETE FROM faculty_education WHERE faculty_id = $1', [id]);
+    await client.query('DELETE FROM faculty_certifications WHERE faculty_id = $1', [id]);
+    await client.query('DELETE FROM faculty_government_agencies WHERE faculty_id = $1', [id]);
+    await client.query('DELETE FROM faculty_history WHERE faculty_id = $1', [id]);
+    
+    // Delete faculty record
+    await client.query('DELETE FROM faculty WHERE id = $1', [id]);
+    
+    await client.query('COMMIT');
+    
+    console.log(`✅ Faculty permanently deleted: ${fullName}`);
+    
+    res.json({
+      success: true,
+      message: `Faculty "${fullName}" has been permanently deleted`
+    });
+    
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('❌ Error deleting faculty:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete faculty member',
+      message: error.message
+    });
+  } finally {
+    client.release();
+  }
+});
+
+// ============================================
 // GET FACULTY STATISTICS
 // ============================================
 
@@ -612,7 +773,6 @@ router.get('/faculty/:id/history', async (req, res) => {
     
     const result = await pool.query(query, [id]);
     
-    // Add full_name to each history record
     const historyWithFullNames = result.rows.map(record => ({
       ...record,
       full_name: buildFullName(record.first_name, record.middle_initial, record.last_name)

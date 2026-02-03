@@ -1824,3 +1824,59 @@
     grid-template-columns: 1fr;
   }
 }
+/* ============================================
+   ADDITIONAL CSS FOR DELETE BUTTON
+   Add this to your facultyManagement.css file
+   ============================================ */
+
+/* Delete button for deactivated faculty */
+.btn-delete-permanent {
+  flex: 1;
+  min-width: 90px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%);
+  color: white;
+}
+
+.btn-delete-permanent:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(153, 27, 27, 0.5);
+  background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
+}
+
+/* Adjust deactivated faculty actions to accommodate both buttons */
+.faculty-card .faculty-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Make restore and delete buttons full width on mobile */
+@media (max-width: 480px) {
+  .btn-delete-permanent {
+    width: 100%;
+  }
+}
+
+/* Add warning color to text when hovering delete */
+.btn-delete-permanent:hover i {
+  animation: shake 0.5s;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
