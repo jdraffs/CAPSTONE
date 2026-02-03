@@ -1,7 +1,28 @@
 // certificates.js - Admin Dashboard
 
-const ADMIN_ID = 1; // Replace with actual admin ID from session
-const ADMIN_NAME = 'AdminMila'; // Replace with actual admin name from session
+// Get admin data from localStorage
+function getAdminData() {
+  const adminData = localStorage.getItem('adminData');
+  if (adminData) {
+    try {
+      return JSON.parse(adminData);
+    } catch (e) {
+      console.error('Error parsing admin data:', e);
+    }
+  }
+  
+  // Fallback: try to get from old storage method
+  const adminid = localStorage.getItem('adminid');
+  return {
+    id: null, // Will be fetched from server if needed
+    adminid: adminid || 'Unknown',
+    roleName: 'Administrator'
+  };
+}
+
+const ADMIN_DATA = getAdminData();
+const ADMIN_ID = ADMIN_DATA.id;
+const ADMIN_NAME = ADMIN_DATA.adminid;
 
 let currentFilters = {
   status: 'all',
@@ -16,7 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
   loadStatistics();
   loadRequests();
   initializeEventListeners();
-  initializeProfileDropdown();
 });
 
 // Event Listeners
@@ -600,7 +620,7 @@ function renderCertificatePreview(request) {
 function getFullCourseName(courseCode) {
   const courses = {
     'BSIT': 'BACHELOR OF SCIENCE IN INFORMATION TECHNOLOGY',
-    'BSCpE': 'BACHELOR OF SCIENCE IN COMPUTER ENGINEERING',
+    'BSCE': 'BACHELOR OF SCIENCE IN COMPUTER ENGINEERING',
     'BSOA': 'BACHELOR OF SCIENCE IN OFFICE ADMINISTRATION',
     'BSHM': 'BACHELOR OF SCIENCE IN HOSPITALITY MANAGEMENT'
   };
@@ -709,8 +729,9 @@ async function deleteRequest(id) {
 function formatCertificateType(type) {
   const types = {
     'no_id': 'Certificate of No ID',
-    'recommendation_scholarship': 'Recommendation Letter - Scholarship',
-    'recommendation_abroad': 'Recommendation Letter - Abroad'
+    'clearance': 'Clearance from Admin',
+    'gres_form': 'GRES Form',
+    'no_pending_obligation': 'Certificate of No Pending Obligation'
   };
   return types[type] || type;
 }
