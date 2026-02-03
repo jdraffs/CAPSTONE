@@ -1,5 +1,6 @@
-// facultyManagementRoute.js - API Routes for Faculty Management
+// facultyManagementRoute.js - UPDATED API Routes for Faculty Management
 // Academic Affairs Manager (adminSerrano) Backend Routes
+// WITH SEPARATED NAME FIELDS & YEAR-ONLY PDS
 
 import express from 'express';
 import pool from '../db.js';
@@ -41,6 +42,17 @@ const upload = multer({
 });
 
 // ============================================
+// HELPER FUNCTION: BUILD FULL NAME
+// ============================================
+
+function buildFullName(firstName, middleInitial, lastName) {
+  if (middleInitial && middleInitial.trim()) {
+    return `${firstName} ${middleInitial}. ${lastName}`;
+  }
+  return `${firstName} ${lastName}`;
+}
+
+// ============================================
 // GET ALL ACTIVE FACULTY
 // ============================================
 
@@ -51,28 +63,35 @@ router.get('/faculty', async (req, res) => {
     const query = `
       SELECT 
         id,
-        full_name,
+        last_name,
+        first_name,
+        middle_initial,
+        birthdate,
+        contact_number,
         program,
         employment_type,
         highest_degree,
+        last_pds_update,
         image_path,
         is_active,
         created_at,
         updated_at
       FROM faculty
       WHERE is_active = TRUE
-      ORDER BY full_name ASC
+      ORDER BY last_name ASC, first_name ASC
     `;
     
     const result = await pool.query(query);
     
-    console.log(`✅ Found ${result.rows.length} active faculty members`);
+    // Add full_name to each record
+    const facultyWithFullNames = result.rows.map(faculty => ({
+      ...faculty,
+      full_name: buildFullName(faculty.first_name, faculty.middle_initial, faculty.last_name)
+    }));
     
-    res.json({
-      success: true,
-      count: result.rows.length,
-      faculty: result.rows
-    });
+    console.log(`✅ Found ${facultyWithFullNames.length} active faculty members`);
+    
+    res.json(facultyWithFullNames);
     
   } catch (error) {
     console.error('❌ Error fetching faculty:', error);
@@ -95,7 +114,11 @@ router.get('/faculty/deactivated', async (req, res) => {
     const query = `
       SELECT 
         id,
-        full_name,
+        last_name,
+        first_name,
+        middle_initial,
+        birthdate,
+        contact_number,
         program,
         employment_type,
         highest_degree,
@@ -110,13 +133,15 @@ router.get('/faculty/deactivated', async (req, res) => {
     
     const result = await pool.query(query);
     
-    console.log(`✅ Found ${result.rows.length} deactivated faculty members`);
+    // Add full_name to each record
+    const facultyWithFullNames = result.rows.map(faculty => ({
+      ...faculty,
+      full_name: buildFullName(faculty.first_name, faculty.middle_initial, faculty.last_name)
+    }));
     
-    res.json({
-      success: true,
-      count: result.rows.length,
-      faculty: result.rows
-    });
+    console.log(`✅ Found ${facultyWithFullNames.length} deactivated faculty members`);
+    
+    res.json(facultyWithFullNames);
     
   } catch (error) {
     console.error('❌ Error fetching deactivated faculty:', error);
@@ -129,7 +154,7 @@ router.get('/faculty/deactivated', async (req, res) => {
 });
 
 // ============================================
-// GET SINGLE FACULTY BY ID
+// GET SINGLE FACULTY BY ID (WITH COMPLETE INFO)
 // ============================================
 
 router.get('/faculty/:id', async (req, res) => {
@@ -138,38 +163,71 @@ router.get('/faculty/:id', async (req, res) => {
     
     console.log(`📚 Fetching faculty member with ID: ${id}`);
     
-    const query = `
+    // Get basic faculty info
+    const facultyQuery = `
       SELECT 
-        id,
-        full_name,
-        program,
-        employment_type,
-        highest_degree,
-        image_path,
-        is_active,
-        created_at,
-        updated_at,
-        deactivated_at,
-        restored_at
+        id, last_name, first_name, middle_initial, birthdate, contact_number,
+        program, employment_type, highest_degree, last_pds_update,
+        image_path, is_active, created_at, updated_at
       FROM faculty
       WHERE id = $1
     `;
     
-    const result = await pool.query(query, [id]);
+    const facultyResult = await pool.query(facultyQuery, [id]);
     
-    if (result.rows.length === 0) {
+    if (facultyResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: 'Faculty member not found'
       });
     }
     
-    console.log(`✅ Found faculty: ${result.rows[0].full_name}`);
+    const faculty = facultyResult.rows[0];
+    faculty.full_name = buildFullName(faculty.first_name, faculty.middle_initial, faculty.last_name);
     
-    res.json({
-      success: true,
-      faculty: result.rows[0]
-    });
+    // Get education
+    const educationQuery = `
+      SELECT degree_level, degree_title, school_name, year_graduated, field_of_study
+      FROM faculty_education
+      WHERE faculty_id = $1
+      ORDER BY CASE degree_level
+        WHEN 'Doctorate' THEN 1
+        WHEN 'Masters' THEN 2
+        WHEN 'Undergraduate' THEN 3
+      END
+    `;
+    const educationResult = await pool.query(educationQuery, [id]);
+    
+    // Get certifications
+    const certsQuery = `
+      SELECT certification_name, issuing_organization, license_number, 
+             issue_date, expiry_date, is_active
+      FROM faculty_certifications
+      WHERE faculty_id = $1 AND is_active = TRUE
+      ORDER BY issue_date DESC
+    `;
+    const certsResult = await pool.query(certsQuery, [id]);
+    
+    // Get government agencies
+    const agenciesQuery = `
+      SELECT agency_type, agency_name, position, employment_status,
+             start_date, end_date, is_active
+      FROM faculty_government_agencies
+      WHERE faculty_id = $1 AND is_active = TRUE
+      ORDER BY start_date DESC
+    `;
+    const agenciesResult = await pool.query(agenciesQuery, [id]);
+    
+    const completeProfile = {
+      ...faculty,
+      education: educationResult.rows,
+      certifications: certsResult.rows,
+      government_agencies: agenciesResult.rows
+    };
+    
+    console.log(`✅ Found faculty: ${faculty.full_name}`);
+    
+    res.json(completeProfile);
     
   } catch (error) {
     console.error('❌ Error fetching faculty:', error);
@@ -189,19 +247,22 @@ router.post('/faculty', upload.single('image'), async (req, res) => {
   const client = await pool.connect();
   
   try {
-    const { full_name, program, employment_type, highest_degree } = req.body;
+    const { 
+      last_name, first_name, middle_initial, birthdate, contact_number,
+      program, employment_type, highest_degree, last_pds_update 
+    } = req.body;
     const created_by = req.body.created_by || 'adminSerrano';
     
     // Validation
-    if (!full_name || !program || !employment_type || !highest_degree) {
+    if (!last_name || !first_name || !program || !employment_type || !highest_degree) {
       return res.status(400).json({
         success: false,
-        error: 'All fields are required'
+        error: 'All required fields must be filled'
       });
     }
     
     // Validate program
-    const validPrograms = ['BSIT', 'BSCpE', 'BSHM', 'BSOA'];
+    const validPrograms = ['BSIT', 'BSCpE', 'BSHM', 'BSOA', 'Gen Ed', 'Others'];
     if (!validPrograms.includes(program)) {
       return res.status(400).json({
         success: false,
@@ -228,41 +289,39 @@ router.post('/faculty', upload.single('image'), async (req, res) => {
     }
     
     const image_path = req.file ? `/uploads/faculty/${req.file.filename}` : null;
+    const pds_year = last_pds_update ? parseInt(last_pds_update) : null;
     
     await client.query('BEGIN');
     
-    console.log(`📝 Creating new faculty: ${full_name}`);
+    const fullName = buildFullName(first_name, middle_initial, last_name);
+    console.log(`📝 Creating new faculty: ${fullName}`);
     
     const insertQuery = `
       INSERT INTO faculty (
-        full_name,
-        program,
-        employment_type,
-        highest_degree,
-        image_path,
-        created_by,
-        is_active
-      ) VALUES ($1, $2, $3, $4, $5, $6, TRUE)
-      RETURNING id, full_name, program, employment_type, highest_degree, image_path, created_at
+        last_name, first_name, middle_initial, birthdate, contact_number,
+        program, employment_type, highest_degree, last_pds_update,
+        image_path, created_by, is_active
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, TRUE)
+      RETURNING id, last_name, first_name, middle_initial, program, employment_type, highest_degree, image_path, created_at
     `;
     
     const result = await client.query(insertQuery, [
-      full_name,
-      program,
-      employment_type,
-      highest_degree,
-      image_path,
-      created_by
+      last_name, first_name, middle_initial || null, birthdate, contact_number,
+      program, employment_type, highest_degree, pds_year,
+      image_path, created_by
     ]);
     
     await client.query('COMMIT');
     
-    console.log(`✅ Faculty created successfully: ${full_name} (ID: ${result.rows[0].id})`);
+    const newFaculty = result.rows[0];
+    newFaculty.full_name = buildFullName(newFaculty.first_name, newFaculty.middle_initial, newFaculty.last_name);
+    
+    console.log(`✅ Faculty created successfully: ${fullName} (ID: ${newFaculty.id})`);
     
     res.status(201).json({
       success: true,
-      message: `Faculty "${full_name}" created successfully`,
-      faculty: result.rows[0]
+      message: `Faculty "${fullName}" created successfully`,
+      faculty: newFaculty
     });
     
   } catch (error) {
@@ -287,10 +346,10 @@ router.put('/faculty/:id', upload.single('image'), async (req, res) => {
   
   try {
     const { id } = req.params;
-    const { full_name, program, employment_type, highest_degree } = req.body;
+    const { last_name, first_name, middle_initial, birthdate, contact_number, program, employment_type, highest_degree, last_pds_update } = req.body;
     
     // Check if faculty exists
-    const checkQuery = 'SELECT id, full_name, image_path FROM faculty WHERE id = $1';
+    const checkQuery = 'SELECT id, first_name, middle_initial, last_name, image_path FROM faculty WHERE id = $1';
     const checkResult = await client.query(checkQuery, [id]);
     
     if (checkResult.rows.length === 0) {
@@ -303,17 +362,42 @@ router.put('/faculty/:id', upload.single('image'), async (req, res) => {
     await client.query('BEGIN');
     
     const faculty = checkResult.rows[0];
+    const oldFullName = buildFullName(faculty.first_name, faculty.middle_initial, faculty.last_name);
     
-    console.log(`📝 Updating faculty: ${faculty.full_name}`);
+    console.log(`📝 Updating faculty: ${oldFullName}`);
     
     // Build dynamic update query
     const updates = [];
     const values = [];
     let paramCount = 1;
     
-    if (full_name) {
-      updates.push(`full_name = $${paramCount}`);
-      values.push(full_name);
+    if (last_name) {
+      updates.push(`last_name = $${paramCount}`);
+      values.push(last_name);
+      paramCount++;
+    }
+    
+    if (first_name) {
+      updates.push(`first_name = $${paramCount}`);
+      values.push(first_name);
+      paramCount++;
+    }
+    
+    if (middle_initial !== undefined) {
+      updates.push(`middle_initial = $${paramCount}`);
+      values.push(middle_initial || null);
+      paramCount++;
+    }
+    
+    if (birthdate) {
+      updates.push(`birthdate = $${paramCount}`);
+      values.push(birthdate);
+      paramCount++;
+    }
+    
+    if (contact_number) {
+      updates.push(`contact_number = $${paramCount}`);
+      values.push(contact_number);
       paramCount++;
     }
     
@@ -332,6 +416,12 @@ router.put('/faculty/:id', upload.single('image'), async (req, res) => {
     if (highest_degree) {
       updates.push(`highest_degree = $${paramCount}`);
       values.push(highest_degree);
+      paramCount++;
+    }
+    
+    if (last_pds_update) {
+      updates.push(`last_pds_update = $${paramCount}`);
+      values.push(parseInt(last_pds_update));
       paramCount++;
     }
     
@@ -354,19 +444,22 @@ router.put('/faculty/:id', upload.single('image'), async (req, res) => {
       UPDATE faculty
       SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP
       WHERE id = $${paramCount}
-      RETURNING id, full_name, program, employment_type, highest_degree, image_path, updated_at
+      RETURNING id, last_name, first_name, middle_initial, program, employment_type, highest_degree, image_path, updated_at
     `;
     
     const result = await client.query(updateQuery, values);
     
     await client.query('COMMIT');
     
-    console.log(`✅ Faculty updated successfully: ${result.rows[0].full_name}`);
+    const updatedFaculty = result.rows[0];
+    updatedFaculty.full_name = buildFullName(updatedFaculty.first_name, updatedFaculty.middle_initial, updatedFaculty.last_name);
+    
+    console.log(`✅ Faculty updated successfully: ${updatedFaculty.full_name}`);
     
     res.json({
       success: true,
-      message: `Faculty "${result.rows[0].full_name}" updated successfully`,
-      faculty: result.rows[0]
+      message: `Faculty "${updatedFaculty.full_name}" updated successfully`,
+      faculty: updatedFaculty
     });
     
   } catch (error) {
@@ -390,8 +483,7 @@ router.post('/faculty/:id/deactivate', async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Check if faculty exists and is active
-    const checkQuery = 'SELECT id, full_name, is_active FROM faculty WHERE id = $1';
+    const checkQuery = 'SELECT id, first_name, middle_initial, last_name, is_active FROM faculty WHERE id = $1';
     const checkResult = await pool.query(checkQuery, [id]);
     
     if (checkResult.rows.length === 0) {
@@ -402,6 +494,7 @@ router.post('/faculty/:id/deactivate', async (req, res) => {
     }
     
     const faculty = checkResult.rows[0];
+    const fullName = buildFullName(faculty.first_name, faculty.middle_initial, faculty.last_name);
     
     if (!faculty.is_active) {
       return res.status(400).json({
@@ -410,7 +503,7 @@ router.post('/faculty/:id/deactivate', async (req, res) => {
       });
     }
     
-    console.log(`🚫 Deactivating faculty: ${faculty.full_name}`);
+    console.log(`🚫 Deactivating faculty: ${fullName}`);
     
     const updateQuery = `
       UPDATE faculty
@@ -418,17 +511,20 @@ router.post('/faculty/:id/deactivate', async (req, res) => {
           deactivated_at = CURRENT_TIMESTAMP,
           updated_at = CURRENT_TIMESTAMP
       WHERE id = $1
-      RETURNING id, full_name, deactivated_at
+      RETURNING id, first_name, middle_initial, last_name, deactivated_at
     `;
     
     const result = await pool.query(updateQuery, [id]);
     
-    console.log(`✅ Faculty deactivated: ${result.rows[0].full_name}`);
+    const deactivatedFaculty = result.rows[0];
+    deactivatedFaculty.full_name = buildFullName(deactivatedFaculty.first_name, deactivatedFaculty.middle_initial, deactivatedFaculty.last_name);
+    
+    console.log(`✅ Faculty deactivated: ${deactivatedFaculty.full_name}`);
     
     res.json({
       success: true,
-      message: `Faculty "${result.rows[0].full_name}" has been deactivated`,
-      faculty: result.rows[0]
+      message: `Faculty "${deactivatedFaculty.full_name}" has been deactivated`,
+      faculty: deactivatedFaculty
     });
     
   } catch (error) {
@@ -449,8 +545,7 @@ router.post('/faculty/:id/restore', async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Check if faculty exists and is deactivated
-    const checkQuery = 'SELECT id, full_name, is_active FROM faculty WHERE id = $1';
+    const checkQuery = 'SELECT id, first_name, middle_initial, last_name, is_active FROM faculty WHERE id = $1';
     const checkResult = await pool.query(checkQuery, [id]);
     
     if (checkResult.rows.length === 0) {
@@ -461,6 +556,7 @@ router.post('/faculty/:id/restore', async (req, res) => {
     }
     
     const faculty = checkResult.rows[0];
+    const fullName = buildFullName(faculty.first_name, faculty.middle_initial, faculty.last_name);
     
     if (faculty.is_active) {
       return res.status(400).json({
@@ -469,7 +565,7 @@ router.post('/faculty/:id/restore', async (req, res) => {
       });
     }
     
-    console.log(`🔄 Restoring faculty: ${faculty.full_name}`);
+    console.log(`🔄 Restoring faculty: ${fullName}`);
     
     const updateQuery = `
       UPDATE faculty
@@ -477,17 +573,20 @@ router.post('/faculty/:id/restore', async (req, res) => {
           restored_at = CURRENT_TIMESTAMP,
           updated_at = CURRENT_TIMESTAMP
       WHERE id = $1
-      RETURNING id, full_name, restored_at
+      RETURNING id, first_name, middle_initial, last_name, restored_at
     `;
     
     const result = await pool.query(updateQuery, [id]);
     
-    console.log(`✅ Faculty restored: ${result.rows[0].full_name}`);
+    const restoredFaculty = result.rows[0];
+    restoredFaculty.full_name = buildFullName(restoredFaculty.first_name, restoredFaculty.middle_initial, restoredFaculty.last_name);
+    
+    console.log(`✅ Faculty restored: ${restoredFaculty.full_name}`);
     
     res.json({
       success: true,
-      message: `Faculty "${result.rows[0].full_name}" has been restored`,
-      faculty: result.rows[0]
+      message: `Faculty "${restoredFaculty.full_name}" has been restored`,
+      faculty: restoredFaculty
     });
     
   } catch (error) {
@@ -508,18 +607,7 @@ router.get('/faculty/stats/overview', async (req, res) => {
   try {
     console.log('📊 Generating faculty statistics...');
     
-    const query = `
-      SELECT 
-        COUNT(*) as total_active,
-        SUM(CASE WHEN employment_type = 'Regular' THEN 1 ELSE 0 END) as total_regular,
-        SUM(CASE WHEN employment_type = 'Part-Time' THEN 1 ELSE 0 END) as total_parttime,
-        SUM(CASE WHEN highest_degree = 'Doctorate' THEN 1 ELSE 0 END) as total_doctoral,
-        SUM(CASE WHEN highest_degree = 'Master' THEN 1 ELSE 0 END) as total_masters,
-        SUM(CASE WHEN highest_degree = 'Bachelor' THEN 1 ELSE 0 END) as total_bachelor,
-        ROUND(SUM(CASE WHEN highest_degree IN ('Doctorate', 'Master') THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(*), 0), 2) as advanced_degree_percent
-      FROM faculty
-      WHERE is_active = TRUE
-    `;
+    const query = `SELECT * FROM vw_faculty_overall_stats`;
     
     const result = await pool.query(query);
     
@@ -548,20 +636,7 @@ router.get('/faculty/stats/by-program', async (req, res) => {
   try {
     console.log('📊 Generating program statistics...');
     
-    const query = `
-      SELECT 
-        program,
-        COUNT(*) as total_faculty,
-        SUM(CASE WHEN employment_type = 'Regular' THEN 1 ELSE 0 END) as regular_count,
-        SUM(CASE WHEN employment_type = 'Part-Time' THEN 1 ELSE 0 END) as parttime_count,
-        SUM(CASE WHEN highest_degree = 'Doctorate' THEN 1 ELSE 0 END) as doctoral_count,
-        SUM(CASE WHEN highest_degree = 'Master' THEN 1 ELSE 0 END) as masters_count,
-        SUM(CASE WHEN highest_degree = 'Bachelor' THEN 1 ELSE 0 END) as bachelor_count
-      FROM faculty
-      WHERE is_active = TRUE
-      GROUP BY program
-      ORDER BY program
-    `;
+    const query = `SELECT * FROM vw_program_summary_enhanced`;
     
     const result = await pool.query(query);
     
@@ -599,7 +674,9 @@ router.get('/faculty/:id/history', async (req, res) => {
         fh.changed_fields,
         fh.performed_by,
         fh.performed_at,
-        f.full_name
+        f.first_name,
+        f.middle_initial,
+        f.last_name
       FROM faculty_history fh
       JOIN faculty f ON f.id = fh.faculty_id
       WHERE fh.faculty_id = $1
@@ -608,12 +685,18 @@ router.get('/faculty/:id/history', async (req, res) => {
     
     const result = await pool.query(query, [id]);
     
-    console.log(`✅ Found ${result.rows.length} history records`);
+    // Add full_name to each history record
+    const historyWithFullNames = result.rows.map(record => ({
+      ...record,
+      full_name: buildFullName(record.first_name, record.middle_initial, record.last_name)
+    }));
+    
+    console.log(`✅ Found ${historyWithFullNames.length} history records`);
     
     res.json({
       success: true,
-      count: result.rows.length,
-      history: result.rows
+      count: historyWithFullNames.length,
+      history: historyWithFullNames
     });
     
   } catch (error) {
