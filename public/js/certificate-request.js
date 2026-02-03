@@ -367,8 +367,9 @@ function getStatusMessage(status) {
 function formatCertificateType(type) {
   const types = {
     'no_id': 'Certificate of No ID',
-    'recommendation_scholarship': 'Recommendation Letter - Scholarship',
-    'recommendation_abroad': 'Recommendation Letter - Abroad'
+    'clearance': 'Clearance from Admin',
+    'gres_form': 'GRES Form',
+    'no_pending_obligation': 'Certificate of No Pending Obligation'
   };
   return types[type] || type;
 }

@@ -102,6 +102,247 @@
 
         <div class="main-content">
             <!-- Statistics Cards -->
+
+            <!-- Add this section to certificates.html main content, before the stats-grid -->
+
+<div class="signature-management-section" style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 25px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 style="font-size: 18px; font-weight: 700; color: #822020; margin: 0; display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-signature"></i> E-Signature Management
+        </h3>
+        <button id="toggleSignatureSection" class="btn btn-secondary btn-sm">
+            <i class="fa-solid fa-chevron-down"></i> Expand
+        </button>
+    </div>
+
+    <div id="signatureContent" style="display: none;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: start;">
+            <!-- Left: Upload Section -->
+            <div>
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border: 2px dashed #d1d5db;">
+                    <label style="display: block; font-weight: 600; font-size: 14px; color: #333; margin-bottom: 15px;">
+                        <i class="fa-solid fa-upload"></i> Upload Your E-Signature
+                    </label>
+                    
+                    <input 
+                        type="file" 
+                        id="signatureUploadInput" 
+                        accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                        style="display: none;"
+                    />
+                    
+                    <button 
+                        type="button" 
+                        id="selectSignatureBtn" 
+                        class="btn btn-primary" 
+                        style="width: 100%; margin-bottom: 15px;"
+                    >
+                        <i class="fa-solid fa-image"></i> Select Signature Image
+                    </button>
+
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 15px;">
+                        <div>
+                            <label style="display: block; font-size: 13px; font-weight: 600; color: #666; margin-bottom: 6px;">
+                                Signature Name
+                            </label>
+                            <input 
+                                type="text" 
+                                id="signatureName" 
+                                placeholder="e.g., MILA JOY J. MARTINEZ"
+                                value="MILA JOY J. MARTINEZ"
+                                style="width: 100%; padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px;"
+                            />
+                        </div>
+
+                        <div>
+                            <label style="display: block; font-size: 13px; font-weight: 600; color: #666; margin-bottom: 6px;">
+                                Signature Title
+                            </label>
+                            <input 
+                                type="text" 
+                                id="signatureTitle" 
+                                placeholder="e.g., Head, Student Affairs and Services"
+                                value="Head, Student Affairs and Services"
+                                style="width: 100%; padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px;"
+                            />
+                        </div>
+                    </div>
+
+                    <button 
+                        type="button" 
+                        id="uploadSignatureBtn" 
+                        class="btn btn-success" 
+                        style="width: 100%; margin-top: 15px;" 
+                        disabled
+                    >
+                        <i class="fa-solid fa-check"></i> Save Signature
+                    </button>
+
+                    <p style="font-size: 12px; color: #666; margin-top: 12px; margin-bottom: 0;">
+                        <i class="fa-solid fa-info-circle"></i> Recommended: PNG with transparent background. Max size: 2MB
+                    </p>
+                </div>
+            </div>
+
+            <!-- Right: Preview Section -->
+            <div>
+                <label style="display: block; font-weight: 600; font-size: 14px; color: #333; margin-bottom: 15px;">
+                    <i class="fa-solid fa-eye"></i> Current Signature
+                </label>
+                
+                <div id="signaturePreviewContainer" style="background: white; padding: 30px; border-radius: 8px; border: 2px solid #e0e0e0; text-align: center; min-height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                    <div id="noSignatureMessage" style="color: #999;">
+                        <i class="fa-solid fa-image" style="font-size: 40px; margin-bottom: 10px; display: block;"></i>
+                        <p style="margin: 0;">No signature uploaded yet</p>
+                    </div>
+                    <div id="signaturePreview" style="display: none; width: 100%;">
+                        <img id="signatureImage" src="" alt="Signature" style="max-width: 100%; max-height: 150px; margin-bottom: 10px;" />
+                        <p id="signatureNameDisplay" style="font-weight: bold; font-size: 14px; margin: 5px 0; color: #333;"></p>
+                        <p id="signatureTitleDisplay" style="font-size: 13px; color: #666; margin: 0;"></p>
+                        <button id="deleteSignatureBtn" class="btn btn-danger btn-sm" style="margin-top: 15px;">
+                            <i class="fa-solid fa-trash"></i> Delete Signature
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add corresponding JavaScript at the end of certificates.js -->
+<script>
+// E-Signature Management
+let selectedSignatureFile = null;
+
+document.getElementById('toggleSignatureSection')?.addEventListener('click', function() {
+    const content = document.getElementById('signatureContent');
+    const icon = this.querySelector('i');
+    
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-up');
+        this.innerHTML = '<i class="fa-solid fa-chevron-up"></i> Collapse';
+        loadCurrentSignature();
+    } else {
+        content.style.display = 'none';
+        icon.classList.remove('fa-chevron-up');
+        icon.classList.add('fa-chevron-down');
+        this.innerHTML = '<i class="fa-solid fa-chevron-down"></i> Expand';
+    }
+});
+
+document.getElementById('selectSignatureBtn')?.addEventListener('click', () => {
+    document.getElementById('signatureUploadInput').click();
+});
+
+document.getElementById('signatureUploadInput')?.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        selectedSignatureFile = file;
+        document.getElementById('uploadSignatureBtn').disabled = false;
+        showCustomAlert(`Selected: ${file.name}`, 'info');
+    }
+});
+
+document.getElementById('uploadSignatureBtn')?.addEventListener('click', uploadSignature);
+document.getElementById('deleteSignatureBtn')?.addEventListener('click', deleteSignature);
+
+async function loadCurrentSignature() {
+    const adminData = getAdminData();
+    
+    try {
+        const response = await fetch(`/api/certificate-requests/admin/signature/${adminData.id}`);
+        const data = await response.json();
+
+        if (data.success && data.signature) {
+            document.getElementById('noSignatureMessage').style.display = 'none';
+            document.getElementById('signaturePreview').style.display = 'block';
+            document.getElementById('signatureImage').src = data.signature.signature_image_path;
+            document.getElementById('signatureNameDisplay').textContent = data.signature.signature_name;
+            document.getElementById('signatureTitleDisplay').textContent = data.signature.signature_title;
+            document.getElementById('signatureName').value = data.signature.signature_name;
+            document.getElementById('signatureTitle').value = data.signature.signature_title;
+        } else {
+            document.getElementById('noSignatureMessage').style.display = 'block';
+            document.getElementById('signaturePreview').style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error loading signature:', error);
+    }
+}
+
+async function uploadSignature() {
+    if (!selectedSignatureFile) {
+        showCustomAlert('Please select a signature image first', 'warning');
+        return;
+    }
+
+    const adminData = getAdminData();
+    const formData = new FormData();
+    formData.append('signature', selectedSignatureFile);
+    formData.append('adminId', adminData.id);
+    formData.append('signatureName', document.getElementById('signatureName').value);
+    formData.append('signatureTitle', document.getElementById('signatureTitle').value);
+
+    const uploadBtn = document.getElementById('uploadSignatureBtn');
+    uploadBtn.disabled = true;
+    uploadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading...';
+
+    try {
+        const response = await fetch('/api/certificate-requests/admin/signature/upload', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showCustomAlert('Signature uploaded successfully!', 'success');
+            selectedSignatureFile = null;
+            document.getElementById('signatureUploadInput').value = '';
+            loadCurrentSignature();
+        } else {
+            showCustomAlert(data.message || 'Failed to upload signature', 'error');
+        }
+    } catch (error) {
+        console.error('Upload error:', error);
+        showCustomAlert('Failed to upload signature', 'error');
+    } finally {
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = '<i class="fa-solid fa-check"></i> Save Signature';
+    }
+}
+
+async function deleteSignature() {
+    const confirmed = await showCustomConfirm(
+        'Are you sure you want to delete your e-signature? It will be removed from all future certificates.',
+        'Delete E-Signature'
+    );
+
+    if (!confirmed) return;
+
+    const adminData = getAdminData();
+
+    try {
+        const response = await fetch(`/api/certificate-requests/admin/signature/${adminData.id}`, {
+            method: 'DELETE'
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showCustomAlert('Signature deleted successfully', 'success');
+            loadCurrentSignature();
+        } else {
+            showCustomAlert(data.message || 'Failed to delete signature', 'error');
+        }
+    } catch (error) {
+        console.error('Delete error:', error);
+        showCustomAlert('Failed to delete signature', 'error');
+    }
+}
+</script>
             <div class="stats-grid">
                 <div class="stat-card pending">
                     <div class="stat-icon">
@@ -169,8 +410,9 @@
                         <select id="certificateTypeFilter" class="filter-select">
                             <option value="all">All Certificate Types</option>
                             <option value="no_id">Certificate of No ID</option>
-                            <option value="recommendation_scholarship">Recommendation Letter - Scholarship</option>
-                            <option value="recommendation_abroad">Recommendation Letter - Abroad</option>
+                            <option value="clearance">Clearance from Admin</option>
+                            <option value="gres_form">GRES Form</option>
+                            <option value="no_pending_obligation">Certificate of No Pending Obligation</option>
                         </select>
 
                         <div class="search-box">
